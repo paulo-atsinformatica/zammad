@@ -1,3 +1,0 @@
-<tr>
-  <td colspan="<%= @columnsLength %>"><b><%- @groupByName %><% if @groupByCount:%> (<%= @groupByCount %>)<% end %></b></td>
-</tr>

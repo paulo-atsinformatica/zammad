@@ -1,8 +1,0 @@
-mutation ticketArticleDelete($articleId: ID!) {
-  ticketArticleDelete(articleId: $articleId) {
-    success
-    errors {
-      ...errors
-    }
-  }
-}

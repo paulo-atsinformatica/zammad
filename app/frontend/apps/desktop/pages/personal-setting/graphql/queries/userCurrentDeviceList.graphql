@@ -1,5 +1,0 @@
-query userCurrentDeviceList {
-  userCurrentDeviceList {
-    ...userDeviceAttributes
-  }
-}

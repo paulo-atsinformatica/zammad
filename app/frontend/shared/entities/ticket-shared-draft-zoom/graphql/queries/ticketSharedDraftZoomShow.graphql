@@ -1,5 +1,0 @@
-query ticketSharedDraftZoomShow($sharedDraftId: ID!) {
-  ticketSharedDraftZoomShow(sharedDraftId: $sharedDraftId) {
-    ...ticketSharedDraftZoomAttributes
-  }
-}

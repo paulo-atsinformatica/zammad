@@ -1,6 +1,0 @@
-query ticketOverviewTicketCount($ignoreUserConditions: Boolean!) {
-  ticketOverviews(ignoreUserConditions: $ignoreUserConditions) {
-    id
-    ticketCount
-  }
-}

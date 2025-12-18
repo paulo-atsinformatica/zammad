@@ -1,3 +1,0 @@
-include:
-  - '.gitlab/ci/__includes__/*.yml'
-  - '.gitlab/ci/*.yml'

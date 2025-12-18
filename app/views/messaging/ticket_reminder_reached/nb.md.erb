@@ -1,7 +1,0 @@
-# #{ticket.title}
-_<#{config.http_type}://#{config.fqdn}/#ticket/zoom/#{ticket.id}|Ticket##{ticket.number}>: Påminnelse nådd!_
-En sak krever oppmerksomhet: påminnelse nådd for (#{ticket.title}) av kunde "*#{ticket.customer.longname}*".
-
-<% if @objects[:article] %>
-#{article.body_as_text}
-<% end %>

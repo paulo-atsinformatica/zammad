@@ -1,8 +1,0 @@
-mutation userCurrentTicketScreenBehavior($behavior: EnumTicketScreenBehavior!) {
-  userCurrentTicketScreenBehavior(behavior: $behavior) {
-    success
-    errors {
-      ...errors
-    }
-  }
-}

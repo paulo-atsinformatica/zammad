@@ -1,7 +1,0 @@
-query translations($locale: String!, $cacheKey: String)  {
-  translations(locale: $locale, cacheKey: $cacheKey) {
-    isCacheStillValid
-    cacheKey
-    translations
-  }
-}

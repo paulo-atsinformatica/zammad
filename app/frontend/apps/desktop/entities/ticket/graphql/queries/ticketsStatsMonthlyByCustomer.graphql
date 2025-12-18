@@ -1,9 +1,0 @@
-query TicketsStatsMonthlyByCustomer($customerId: ID!) {
-    ticketsStatsMonthlyByCustomer(customerId: $customerId) {
-        monthLabel
-        monthNumber
-        ticketsClosed
-        ticketsCreated
-        year
-    }
-}

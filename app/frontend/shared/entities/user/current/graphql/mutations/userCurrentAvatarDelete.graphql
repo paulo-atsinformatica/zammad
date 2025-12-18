@@ -1,8 +1,0 @@
-mutation userCurrentAvatarDelete($id: ID!) {
-  userCurrentAvatarDelete(id: $id) {
-    success
-    errors {
-      ...errors
-    }
-  }
-}

@@ -1,5 +1,0 @@
-query publicLinks($screen: EnumPublicLinksScreen!) {
-  publicLinks(screen: $screen) {
-    ...publicLinkAttributes
-  }
-}

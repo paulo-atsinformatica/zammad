@@ -1,8 +1,0 @@
-mutation tagAssignmentUpdate($objectId: ID!, $tags: [String!]!) {
-  tagAssignmentUpdate(objectId: $objectId, tags: $tags) {
-    success
-    errors {
-      ...errors
-    }
-  }
-}

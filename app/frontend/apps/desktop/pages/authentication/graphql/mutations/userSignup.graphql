@@ -1,8 +1,0 @@
-mutation userSignup($input: UserSignupInput!) {
-  userSignup(input: $input) {
-    success
-    errors {
-      ...errors
-    }
-  }
-}

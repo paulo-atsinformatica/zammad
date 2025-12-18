@@ -1,7 +1,0 @@
-subscription ticketSharedDraftStartUpdateByGroup($groupId: ID!) {
-  ticketSharedDraftStartUpdateByGroup(groupId: $groupId) {
-    sharedDraftStarts {
-      ...ticketSharedDraftStartAttributes
-    }
-  }
-}

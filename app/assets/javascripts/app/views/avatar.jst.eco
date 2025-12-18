@@ -1,3 +1,0 @@
-<span class="avatar <%- @cssClass %>" style="background-image: url(<%- @url %>)"<%- @placement %><%- @data %> data-initials="<%- @initials %>">
-  <%- @Icon('crown') if @vip %>
-</span>

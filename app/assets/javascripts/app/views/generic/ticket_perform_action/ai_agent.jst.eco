@@ -1,6 +1,0 @@
-<div class="form-group">
-  <div class="formGroup-label">
-    <label><%- @T('AI Agents') %></label>
-  </div>
-  <div class="controls js-ai-agents"></div>
-</div>

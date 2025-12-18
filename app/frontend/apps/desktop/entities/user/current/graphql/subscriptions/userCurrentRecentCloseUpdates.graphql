@@ -1,5 +1,0 @@
-subscription userCurrentRecentCloseUpdates {
-  userCurrentRecentCloseUpdates {
-    recentCloseUpdated
-  }
-}

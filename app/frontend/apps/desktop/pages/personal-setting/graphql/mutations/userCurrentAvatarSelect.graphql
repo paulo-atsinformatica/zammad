@@ -1,8 +1,0 @@
-mutation userCurrentAvatarSelect($id: ID!) {
-  userCurrentAvatarSelect(id: $id) {
-    success
-    errors {
-      ...errors
-    }
-  }
-}

@@ -1,7 +1,0 @@
-subscription aiTextToolUpdates {
-  aiTextToolUpdates {
-    textToolId
-    groupIds
-    removeTextToolId
-  }
-}

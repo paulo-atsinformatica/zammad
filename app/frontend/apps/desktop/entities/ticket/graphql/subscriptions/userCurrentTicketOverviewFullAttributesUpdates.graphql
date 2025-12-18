@@ -1,8 +1,0 @@
-subscription userCurrentTicketOverviewFullAttributesUpdates($ignoreUserConditions: Boolean!, $withTicketCount: Boolean = false) {
-  userCurrentTicketOverviewUpdates(ignoreUserConditions: $ignoreUserConditions) {
-    ticketOverviews {
-      ...overviewAttributes
-      viewColumnsRaw
-    }
-  }
-}

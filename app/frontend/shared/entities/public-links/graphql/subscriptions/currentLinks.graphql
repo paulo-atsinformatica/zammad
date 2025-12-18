@@ -1,7 +1,0 @@
-subscription publicLinkUpdates($screen: EnumPublicLinksScreen!) {
-  publicLinkUpdates(screen: $screen) {
-    publicLinks {
-      ...publicLinkAttributes
-    }
-  }
-}

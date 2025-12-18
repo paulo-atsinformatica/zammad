@@ -1,7 +1,0 @@
-query emailAddresses($onlyActive: Boolean = false) {
-  emailAddresses(onlyActive: $onlyActive) {
-    name
-    email
-    active
-  }
-}

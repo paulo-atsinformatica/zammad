@@ -1,8 +1,0 @@
-mutation userCurrentAccessTokenDelete($tokenId: ID!) {
-  userCurrentAccessTokenDelete(tokenId: $tokenId) {
-    success
-    errors {
-      ...errors
-    }
-  }
-}

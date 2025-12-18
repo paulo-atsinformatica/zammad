@@ -1,5 +1,0 @@
-<div class="popover-headline">
-  <h2>
-    <%- @T(@title) %>
-  </h2>
-</div>

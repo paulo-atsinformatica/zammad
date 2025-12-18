@@ -1,4 +1,0 @@
-<div class="camera">
-  <canvas class="camera-preview" height="256" width="256"></canvas>
-  <video></video>
-</div>

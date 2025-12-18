@@ -1,3 +1,0 @@
-<span class="avatar avatar--group <%- @cssClass %>">
-  <%- @Icon('team') %>
-</span>

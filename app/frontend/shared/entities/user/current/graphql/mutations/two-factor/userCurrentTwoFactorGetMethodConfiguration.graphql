@@ -1,9 +1,0 @@
-query userCurrentTwoFactorGetMethodConfiguration(
-  $methodName: String!
-  $token: String!
-) {
-  userCurrentTwoFactorGetMethodConfiguration(
-    methodName: $methodName
-    token: $token
-  )
-}

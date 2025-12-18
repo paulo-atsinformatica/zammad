@@ -1,7 +1,0 @@
-fragment securityState on TicketArticleSecurityState {
-  type
-  signingSuccess
-  signingMessage
-  encryptionSuccess
-  encryptionMessage
-}

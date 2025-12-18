@@ -1,7 +1,0 @@
-subscription userCurrentAccessTokenUpdates {
-  userCurrentAccessTokenUpdates {
-    tokens {
-      ...tokenAttributes
-    }
-  }
-}

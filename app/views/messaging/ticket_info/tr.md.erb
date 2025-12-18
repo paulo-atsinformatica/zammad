@@ -1,9 +1,0 @@
-# #{ticket.title}
-_<#{config.http_type}://#{config.fqdn}/#ticket/zoom/#{ticket.id}|Ticket##{ticket.number}>: En son #{ticket.updated_at} tarihinde güncellendi_
-* Grup: #{ticket.group.name}
-* Sahip: #{ticket.owner.fullname}
-* Durum: #{t(ticket.state.name)}
-
-<% if @objects[:article] %>
-#{article.body_as_text}
-<% end %>

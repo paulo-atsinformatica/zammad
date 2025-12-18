@@ -1,5 +1,0 @@
-subscription userCurrentTaskbarItemStateUpdates($taskbarItemId: ID!) {
-  userCurrentTaskbarItemStateUpdates(taskbarItemId: $taskbarItemId) {
-    stateChanged
-  }
-}

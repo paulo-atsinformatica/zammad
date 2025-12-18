@@ -1,3 +1,0 @@
-<div class="btn btn--action js-setting centered">
-  <%- @Icon('cog', 'dropdown-icon') %>
-</div>

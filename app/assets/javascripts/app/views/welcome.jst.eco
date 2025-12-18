@@ -1,3 +1,0 @@
-<div class="welcome main flex center">
-  <h2><%- @T('Welcome!') %></h2>
-</div>

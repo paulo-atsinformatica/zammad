@@ -1,6 +1,0 @@
-query ticketSharedDraftStartSingle($sharedDraftId: ID!) {
-  ticketSharedDraftStartSingle(sharedDraftId: $sharedDraftId) {
-    ...ticketSharedDraftStartAttributes
-    content
-  }
-}

@@ -1,7 +1,0 @@
-subscription userCurrentDevicesUpdates {
-  userCurrentDevicesUpdates {
-    devices {
-      ...userDeviceAttributes
-    }
-  }
-}

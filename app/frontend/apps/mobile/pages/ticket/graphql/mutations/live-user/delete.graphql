@@ -1,8 +1,0 @@
-mutation ticketLiveUserDelete($id: ID!, $app: EnumTaskbarApp!) {
-  ticketLiveUserDelete(id: $id, app: $app) {
-    success
-    errors {
-      ...errors
-    }
-  }
-}

@@ -1,6 +1,0 @@
-fragment errors on UserError {
-  message
-  messagePlaceholder
-  field
-  exception
-}
