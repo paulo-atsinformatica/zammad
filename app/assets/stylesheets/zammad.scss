@@ -22,15 +22,15 @@ $mobileNavigationWidthOpen: 220px;
   --text-muted: hsl(213, 3%, 64%);
   --text-muted-highlight: hsl(205, 90%, 90%);
   --text-muted-alt: hsl(197, 16%, 65%);
-  --text-link: hsl(0, 65%, 55%);
+  --text-link: #480404;
   --text-inverted: white;
   --text-active: white;
-  --text-nav: hsl(0, 65%, 55%);
+  --text-nav: #480404;
   --text-button-primary: var(--button-primary-background);
   --text-button-primary-active: var(--button-primary-background-active);
   --text-button-secondary: var(--interactive-muted);
-  --nav-icon: hsl(0, 0%, 50%);
-  --highlight: hsl(205, 90%, 60%);
+  --nav-icon: hsl(0, 0%, 100%);
+  --highlight: #480404;
   --interactive-primary: black;
   --interactive-muted: hsl(210, 3%, 71%);
   --interactive-muted-active: hsl(210, 4%, 71%);
@@ -44,7 +44,7 @@ $mobileNavigationWidthOpen: 220px;
   --background-quaternary: hsl(231, 9%, 16%);
   --background-quaternary-alt: hsl(228, 17%, 91%);
   --background-popover: white;
-  --background-active: hsl(233, 9%, 19%);
+  --background-active: #480404;
   --background-highlight: hsl(200, 100%, 91%);
   --background-article-meta: hsl(212, 14%, 99%);
   --background-article-customer: hsl(201, 46%, 93%);
@@ -65,13 +65,13 @@ $mobileNavigationWidthOpen: 220px;
   --border-article-customer: hsl(199, 38%, 90%);
   --border-article-customer-selected: hsl(199, 44%, 85%);
   --shadow-highlight: hsl(201, 62%, 90%);
-  --supergood-color: hsl(0, 65%, 55%);
-  --good-color: hsl(0, 65%, 55%);
+  --supergood-color: #480404;
+  --good-color: #480404;
   --ok-color: hsl(41, 100%, 49%);
   --bad-color: hsl(30, 93%, 50%);
   --superbad-color: hsl(19, 90%, 51%);
-  --ghost-color: hsl(0, 0%, 74%);
-  --danger-color: hsl(0, 65%, 55%);
+  --ghost-color: hsl(0, 0%, 100%);
+  --danger-color: #480404;
   --pending-color: hsl(206, 7%, 28%);
   --elevation-stroke: 0 1px hsl(210, 7%, 94%);
   --elevation-low: 0 1px 5px hsla(205, 30%, 30%, 0.1);
@@ -90,14 +90,14 @@ $mobileNavigationWidthOpen: 220px;
   --fullscreen-text-link: var(--text-inverted);
   --fullscreen-text-muted: hsl(233, 7%, 26%);
   --fullscreen-drop-shadow: 0 8px 17px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
-  --menu-text: hsl(0, 0%, 74%);
+  --menu-text: hsl(0, 0%, 100%);
   --menu-text-active: white;
   --menu-text-open: white;
   --menu-text-closed: white;
   --menu-text-escalating: white;
-  --menu-background-active: var(--button-primary-background);
-  --menu-icon: hsl(206, 5%, 42%);
-  --menu-icon-secondary: hsl(0, 0%, 30%);
+  --menu-background-active: hsl(0, 65%, 55%);
+  --menu-icon: hsl(0, 0%, 100%);
+  --menu-icon-secondary: hsl(0, 0%, 100%);
   --menu-icon-secondary-hover-background: var(--text-inverted);
   --menu-switch-background: hsl(0, 0%, 5%);
   --menu-switch-pointer: var(--background-tertiary);
@@ -127,10 +127,10 @@ $mobileNavigationWidthOpen: 220px;
   --text-normal: hsl(205, 1%, 86%);
   --text-muted: hsl(213, 3%, 60%);
   --text-muted-alt: hsl(213, 8%, 61%);
-  --text-link: hsl(0, 65%, 55%);
-  --text-nav: hsl(0, 65%, 55%);
-  --nav-icon: hsl(0, 0%, 50%);
-  --highlight: hsl(205, 90%, 60%);
+  --text-link: #480404;
+  --text-nav: #480404;
+  --nav-icon: hsl(0, 0%, 100%);
+  --highlight: #480404;
   --interactive-primary: white;
   --interactive-muted: hsl(213, 3%, 64%);
   --interactive-muted-active: hsl(213, 3%, 35%);
@@ -144,7 +144,7 @@ $mobileNavigationWidthOpen: 220px;
   --background-quaternary: hsl(230, 7%, 13%);
   --background-quaternary-alt: hsl(230, 4%, 30%);
   --background-popover: hsl(216, 3%, 30%);
-  --background-active: var(--highlight);
+  --background-active: #480404;
   --background-highlight: hsl(205, 30%, 27%);
   --background-article-meta: hsl(230, 7%, 25%);
   --background-article-customer: hsl(218, 8%, 32%);
@@ -165,13 +165,13 @@ $mobileNavigationWidthOpen: 220px;
   --border-article-customer: hsl(209, 6%, 30%);
   --border-article-customer-selected: hsl(199, 10%, 33%);
   --shadow-highlight: hsl(205, 42%, 36%);
-  --supergood-color: hsl(0, 65%, 55%);
-  --good-color: hsl(0, 65%, 55%);
+  --supergood-color: #480404;
+  --good-color: #480404;
   --ok-color: hsl(41, 100%, 49%);
   --bad-color: hsl(30, 93%, 50%);
   --superbad-color: hsl(19, 90%, 51%);
-  --ghost-color: hsl(0, 0%, 50%);
-  --danger-color: hsl(0, 82%, 59%);
+  --ghost-color: hsl(0, 0%, 100%);
+  --danger-color: #480404;
   --pending-color: hsl(205, 1%, 44%);
   --elevation-stroke: 0 1px hsla(0, 0%, 0%, 0.13);
   --elevation-low: 0 1px 5px hsla(0, 0%, 0%, 0.15);
@@ -187,6 +187,10 @@ $mobileNavigationWidthOpen: 220px;
   --tag-background: hsl(230, 5%, 32%);
   --table-border: hsl(0, 0%, 72%);
   --table-header-background: hsla(0, 0%, 0%, 0.2);
+  --menu-text: hsl(0, 0%, 100%);
+  --menu-icon: hsl(0, 0%, 100%);
+  --menu-icon-secondary: hsl(0, 0%, 100%);
+  --menu-background-active: hsl(0, 65%, 55%);
 }
 
 @mixin dark {
@@ -360,7 +364,7 @@ a {
 }
 
 a.create {
-  color: hsl(0, 65%, 55%);
+  color: #480404;
   text-decoration: underline;
 }
 
@@ -888,15 +892,15 @@ pre code {
   &--create,
   &--success {
     color: var(--text-inverted);
-    background: hsl(0, 65%, 55%);
+    background: #480404;
 
     &:active {
-      background: hsl(0, 65%, 45%);
+      background: #480404;
     }
 
     &.btn--secondary {
       background: var(--background-secondary);
-      color: hsl(0, 65%, 55%);
+      color: #480404;
 
       &:active {
         background: var(--button-background-active);
@@ -982,10 +986,10 @@ pre code {
     }
 
     &.btn--positive {
-      color: hsl(0, 65%, 55%);
+      color: #480404;
 
       &:active {
-        color: hsl(0, 65%, 40%);
+        color: #480404;
         background: none;
       }
     }
@@ -994,7 +998,7 @@ pre code {
       color: var(--danger-color);
 
       &:active {
-        color: hsl(0, 65%, 40%);
+        color: #480404;
         background: none;
       }
     }
@@ -4038,7 +4042,7 @@ ol.tabs li {
   display: inline-block;
   width: 30px;
   height: 30px;
-  background: hsl(0, 65%, 55%);
+  background: #480404;
   animation: rotateplane 1.2s infinite ease-in-out;
 }
 
@@ -4567,18 +4571,31 @@ footer {
   @include bidi-style(margin-left, 80px, margin-right, 0);
 }
 
+#loading-app {
+  background: #480404 !important;
+
+  @include dark {
+    background: #480404 !important;
+  }
+}
+
 .splash {
   position: absolute;
   left: 0;
   top: 0;
   width: 100%;
   height: 100%;
-  background: var(--background-primary);
+  background: #480404 !important;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 16px;
   color: var(--text-normal);
+
+  @include dark {
+    background: #480404 !important;
+  }
+}
 
   .icon {
     @include bidi-style(margin-right, 10px, margin-left, 0);
@@ -4587,7 +4604,7 @@ footer {
 
 .navigation {
   width: $navigationWidth;
-  background: hsl(0, 65%, 55%) !important;
+  background: #480404 !important;
   border: var(--menu-border);
   position: relative;
   container-name: navigation;
@@ -4595,7 +4612,7 @@ footer {
 
   // No modo escuro, a navigation deve ser vermelha (igual ao modo claro)
   @include dark {
-    background: hsl(0, 65%, 55%) !important;
+    background: #480404 !important;
   }
 
   @include phone {
@@ -4833,6 +4850,14 @@ footer {
   }
 }
 
+.tasks.tasks-navigation {
+  background: #480404 !important;
+
+  @include dark {
+    background: #480404 !important;
+  }
+}
+
 .tasks.tasks--standalone {
   background: none;
   margin: 8px 0 0;
@@ -4898,6 +4923,14 @@ footer {
 
   @include phone {
     width: $mobileNavigationWidthOpen;
+  }
+}
+
+.tasks-navigation {
+  background: #480404 !important;
+
+  @include dark {
+    background: #480404 !important;
   }
 }
 
@@ -5179,7 +5212,7 @@ footer {
   padding: 5px 33px;
   height: 30px;
   color: var(--menu-text);
-  background: var(--menu-background-secondary);
+  background: hsl(0, 65%, 55%) !important;
   line-height: 20px;
   outline: none;
   border: none;
@@ -5192,11 +5225,10 @@ footer {
     padding: 5px 33px;
     font-size: 16px;
   }
-}
 
-// No modo escuro, o search-holder deve ter o mesmo fundo do modo claro
-[data-theme='dark'] .search input[type='search'] {
-  background: hsl(233, 9%, 19%);
+  @include dark {
+    background: hsl(0, 65%, 55%) !important;
+  }
 }
 
 .navigation:not(.is-not-collapsed) .search:not(.filled, .focused) input[type='search'] {
@@ -5238,9 +5270,13 @@ input[type='search']::-webkit-search-decoration {
   @include bidi-style(left, 10px, right, auto);
 
   z-index: 2;
-  fill: var(--menu-icon);
+  fill: white !important;
   transition: opacity 0.1s;
   pointer-events: none;
+
+  @include dark {
+    fill: white !important;
+  }
 }
 
 .search.loading .icon-magnifier {
@@ -5404,15 +5440,24 @@ input[type='search']::-webkit-search-decoration {
   position: relative;
   flex-shrink: 0;
   display: flex;
+  background: #480404 !important;
 
   @include phone {
     flex-direction: column;
+  }
+
+  @include dark {
+    background: #480404 !important;
   }
 }
 
 .user-menu > li {
   flex: 1;
-  background: var(--menu-background-primary);
+  background: #480404 !important;
+
+  @include dark {
+    background: #480404 !important;
+  }
 }
 
 .user-menu .list-button {
@@ -5469,13 +5514,13 @@ input[type='search']::-webkit-search-decoration {
 
 // Ícone plus mantém cor verde quando não está em hover
 .user-menu-icon.icon-plus {
-  fill: hsl(0, 65%, 55%);
+  fill: #480404;
 }
 
 // No hover, todos os ícones (plus, cog, report) ficam vermelhos
 .user-menu > li:hover .list-button .user-menu-icon,
 .user-menu > li.is-hovered .list-button .user-menu-icon {
-  fill: hsl(0, 65%, 55%) !important;
+  fill: #480404 !important;
 }
 
 // Quando ativo, mantém comportamento original
@@ -5486,7 +5531,7 @@ input[type='search']::-webkit-search-decoration {
 // Ícone plus no hover também fica vermelho (não verde)
 .user-menu > li.add:hover .list-button .user-menu-icon.icon-plus,
 .user-menu > li.add.is-hovered .list-button .user-menu-icon.icon-plus {
-  fill: hsl(0, 65%, 55%) !important;
+  fill: #480404 !important;
 }
 
 // Quando ativo, mantém comportamento original
@@ -5788,7 +5833,7 @@ li.add .dropdown-nose {
     }
 
     &-color-1 {
-      background: hsl(0, 65%, 55%);
+      background: #480404;
     }
 
     &-color-2 {
@@ -6623,8 +6668,8 @@ a.list-group-item.active > .badge,
   }
 
   .primary {
-    color: hsl(0, 65%, 55%);
-    background: hsl(0, 65%, 55%);
+    color: #480404;
+    background: #480404;
   }
 }
 
@@ -8647,11 +8692,11 @@ a.list-group-item.active > .badge,
     }
 
     &.tabsSidebar-tab-count--success {
-      background: hsl(0, 65%, 55%);
+      background: #480404;
       opacity: 1;
 
       &::after {
-        border-right-color: hsl(0, 65%, 55%);
+        border-right-color: #480404;
       }
     }
 
@@ -8752,11 +8797,11 @@ a.list-group-item.active > .badge,
   }
 
   &.tabsSidebar-tab-count--success {
-    background: hsl(0, 65%, 55%);
+    background: #480404;
     opacity: 0.5;
 
     &::after {
-      border-right-color: hsl(0, 65%, 55%);
+      border-right-color: #480404;
     }
   }
 
@@ -8806,7 +8851,7 @@ a.list-group-item.active > .badge,
     &,
     &[contenteditable]:hover,
     &[contenteditable]:focus {
-      background: hsl(0, 65%, 55%);
+      background: #480404;
     }
   }
 
@@ -9864,7 +9909,7 @@ li.list-item-none {
 
 .dropdown-menu > li.create:hover,
 .dropdown-menu > li.create.is-active {
-  background: hsl(0, 65%, 55%);
+  background: #480404;
 }
 
 .dropdown-menu > li[disabled] {
@@ -10126,11 +10171,11 @@ li.dropdown-header {
 }
 
 .recipientList--new {
-  background: hsl(0, 65%, 55%);
+  background: #480404;
 }
 
 .dropdown .recipientList--new:hover {
-  background: hsl(0, 65%, 55%);
+  background: #480404;
 }
 
 .recipientList-controls {
@@ -10902,7 +10947,7 @@ label + .wizard-buttonList {
 }
 
 .avatar--new {
-  background: hsl(0, 65%, 55%);
+  background: #480404;
 
   @extend .u-clickable;
 }
@@ -13629,25 +13674,25 @@ output {
 
       [style*='color:rgb(239, 68, 68)'], [style*='color: rgb(239, 68, 68)'], /* red 1 */
       [style*='color:rgb(205, 121, 45)'], [style*='color: rgb(205, 121, 45)'], /* orange 1 */
-      [style*='color:rgb(236, 36, 28)'], [style*='color: rgb(236, 36, 28)'], /* green 1 -> red */
+      [style*='color:rgb(72, 4, 4)'], [style*='color: rgb(72, 4, 4)'], /* green 1 -> red */
       [style*='color:rgb(48, 100, 172)'], [style*='color: rgb(48, 100, 172)'], /* blue 1 */
       [style*='color:rgb(107, 41, 132)'], [style*='color: rgb(107, 41, 132)'], /* purple 1 */
 
       [style*='color:rgb(235, 61, 79)'], [style*='color: rgb(235, 61, 79)'], /* red 2 */
       [style*='color:rgb(233, 159, 59)'], [style*='color: rgb(233, 159, 59)'], /* orange 2 */
-      [style*='color:rgb(236, 36, 28)'], [style*='color: rgb(236, 36, 28)'], /* green 2 -> red */
+      [style*='color:rgb(72, 4, 4)'], [style*='color: rgb(72, 4, 4)'], /* green 2 -> red */
       [style*='color:rgb(70, 147, 231)'], [style*='color: rgb(70, 147, 231)'], /* blue 2 */
       [style*='color:rgb(153, 62, 195)'], [style*='color: rgb(153, 62, 195)'], /* purple 2 */
 
       [style*='color:rgb(237, 97, 118)'], [style*='color: rgb(237, 97, 118)'], /* red 3 */
       [style*='color:rgb(243, 193, 79)'], [style*='color: rgb(243, 193, 79)'], /* orange 3 */
-      [style*='color:rgb(236, 36, 28)'], [style*='color: rgb(236, 36, 28)'], /* green 3 -> red */
+      [style*='color:rgb(72, 4, 4)'], [style*='color: rgb(72, 4, 4)'], /* green 3 -> red */
       [style*='color:rgb(91, 174, 243)'], [style*='color: rgb(91, 174, 243)'], /* blue 3 */
       [style*='color:rgb(179, 91, 223)'], [style*='color: rgb(179, 91, 223)'], /* purple 3 */
 
       [style*='color:rgb(241, 152, 167)'], [style*='color: rgb(241, 152, 167)'], /* red 4 */
       [style*='color:rgb(246, 211, 102)'], [style*='color: rgb(246, 211, 102)'], /* orange 4 */
-      [style*='color:rgb(236, 36, 28)'], [style*='color: rgb(236, 36, 28)'], /* green 4 -> red */
+      [style*='color:rgb(72, 4, 4)'], [style*='color: rgb(72, 4, 4)'], /* green 4 -> red */
       [style*='color:rgb(122, 202, 247)'], [style*='color: rgb(122, 202, 247)'], /* blue 4 */
       [style*='color:rgb(201, 135, 236)'] [style*='color: rgb(201, 135, 236)'] /* purple 4 */
     ) {
@@ -13683,7 +13728,7 @@ output {
     /* green 1 -> red */
     [style*='color:rgb(80, 140, 70)'],
     [style*='color: rgb(80, 140, 70)'] {
-      color: rgb(236, 36, 28) !important;
+      color: rgb(72, 4, 4) !important;
     }
 
     /* blue 1 */
@@ -13713,7 +13758,7 @@ output {
     /* green 2 -> red */
     [style*='color:rgb(95, 159, 84)'],
     [style*='color: rgb(95, 159, 84)'] {
-      color: rgb(236, 36, 28) !important;
+      color: rgb(72, 4, 4) !important;
     }
 
     /* blue 2 */
@@ -13743,7 +13788,7 @@ output {
     /* green 3 -> red */
     [style*='color:rgb(127, 187, 118)'],
     [style*='color: rgb(127, 187, 118)'] {
-      color: rgb(236, 36, 28) !important;
+      color: rgb(72, 4, 4) !important;
     }
 
     /* blue 3 */
@@ -13773,7 +13818,7 @@ output {
     /* green 4 -> red */
     [style*='color:rgb(170, 214, 164)'],
     [style*='color: rgb(170, 214, 164)'] {
-      color: rgb(236, 36, 28) !important;
+      color: rgb(72, 4, 4) !important;
     }
 
     /* blue 4 */
