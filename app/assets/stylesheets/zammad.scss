@@ -22,10 +22,10 @@ $mobileNavigationWidthOpen: 220px;
   --text-muted: hsl(213, 3%, 64%);
   --text-muted-highlight: hsl(205, 90%, 90%);
   --text-muted-alt: hsl(197, 16%, 65%);
-  --text-link: hsl(204, 72%, 50%);
+  --text-link: hsl(0, 65%, 55%);
   --text-inverted: white;
   --text-active: white;
-  --text-nav: hsl(204, 72%, 50%);
+  --text-nav: hsl(0, 65%, 55%);
   --text-button-primary: var(--button-primary-background);
   --text-button-primary-active: var(--button-primary-background-active);
   --text-button-secondary: var(--interactive-muted);
@@ -65,8 +65,8 @@ $mobileNavigationWidthOpen: 220px;
   --border-article-customer: hsl(199, 38%, 90%);
   --border-article-customer-selected: hsl(199, 44%, 85%);
   --shadow-highlight: hsl(201, 62%, 90%);
-  --supergood-color: hsl(145, 51%, 45%);
-  --good-color: hsl(62, 45%, 46%);
+  --supergood-color: hsl(0, 65%, 55%);
+  --good-color: hsl(0, 65%, 55%);
   --ok-color: hsl(41, 100%, 49%);
   --bad-color: hsl(30, 93%, 50%);
   --superbad-color: hsl(19, 90%, 51%);
@@ -127,8 +127,8 @@ $mobileNavigationWidthOpen: 220px;
   --text-normal: hsl(205, 1%, 86%);
   --text-muted: hsl(213, 3%, 60%);
   --text-muted-alt: hsl(213, 8%, 61%);
-  --text-link: hsl(202, 72%, 50%);
-  --text-nav: hsl(205, 1%, 84%);
+  --text-link: hsl(0, 65%, 55%);
+  --text-nav: hsl(0, 65%, 55%);
   --nav-icon: hsl(0, 0%, 50%);
   --highlight: hsl(205, 90%, 60%);
   --interactive-primary: white;
@@ -165,8 +165,8 @@ $mobileNavigationWidthOpen: 220px;
   --border-article-customer: hsl(209, 6%, 30%);
   --border-article-customer-selected: hsl(199, 10%, 33%);
   --shadow-highlight: hsl(205, 42%, 36%);
-  --supergood-color: hsl(145, 51%, 45%);
-  --good-color: hsl(62, 45%, 46%);
+  --supergood-color: hsl(0, 65%, 55%);
+  --good-color: hsl(0, 65%, 55%);
   --ok-color: hsl(41, 100%, 49%);
   --bad-color: hsl(30, 93%, 50%);
   --superbad-color: hsl(19, 90%, 51%);
@@ -360,7 +360,7 @@ a {
 }
 
 a.create {
-  color: hsl(145, 51%, 45%);
+  color: hsl(0, 65%, 55%);
   text-decoration: underline;
 }
 
@@ -888,15 +888,15 @@ pre code {
   &--create,
   &--success {
     color: var(--text-inverted);
-    background: hsl(145, 51%, 45%);
+    background: hsl(0, 65%, 55%);
 
     &:active {
-      background: hsl(145, 51%, 35%);
+      background: hsl(0, 65%, 45%);
     }
 
     &.btn--secondary {
       background: var(--background-secondary);
-      color: hsl(145, 51%, 45%);
+      color: hsl(0, 65%, 55%);
 
       &:active {
         background: var(--button-background-active);
@@ -982,10 +982,10 @@ pre code {
     }
 
     &.btn--positive {
-      color: hsl(145, 51%, 45%);
+      color: hsl(0, 65%, 55%);
 
       &:active {
-        color: hsl(145, 51%, 30%);
+        color: hsl(0, 65%, 40%);
         background: none;
       }
     }
@@ -4038,7 +4038,7 @@ ol.tabs li {
   display: inline-block;
   width: 30px;
   height: 30px;
-  background: hsl(145, 51%, 45%);
+  background: hsl(0, 65%, 55%);
   animation: rotateplane 1.2s infinite ease-in-out;
 }
 
@@ -4587,7 +4587,7 @@ footer {
 
 .navigation {
   width: $navigationWidth;
-  background: var(--menu-background-primary);
+  background: hsl(0, 65%, 55%) !important;
   border: var(--menu-border);
   position: relative;
   container-name: navigation;
@@ -4595,7 +4595,7 @@ footer {
 
   // No modo escuro, a navigation deve ser vermelha (igual ao modo claro)
   @include dark {
-    background: hsl(233, 9%, 19%);
+    background: hsl(0, 65%, 55%) !important;
   }
 
   @include phone {
@@ -5469,7 +5469,7 @@ input[type='search']::-webkit-search-decoration {
 
 // Ícone plus mantém cor verde quando não está em hover
 .user-menu-icon.icon-plus {
-  fill: hsl(145, 51%, 45%);
+  fill: hsl(0, 65%, 55%);
 }
 
 // No hover, todos os ícones (plus, cog, report) ficam vermelhos
@@ -5788,7 +5788,7 @@ li.add .dropdown-nose {
     }
 
     &-color-1 {
-      background: hsl(148, 100%, 38%);
+      background: hsl(0, 65%, 55%);
     }
 
     &-color-2 {
@@ -6623,8 +6623,8 @@ a.list-group-item.active > .badge,
   }
 
   .primary {
-    color: hsl(145, 51%, 45%);
-    background: hsl(145, 51%, 45%);
+    color: hsl(0, 65%, 55%);
+    background: hsl(0, 65%, 55%);
   }
 }
 
@@ -8647,11 +8647,11 @@ a.list-group-item.active > .badge,
     }
 
     &.tabsSidebar-tab-count--success {
-      background: hsl(145, 51%, 45%);
+      background: hsl(0, 65%, 55%);
       opacity: 1;
 
       &::after {
-        border-right-color: hsl(145, 51%, 45%);
+        border-right-color: hsl(0, 65%, 55%);
       }
     }
 
@@ -8752,11 +8752,11 @@ a.list-group-item.active > .badge,
   }
 
   &.tabsSidebar-tab-count--success {
-    background: hsl(145, 51%, 45%);
+    background: hsl(0, 65%, 55%);
     opacity: 0.5;
 
     &::after {
-      border-right-color: hsl(145, 51%, 45%);
+      border-right-color: hsl(0, 65%, 55%);
     }
   }
 
@@ -8806,7 +8806,7 @@ a.list-group-item.active > .badge,
     &,
     &[contenteditable]:hover,
     &[contenteditable]:focus {
-      background: hsl(145, 51%, 45%);
+      background: hsl(0, 65%, 55%);
     }
   }
 
@@ -9864,7 +9864,7 @@ li.list-item-none {
 
 .dropdown-menu > li.create:hover,
 .dropdown-menu > li.create.is-active {
-  background: hsl(145, 51%, 45%);
+  background: hsl(0, 65%, 55%);
 }
 
 .dropdown-menu > li[disabled] {
@@ -10126,11 +10126,11 @@ li.dropdown-header {
 }
 
 .recipientList--new {
-  background: hsl(145, 51%, 45%);
+  background: hsl(0, 65%, 55%);
 }
 
 .dropdown .recipientList--new:hover {
-  background: hsl(147, 52%, 43%);
+  background: hsl(0, 65%, 55%);
 }
 
 .recipientList-controls {
@@ -10902,7 +10902,7 @@ label + .wizard-buttonList {
 }
 
 .avatar--new {
-  background: hsl(145, 51%, 45%);
+  background: hsl(0, 65%, 55%);
 
   @extend .u-clickable;
 }
@@ -13629,25 +13629,25 @@ output {
 
       [style*='color:rgb(239, 68, 68)'], [style*='color: rgb(239, 68, 68)'], /* red 1 */
       [style*='color:rgb(205, 121, 45)'], [style*='color: rgb(205, 121, 45)'], /* orange 1 */
-      [style*='color:rgb(80, 140, 70)'], [style*='color: rgb(80, 140, 70)'], /* green 1 */
+      [style*='color:rgb(236, 36, 28)'], [style*='color: rgb(236, 36, 28)'], /* green 1 -> red */
       [style*='color:rgb(48, 100, 172)'], [style*='color: rgb(48, 100, 172)'], /* blue 1 */
       [style*='color:rgb(107, 41, 132)'], [style*='color: rgb(107, 41, 132)'], /* purple 1 */
 
       [style*='color:rgb(235, 61, 79)'], [style*='color: rgb(235, 61, 79)'], /* red 2 */
       [style*='color:rgb(233, 159, 59)'], [style*='color: rgb(233, 159, 59)'], /* orange 2 */
-      [style*='color:rgb(95, 159, 84)'], [style*='color: rgb(95, 159, 84)'], /* green 2 */
+      [style*='color:rgb(236, 36, 28)'], [style*='color: rgb(236, 36, 28)'], /* green 2 -> red */
       [style*='color:rgb(70, 147, 231)'], [style*='color: rgb(70, 147, 231)'], /* blue 2 */
       [style*='color:rgb(153, 62, 195)'], [style*='color: rgb(153, 62, 195)'], /* purple 2 */
 
       [style*='color:rgb(237, 97, 118)'], [style*='color: rgb(237, 97, 118)'], /* red 3 */
       [style*='color:rgb(243, 193, 79)'], [style*='color: rgb(243, 193, 79)'], /* orange 3 */
-      [style*='color:rgb(127, 187, 118)'], [style*='color: rgb(127, 187, 118)'], /* green 3 */
+      [style*='color:rgb(236, 36, 28)'], [style*='color: rgb(236, 36, 28)'], /* green 3 -> red */
       [style*='color:rgb(91, 174, 243)'], [style*='color: rgb(91, 174, 243)'], /* blue 3 */
       [style*='color:rgb(179, 91, 223)'], [style*='color: rgb(179, 91, 223)'], /* purple 3 */
 
       [style*='color:rgb(241, 152, 167)'], [style*='color: rgb(241, 152, 167)'], /* red 4 */
       [style*='color:rgb(246, 211, 102)'], [style*='color: rgb(246, 211, 102)'], /* orange 4 */
-      [style*='color:rgb(170, 214, 164)'], [style*='color: rgb(170, 214, 164)'], /* green 4 */
+      [style*='color:rgb(236, 36, 28)'], [style*='color: rgb(236, 36, 28)'], /* green 4 -> red */
       [style*='color:rgb(122, 202, 247)'], [style*='color: rgb(122, 202, 247)'], /* blue 4 */
       [style*='color:rgb(201, 135, 236)'] [style*='color: rgb(201, 135, 236)'] /* purple 4 */
     ) {
@@ -13680,10 +13680,10 @@ output {
       color: rgb(246, 211, 102) !important;
     }
 
-    /* green 1 */
+    /* green 1 -> red */
     [style*='color:rgb(80, 140, 70)'],
     [style*='color: rgb(80, 140, 70)'] {
-      color: rgb(170, 214, 164) !important;
+      color: rgb(236, 36, 28) !important;
     }
 
     /* blue 1 */
@@ -13710,10 +13710,10 @@ output {
       color: rgb(243, 193, 79) !important;
     }
 
-    /* green 2 */
+    /* green 2 -> red */
     [style*='color:rgb(95, 159, 84)'],
     [style*='color: rgb(95, 159, 84)'] {
-      color: rgb(127, 187, 118) !important;
+      color: rgb(236, 36, 28) !important;
     }
 
     /* blue 2 */
@@ -13740,10 +13740,10 @@ output {
       color: rgb(233, 159, 59) !important;
     }
 
-    /* green 3 */
+    /* green 3 -> red */
     [style*='color:rgb(127, 187, 118)'],
     [style*='color: rgb(127, 187, 118)'] {
-      color: rgb(95, 159, 84) !important;
+      color: rgb(236, 36, 28) !important;
     }
 
     /* blue 3 */
@@ -13770,10 +13770,10 @@ output {
       color: rgb(205, 121, 45) !important;
     }
 
-    /* green 4 */
+    /* green 4 -> red */
     [style*='color:rgb(170, 214, 164)'],
     [style*='color: rgb(170, 214, 164)'] {
-      color: rgb(80, 140, 70) !important;
+      color: rgb(236, 36, 28) !important;
     }
 
     /* blue 4 */
