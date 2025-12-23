@@ -66,3 +66,5 @@ Após a reindexação, você poderá buscar organizações por:
 - O script não afeta outras entidades (Tickets, Users, etc.)
 - Se você precisar reindexar tudo, use: `rails zammad:searchindex:reload`
 
+
+

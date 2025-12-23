@@ -4593,6 +4593,11 @@ footer {
   container-name: navigation;
   container-type: inline-size;
 
+  // No modo escuro, a navigation deve ser vermelha (igual ao modo claro)
+  @include dark {
+    background: hsl(233, 9%, 19%);
+  }
+
   @include phone {
     position: absolute;
 
