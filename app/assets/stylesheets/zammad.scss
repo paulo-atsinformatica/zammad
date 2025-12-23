@@ -95,7 +95,7 @@ $mobileNavigationWidthOpen: 220px;
   --menu-text-open: white;
   --menu-text-closed: white;
   --menu-text-escalating: white;
-  --menu-background-active: hsl(0, 65%, 55%);
+  --menu-background-active: #a40404;
   --menu-icon: hsl(0, 0%, 100%);
   --menu-icon-secondary: hsl(0, 0%, 100%);
   --menu-icon-secondary-hover-background: var(--text-inverted);
@@ -122,13 +122,15 @@ $mobileNavigationWidthOpen: 220px;
   --button-background-active: hsla(0, 0%, 100%, 0.015);
   --button-active: hsla(0, 0%, 100%, 0.1);
   --button-active-active: hsla(0, 0%, 100%, 0.08);
+  --button-primary-background: #a40404; // Vermelho claro no modo escuro
+  --button-primary-background-active: #8a0303; // Vermelho claro mais escuro quando ativo
   --header-primary: white;
   --header-secondary: hsl(198, 5%, 73%);
   --text-normal: hsl(205, 1%, 86%);
   --text-muted: hsl(213, 3%, 60%);
   --text-muted-alt: hsl(213, 8%, 61%);
-  --text-link: #480404;
-  --text-nav: #480404;
+  --text-link: white; // Branco no modo escuro
+  --text-nav: white; // Branco no modo escuro
   --nav-icon: hsl(0, 0%, 100%);
   --highlight: #480404;
   --interactive-primary: white;
@@ -190,7 +192,7 @@ $mobileNavigationWidthOpen: 220px;
   --menu-text: hsl(0, 0%, 100%);
   --menu-icon: hsl(0, 0%, 100%);
   --menu-icon-secondary: hsl(0, 0%, 100%);
-  --menu-background-active: hsl(0, 65%, 55%);
+  --menu-background-active: #a40404;
 }
 
 @mixin dark {
@@ -5211,7 +5213,7 @@ footer {
   padding: 5px 33px;
   height: 30px;
   color: var(--menu-text);
-  background: hsl(0, 65%, 55%) !important;
+  background: white !important; // Fundo branco nos dois temas
   line-height: 20px;
   outline: none;
   border: none;
@@ -5226,7 +5228,7 @@ footer {
   }
 
   @include dark {
-    background: hsl(0, 65%, 55%) !important;
+    background: white !important; // Fundo branco no modo escuro também
   }
 }
 
@@ -5269,12 +5271,12 @@ input[type='search']::-webkit-search-decoration {
   @include bidi-style(left, 10px, right, auto);
 
   z-index: 2;
-  fill: white !important;
+  fill: #480404 !important; // Vermelho escuro nos dois temas
   transition: opacity 0.1s;
   pointer-events: none;
 
   @include dark {
-    fill: white !important;
+    fill: #480404 !important; // Vermelho escuro no modo escuro também
   }
 }
 
@@ -5511,26 +5513,30 @@ input[type='search']::-webkit-search-decoration {
   z-index: 1;
 }
 
-// Ícone plus mantém cor verde quando não está em hover
+// Ícone plus branco por padrão
 .user-menu-icon.icon-plus {
-  fill: #480404;
+  fill: white !important;
 }
 
-// No hover, todos os ícones (plus, cog, report) ficam vermelhos
-.user-menu > li:hover .list-button .user-menu-icon,
-.user-menu > li.is-hovered .list-button .user-menu-icon {
-  fill: #480404 !important;
+// No modo escuro também branco
+@include dark {
+  .user-menu-icon.icon-plus {
+    fill: white !important;
+  }
 }
 
-// Quando ativo, mantém comportamento original
-.user-menu > li.is-active .list-button .user-menu-icon {
-  fill: var(--text-inverted);
-}
-
-// Ícone plus no hover também fica vermelho (não verde)
+// No hover, ícone plus fica vermelho
 .user-menu > li.add:hover .list-button .user-menu-icon.icon-plus,
 .user-menu > li.add.is-hovered .list-button .user-menu-icon.icon-plus {
   fill: #480404 !important;
+}
+
+// No modo escuro, hover também fica vermelho
+@include dark {
+  .user-menu > li.add:hover .list-button .user-menu-icon.icon-plus,
+  .user-menu > li.add.is-hovered .list-button .user-menu-icon.icon-plus {
+    fill: #480404 !important;
+  }
 }
 
 // Quando ativo, mantém comportamento original
@@ -11677,16 +11683,25 @@ output {
 
   &.zammad-switch--dark {
     label {
-      background: var(--menu-switch-background);
+      background: white !important; // Fundo sempre branco
     }
 
     label::after {
-      background: var(--menu-switch-pointer);
+      background: #a40404 !important; // Vermelho claro quando desativado
+    }
+
+    // Quando ativado, bolinha verde
+    input:checked + label::after {
+      background: #38AE6A !important; // Verde quando ativado
     }
   }
 
   &.zammad-switch--green input:checked + label {
-    background: var(--supergood-color);
+    background: white !important; // Fundo sempre branco
+  }
+
+  &.zammad-switch--green input:checked + label::after {
+    background: #38AE6A !important; // Verde quando ativado
   }
 }
 
@@ -11697,16 +11712,21 @@ output {
   height: 100%;
   border-radius: inherit;
   outline: none;
-  background: var(--background-secondary);
+  background: white !important; // Fundo sempre branco
   box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.1) inset;
   transition: background 200ms;
 
   @extend %clickable;
 
+  // No modo escuro também branco
+  @include dark {
+    background: white !important;
+  }
+
   &::after {
     content: '';
     position: absolute;
-    transition: transform 200ms;
+    transition: transform 200ms, background 200ms;
     width: calc(60% - 2px);
     height: calc(100% - 2px);
     border-radius: inherit;
@@ -11715,14 +11735,14 @@ output {
     box-shadow:
       0 0 0 1px rgba(0, 0, 0, 0.05),
       0 1px 3px rgba(0, 0, 0, 0.2);
-    background: var(--background-secondary);
+    background: #a40404; // Vermelho claro quando desativado
 
     @include rtl(transform, translateX(70%));
   }
 }
 
 .dropdown-menu.dropdown-menu--light .zammad-switch input:not(:checked) + label {
-  background: var(--background-primary);
+  background: white !important; // Fundo sempre branco
 }
 
 .zammad-switch input {
@@ -11745,11 +11765,12 @@ output {
   }
 
   &:checked + label {
-    background: var(--highlight);
+    background: white !important; // Fundo sempre branco mesmo quando ativado
   }
 
   &:checked + label::after {
     transform: translateX(70%);
+    background: #38AE6A !important; // Verde quando ativado
 
     @include rtl(transform, none);
   }
