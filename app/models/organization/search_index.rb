@@ -23,8 +23,7 @@ class Organization
         .where(
           object_lookup_id: ObjectLookup.by_name('Organization'),
           data_type:        %w[input textarea],
-          active:           true,
-          editable:         true
+          active:           true
         )
         .pluck(:name)
 

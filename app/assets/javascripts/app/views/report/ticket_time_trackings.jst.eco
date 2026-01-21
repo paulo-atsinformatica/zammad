@@ -1,0 +1,44 @@
+<div class="main flex reporting">
+  <div class="page-header">
+    <div class="page-header-title">
+      <h1><%- @T('Relatório de Tempo de Atendimento') %> <small></small></h1>
+    </div>
+  </div>
+
+  <div class="page-body">
+    <div class="page-main">
+      <div class="report-filters well">
+        <div class="report-filters-grid">
+          <div class="form-group report-filter-field">
+            <label><%- @T('Data de Abertura (Inicial)') %></label>
+            <input type="text" class="form-control js-open-start-date" readonly>
+          </div>
+          <div class="form-group report-filter-field">
+            <label><%- @T('Data de Abertura (Final)') %></label>
+            <input type="text" class="form-control js-open-end-date" readonly>
+          </div>
+          <div class="form-group report-filter-field">
+            <label><%- @T('Data de Fechamento (Inicial)') %></label>
+            <input type="text" class="form-control js-close-start-date" readonly>
+          </div>
+          <div class="form-group report-filter-field">
+            <label><%- @T('Data de Fechamento (Final)') %></label>
+            <input type="text" class="form-control js-close-end-date" readonly>
+          </div>
+          <div class="form-group report-filter-field">
+            <label><%- @T('Ticket') %></label>
+            <input type="text" class="form-control js-ticket-query" placeholder="<%- @T('Número ou título') %>">
+          </div>
+          <div class="form-group report-filter-field">
+            <label><%- @T('Responsável') %></label>
+            <input type="text" class="form-control js-agent-query" placeholder="<%- @T('Nome ou email') %>">
+          </div>
+        </div>
+        <div class="report-filters-actions">
+          <button type="button" class="btn btn--primary js-report-search"><%- @T('Pesquisar') %></button>
+        </div>
+      </div>
+      <div class="js-report-content"></div>
+    </div>
+  </div>
+</div>

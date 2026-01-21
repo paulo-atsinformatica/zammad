@@ -1,0 +1,48 @@
+<div class="report-content">
+  <table class="table">
+    <thead>
+      <tr>
+        <th><%- @T('Colaborador') %></th>
+        <th><%- @T('Status') %></th>
+        <th><%- @T('Em pausa') %></th>
+        <th><%- @T('Logado') %></th>
+        <th><%- @T('Estado') %></th>
+        <th><%- @T('Pausa ativa') %></th>
+      </tr>
+    </thead>
+    <tbody>
+      <% if !@data.entries || @data.entries.length == 0: %>
+      <tr>
+        <td colspan="6"><%- @T('Nenhum registro encontrado') %></td>
+      </tr>
+      <% else: %>
+        <% for item in @data.entries: %>
+          <tr>
+            <td><%= item.user?.firstname %> <%= item.user?.lastname %></td>
+            <td><%= item.status %></td>
+            <% if item.in_pause: %>
+              <td><%- @T('Sim') %></td>
+            <% else: %>
+              <td><%- @T('Não') %></td>
+            <% end %>
+            <% if item.logged_in: %>
+              <td><%- @T('Sim') %></td>
+            <% else: %>
+              <td><%- @T('Não') %></td>
+            <% end %>
+            <% if item.state: %>
+              <td><%= item.state %></td>
+            <% else: %>
+              <td>-</td>
+            <% end %>
+            <% if item.pause_name: %>
+              <td><%= item.pause_name %></td>
+            <% else: %>
+              <td>-</td>
+            <% end %>
+          </tr>
+        <% end %>
+      <% end %>
+    </tbody>
+  </table>
+</div>

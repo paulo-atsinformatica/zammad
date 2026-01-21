@@ -80,6 +80,9 @@ begin
   if custom_fields.include?('codcliente')
     puts '  - CODCLIENTE'
   end
+  if custom_fields.include?('grupoeconomico')
+    puts '  - Grupo Econômico'
+  end
   puts ''
 
 rescue => e
@@ -91,6 +94,11 @@ rescue => e
   puts '=' * 60
   exit 1
 end
+
+
+
+
+
 
 
 

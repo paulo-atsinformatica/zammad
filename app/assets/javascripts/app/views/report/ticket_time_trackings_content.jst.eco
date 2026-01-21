@@ -1,0 +1,43 @@
+<div class="report-content">
+  <table class="table">
+    <thead>
+      <tr>
+        <th><%- @T('Ticket') %></th>
+        <th><%- @T('Responsável') %></th>
+        <th><%- @T('Data de abertura') %></th>
+        <th><%- @T('Data de fechamento') %></th>
+        <th><%- @T('Data/Hora de início') %></th>
+        <th><%- @T('Data/Hora de término') %></th>
+        <th><%- @T('Tempo total de atendimento') %></th>
+        <th><%- @T('Tempo do atendimento pausado') %></th>
+        <th><%- @T('Estado atual') %></th>
+      </tr>
+    </thead>
+    <tbody>
+      <% if !@data.entries || @data.entries.length == 0: %>
+      <tr>
+        <td colspan="9"><%- @T('Nenhum registro encontrado') %></td>
+      </tr>
+      <% else: %>
+        <% for item in @data.entries: %>
+          <tr>
+            <td>#<%= item.ticket?.number %> - <%= item.ticket?.title %></td>
+            <td><%= item.user?.firstname %> <%= item.user?.lastname %></td>
+            <td><%= @formatDate(item.opened_at) %></td>
+            <td><%= @formatDate(item.closed_at) %></td>
+            <td><%= @formatDateTime(item.started_at) %></td>
+            <td><%= @formatDateTime(item.ended_at) %></td>
+            <td><%= @formatDuration(item.total_seconds) %></td>
+            <td><%= @formatDuration(item.paused_seconds) %></td>
+            <% if item.current_state: %>
+              <td><%= item.current_state %></td>
+            <% else: %>
+              <td>-</td>
+            <% end %>
+          </tr>
+        <% end %>
+      <% end %>
+    </tbody>
+  </table>
+</div>
+
