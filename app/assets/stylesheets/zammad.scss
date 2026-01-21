@@ -13762,6 +13762,10 @@ output {
   h3 {
     font-weight: 700;
 
+    span {
+      font-weight: inherit !important;
+    }
+
     strong {
       font-weight: inherit;
     }
@@ -13769,14 +13773,26 @@ output {
 
   h1 {
     font-size: 20px;
+
+    span {
+      font-size: inherit !important;
+    }
   }
 
   h2 {
     font-size: 16px;
+
+    span {
+      font-size: inherit !important;
+    }
   }
 
   h3 {
     font-size: 14px;
+
+    span {
+      font-size: inherit !important;
+    }
   }
 
   p {
