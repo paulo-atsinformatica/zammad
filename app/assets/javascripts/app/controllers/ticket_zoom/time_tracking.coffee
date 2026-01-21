@@ -221,8 +221,11 @@ class App.TicketZoomTimeTracking extends App.Controller
           catch e
             responseData = {}
         
+        console.log('Time tracking start error:', xhr.status, responseData)
+        
         # Check for existing ticket - show dialog only, no error toast
         if responseData?.existing_ticket_id
+          console.log('Showing switch dialog for ticket:', responseData.existing_ticket_id)
           @showSwitchDialog(responseData)
           return
         
@@ -292,8 +295,11 @@ class App.TicketZoomTimeTracking extends App.Controller
           catch e
             responseData = {}
         
+        console.log('Time tracking resume error:', xhr.status, responseData)
+        
         # Check for existing ticket - show switch dialog instead of error
         if responseData?.existing_ticket_id
+          console.log('Showing switch dialog for ticket:', responseData.existing_ticket_id)
           @showSwitchDialog(responseData)
           return
 

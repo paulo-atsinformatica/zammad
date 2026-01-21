@@ -14,11 +14,13 @@ class TicketTimeTrackingsController < ApplicationController
       render json: result.data.attributes_with_association_ids, status: :created
     else
       status_code = result.existing_ticket_id.present? ? :conflict : :unprocessable_entity
-      render json: {
+      response_data = {
         error: result.error,
         existing_ticket_id: result.existing_ticket_id,
         existing_ticket_number: result.existing_ticket_number
-      }, status: status_code
+      }
+      Rails.logger.info "Time tracking start error: #{response_data.inspect}"
+      render json: response_data, status: status_code
     end
   end
 
