@@ -8,7 +8,6 @@ class TicketsController < ApplicationController
 
   prepend_before_action -> { authorize! }, only: %i[create import_example import_start ticket_customer ticket_history ticket_related ticket_recent ticket_merge ticket_split]
   prepend_before_action :authentication_check
-  before_action :check_user_not_in_pause, except: %i[index show]
 
   # GET /api/v1/tickets
   def index
@@ -573,14 +572,4 @@ class TicketsController < ApplicationController
     macro
   end
 
-  private
-
-  def check_user_not_in_pause
-    return if !current_user.permissions?('user.pause_control')
-    return if !current_user.in_pause?
-
-    render json: {
-      error: __('Cannot perform actions while in pause. Please end your pause first.')
-    }, status: :forbidden
-  end
 end

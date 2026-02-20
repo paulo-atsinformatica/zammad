@@ -1,20 +1,3 @@
-<<<<<<< HEAD
-subscription organizationUpdates($organizationId: ID!, $first: Int, $after: String) {
-  organizationUpdates(organizationId: $organizationId) {
-    organization {
-      ...organizationAttributes
-      ...organizationMembersWithFetchMore
-      policy {
-        update
-      }
-      ticketsCount {
-        open
-        closed
-      }
-    }
-  }
-}
-=======
 subscription organizationUpdates($organizationId: ID!, $first: Int, $after: String) {
   organizationUpdates(organizationId: $organizationId) {
     organization {
@@ -32,4 +15,3 @@ subscription organizationUpdates($organizationId: ID!, $first: Int, $after: Stri
     }
   }
 }
->>>>>>> upstream/develop

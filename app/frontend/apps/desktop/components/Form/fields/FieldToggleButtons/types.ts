@@ -1,22 +1,3 @@
-<<<<<<< HEAD
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
-
-import type { FormFieldContext } from '#shared/components/Form/types/field.ts'
-
-import type { FormKitOptionsItem } from '@formkit/inputs'
-
-export interface ToggleButtonsOption extends FormKitOptionsItem<string> {
-  icon?: string
-}
-
-export type FieldToggleButtonsContext = {
-  options: ToggleButtonsOption
-}
-
-export interface FieldToggleButtonsProps {
-  context: FormFieldContext<FieldToggleButtonsContext>
-}
-=======
 // Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import type { FormFieldContext } from '#shared/components/Form/types/field.ts'
@@ -34,4 +15,3 @@ export type FieldToggleButtonsContext = {
 export interface FieldToggleButtonsProps {
   context: FormFieldContext<FieldToggleButtonsContext>
 }
->>>>>>> upstream/develop

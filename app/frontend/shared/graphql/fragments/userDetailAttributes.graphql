@@ -1,52 +1,3 @@
-<<<<<<< HEAD
-fragment userDetailAttributes on User {
-  id
-  internalId
-  firstname
-  lastname
-  fullname
-  outOfOffice
-  outOfOfficeStartAt
-  outOfOfficeEndAt
-  image
-  email
-  web
-  vip
-  phone
-  mobile
-  fax
-  note
-  active
-  objectAttributeValues {
-    ...objectAttributeValues
-  }
-  organization {
-    id
-    internalId
-    name
-    active
-    vip
-    ticketsCount {
-      open
-      closed
-    }
-  }
-  secondaryOrganizations(first: $secondaryOrganizationsCount, after: $after) {
-    edges {
-      node {
-        id
-        internalId
-        active
-        name
-      }
-    }
-    pageInfo {
-      endCursor
-    }
-    totalCount
-  }
-}
-=======
 fragment userDetailAttributes on User {
   id
   internalId
@@ -96,4 +47,3 @@ fragment userDetailAttributes on User {
     totalCount
   }
 }
->>>>>>> upstream/develop

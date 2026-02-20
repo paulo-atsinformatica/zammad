@@ -1,25 +1,3 @@
-<<<<<<< HEAD
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
-
-import type { RouteRecordRaw } from 'vue-router'
-
-export const isMainRoute = true
-
-const route: RouteRecordRaw = {
-  path: '/error',
-  alias: '/:pathMatch(.*)*',
-  name: 'Error',
-  props: true,
-  component: () => import('../views/Error.vue'),
-  meta: {
-    requiresAuth: false,
-    requiredPermission: null,
-    hasOwnLandmarks: true,
-  },
-}
-
-export default route
-=======
 // Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import type { RouteRecordRaw } from 'vue-router'
@@ -40,4 +18,3 @@ const route: RouteRecordRaw = {
 }
 
 export default route
->>>>>>> upstream/develop

@@ -1,17 +1,3 @@
-<<<<<<< HEAD
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
-
-import type { AvatarMenuPlugin } from './index.ts'
-
-export default <AvatarMenuPlugin>{
-  key: 'personal-setting',
-  label: __('Profile settings'),
-  link: '/personal-setting',
-  icon: 'user-settings',
-  order: 400,
-  permission: 'user_preferences.*',
-}
-=======
 // Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import type { AvatarMenuPlugin } from './index.ts'
@@ -24,4 +10,3 @@ export default <AvatarMenuPlugin>{
   order: 400,
   permission: 'user_preferences.*',
 }
->>>>>>> upstream/develop

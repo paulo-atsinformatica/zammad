@@ -1,280 +1,32 @@
-<<<<<<< HEAD
----
-- locale: bg
-  alias: ''
-  name: Bulgarian (Български)
-  active: true
-  dir: ltr
-- locale: cs
-  alias: ''
-  name: Czech (Česky)
-  active: true
-  dir: ltr
-- locale: da
-  alias: ''
-  name: Dansk
-  active: true
-  dir: ltr
-- locale: el
-  alias: ''
-  name: Greek (Ελληνικά)
-  active: true
-  dir: ltr
-- locale: et
-  alias: ''
-  name: Eesti
-  active: true
-  dir: ltr
-- locale: en-us
-  alias: en
-  name: English (United States)
-  active: true
-  dir: ltr
-- locale: en-ca
-  alias: ''
-  name: English (Canada)
-  active: true
-  dir: ltr
-- locale: en-gb
-  alias: ''
-  name: English (Great Britain)
-  active: true
-  dir: ltr
-- locale: es-es
-  alias: es
-  name: Español
-  active: true
-  dir: ltr
-- locale: es-co
-  alias: ''
-  name: Español (Colombia)
-  active: true
-  dir: ltr
-- locale: es-mx
-  alias: ''
-  name: Español (México)
-  active: true
-  dir: ltr
-- locale: fi
-  alias: ''
-  name: Suomi
-  active: true
-  dir: ltr
-- locale: fr-fr
-  alias: fr
-  name: Français
-  active: true
-  dir: ltr
-- locale: fr-ca
-  alias: ''
-  name: Français (Canada)
-  active: true
-  dir: ltr
-- locale: hr
-  alias: ''
-  name: Hrvatski
-  active: true
-  dir: ltr
-- locale: hu
-  alias: ''
-  name: Magyar
-  active: true
-  dir: ltr
-- locale: id
-  alias: ''
-  name: Bahasa Indonesia
-  active: true
-  dir: ltr
-- locale: it-it
-  alias: it
-  name: Italiano
-  active: true
-  dir: ltr
-- locale: ja
-  alias: ''
-  name: Japanese (日本語)
-  active: true
-  dir: ltr
-- locale: lt
-  alias: ''
-  name: Lietuvių kalba
-  active: true
-  dir: ltr
-- locale: lv
-  alias: ''
-  name: Latviešu
-  active: true
-  dir: ltr
-- locale: no-no
-  alias: nb
-  name: Norsk bokmål
-  active: true
-  dir: ltr
-- locale: nl-nl
-  alias: nl
-  name: Nederlands
-  active: true
-  dir: ltr
-- locale: pl
-  alias: ''
-  name: Polski
-  active: true
-  dir: ltr
-- locale: pt-pt
-  alias: pt
-  name: Português
-  active: true
-  dir: ltr
-- locale: pt-br
-  alias: ''
-  name: Português Brasileiro
-  active: true
-  dir: ltr
-- locale: ru
-  alias: ''
-  name: Russian (Русский)
-  active: true
-  dir: ltr
-- locale: sk
-  alias: ''
-  name: Slovak (Slovenčina)
-  active: true
-  dir: ltr
-- locale: sl
-  alias: ''
-  name: Slovenian (Slovenščina)
-  active: true
-  dir: ltr
-- locale: sv-se
-  alias: sv
-  name: Svenska
-  active: true
-  dir: ltr
-- locale: tr
-  alias: ''
-  name: Türkçe
-  active: true
-  dir: ltr
-- locale: uk
-  alias: ''
-  name: Ukrainian (Українська)
-  active: true
-  dir: ltr
-- locale: vi
-  alias: ''
-  name: Vietnam (ViɆt Nam)
-  active: true
-  dir: ltr
-- locale: zh-cn
-  alias: ''
-  name: Chinese (Sim.) (简体中文)
-  active: true
-  dir: ltr
-- locale: hi-in
-  alias: hi
-  name: Hindi (हिंदी)
-  active: true
-  dir: ltr
-- locale: de-de
-  alias: de
-  name: Deutsch
-  active: true
-  dir: ltr
-- locale: he-il
-  alias: ''
-  name: Hebrew (עִבְרִית)
-  active: true
-  dir: rtl
-- locale: fa-ir
-  alias: fa
-  name: Persian (فارسى)
-  active: true
-  dir: rtl
-- locale: ms-my
-  alias: ms
-  name: Malay (Bahasa Malaysia)
-  active: true
-  dir: ltr
-- locale: ro-ro
-  alias: ro
-  name: Romanian (Românesc)
-  active: true
-  dir: ltr
-- locale: ar
-  alias: ar
-  name: Arabic
-  active: true
-  dir: rtl
-- locale: sr-cyrl-rs
-  alias: sr
-  name: Serbian Cyrillic (српски)
-  active: true
-  dir: ltr
-- locale: sr-latn-rs # dummy locale, automatically transliterated from `sr-cyrl-rs`
-  alias: ''
-  name: Serbian Latin (srpski)
-  active: true
-  dir: ltr
-- locale: is
-  alias: ''
-  name: Icelandic (Íslenska)
-  active: true
-  dir: ltr
-- locale: rw
-  alias: ''
-  name: Ikinyarwanda
-  active: true
-  dir: ltr
-- locale: ko-kr
-  alias: ko
-  name: Korean (한국어)
-  active: true
-  dir: ltr
-- locale: es-ca
-  alias: ''
-  name: Català
-  active: true
-  dir: ltr
-- locale: zh-tw
-  alias: ''
-  name: Chinese (Trad.) (繁體中文)
-  active: true
-  dir: ltr
-- locale: th
-  alias: ''
-  name: Thai (ภาษาไทย)
-  active: true
-  dir: ltr
-=======
----
+﻿---
 # Locale Naming & Ordering
 #
 # Locales are sorted lexicographically by locale code.
 #
 # Naming format:
 # - Simple locales:
-#   Language native – Language English
+#   Language native ÔÇô Language English
 #
 # - Regional / variant locales:
-#   Language native (Region native) – Language English (Region English)
+#   Language native (Region native) ÔÇô Language English (Region English)
 - locale: ar
   alias: ar
-  name: العربية - Arabic
+  name: Ïº┘äÏ╣Ï▒Ï¿┘èÏ® - Arabic
   active: true
   dir: rtl
 - locale: bg
   alias: ''
-  name: Български - Bulgarian
+  name: ðæÐèð╗ð│ð░ÐÇÐüð║ð© - Bulgarian
   active: true
   dir: ltr
 - locale: ca
   alias: ''
-  name: Català - Catalan
+  name: Catal├á - Catalan
   active: true
   dir: ltr
 - locale: cs
   alias: ''
-  name: Česky - Czech
+  name: ─îesky - Czech
   active: true
   dir: ltr
 - locale: da
@@ -289,7 +41,7 @@
   dir: ltr
 - locale: el
   alias: ''
-  name: Ελληνικά - Greek
+  name: ╬ò╬╗╬╗╬À╬¢╬╣╬║╬¼ - Greek
   active: true
   dir: ltr
 - locale: en-ca
@@ -309,22 +61,22 @@
   dir: ltr
 - locale: es-ca
   alias: ''
-  name: Català - Catalan (deprecated, please use Català instead)
+  name: Catal├á - Catalan (deprecated, please use Catal├á instead)
   active: true
   dir: ltr
 - locale: es-co
   alias: ''
-  name: Español (Colombia) - Spanish (Colombia)
+  name: Espa├▒ol (Colombia) - Spanish (Colombia)
   active: true
   dir: ltr
 - locale: es-es
   alias: es
-  name: Español - Spanish
+  name: Espa├▒ol - Spanish
   active: true
   dir: ltr
 - locale: es-mx
   alias: ''
-  name: Español (México) - Spanish (Mexico)
+  name: Espa├▒ol (M├®xico) - Spanish (Mexico)
   active: true
   dir: ltr
 - locale: et
@@ -334,7 +86,7 @@
   dir: ltr
 - locale: fa-ir
   alias: fa
-  name: فارسی - Persian
+  name: ┘üÏºÏ▒Ï│█î - Persian
   active: true
   dir: rtl
 - locale: fi
@@ -344,22 +96,22 @@
   dir: ltr
 - locale: fr-ca
   alias: ''
-  name: Français (Canada) - French (Canada)
+  name: Fran├ºais (Canada) - French (Canada)
   active: true
   dir: ltr
 - locale: fr-fr
   alias: fr
-  name: Français - French
+  name: Fran├ºais - French
   active: true
   dir: ltr
 - locale: he-il
   alias: ''
-  name: עברית - Hebrew
+  name: ÎóÎæÎ¿ÎÖÎ¬ - Hebrew
   active: true
   dir: rtl
 - locale: hi-in
   alias: hi
-  name: हिंदी - Hindi
+  name: Óñ╣Óñ┐ÓñéÓñªÓÑÇ - Hindi
   active: true
   dir: ltr
 - locale: hr
@@ -379,7 +131,7 @@
   dir: ltr
 - locale: is
   alias: ''
-  name: Íslenska - Icelandic
+  name: ├ìslenska - Icelandic
   active: true
   dir: ltr
 - locale: it-it
@@ -389,22 +141,22 @@
   dir: ltr
 - locale: ja
   alias: ''
-  name: 日本語 - Japanese
+  name: µùÑµ£¼Þ¬× - Japanese
   active: true
   dir: ltr
 - locale: ko-kr
   alias: ko
-  name: 한국어 - Korean
+  name: Ýò£ÛÁ¡ýû┤ - Korean
   active: true
   dir: ltr
 - locale: lt
   alias: ''
-  name: Lietuvių - Lithuanian
+  name: Lietuvi┼│ - Lithuanian
   active: true
   dir: ltr
 - locale: lv
   alias: ''
-  name: Latviešu - Latvian
+  name: Latvie┼íu - Latvian
   active: true
   dir: ltr
 - locale: ms-my
@@ -419,7 +171,7 @@
   dir: ltr
 - locale: no-no
   alias: nb
-  name: Norsk bokmål - Norwegian Bokmål
+  name: Norsk bokm├Ñl - Norwegian Bokm├Ñl
   active: true
   dir: ltr
 - locale: pl
@@ -429,22 +181,22 @@
   dir: ltr
 - locale: pt-br
   alias: ''
-  name: Português (Brasil) - Portuguese (Brazil)
+  name: Portugu├¬s (Brasil) - Portuguese (Brazil)
   active: true
   dir: ltr
 - locale: pt-pt
   alias: pt
-  name: Português - Portuguese
+  name: Portugu├¬s - Portuguese
   active: true
   dir: ltr
 - locale: ro-ro
   alias: ro
-  name: Română - Romanian
+  name: Rom├ón─â - Romanian
   active: true
   dir: ltr
 - locale: ru
   alias: ''
-  name: Русский - Russian
+  name: ðáÐâÐüÐüð║ð©ð╣ - Russian
   active: true
   dir: ltr
 - locale: rw
@@ -454,17 +206,17 @@
   dir: ltr
 - locale: sk
   alias: ''
-  name: Slovenčina - Slovak
+  name: Sloven─ìina - Slovak
   active: true
   dir: ltr
 - locale: sl
   alias: ''
-  name: Slovenščina - Slovenian
+  name: Sloven┼í─ìina - Slovenian
   active: true
   dir: ltr
 - locale: sr-cyrl-rs
   alias: sr
-  name: српски (ћирилица) - Serbian (Cyrillic)
+  name: ÐüÐÇð┐Ðüð║ð© (Ðøð©ÐÇð©ð╗ð©Ðåð░) - Serbian (Cyrillic)
   active: true
   dir: ltr
 - locale: sr-latn-rs
@@ -479,32 +231,31 @@
   dir: ltr
 - locale: th
   alias: ''
-  name: ภาษาไทย - Thai
+  name: Ó©áÓ©▓Ó©®Ó©▓Ó╣äÓ©ùÓ©ó - Thai
   active: true
   dir: ltr
 - locale: tr
   alias: ''
-  name: Türkçe - Turkish
+  name: T├╝rk├ºe - Turkish
   active: true
   dir: ltr
 - locale: uk
   alias: ''
-  name: Українська - Ukrainian
+  name: ðúð║ÐÇð░Ðùð¢ÐüÐîð║ð░ - Ukrainian
   active: true
   dir: ltr
 - locale: vi
   alias: ''
-  name: Tiếng Việt - Vietnamese
+  name: Tiß║┐ng Viß╗çt - Vietnamese
   active: true
   dir: ltr
 - locale: zh-cn
   alias: ''
-  name: 简体中文 - Chinese (Simplified)
+  name: þ«Çõ¢ôõ©¡µûç - Chinese (Simplified)
   active: true
   dir: ltr
 - locale: zh-tw
   alias: ''
-  name: 繁體中文 - Chinese (Traditional)
+  name: þ╣üÚ½öõ©¡µûç - Chinese (Traditional)
   active: true
   dir: ltr
->>>>>>> upstream/develop

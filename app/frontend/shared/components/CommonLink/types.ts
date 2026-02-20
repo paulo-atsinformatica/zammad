@@ -1,13 +1,3 @@
-<<<<<<< HEAD
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
-
-export interface LinkClassMap {
-  base: string
-  internal: string
-}
-
-export type Sizes = 'xs' | 'small' | 'medium' | 'large' | 'xl'
-=======
 // Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 export interface LinkClassMap {
@@ -16,4 +6,3 @@ export interface LinkClassMap {
 }
 
 export type Sizes = 'xs' | 'small' | 'medium' | 'large' | 'xl'
->>>>>>> upstream/develop

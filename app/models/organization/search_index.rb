@@ -17,31 +17,6 @@ class Organization
         end
       end
 
-      # Ensure custom text fields (CNPJ, CPF, CODCLIENTE, etc.) are searchable
-      # Get all custom input/text fields for Organization
-      custom_text_fields = ObjectManager::Attribute
-        .where(
-          object_lookup_id: ObjectLookup.by_name('Organization'),
-          data_type:        %w[input textarea],
-          active:           true
-        )
-        .pluck(:name)
-
-      custom_text_fields.each do |field_name|
-        next if attributes[field_name].blank?
-
-        field_value = attributes[field_name].to_s
-        next if field_value.blank?
-
-        # Add text version for full-text search (ensures it's indexed as text)
-        attributes["#{field_name}_text"] = field_value
-
-        # Create cleaned version (remove formatting characters) for better matching
-        # This allows searching "12.345.678/0001-90" by typing "12345678000190"
-        cleaned_value = field_value.gsub(/[.\-\/\s]/, '')
-        attributes["#{field_name}_clean"] = cleaned_value if cleaned_value.present? && cleaned_value != field_value
-      end
-
       attributes
     end
   end

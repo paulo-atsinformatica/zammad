@@ -1,26 +1,3 @@
-<<<<<<< HEAD
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
-
-module Gql::Queries
-  class Ticket::History < BaseQuery
-    description 'Fetch history of a ticket'
-
-    argument :ticket_id, ID, loads: Gql::Types::TicketType, description: 'Ticket ID'
-
-    type [Gql::Types::HistoryGroupType], null: false
-
-    def self.authorize(_obj, ctx)
-      ctx.current_user.permissions?(['ticket.agent'])
-    end
-
-    def resolve(ticket:)
-      Service::History::Group
-        .new(current_user: context.current_user)
-        .execute(object: ticket)
-    end
-  end
-end
-=======
 # Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 module Gql::Queries
@@ -40,4 +17,3 @@ module Gql::Queries
     end
   end
 end
->>>>>>> upstream/develop

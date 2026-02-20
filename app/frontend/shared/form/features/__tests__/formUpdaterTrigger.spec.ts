@@ -1,51 +1,3 @@
-<<<<<<< HEAD
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
-
-import { createNode } from '@formkit/core'
-import { createLibraryPlugin } from '@formkit/inputs'
-
-import formUpdaterTrigger from '../formUpdaterTrigger.ts'
-
-describe('formUpdaterTrigger', () => {
-  it('triggers form updater directly', () => {
-    const node = createNode({
-      plugins: [
-        createLibraryPlugin({
-          text: {
-            type: 'input',
-            features: [formUpdaterTrigger()],
-          },
-        }),
-      ],
-      props: {
-        type: 'text',
-        triggerFormUpdater: true,
-      },
-    })
-
-    expect(node.props.delay).toEqual(20)
-  })
-
-  it('triggers form updater delayed', () => {
-    const node = createNode({
-      plugins: [
-        createLibraryPlugin({
-          text: {
-            type: 'input',
-            features: [formUpdaterTrigger('delayed')],
-          },
-        }),
-      ],
-      props: {
-        type: 'text',
-        triggerFormUpdater: true,
-      },
-    })
-
-    expect(node.props.delay).toEqual(300)
-  })
-})
-=======
 // Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import { createNode } from '@formkit/core'
@@ -92,4 +44,3 @@ describe('formUpdaterTrigger', () => {
     expect(node.props.delay).toEqual(300)
   })
 })
->>>>>>> upstream/develop

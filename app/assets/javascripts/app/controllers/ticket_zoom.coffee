@@ -604,15 +604,6 @@ class App.TicketZoom extends App.Controller
           ticket_id: @ticket_id
         )
 
-        # Time tracking control
-        currentUser = App.User.current()
-        if @ticket.editable() && currentUser?.permission('user.ticket_time_tracking')
-          @timeTracking = new App.TicketZoomTimeTracking(
-            el:        elLocal.find('.js-timeTrackingContainer')
-            ticket:    @ticket
-            ticket_id: @ticket_id
-          )
-
         # Check if the alert should be shown.
         #   Normally, this is a concern of the associated channel, so we only render it if it's known.
         if @ticket.preferences?.channel_id

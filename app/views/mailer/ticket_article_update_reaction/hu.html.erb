@@ -1,24 +1,3 @@
-<<<<<<< HEAD
-Jegy cikk frissítve  (#{ticket.title})
-
-<div>Üdvözöljük #{recipient.firstname},</div>
-<br>
-<div>
-<%= @objects[:article].preferences.dig('whatsapp', 'reaction', 'author') %> ezzel reagált: <%= @objects[:article].preferences.dig('whatsapp', 'reaction', 'emoji') %> az ő üzentére: #{article.created_by.fullname}:
-</div>
-<br>
-<% if @objects[:article] %>
-  <div>
-    <blockquote type="cite">
-    #{article.body_as_html}
-    </blockquote>
-  </div>
-<% end %>
-<br>
-<div>
-  <a href="#{config.http_type}://#{config.fqdn}/#ticket/zoom/#{ticket.id}/#{article.id}" target="zammad_app">Tekintse meg itt: #{config.product_name}</a>
-</div>
-=======
 Frissített jegybejegyzés (#{ticket.title})
 
 <div>Kedves #{recipient.firstname}!</div>
@@ -38,4 +17,3 @@ Frissített jegybejegyzés (#{ticket.title})
 <div>
   <a href="#{config.http_type}://#{config.fqdn}/#ticket/zoom/#{ticket.id}/#{article.id}" target="zammad_app">Nézze meg itt: #{config.product_name}</a>
 </div>
->>>>>>> upstream/develop

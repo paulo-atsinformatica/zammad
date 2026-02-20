@@ -1,42 +1,3 @@
-<<<<<<< HEAD
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
-
-import type { FormSchemaField } from '#shared/components/Form/types.ts'
-import type {
-  EnumObjectManagerObjects,
-  ObjectManagerFrontendAttribute,
-} from '#shared/graphql/types.ts'
-
-import type { JsonValue } from 'type-fest'
-import type { ComputedRef, Ref } from 'vue'
-
-export interface ObjectAttribute extends ObjectManagerFrontendAttribute {
-  id?: string
-  isStatic?: boolean
-  dataOption?: {
-    display_config?: string
-    translate?: boolean
-    permission?: string | string[]
-    relation?: string
-    belongs_to?: string
-    item_class?: string
-    [index: string]: JsonValue | undefined
-  }
-}
-
-export interface EntityStaticObjectAttributes {
-  name: EnumObjectManagerObjects
-  attributes: ObjectAttribute[]
-}
-
-export interface ObjectAttributesObject {
-  attributes: ComputedRef<ObjectAttribute[]>
-  screens: ComputedRef<Record<string, string[]>>
-  attributesLookup: ComputedRef<Map<string, ObjectAttribute>>
-  formFieldAttributesLookup: ComputedRef<Map<string, FormSchemaField>>
-  loading: Ref<boolean>
-}
-=======
 // Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import type { FormSchemaField } from '#shared/components/Form/types.ts'
@@ -82,4 +43,3 @@ export interface ObjectAttributesObject {
   formFieldAttributesLookup: ComputedRef<Map<string, FormSchemaField>>
   loading: Ref<boolean>
 }
->>>>>>> upstream/develop

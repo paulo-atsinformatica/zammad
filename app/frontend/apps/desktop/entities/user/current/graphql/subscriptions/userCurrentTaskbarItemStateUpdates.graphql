@@ -1,13 +1,5 @@
-<<<<<<< HEAD
-subscription userCurrentTaskbarItemStateUpdates($taskbarItemId: ID!) {
-  userCurrentTaskbarItemStateUpdates(taskbarItemId: $taskbarItemId) {
-    stateChanged
-  }
-}
-=======
 subscription userCurrentTaskbarItemStateUpdates($taskbarItemId: ID!) {
   userCurrentTaskbarItemStateUpdates(taskbarItemId: $taskbarItemId) {
     stateUpdateType
   }
 }
->>>>>>> upstream/develop

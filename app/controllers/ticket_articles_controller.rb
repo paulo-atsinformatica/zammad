@@ -6,7 +6,6 @@ class TicketArticlesController < ApplicationController
 
   prepend_before_action -> { authorize! }, only: %i[index import_example import_start]
   prepend_before_action :authentication_check
-  before_action :check_user_not_in_pause, except: %i[index show]
 
   # GET /articles
   def index
@@ -297,14 +296,5 @@ class TicketArticlesController < ApplicationController
   rescue => e
     logger.error e
     render json: { error: __('The preview cannot be generated. The format is corrupted or not supported.') }, status: :unprocessable_entity
-  end
-
-  def check_user_not_in_pause
-    return if !current_user.permissions?('user.pause_control')
-    return if !current_user.in_pause?
-
-    render json: {
-      error: __('Cannot perform actions while in pause. Please end your pause first.')
-    }, status: :forbidden
   end
 end

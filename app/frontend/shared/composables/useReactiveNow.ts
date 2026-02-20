@@ -1,14 +1,3 @@
-<<<<<<< HEAD
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
-
-import { useNow } from '@vueuse/core'
-
-const reactiveNow = useNow({
-  interval: 1000,
-})
-
-export const useReactiveNow = () => reactiveNow
-=======
 // Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import { useNow } from '@vueuse/core'
@@ -18,4 +7,3 @@ const reactiveNow = useNow({
 })
 
 export const useReactiveNow = () => reactiveNow
->>>>>>> upstream/develop

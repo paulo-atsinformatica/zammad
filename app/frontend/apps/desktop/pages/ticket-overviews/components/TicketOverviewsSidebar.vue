@@ -1,41 +1,3 @@
-<<<<<<< HEAD
-<!-- Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/ -->
-
-<script setup lang="ts">
-import { computed } from 'vue'
-
-import { useSessionStore } from '#shared/stores/session.ts'
-
-import TicketOverviewsList from '#desktop/pages/ticket-overviews/components/TicketOverviewsSidebar/TicketOverviewsList.vue'
-
-const { hasPermission } = useSessionStore()
-
-const hasOverviewSortingPreference = computed(() =>
-  hasPermission('user_preferences.overview_sorting'),
-)
-</script>
-
-<template>
-  <section class="flex flex-col gap-2.5">
-    <CommonLink
-      v-if="hasOverviewSortingPreference"
-      class="my-2.5 ltr:ml-auto rtl:mr-auto"
-      internal
-      link="/personal-setting/ticket-overviews"
-    >
-      <CommonLabel
-        class="text-blue-800! hover:text-blue-850! hover:dark:text-blue-600!"
-        prefix-icon="list-columns-reverse"
-        size="small"
-      >
-        {{ $t('reorder items') }}
-      </CommonLabel>
-    </CommonLink>
-
-    <TicketOverviewsList />
-  </section>
-</template>
-=======
 <!-- Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/ -->
 
 <script setup lang="ts">
@@ -72,4 +34,3 @@ const hasOverviewSortingPreference = computed(() =>
     <TicketOverviewsList />
   </section>
 </template>
->>>>>>> upstream/develop

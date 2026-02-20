@@ -1,5 +1,4 @@
-<<<<<<< HEAD
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+﻿# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 # Be sure to restart your server when you modify this file.
 
@@ -8,14 +7,3 @@
 
 # Since sessions are stored in the database, the serializer is not used / not relevant.
 # Rails.application.config.action_dispatch.cookies_serializer = :json
-=======
-# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
-
-# Be sure to restart your server when you modify this file.
-
-# Specify a serializer for the signed and encrypted cookie jars.
-# Valid options are :json, :marshal, and :hybrid.
-
-# Since sessions are stored in the database, the serializer is not used / not relevant.
-# Rails.application.config.action_dispatch.cookies_serializer = :json
->>>>>>> upstream/develop

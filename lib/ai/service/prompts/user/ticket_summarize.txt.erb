@@ -1,26 +1,3 @@
-<<<<<<< HEAD
-<title><%= @context_data[:ticket].title %></title>
-<% @context_data[:ticket].articles.without_system_notifications.each do |article| -%>
-  <% next if article.body.blank? -%>
-  <% next if article.body_as_text.blank? -%>
-  <% if article.type.name == 'email' -%>
-    <% result = AI::Service::EmailRemoveQuote
-      .new(context_data: { article: article })
-      .execute
-      .content %>
-    <% next if result.blank? %>
-  <% else -%>
-    <% result = article.body_as_text %>
-  <% end -%>
-<article>
-  <sender_type><%= article.sender.name %></sender_type>
-  <sender_name><%= article.author.fullname %></sender_name>
-  <created_at><%= article.created_at %></created_at>
-  <visibility><%= article.internal ? 'internal' : 'public' %></visibility>
-  <text><%= result %></text>
-</article>
-<% end -%>
-=======
 <title><%= @context_data[:ticket].title %></title>
 <% @context_data[:prepared_articles]&.each do |article| -%>
 <article>
@@ -41,4 +18,3 @@
   <%- end -%>
 </article>
 <% end -%>
->>>>>>> upstream/develop

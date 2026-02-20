@@ -112,27 +112,6 @@ class Navigation extends App.Controller
       activeTab: activeTab
     )
 
-    # Initialize custom controllers for menu items
-    @initializeMenuControllers(items)
-
-  initializeMenuControllers: (items) =>
-    for item in items
-      if item.controller
-        controllerClass = App[item.controller]
-        if controllerClass
-          menuItem = @$(".js-#{item.class}MenuItem")
-          if menuItem.length && !menuItem.data('controller-initialized')
-            # Find the parent container for the dropdown
-            container = menuItem.closest('.menu-item').parent()
-            if container.length == 0
-              container = menuItem.parent()
-            
-            # Initialize the controller
-            new controllerClass(
-              el: container
-            )
-            menuItem.data('controller-initialized', true)
-
   click: (e) ->
     @preventDefaultAndStopPropagation(e)
 

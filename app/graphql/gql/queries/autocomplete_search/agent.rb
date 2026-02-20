@@ -1,22 +1,3 @@
-<<<<<<< HEAD
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
-
-module Gql::Queries
-  class AutocompleteSearch::Agent < AutocompleteSearch::User
-
-    description 'Search for agents'
-
-    def find_users(query:, limit:)
-      ::User.search(
-        query:,
-        limit:,
-        current_user: context.current_user,
-        permissions:  ['ticket.agent'],
-      )
-    end
-  end
-end
-=======
 # Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 module Gql::Queries
@@ -34,4 +15,3 @@ module Gql::Queries
     end
   end
 end
->>>>>>> upstream/develop

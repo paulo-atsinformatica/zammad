@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
+﻿# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 class MigrateCatalanUserPreference < ActiveRecord::Migration[8.0]
   def change

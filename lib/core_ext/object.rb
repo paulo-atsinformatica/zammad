@@ -1,12 +1,3 @@
-<<<<<<< HEAD
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
-
-class Object
-  def to_utf8(**)
-    to_s.utf8_encode(**)
-  end
-end
-=======
 # Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 class Object
@@ -14,4 +5,3 @@ class Object
     to_s.utf8_encode(**)
   end
 end
->>>>>>> upstream/develop

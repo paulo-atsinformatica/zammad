@@ -1,5 +1,4 @@
-<<<<<<< HEAD
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+﻿# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 # Be sure to restart your server when you modify this file.
 
@@ -9,15 +8,3 @@
 #     https: false
 #   )
 # end
-=======
-# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
-
-# Be sure to restart your server when you modify this file.
-
-# ActiveSupport::Reloader.to_prepare do
-#   ApplicationController.renderer.defaults.merge!(
-#     http_host: 'example.org',
-#     https: false
-#   )
-# end
->>>>>>> upstream/develop

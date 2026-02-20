@@ -637,13 +637,3 @@ class Sidebar extends App.Controller
 
 App.Config.set('report', Reporting, 'Routes')
 App.Config.set('Reporting', { prio: 8000, parent: '', name: __('Reporting'), translate: true, target: '#report', icon: 'report', permission: ['report'] }, 'NavBarRight')
-
-# When "Reporting" has submenu entries, it becomes a dropdown toggle (and won't navigate on click).
-# Add an explicit entry to open the native reporting screen.
-App.Config.set('ReportingHome', {
-  prio: 1,
-  name: __('Relatório de Atendimento'),
-  parent: '#report',
-  target: '#report',
-  permission: ['report']
-}, 'NavBarRight')

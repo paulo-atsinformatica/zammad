@@ -1,16 +1,3 @@
-<<<<<<< HEAD
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
-
-class Service::Ticket::Article::ChangeVisibility < Service::BaseWithCurrentUser
-  def execute(article:, internal:)
-    Pundit.authorize current_user, article, :update?
-
-    article.update! internal: internal
-
-    article
-  end
-end
-=======
 # Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 class Service::Ticket::Article::ChangeVisibility < Service::BaseWithCurrentUser
@@ -22,4 +9,3 @@ class Service::Ticket::Article::ChangeVisibility < Service::BaseWithCurrentUser
     article
   end
 end
->>>>>>> upstream/develop

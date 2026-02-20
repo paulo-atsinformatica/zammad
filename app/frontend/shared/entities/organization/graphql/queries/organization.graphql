@@ -1,22 +1,3 @@
-<<<<<<< HEAD
-query organization(
-  $organizationId: ID!
-  $first: Int
-  $after: String
-) {
-  organization(organizationId: $organizationId) {
-    ...organizationAttributes
-    ...organizationMembersWithFetchMore
-    policy {
-      update
-    }
-    ticketsCount {
-      open
-      closed
-    }
-  }
-}
-=======
 query organization(
   $organizationId: ID!
   $first: Int
@@ -36,4 +17,3 @@ query organization(
     }
   }
 }
->>>>>>> upstream/develop

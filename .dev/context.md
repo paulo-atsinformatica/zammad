@@ -280,12 +280,13 @@ source/
 cd E:\Projetos\zammad
 $env:DOCKER_BUILDKIT=0
 $COMMIT_SHA = git -C source rev-parse HEAD
-docker build --build-arg COMMIT_SHA=$COMMIT_SHA -t ghcr.io/paulo-atsinformatica/zammad:latest -t ghcr.io/paulo-atsinformatica/zammad:7.0.1 -f source/Dockerfile source
+docker build --build-arg COMMIT_SHA=$COMMIT_SHA -t ghcr.io/paulo-atsinformatica/zammad:latest -t ghcr.io/paulo-atsinformatica/zammad:7.1.0 -f source/Dockerfile source
 ```
 
-### Push Docker
+### Push Docker (ghcr.io)
 ```powershell
-docker push ghcr.io/paulo-atsinformatica/zammad:7.0.1
+# Faça login uma vez se ainda não: docker login ghcr.io (use um PAT com write:packages)
+docker push ghcr.io/paulo-atsinformatica/zammad:7.1.0
 docker push ghcr.io/paulo-atsinformatica/zammad:latest
 ```
 

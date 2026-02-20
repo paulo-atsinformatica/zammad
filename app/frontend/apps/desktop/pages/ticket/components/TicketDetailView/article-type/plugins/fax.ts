@@ -1,14 +1,3 @@
-<<<<<<< HEAD
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
-
-import type { ChannelModule } from '#desktop/pages/ticket/components/TicketDetailView/article-type/types.ts'
-
-export default <ChannelModule>{
-  name: 'fax',
-  label: __('Fax'),
-  icon: 'fax',
-}
-=======
 // Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import type { ChannelModule } from '#desktop/pages/ticket/components/TicketDetailView/article-type/types.ts'
@@ -19,4 +8,3 @@ export default <ChannelModule>{
   metaLabel: __('fax'),
   icon: 'fax',
 }
->>>>>>> upstream/develop

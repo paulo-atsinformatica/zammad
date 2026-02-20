@@ -110,7 +110,6 @@ class _ajaxSingleton
       return if status is 401
       return if status is 403
       return if status is 404
-      return if status is 409 # Conflict - handled by time tracking switch dialog
       return if status is 422
 
       # do not show any error message with code 502

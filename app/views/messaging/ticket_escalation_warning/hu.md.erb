@@ -1,12 +1,3 @@
-<<<<<<< HEAD
-# #{ticket.title}
-_<<#{config.http_type}://#{config.fqdn}/#ticket/zoom/#{ticket.id}|Ticket##{ticket.number}>: Eszkalálódni fog ekkor: #{ticket.escalation_at}_
-A "#{ticket.customer.longname}" ügyféltől származó jegy (#{ticket.title}) eszkalálódni fog ekkor: "#{ticket.escalation_at}"!
-
-<% if @objects[:article] %>
-#{article.body_as_text}
-<% end %>
-=======
 # #{ticket.title}
 _<#{config.http_type}://#{config.fqdn}/#ticket/zoom/#{ticket.id}|Ticket##{ticket.number}>: eszkalálódni fog ekkor: #{ticket.escalation_at}_
 A(z) „#{ticket.customer.longname}” ügyféltől származó jegy (#{ticket.title}) eszkalálódni fog ekkor: „#{ticket.escalation_at}”!
@@ -14,4 +5,3 @@ A(z) „#{ticket.customer.longname}” ügyféltől származó jegy (#{ticket.ti
 <% if @objects[:article] %>
 #{article.body_as_text}
 <% end %>
->>>>>>> upstream/develop

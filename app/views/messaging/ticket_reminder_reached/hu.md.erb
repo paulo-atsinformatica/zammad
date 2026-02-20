@@ -1,12 +1,3 @@
-<<<<<<< HEAD
-# #{ticket.title}
-_<<#{config.http_type}://#{config.fqdn}/#ticket/zoom/#{ticket.id}|Ticket##{ticket.number}>: Emlékeztető elérve!_
-Egy jegy figyelmet igényel: emlékeztető a (#{ticket.title}) számára "*##{ticket.customer.longname}*" ügyféllel.
-
-<% if @objects[:article] %>
-#{article.body_as_text}
-<% end %>
-=======
 # #{ticket.title}
 _<#{config.http_type}://#{config.fqdn}/#ticket/zoom/#{ticket.id}|Ticket##{ticket.number}>: Emlékeztető elérve!_
 Egy jegy figyelmet igényel: emlékeztető elérve a(z) „*#{ticket.customer.longname}*” ügyfelű (#{ticket.title}) jegynél.
@@ -14,4 +5,3 @@ Egy jegy figyelmet igényel: emlékeztető elérve a(z) „*#{ticket.customer.lo
 <% if @objects[:article] %>
 #{article.body_as_text}
 <% end %>
->>>>>>> upstream/develop

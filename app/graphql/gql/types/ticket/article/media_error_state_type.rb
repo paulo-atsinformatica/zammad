@@ -1,18 +1,3 @@
-<<<<<<< HEAD
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
-
-module Gql::Types::Ticket::Article
-  class MediaErrorStateType < Gql::Types::BaseObject
-    description 'Ticket article media error information, e.g. for WhatsApp Business'
-
-    field :error, Boolean
-
-    def error
-      @object['media_error']
-    end
-  end
-end
-=======
 # Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 module Gql::Types::Ticket::Article
@@ -26,4 +11,3 @@ module Gql::Types::Ticket::Article
     end
   end
 end
->>>>>>> upstream/develop

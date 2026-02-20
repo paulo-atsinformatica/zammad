@@ -1,28 +1,3 @@
-<<<<<<< HEAD
---- !ruby/hash:ActiveSupport::HashWithIndifferentAccess
-from: me@example.com
-from_email: me@example.com
-from_display_name: ''
-to: you@example.com
-subject: test
-body: 'some text
-
-  '
-content_type: text/plain
-attachments:
-- !ruby/hash:ActiveSupport::HashWithIndifferentAccess
-  data: 'some text
-
-    '
-  filename: file
-  preferences: !ruby/hash:ActiveSupport::HashWithIndifferentAccess
-    Date: Fri, 07 Apr 2023 17:30:44 +0200
-    From: me@example.com
-    To: you@example.com
-    Message-ID: "<gen-a3107f78344dfa1250814ad918629a39@zammad_generated>"
-    Subject: test
-    Charset: UTF-8
-=======
 --- !ruby/hash:ActiveSupport::HashWithIndifferentAccess
 from: me@example.com
 from_email: me@example.com
@@ -34,4 +9,3 @@ body: 'some text
   '
 content_type: text/plain
 attachments: []
->>>>>>> upstream/develop

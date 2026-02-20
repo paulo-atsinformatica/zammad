@@ -1,42 +1,3 @@
-<<<<<<< HEAD
-fragment userCurrentTaskbarItemAttributes on UserTaskbarItem {
-  id
-  key
-  callback
-  formId
-  formNewArticlePresent
-  entity {
-    ... on Ticket {
-      ...ticketTaskbarTabAttributes
-    }
-    ... on UserTaskbarItemEntityTicketCreate {
-      uid
-      title
-      createArticleTypeKey
-    }
-    ... on UserTaskbarItemEntitySearch {
-      query
-      model
-    }
-    ... on User {
-      id
-      internalId
-      fullname
-      active
-    }
-    ... on Organization {
-      id
-      internalId
-    }
-  }
-  entityAccess
-  prio
-  changed
-  dirty
-  notify
-  updatedAt
-}
-=======
 fragment userCurrentTaskbarItemAttributes on UserTaskbarItem {
   id
   key
@@ -76,4 +37,3 @@ fragment userCurrentTaskbarItemAttributes on UserTaskbarItem {
   notify
   updatedAt
 }
->>>>>>> upstream/develop

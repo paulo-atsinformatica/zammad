@@ -33,11 +33,4 @@ class App.Run extends App.Controller
     # bind to fill selected text into
     App.ClipBoard.bind(@el)
 
-    # Initialize pause blocker (create dedicated container in body)
-    pauseBlockerContainer = $('<div class="pause-blocker-overlay"></div>')
-    $('body').append(pauseBlockerContainer)
-    @pauseBlocker = new App.ApplicationPauseBlocker(
-      el: pauseBlockerContainer
-    )
-
     App.Event.trigger('app:ready')

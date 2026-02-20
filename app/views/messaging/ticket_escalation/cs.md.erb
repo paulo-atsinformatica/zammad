@@ -1,12 +1,3 @@
-<<<<<<< HEAD
-# #{ticket.title}
-_<#{config.http_type}://#{config.fqdn}/#ticket/zoom/#{ticket.id}|Ticket##{ticket.number}>: Eskalován #{ticket.escalation_at}_
-Ticket (#{ticket.title}) od "#{ticket.customer.longname}" je v eskalaci od "#{ticket.escalation_at}"!
-
-<% if @objects[:article] %>
-#{article.body_as_text}
-<% end %>
-=======
 # #{ticket.title}
 _<#{config.http_type}://#{config.fqdn}/#ticket/zoom/#{ticket.id}|Tiket##{ticket.number}>: Eskalován #{ticket.escalation_at}_
 Tiket (#{ticket.title}) od "#{ticket.customer.longname}" je v eskalaci od "#{ticket.escalation_at}"!
@@ -14,4 +5,3 @@ Tiket (#{ticket.title}) od "#{ticket.customer.longname}" je v eskalaci od "#{tic
 <% if @objects[:article] %>
 #{article.body_as_text}
 <% end %>
->>>>>>> upstream/develop

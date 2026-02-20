@@ -1,16 +1,3 @@
-<<<<<<< HEAD
-# #{ticket.title}
-_<#{config.http_type}://#{config.fqdn}/#ticket/zoom/#{ticket.id}|Ticket##{ticket.number}>: Aktualizoval #{current_user.longname} #{ticket.updated_at}_
-<% if @objects[:changes].present? %>
-  <% @objects[:changes].each do |key, value| %>
-  * <%= t key %>: <%= h value[0] %> -> <%= h value[1] %>
-  <% end %>
-<% end %>
-
-<% if @objects[:article] %>
-#{article.body_as_text}
-<% end %>
-=======
 # #{ticket.title}
 _<#{config.http_type}://#{config.fqdn}/#ticket/zoom/#{ticket.id}|Tiket##{ticket.number}>: Aktualizoval #{current_user.longname} #{ticket.updated_at}_
 <% if @objects[:changes].present? %>
@@ -22,4 +9,3 @@ _<#{config.http_type}://#{config.fqdn}/#ticket/zoom/#{ticket.id}|Tiket##{ticket.
 <% if @objects[:article] %>
 #{article.body_as_text}
 <% end %>
->>>>>>> upstream/develop

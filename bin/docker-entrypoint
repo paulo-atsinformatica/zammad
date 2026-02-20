@@ -107,27 +107,6 @@ if [ "$1" = 'zammad-init' ]; then
       if bundle exec rails r "SearchIndexBackend.index_exists?('Ticket') || exit(1)"
       then
         echo "Elasticsearch index exists, no automatic reindexing is needed."
-        
-        # Reindex organizations if custom fields were added/modified
-        # This ensures new custom fields (CNPJ, CPF, CODCLIENTE, etc.) are searchable
-        if bundle exec rails r "
-          custom_fields = ObjectManager::Attribute.where(
-            object_lookup_id: ObjectLookup.by_name('Organization'),
-            data_type: %w[input textarea],
-            active: true,
-            editable: true
-          ).pluck(:name)
-          
-          if custom_fields.any?
-            puts 'Reindexing organizations to include custom fields: ' + custom_fields.join(', ')
-            Organization.search_index_reload(silent: true)
-            puts 'Organizations reindexed successfully.'
-          end
-        " 2>/dev/null; then
-          echo "Organizations reindexed with custom fields."
-        else
-          echo "Skipping organization reindex (may not be needed)."
-        fi
       else
         echo "Elasticsearch index does not exist yet, create it now…"
         bundle exec rake zammad:searchindex:rebuild

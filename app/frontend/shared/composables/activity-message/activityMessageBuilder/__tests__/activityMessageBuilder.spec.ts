@@ -1,21 +1,3 @@
-<<<<<<< HEAD
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
-
-import { activityMessageBuilder } from '../index.ts'
-
-describe('activity message builder are available', () => {
-  it('should return all search plugins', () => {
-    const builderList = activityMessageBuilder
-
-    const models = Object.keys(builderList)
-
-    expect(models).toContain('Ticket')
-    expect(models).toContain('User')
-    expect(models).toContain('Organization')
-    expect(models).toContain('Group')
-  })
-})
-=======
 // Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import { activityMessageBuilder } from '../index.ts'
@@ -32,4 +14,3 @@ describe('activity message builder are available', () => {
     expect(models).toContain('Group')
   })
 })
->>>>>>> upstream/develop

@@ -38,7 +38,7 @@ class Ticket < ApplicationModel
   store :preferences
   after_initialize :check_defaults, if: :new_record?
   before_create  :check_generate, :check_defaults, :check_title, :set_default_state, :set_default_priority
-  before_update  :check_defaults, :check_title, :reset_pending_time, :check_owner_active, :end_time_tracking_on_close, :end_time_tracking_on_unassign
+  before_update  :check_defaults, :check_title, :reset_pending_time, :check_owner_active
 
   # This must be loaded late as it depends on the internal before_create and before_update handlers of ticket.rb.
   include Ticket::SetsLastOwnerUpdateTime
@@ -110,8 +110,6 @@ class Ticket < ApplicationModel
 
   has_many      :articles, -> { reorder(:created_at, :id) }, class_name: 'Ticket::Article', after_add: :cache_update, after_remove: :cache_update, dependent: :destroy, inverse_of: :ticket
   has_many      :ticket_time_accounting, class_name: 'Ticket::TimeAccounting', dependent: :destroy, inverse_of: :ticket
-  has_many      :ticket_time_trackings, class_name: 'TicketTimeTracking', dependent: :destroy
-  has_one       :active_time_tracking, -> { where(is_active: true) }, class_name: 'TicketTimeTracking'
   has_many      :mentions,               as: :mentionable, dependent: :destroy
   has_one       :shared_draft,           class_name: 'Ticket::SharedDraftZoom', inverse_of: :ticket, dependent: :destroy
   belongs_to    :state,                  class_name: 'Ticket::State', optional: true
@@ -768,33 +766,6 @@ returns a hex color code
 
     # else set the owner of the ticket to the default user as unassigned
     self.owner_id = 1
-    true
-  end
-
-  def end_time_tracking_on_close
-    return true if !will_save_change_to_attribute?('state_id')
-    return true if state_id.blank?
-
-    new_state = Ticket::State.find_by(id: state_id)
-    return true if new_state.blank?
-
-    state_type = Ticket::StateType.lookup(id: new_state.state_type_id)
-    return true if state_type.blank?
-
-    if state_type.name == 'closed'
-      # Pause and deactivate time tracking when ticket is closed (preserve time for reopen)
-      active_time_tracking&.pause_and_deactivate!
-    end
-
-    true
-  end
-
-  def end_time_tracking_on_unassign
-    return true if !will_save_change_to_attribute?('owner_id')
-    return true if owner_id.present? # Only end if unassigning (owner_id becomes nil or 1)
-
-    # End active time tracking if ticket is being unassigned
-    active_time_tracking&.end!
     true
   end
 end

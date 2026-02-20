@@ -337,12 +337,6 @@ Permission.create_if_not_exists(
   preferences: { prio: 1095 }
 )
 Permission.create_if_not_exists(
-  name:        'admin.pause_type',
-  label:       __('Pause Types'),
-  description: __('Manage pause types of your system.'),
-  preferences: { prio: 1096 }
-)
-Permission.create_if_not_exists(
   name:        'chat',
   label:       __('Chat'),
   description: __('Access to the chat interface.'),
@@ -417,12 +411,6 @@ Permission.create_if_not_exists(
     prio:   1560,
     plugin: ['groups']
   },
-)
-Permission.create_if_not_exists(
-  name:        'ticket.time_tracking',
-  label:       __('Ticket Time Tracking'),
-  description: __('Track time spent on tickets.'),
-  preferences: { prio: 1565 }
 )
 Permission.create_if_not_exists(
   name:         'ticket.customer',
@@ -554,13 +542,10 @@ admin.permission_grant('user_preferences')
 admin.permission_grant('admin')
 admin.permission_grant('report')
 admin.permission_grant('knowledge_base.editor')
-admin.permission_grant('admin.pause_type')
-admin.permission_grant('ticket.time_tracking')
 
 agent = Role.find_by(name: 'Agent')
 agent.permission_grant('user_preferences')
 agent.permission_grant('ticket.agent')
-agent.permission_grant('ticket.time_tracking')
 agent.permission_grant('chat.agent')
 agent.permission_grant('cti.agent')
 agent.permission_grant('knowledge_base.reader')
