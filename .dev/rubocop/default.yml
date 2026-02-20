@@ -234,6 +234,7 @@ Rails/EnvironmentVariableAccess:
 Rails/Output:
   Exclude:
     - "lib/tasks/**/*"
+    - "spec/**/*"
   Include:
     - "**/*_spec.rb"
 
@@ -505,6 +506,41 @@ Zammad/EnsuresTimeZoneAtSpecTopLevel:
   Include:
     - 'spec/system/**/*.rb'
 
+Zammad/GraphqlAuthorizeAllowPublicAccess:
+  Enabled: true
+  Include:
+    - "app/graphql/gql/**/*.rb"
+
+Zammad/GraphqlAuthorizeDisallowed:
+  Enabled: true
+  Include:
+    - "app/graphql/gql/**/*.rb"
+
+Zammad/GraphqlAuthorizeRequiresPermission:
+  Enabled: true
+  Include:
+    - "app/graphql/gql/**/*.rb"
+
+Zammad/GraphqlAuthorizedRequiresEnabledSetting:
+  Enabled: true
+  Include:
+    - "app/graphql/gql/**/*.rb"
+
+Zammad/GraphqlCsrfSkipVerification:
+  Enabled: true
+  Include:
+    - "app/graphql/gql/**/*.rb"
+
+Zammad/MigrationEnsureIntegerPrimaryKey:
+  Enabled: true
+  Include:
+    - "db/migrate/*.rb"
+
+Zammad/MigrationEnsureIntegerForeignKey:
+  Enabled: true
+  Include:
+    - "db/migrate/*.rb"
+
 Capybara/NegationMatcherAfterVisit:
   Description: 'Allow to use negated matcher after visit'
   Enabled: false
@@ -533,3 +569,6 @@ Rails/PluckInWhere:
 Rails/Exit:
   Exclude:
     - "lib/tasks/**/*"
+
+RSpec/Output:
+  Enabled: false

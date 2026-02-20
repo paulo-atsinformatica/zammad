@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 class Ticket < ApplicationModel
   include CanBeImported
@@ -24,6 +24,7 @@ class Ticket < ApplicationModel
   include Ticket::TriggersSubscriptions
   include Ticket::ChecksReopenAfterCertainTime
   include Ticket::Checklists
+  include Ticket::HasDailyEventLocks
 
   include ::Ticket::Escalation
   include ::Ticket::Subject
@@ -89,7 +90,9 @@ class Ticket < ApplicationModel
   search_index_attributes_relevant :organization_id,
                                    :group_id,
                                    :state_id,
-                                   :priority_id
+                                   :priority_id,
+                                   :customer_id,
+                                   :owner_id
 
   history_attributes_ignored :create_article_type_id,
                              :create_article_sender_id,

@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 require 'rails_helper'
 
@@ -60,7 +60,7 @@ RSpec.describe 'Ticket create > Inline Image Replacement for AI Text Tools', aut
         allow(Service::AIAssistance::TextTools).to receive(:new).and_return(ai_service_spy)
         allow(ai_service_spy).to receive(:execute).and_return(ai_service_text_tool_result)
 
-        find("[aria-label='Writing Assistant Tools']").click
+        find("[aria-label='AI Writing Assistant Tools']").click
         find('.js-action', text: 'Dummy').click
 
         expect(Service::AIAssistance::TextTools).to have_received(:new).with(

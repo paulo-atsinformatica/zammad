@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 Egy másik jegyet egyesítettünk a jegybe (#{ticket.title})
 
 <div>Üdvözöljük #{recipient.firstname},</div>
@@ -9,3 +10,16 @@ Egy másik jegy lett egyesítve a jegybe (#{ticket.title}) "<b>#{current_user.lo
 <div>
   <a href="#{config.http_type}://#{config.fqdn}/#ticket/zoom/#{ticket.id}" target="zammad_app">Tekintse meg itt: #{config.product_name}</a>
 </div>
+=======
+Egy másik jegy egyesítve lett a jegybe (#{ticket.title})
+
+<div>Kedves #{recipient.firstname}!</div>
+<br>
+<div>
+Egy másik jegy egyesítve lett a jegybe (#{ticket.title}) „<b>#{current_user.longname}”</b> által.
+</div>
+<br>
+<div>
+  <a href="#{config.http_type}://#{config.fqdn}/#ticket/zoom/#{ticket.id}" target="zammad_app">Nézze meg itt: #{config.product_name}</a>
+</div>
+>>>>>>> upstream/develop

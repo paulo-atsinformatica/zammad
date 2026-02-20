@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import { within } from '@testing-library/vue'
 
@@ -63,7 +63,7 @@ describe('static organization', () => {
       'Save something as this note',
     )
 
-    expect(view.getByRole('button', { name: 'Edit Organization' })).toBeInTheDocument()
+    expect(view.getByRole('button', { name: 'Edit organization' })).toBeInTheDocument()
 
     expect(view.container).toHaveTextContent('Tickets')
 
@@ -171,6 +171,6 @@ describe('static organization', () => {
     }
     const { view } = await visitTicketOrganization(organization)
 
-    expect(view.queryByRole('button', { name: 'Edit Organization' })).not.toBeInTheDocument()
+    expect(view.queryByRole('button', { name: 'Edit organization' })).not.toBeInTheDocument()
   })
 })

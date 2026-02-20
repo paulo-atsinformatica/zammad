@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import '@testing-library/cypress/add-commands'
 import 'cypress-real-events/support'
@@ -60,6 +60,7 @@ Cypress.Commands.add('selectText', { prevSubject: true }, (subject, direction, s
     ])
 })
 
+// :TODO - remove this helper if we decide in the long run to not reintroduce the uniqueID extension from tiptap
 const normalizeHTML = (html) =>
   html
     // strip node ids from unique ids

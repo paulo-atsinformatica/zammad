@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
 
 class AsyncOtrsImportJob < ApplicationJob
@@ -5,3 +6,12 @@ class AsyncOtrsImportJob < ApplicationJob
     Import::OTRS.start_bg
   end
 end
+=======
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
+
+class AsyncOtrsImportJob < ApplicationJob
+  def perform
+    Import::OTRS.start_bg
+  end
+end
+>>>>>>> upstream/develop

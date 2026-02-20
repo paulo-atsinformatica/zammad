@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 Setting.create_if_not_exists(
   title:       __('Application secret'),
@@ -3150,6 +3150,15 @@ Setting.create_if_not_exists(
 )
 
 Setting.create_if_not_exists(
+  title:       __('Form Allowed Parameters'),
+  name:        'form_allowed_params',
+  area:        'Form::API',
+  description: __('Defines which parameters are allowed to be submitted via the form API.'),
+  state:       [],
+  frontend:    false
+)
+
+Setting.create_if_not_exists(
   title:       __('Ticket Subject Size'),
   name:        'ticket_subject_size',
   area:        'Email::Base',
@@ -6017,6 +6026,24 @@ Setting.create_if_not_exists(
 )
 
 Setting.create_if_not_exists(
+  title:       __('UI Desktop BETA Switch Admin Menu'),
+  name:        'ui_desktop_beta_switch_admin_menu',
+  area:        'UI::Desktop',
+  description: __('Allow admins to manage availability and access to the desktop BETA UI switch.'),
+  state:       false,
+  frontend:    true,
+)
+
+Setting.create_if_not_exists(
+  title:       __('UI Desktop BETA Switch Roles'),
+  name:        'ui_desktop_beta_switch_role_ids',
+  area:        'UI::Desktop',
+  description: __('Defines which roles are allowed to access the desktop UI beta switch.'),
+  state:       [],
+  frontend:    true,
+)
+
+Setting.create_if_not_exists(
   title:       __('AI provider'),
   name:        'ai_provider',
   area:        'AI::Provider',
@@ -6067,8 +6094,8 @@ Setting.create_if_not_exists(
   description: __('Stores the ticket summarization options (e.g. which content is visible).'),
   options:     {},
   state:       {
-    open_questions:     true,
-    upcoming_events:    true,
+    open_questions:     false,
+    upcoming_events:    false,
     customer_sentiment: true,
     generate_on:        'on_ticket_detail_opening',
   },

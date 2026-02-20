@@ -1,7 +1,8 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
+
+import { getNode } from '@formkit/core'
 
 import { renderComponent } from '#tests/support/components/index.ts'
-import { waitFor } from '#tests/support/vitest-wrapper.ts'
 
 import { waitForAiAnalyticsUsageMutationCalls } from '#shared/graphql/mutations/aiAnalyticsUsage.mocks.ts'
 
@@ -45,7 +46,7 @@ describe('CommonAIFeedback', () => {
 
     await waitForAiAnalyticsUsageMutationCalls()
 
-    await wrapper.events.click(wrapper.getByLabelText('Positive Feedback'))
+    await wrapper.events.click(wrapper.getByLabelText('Positive feedback'))
 
     const usageMutation = await waitForAiAnalyticsUsageMutationCalls()
 
@@ -66,7 +67,7 @@ describe('CommonAIFeedback', () => {
 
     await waitForAiAnalyticsUsageMutationCalls()
 
-    await wrapper.events.click(wrapper.getByLabelText('Negative Feedback'))
+    await wrapper.events.click(wrapper.getByLabelText('Negative feedback'))
 
     const usageMutation = await waitForAiAnalyticsUsageMutationCalls()
 
@@ -87,20 +88,28 @@ describe('CommonAIFeedback', () => {
 
     await waitForAiAnalyticsUsageMutationCalls()
 
-    await wrapper.events.click(wrapper.getByLabelText('Negative Feedback'))
+    await wrapper.events.click(wrapper.getByLabelText('Negative feedback'))
 
     await waitForAiAnalyticsUsageMutationCalls()
 
     expect(wrapper.emitted('rated')).toHaveLength(1)
 
-    await wrapper.events.type(
-      wrapper.getByPlaceholderText('Thanks for the feedback. Please explain what went wrong?'),
-      'Never trust AI',
+    const fieldNode = getNode('feedback-comment')
+
+    const commentField = await wrapper.findByPlaceholderText(
+      'Thanks for the feedback. Please explain what went wrong?',
     )
 
-    await waitFor(() => expect(wrapper.getByRole('textbox')).toHaveValue('Never trust AI'))
+    expect(commentField).toHaveFocus()
 
-    await wrapper.events.click(wrapper.getByRole('button', { name: 'Submit Comment' }))
+    await wrapper.events.type(commentField, 'Never trust AI')
+
+    // There is an issue for the formkit input
+    // We really need to wait first that the value resolved before asserting the value,
+    // otherwise it will be always undefined and the test is flaky
+    await fieldNode?.settled
+
+    await wrapper.events.click(wrapper.getByRole('button', { name: 'Submit comment' }))
 
     const usageMutation = await waitForAiAnalyticsUsageMutationCalls()
 
@@ -119,11 +128,11 @@ describe('CommonAIFeedback', () => {
 
     await waitForAiAnalyticsUsageMutationCalls()
 
-    await wrapper.events.click(wrapper.getByLabelText('Negative Feedback'))
+    await wrapper.events.click(wrapper.getByLabelText('Negative feedback'))
 
     await waitForAiAnalyticsUsageMutationCalls()
 
-    await wrapper.events.click(wrapper.getByRole('button', { name: 'No Comment' }))
+    await wrapper.events.click(wrapper.getByRole('button', { name: 'No comment' }))
 
     expect(wrapper.getByText('Thank you for your feedback.')).toBeInTheDocument()
     expect(wrapper.getByRole('button', { name: 'Regenerate' })).toBeInTheDocument()
@@ -163,7 +172,7 @@ describe('CommonAIFeedback', () => {
     })
 
     expect(wrapper.getByRole('button', { name: 'Regenerate' })).toBeInTheDocument()
-    expect(wrapper.queryByRole('button', { name: 'Positive Feedback' })).not.toBeInTheDocument()
-    expect(wrapper.queryByRole('button', { name: 'Negative Feedback' })).not.toBeInTheDocument()
+    expect(wrapper.queryByRole('button', { name: 'Positive feedback' })).not.toBeInTheDocument()
+    expect(wrapper.queryByRole('button', { name: 'Negative feedback' })).not.toBeInTheDocument()
   })
 })

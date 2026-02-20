@@ -21,6 +21,9 @@ class TextTool extends App.ControllerAIFeatureBase
         pagerSelected: ( @page || 1 )
         pagerPerPage: 50
         navupdate: '#ai/text_tools'
+        leftButtons: [
+          { name: __('Legal Information'), 'data-type': 'legal-information', class: 'btn--info' }
+        ]
         buttons: [
           { name: __('New Writing Assistant Tool'), 'data-type': 'new', class: 'btn--success' }
         ]
@@ -116,4 +119,4 @@ class EditTextTool extends App.ControllerGenericEdit
 class NewTextTool extends App.ControllerGenericNew
   @include TextToolModalMixin
 
-App.Config.set('TextTool', { prio: 1400, name: __('Writing Assistant'), parent: '#ai', target: '#ai/text_tools', controller: TextTool, permission: ['admin.ai_assistance_text_tools'] }, 'NavBarAdmin')
+App.Config.set('TextTool', { prio: 1200, name: __('Writing Assistant'), parent: '#ai', target: '#ai/text_tools', controller: TextTool, permission: ['admin.ai_assistance_text_tools'] }, 'NavBarAdmin')

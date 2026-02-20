@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 class ObjectManager::Attribute < ApplicationModel
   include HasDefaultModelUserRelations
@@ -74,7 +74,8 @@ class ObjectManager::Attribute < ApplicationModel
 
   belongs_to :object_lookup, optional: true
 
-  validates :name, presence: true
+  validates :name,    presence: true
+  validates :display, presence: true
   validates :data_type, inclusion: { in: DATA_TYPES, msg: '%{value} is not a valid data type' }
   validate :inactive_must_be_unused_by_references, unless: :active?
   validate :data_type_must_not_change, on: :update
@@ -640,7 +641,7 @@ to send no browser reload event, pass false
       # config changes
       if attribute.to_config
         execute_config_count += 1
-        if attribute.data_type =~ %r{^(multi|tree_)?select$} && attribute.data_option[:options]
+        if attribute.option_attribute? && attribute.data_option[:options]
           attribute.data_option_new[:historical_options] = attribute_historic_options(attribute)
         end
         attribute.data_option = attribute.data_option_new
@@ -650,7 +651,7 @@ to send no browser reload event, pass false
         next if !attribute.to_create && !attribute.to_migrate && !attribute.to_delete
       end
 
-      if %r{^(multi|tree_)?select$}.match?(attribute.data_type)
+      if attribute.option_attribute?
         attribute.data_option[:historical_options] = attribute_historic_options(attribute)
       end
 
@@ -1000,6 +1001,10 @@ is certain attribute used by triggers, overviews or schedulers
 
   def local_data_option=(val)
     send(:"#{local_data_attr}=", val)
+  end
+
+  def option_attribute?
+    %w[select tree_select multiselect multi_tree_select].include?(data_type)
   end
 
   private

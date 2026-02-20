@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 require 'rails_helper'
 
@@ -10,11 +10,7 @@ RSpec.describe 'AI > Provider', authenticated_as: :admin, type: :system do
   before do
     Setting.set('ai_provider_config', initial_ai_provider_config, validate: false)
     Setting.set('ai_provider', initial_ai_provider_config.present?, validate: false)
-
-    if self_hosted
-      Setting.set('system_online_service', false)
-      Setting.set('developer_mode', false)
-    end
+    Setting.set('system_online_service', !self_hosted)
 
     result = UserAgent::Result.new(
       success: true,
@@ -51,28 +47,37 @@ RSpec.describe 'AI > Provider', authenticated_as: :admin, type: :system do
       expect(page)
         .to have_field('Token')
         .and(have_field('Model', placeholder: AI::Provider::OpenAI::DEFAULT_OPTIONS[:model]))
+        .and(have_field('OCR Model'))
+      check_switch_field_value('ocr_active', false)
 
       find('select[name=provider]').select('Ollama')
       expect(page)
         .to have_field('URL')
         .and(have_field('Model', placeholder: AI::Provider::Ollama::DEFAULT_OPTIONS[:model]))
+        .and(have_field('OCR Model'))
+      check_switch_field_value('ocr_active', false)
 
       find('select[name=provider]').select('Anthropic')
       expect(page)
         .to have_field('Token')
         .and(have_field('Model', placeholder: AI::Provider::Anthropic::DEFAULT_OPTIONS[:model]))
+        .and(have_field('OCR Model'))
+      check_switch_field_value('ocr_active', false)
 
       find('select[name=provider]').select('Azure AI')
       expect(page)
         .to have_field('URL')
         .and(have_field('Token'))
         .and(have_no_field('Model'))
+        .and(have_field('URL (OCR)'))
+      check_switch_field_value('ocr_active', false)
 
       find('select[name=provider]').select('Zammad AI')
       expect(page)
         .to have_no_field('Token')
         .and(have_no_field('Model'))
         .and(have_no_field('URL'))
+      check_switch_field_value('ocr_active', false)
     end
   end
 
@@ -85,6 +90,7 @@ RSpec.describe 'AI > Provider', authenticated_as: :admin, type: :system do
         .to have_field('Token')
         .and(have_no_field('Model'))
         .and(have_no_field('URL'))
+      check_switch_field_value('ocr_active', false)
     end
   end
 
@@ -131,6 +137,28 @@ RSpec.describe 'AI > Provider', authenticated_as: :admin, type: :system do
 
       expect(Setting.get('ai_provider')).to be(false)
       expect(Setting.get('ai_provider_config')).to be_blank
+    end
+
+    context 'when configuration is updated elsewhere' do
+      let(:initial_ai_provider_config) do
+        { provider: 'open_ai', token: '123', ocr_active: false }
+      end
+
+      it 'shows the new configuration automatically' do
+        within :active_content do
+          check_select_field_value('provider', 'open_ai')
+          expect(page).to have_field('Token', with: %r{.+})
+          check_switch_field_value('ocr_active', false)
+        end
+
+        setup_ai_provider('zammad_ai', token: '456', ocr_active: true)
+
+        within :active_content do
+          check_select_field_value('provider', 'zammad_ai')
+          expect(page).to have_no_field('Token')
+          check_switch_field_value('ocr_active', true)
+        end
+      end
     end
   end
 

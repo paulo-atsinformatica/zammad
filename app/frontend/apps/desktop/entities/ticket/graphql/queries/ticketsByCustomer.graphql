@@ -1,0 +1,71 @@
+<<<<<<< HEAD:app/frontend/apps/desktop/entities/ticket/graphql/queries/customerTicketsByFilter.graphql
+query customerTicketsByFilter(
+  $customerId: ID
+  $customerOrganizations: Boolean
+  $stateTypeCategory: EnumTicketStateTypeCategory
+  $pageSize: Int = 7
+  $cursor: String
+) {
+  ticketsByFilter(
+    customerId: $customerId
+    customerOrganizations: $customerOrganizations
+    stateTypeCategory: $stateTypeCategory
+    first: $pageSize
+    after: $cursor
+  ) {
+    totalCount
+    edges {
+      node {
+        id
+        internalId
+        number
+        title
+        stateColorCode
+        state {
+          id
+          name
+        }
+        createdAt
+      }
+    }
+    pageInfo {
+      endCursor
+    }
+  }
+}
+=======
+query ticketsByCustomer(
+  $customerId: ID!
+  $customerOrganizations: Boolean
+  $stateTypeCategory: EnumTicketStateTypeCategory
+  $pageSize: Int = 7
+  $cursor: String
+) {
+  ticketsByCustomer(
+    customerId: $customerId
+    customerOrganizations: $customerOrganizations
+    stateTypeCategory: $stateTypeCategory
+    first: $pageSize
+    after: $cursor
+  ) {
+    totalCount
+    edges {
+      node {
+        id
+        internalId
+        number
+        title
+        stateColorCode
+        state {
+          id
+          name
+        }
+        createdAt
+      }
+    }
+    pageInfo {
+      endCursor
+    }
+  }
+}
+>>>>>>> upstream/develop:app/frontend/apps/desktop/entities/ticket/graphql/queries/ticketsByCustomer.graphql

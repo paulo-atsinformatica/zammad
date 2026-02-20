@@ -1,4 +1,4 @@
-<!-- Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/ -->
+<!-- Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/ -->
 
 <script setup lang="ts">
 import { computed, useTemplateRef } from 'vue'
@@ -12,6 +12,10 @@ import CommonSectionCollapse from '#desktop/components/CommonSectionCollapse/Com
 import { useTicketInformation } from '#desktop/pages/ticket/composables/useTicketInformation.ts'
 import { type TicketSidebarContentProps } from '#desktop/pages/ticket/types/sidebar.ts'
 
+import {
+  TICKET_HISTORY_FLYOUT_NAME,
+  useTicketHistory,
+} from '../../TicketDetailView/actions/useTicketHistory.ts'
 import TicketSidebarContent from '../TicketSidebarContent.vue'
 
 import TicketAccountedTime from './TicketSidebarInformationContent/TicketAccountedTime.vue'
@@ -31,18 +35,13 @@ const { isTicketAgent, isTicketEditable } = useTicketView(ticket)
 
 const ticketMergeFlyoutName = 'ticket-merge'
 const ticketChangeCustomerFlyoutName = 'ticket-change-customer'
-const ticketHistoryFlyoutName = 'ticket-history'
+
+const { openTicketHistoryFlyout } = useTicketHistory()
 
 const { open: openTicketMergeFlyout } = useFlyout({
   name: ticketMergeFlyoutName,
   component: () =>
     import('#desktop/pages/ticket/components/TicketDetailView/actions/TicketMerge/TicketMergeFlyout.vue'),
-})
-
-const { open: openTicketHistoryFlyout } = useFlyout({
-  name: ticketHistoryFlyoutName,
-  component: () =>
-    import('#desktop/pages/ticket/components/TicketDetailView/actions/TicketHistory/TicketHistoryFlyout.vue'),
 })
 
 const { open: openChangeCustomerFlyout } = useFlyout({
@@ -54,11 +53,11 @@ const { open: openChangeCustomerFlyout } = useFlyout({
 // :TODO find a way to provide the ticket via prop
 const actions = computed<MenuItem[]>(() => [
   {
-    key: ticketHistoryFlyoutName,
+    key: TICKET_HISTORY_FLYOUT_NAME,
     label: __('History'),
     icon: 'clock-history',
     show: () => isTicketAgent.value,
-    onClick: () => openTicketHistoryFlyout({ ticket }),
+    onClick: () => openTicketHistoryFlyout(ticket.value!.id),
   },
   {
     key: ticketMergeFlyoutName,
@@ -68,8 +67,8 @@ const actions = computed<MenuItem[]>(() => [
     onClick: () =>
       openTicketMergeFlyout({
         ticket,
+        currentTaskbarTabId: props.context.currentTaskbarTabId,
       }),
-    currentTaskbarTabId: props.context.currentTaskbarTabId,
   },
   {
     key: ticketChangeCustomerFlyoutName,
@@ -122,7 +121,7 @@ const actions = computed<MenuItem[]>(() => [
       v-if="ticket?.timeUnit && isTicketAgent"
       id="ticket-time-accounting"
       v-model="persistentStates.collapseTimeAccounting"
-      :title="__('Accounted Time')"
+      :title="__('Accounted time')"
     >
       <TicketAccountedTime :ticket="ticket!" />
     </CommonSectionCollapse>

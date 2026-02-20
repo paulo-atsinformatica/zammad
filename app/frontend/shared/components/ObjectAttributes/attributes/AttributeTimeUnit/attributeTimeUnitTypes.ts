@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 // Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
 
 import type { ObjectAttribute } from '#shared/entities/object-attributes/types/store.ts'
@@ -5,3 +6,12 @@ import type { ObjectAttribute } from '#shared/entities/object-attributes/types/s
 export interface ObjectAttributeTimeUnit extends ObjectAttribute {
   dataType: 'time_unit'
 }
+=======
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
+
+import type { ObjectAttribute } from '#shared/entities/object-attributes/types/store.ts'
+
+export interface ObjectAttributeTimeUnit extends ObjectAttribute {
+  dataType: 'time_unit'
+}
+>>>>>>> upstream/develop

@@ -7606,6 +7606,10 @@ a.list-group-item.active > .badge,
     margin-top: 0;
   }
 
+  p {
+    margin: 8px 0;
+  }
+
   p:last-of-type {
     margin-bottom: 0;
   }
@@ -8350,6 +8354,10 @@ a.list-group-item.active > .badge,
     border-radius: 3px;
     padding: 12px;
     background: var(--background-primary);
+
+    p {
+      margin: 0;
+    }
   }
 
   .result-field {
@@ -8393,7 +8401,7 @@ a.list-group-item.active > .badge,
     display: flex;
     flex-direction: column;
 
-    .alert > p + p {
+    .alert > p:first-child {
       margin: 0;
     }
 
@@ -9988,8 +9996,6 @@ li.list-item-none {
   overflow: hidden;
 
   @include rtl(text-align, right);
-
-  overscroll-behavior: contain;
 }
 
 .dropdown-menu .divider {

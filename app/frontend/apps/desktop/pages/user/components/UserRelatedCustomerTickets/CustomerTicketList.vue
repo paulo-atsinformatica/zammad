@@ -1,4 +1,4 @@
-<!-- Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/ -->
+<!-- Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/ -->
 
 <script setup lang="ts">
 import { computed } from 'vue'
@@ -15,7 +15,7 @@ import CommonButton from '#desktop/components/CommonButton/CommonButton.vue'
 import CommonShowMoreButton from '#desktop/components/CommonShowMoreButton/CommonShowMoreButton.vue'
 import CommonSimpleEntityList from '#desktop/components/CommonSimpleEntityList/CommonSimpleEntityList.vue'
 import { EntityType } from '#desktop/components/CommonSimpleEntityList/types.ts'
-import { useCustomerTicketsByFilterQuery } from '#desktop/entities/ticket/graphql/queries/customerTicketsByFilter.api.ts'
+import { useTicketsByCustomerQuery } from '#desktop/entities/ticket/graphql/queries/ticketsByCustomer.api.ts'
 
 import CustomerTicketListSkeleton from './skeleton/CustomerTicketListSkeleton.vue'
 
@@ -29,7 +29,7 @@ export interface Props {
 const props = defineProps<Props>()
 
 const customerTicketsQuery = new QueryHandler(
-  useCustomerTicketsByFilterQuery(() => ({
+  useTicketsByCustomerQuery(() => ({
     customerId: props.customer.id,
     customerOrganizations: props.customerOrganizations,
     stateTypeCategory: props.stateTypeCategory,
@@ -45,9 +45,11 @@ const { debouncedLoading } = useDebouncedLoading({
   isLoading: loading,
 })
 
-const customerTickets = computed(() => normalizeEdges(customerTicketsResult.value?.ticketsByFilter))
+const customerTickets = computed(() =>
+  normalizeEdges(customerTicketsResult.value?.ticketsByCustomer),
+)
 
-const pagination = usePagination(customerTicketsQuery, 'ticketsByFilter', 100)
+const pagination = usePagination(customerTicketsQuery, 'ticketsByCustomer', 100)
 
 useOnEmitter(`customer-ticket-list-refetch:${props.customer.id}`, () => {
   customerTicketsQuery.refetch()

@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 <!-- Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/ -->
 
 <script setup lang="ts">
@@ -12,3 +13,19 @@ import LayoutPublicPage from '#desktop/components/layout/LayoutPublicPage/Layout
     </div>
   </LayoutPublicPage>
 </template>
+=======
+<!-- Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/ -->
+
+<script setup lang="ts">
+import LayoutPublicPage from '#desktop/components/layout/LayoutPublicPage/LayoutPublicPage.vue'
+</script>
+
+<template>
+  <LayoutPublicPage box-size="medium" :title="__('Automated setup')">
+    <div class="text-center">
+      <CommonLabel>{{ $t('This system is configured for automated setup.') }}</CommonLabel>
+      <CommonLabel>{{ $t('Please use the provided URL.') }}</CommonLabel>
+    </div>
+  </LayoutPublicPage>
+</template>
+>>>>>>> upstream/develop

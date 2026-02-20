@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 require 'rails_helper'
 
@@ -6,8 +6,8 @@ DEFAULT_VALUES = {
   textarea: 'rspec',
   text:     'rspec',
   boolean:  true,
-  date:     1,
-  datetime: 12,
+  date:     24,  # in hours, so 1 day
+  datetime: 720, # in minutes, so 12 hours
   integer:  123,
   select:   'key_1'
 }.freeze

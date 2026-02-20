@@ -1,4 +1,4 @@
-<!-- Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/ -->
+<!-- Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/ -->
 
 <script setup lang="ts">
 import { toRef } from 'vue'
@@ -20,8 +20,8 @@ const escalationState = useEscalationState(toRef(() => props.escalationAt))
   <CommonSectionMenuItem
     v-if="escalationAt && escalationState !== EscalationState.None"
     :class="{
-      'text-red-bright bg-red-highlight': escalationState === EscalationState.Escalated,
-      'text-yellow bg-yellow-highlight': escalationState === EscalationState.Warning,
+      'bg-red-highlight text-red-bright': escalationState === EscalationState.Escalated,
+      'bg-yellow-highlight text-yellow': escalationState === EscalationState.Warning,
     }"
     :label="label"
   >

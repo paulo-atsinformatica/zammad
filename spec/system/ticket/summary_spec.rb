@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 require 'rails_helper'
 
@@ -17,7 +17,7 @@ RSpec.describe 'Ticket Summary', authenticated_as: :authenticate, type: :system 
   let(:initial_content) do
     {
       'customer_request'     => article.body_as_text,
-      'conversation_summary' => initial_summary,
+      'conversation_summary' => [initial_summary],
       'open_questions'       => [],
       'upcoming_events'      => [],
       'customer_mood'        => 'Neutral',
@@ -29,7 +29,7 @@ RSpec.describe 'Ticket Summary', authenticated_as: :authenticate, type: :system 
   let(:updated_content) do
     {
       'customer_request'     => 'Customer is facing an issue with the product.',
-      'conversation_summary' => updated_summary,
+      'conversation_summary' => [updated_summary],
       'open_questions'       => ['What is the issue?', 'How can we help?'],
       'upcoming_events'      => ['Next meeting on Friday', 'Follow-up call next week'],
       'customer_mood'        => 'Happy',
@@ -41,7 +41,7 @@ RSpec.describe 'Ticket Summary', authenticated_as: :authenticate, type: :system 
   let(:ai_analytics_run) do
     AI::Analytics::Run.create!(
       content:         initial_content,
-      version:         AI::Service::TicketSummarize.lookup_version({ ticket: }, Locale.find_by(locale: agent.locale)),
+      version:         AI::Service::TicketSummarize.lookup_version({ articles: ticket.articles.without_system_notifications }, Locale.find_by(locale: agent.locale)),
       ai_service_name: 'TicketSummarize',
       **AI::Service::TicketSummarize.lookup_attributes({ ticket: }, Locale.find_by(locale: agent.locale)),
     )
@@ -68,15 +68,12 @@ RSpec.describe 'Ticket Summary', authenticated_as: :authenticate, type: :system 
     if defined?(initial_cache_key)
       AI::StoredResult.create!(
         content:          initial_content,
-        version:          AI::Service::TicketSummarize.lookup_version({ ticket: }, Locale.find_by(locale: agent.locale)),
+        version:          AI::Service::TicketSummarize.lookup_version({ articles: ticket.articles.without_system_notifications }, Locale.find_by(locale: agent.locale)),
         **AI::Service::TicketSummarize.lookup_attributes({ ticket: }, Locale.find_by(locale: agent.locale)),
         ai_analytics_run:,
       )
 
       ai_analytics_usage if defined?(ai_analytics_usage)
-
-      allow_any_instance_of(AI::Service::EmailRemoveQuote)
-        .to receive(:ask_provider).and_return(article.body_as_text)
 
       allow_any_instance_of(AI::Service::TicketSummarize)
         .to receive(:ask_provider).and_return(updated_content)

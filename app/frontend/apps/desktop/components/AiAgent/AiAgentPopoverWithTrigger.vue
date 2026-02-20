@@ -1,4 +1,4 @@
-<!-- Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/ -->
+<!-- Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/ -->
 
 <script setup lang="ts">
 import CommonPopoverWithTrigger, {
@@ -17,8 +17,8 @@ defineProps<CommonPopoverWithTriggerProps>()
   >
     <template #popover-content="{ popoverId }">
       <div :id="popoverId" class="p-3">
-        <CommonLabel class="text-base! dark:text-white! text-black! block!" tag="h3">
-          {{ $t('AI Agent') }}
+        <CommonLabel class="block! text-base! text-black! dark:text-white!" tag="h3">
+          {{ $t('AI agent') }}
         </CommonLabel>
 
         <CommonLabel tag="p">
@@ -28,13 +28,12 @@ defineProps<CommonPopoverWithTriggerProps>()
     </template>
 
     <div
-      class="relative size-8 rounded-full before:bg-gradient-to-r before:from-blue-800 before:to-pink-200 before:absolute before:w-full before:inset-0 before:size-full before:-z-1 before:rounded-full before:animate-spin before:[animation-duration:2s]"
+      class="relative size-8 rounded-full before:absolute before:inset-0 before:-z-1 before:size-full before:w-full before:animate-spin before:rounded-full before:bg-gradient-to-r before:from-blue-800 before:to-pink-200 before:[animation-duration:2s]"
     >
       <div
-        :aria-label="$t('AI Agent')"
-        class="p-1 bg-neutral-50 dark:bg-gray-500 rounded-[inherit] border border-transparent bg-clip-padding h-full flex"
+        class="flex h-full rounded-[inherit] border border-transparent bg-neutral-50 bg-clip-padding p-1 dark:bg-gray-500"
       >
-        <CommonIcon class="text-blue-800" size="base" name="ai-agent" />
+        <CommonIcon class="text-blue-800" size="base" name="ai-agent" :label="__('AI agent')" />
       </div>
 
       <span

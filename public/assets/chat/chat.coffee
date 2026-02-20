@@ -195,6 +195,24 @@ do($ = window.jQuery, window) ->
     initialQueueDelay: 10000
     translations:
     # ZAMMAD_TRANSLATIONS_START
+      'ca':
+        '<strong>Chat</strong> with us!': '<strong>Xateja</strong> amb nosaltres!'
+        'All colleagues are busy.': 'Tot el personal està ocupat.'
+        'Chat closed by %s': 'Xat tancat per %s'
+        'Compose your message…': 'Redacta el teu missatge…'
+        'Connecting': 'Connectant'
+        'Connection lost': 'Connexió perduda'
+        'Connection re-established': 'Connexió restablerta'
+        'Offline': 'Fora de línia'
+        'Online': 'En línia'
+        'Scroll down to see new messages': 'Desplaçat més avall per veure nous missatges'
+        'Send': 'Envia'
+        'Since you didn\'t respond in the last %s minutes your conversation was closed.': 'Com que no heu respost en els darrers %s minuts, la vostra conversa s\'ha tancat.'
+        'Since you didn\'t respond in the last %s minutes your conversation with <strong>%s</strong> was closed.': 'Com que no heu respost en els darrers %s minuts, la vostra conversa amb <strong>%s</strong> s\'ha tancat.'
+        'Start new conversation': 'Inicia una conversa nova'
+        'Today': 'Avui'
+        'We are sorry, it is taking longer than expected to get a slot. Please try again later or send us an email. Thank you!': 'Ho sentim, està tardant més del que s\'esperava per aconseguir un espai. Si us plau, torna-ho a intentar més tard o envia\'ns un correu electrònic. Gràcies!'
+        'You are on waiting list position <strong>%s</strong>.': 'Estàs en la posició <strong>%s</strong> de la llista d\'espera.'
       'cs':
         '<strong>Chat</strong> with us!': '<strong>Chatujte</strong> s námi!'
         'All colleagues are busy.': 'Všichni kolegové jsou vytíženi.'
@@ -305,22 +323,22 @@ do($ = window.jQuery, window) ->
         'You are on waiting list position <strong>%s</strong>.': 'Nalazite se u redu čekanja na poziciji <strong>%s</strong>.'
       'hu':
         '<strong>Chat</strong> with us!': '<strong>Csevegjen</strong> velünk!'
-        'All colleagues are busy.': 'Minden munkatársunk foglalt.'
+        'All colleagues are busy.': 'Az összes munkatárs elfoglalt.'
         'Chat closed by %s': 'A csevegés %s által lezárva'
-        'Compose your message…': 'Fogalmazza meg üzenetét…'
-        'Connecting': 'Csatlakozás'
+        'Compose your message…': 'Üzenet írása…'
+        'Connecting': 'Kapcsolatépítés'
         'Connection lost': 'A kapcsolat megszakadt'
         'Connection re-established': 'A kapcsolat helyreállt'
-        'Offline': 'Offline'
-        'Online': 'Online'
-        'Scroll down to see new messages': 'Görgessen lefelé az új üzenetek megtekintéséhez'
+        'Offline': 'Kapcsolat nélkül'
+        'Online': 'Elérhető'
+        'Scroll down to see new messages': 'Görgessen le az új üzenetek megtekintéséhez'
         'Send': 'Küldés'
-        'Since you didn\'t respond in the last %s minutes your conversation was closed.': 'Mivel az elmúlt %s percben nem válaszolt, a beszélgetése lezárásra került.'
-        'Since you didn\'t respond in the last %s minutes your conversation with <strong>%s</strong> was closed.': 'Mivel az elmúlt %s percben nem válaszolt, <strong>%s</strong> munkatársunkkal folytatott beszélgetését lezártuk.'
+        'Since you didn\'t respond in the last %s minutes your conversation was closed.': 'Mivel nem válaszolt az elmúlt %s percben, a beszélgetése lezárásra került.'
+        'Since you didn\'t respond in the last %s minutes your conversation with <strong>%s</strong> was closed.': 'Mivel nem válaszolt az elmúlt %s percben, <strong>%s</strong> ügyintézővel folytatott beszélgetése lezárásra került.'
         'Start new conversation': 'Új beszélgetés indítása'
         'Today': 'Ma'
-        'We are sorry, it is taking longer than expected to get a slot. Please try again later or send us an email. Thank you!': 'Sajnáljuk, hogy a vártnál hosszabb ideig tart a helyfoglalás. Kérjük, próbálja meg később újra, vagy küldjön nekünk egy e-mailt. Köszönjük!'
-        'You are on waiting list position <strong>%s</strong>.': 'Ön a várólistán a <strong>%s</strong> helyen szerepel.'
+        'We are sorry, it is taking longer than expected to get a slot. Please try again later or send us an email. Thank you!': 'Sajnáljuk, a vártnál hosszabb ideig tart a helyfoglalás. Próbálja meg később újra, vagy küldjön nekünk e-mailt. Köszönjük!'
+        'You are on waiting list position <strong>%s</strong>.': 'Ön a várólista <strong>%s.</strong> helyén szerepel.'
       'id':
         '<strong>Chat</strong> with us!': '<strong>Obrolan</strong> dengan kami!'
         'All colleagues are busy.': 'Semua rekan sedang sibuk.'
@@ -1737,7 +1755,7 @@ do($ = window.jQuery, window) ->
       # Convert <span style="mso-spacerun:yes">___</span> to string of alternating
       # breaking/non-breaking spaces of same length
       #content = content.replace(/<span\s+style\s*=\s*"\s*mso-spacerun\s*:\s*yes\s*;?\s*"\s*>([\s\u00a0]*)<\/span>/gi, (str, spaces) ->
-      #  return (spaces.length > 0) ? spaces.replace(/./, " ").slice(Math.floor(spaces.length/2)).split("").join("\u00a0") : ''
+      #  return if (spaces.length > 0) then spaces.replace(/./, " ").slice(Math.floor(spaces.length/2)).split("").join("\u00a0") else ''
       #)
 
       editor.html(content)
@@ -1762,7 +1780,7 @@ do($ = window.jQuery, window) ->
             matches = /([0-9])\./.exec(txt)
             if matches
               start = parseInt(matches[1], 10)
-              list_tag = start>1 ? '<ol start="' + start + '"></ol>' : '<ol></ol>'
+              list_tag = if start > 1 then '<ol start="' + start + '"></ol>' else '<ol></ol>'
             else
               list_tag = '<ol></ol>'
 

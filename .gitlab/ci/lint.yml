@@ -138,8 +138,8 @@
 'lint: secret_detection':
   extends: .template_lint
   image:
-    name: "zricethezav/gitleaks:latest"
-    entrypoint: [""]
+    name: 'zricethezav/gitleaks:latest'
+    entrypoint: ['']
   cache: []
   before_script: []
   script:

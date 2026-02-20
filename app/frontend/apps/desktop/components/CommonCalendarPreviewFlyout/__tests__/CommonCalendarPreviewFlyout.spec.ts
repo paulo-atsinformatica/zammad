@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import { renderComponent } from '#tests/support/components/index.ts'
 import { mockApplicationConfig } from '#tests/support/mock-applicationConfig.ts'
@@ -88,11 +88,11 @@ describe('TicketSidebarSharedDraftFlyout.vue', () => {
 
     expect(
       wrapper.getByRole('complementary', {
-        name: 'Preview Calendar',
+        name: 'Preview calendar',
       }),
     ).toBeInTheDocument()
 
-    expect(wrapper.getByRole('heading', { name: 'Preview Calendar' })).toBeInTheDocument()
+    expect(wrapper.getByRole('heading', { name: 'Preview calendar' })).toBeInTheDocument()
 
     expect(wrapper.getByText('event 1')).toBeInTheDocument()
     expect(wrapper.getByText('location 1')).toBeInTheDocument()

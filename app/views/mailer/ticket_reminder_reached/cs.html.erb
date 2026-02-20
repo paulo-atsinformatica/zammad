@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 Dosažena upomínka ticketu (#{ticket.title})
 
 <div>Dobrý den, #{recipient.firstname},</div>
@@ -16,3 +17,23 @@ Dosažena upomínka ticketu (#{ticket.title})
 <div>
   <a href="#{config.http_type}://#{config.fqdn}/#ticket/zoom/#{ticket.id}" target="zammad_app">Otevřít v aplikaci #{config.product_name}</a>
 </div>
+=======
+Dosažena upomínka tiketu (#{ticket.title})
+
+<div>Dobrý den, #{recipient.firstname},</div>
+<br>
+<div>tiket (#{ticket.title}) vytvořený zákazníkem "<b>#{ticket.customer.longname}</b>" vyžaduje Vaši pozornost, neboť byl dosažen čas pro upomínku.</div>
+<br>
+<% if @objects[:article] %>
+  <div>
+  Informace:
+  <blockquote type="cite">
+  #{article.body_as_html}
+  </blockquote>
+  </div>
+<% end %>
+<br>
+<div>
+  <a href="#{config.http_type}://#{config.fqdn}/#ticket/zoom/#{ticket.id}" target="zammad_app">Otevřít v aplikaci #{config.product_name}</a>
+</div>
+>>>>>>> upstream/develop

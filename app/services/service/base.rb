@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
 
 class Service::Base
@@ -5,3 +6,12 @@ class Service::Base
     raise NotImplementedError
   end
 end
+=======
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
+
+class Service::Base
+  def execute
+    raise NotImplementedError
+  end
+end
+>>>>>>> upstream/develop

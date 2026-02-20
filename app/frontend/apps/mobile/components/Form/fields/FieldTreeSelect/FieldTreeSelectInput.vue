@@ -1,4 +1,4 @@
-<!-- Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/ -->
+<!-- Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/ -->
 
 <script setup lang="ts">
 import { computed, nextTick, ref, toRef } from 'vue'
@@ -63,12 +63,15 @@ const flattenOptions = (
 ): FlatSelectOption[] =>
   options &&
   options.reduce((flatOptions: FlatSelectOption[], { children, ...option }) => {
-    flatOptions.push({
-      ...option,
-      parents,
-      hasChildren: Boolean(children),
-    })
+    flatOptions.push(
+      Object.assign(option, {
+        parents,
+        hasChildren: Boolean(children),
+      }),
+    )
+
     if (children) flatOptions.push(...flattenOptions(children, [...parents, option.value]))
+
     return flatOptions
   }, [])
 
@@ -162,7 +165,7 @@ setupMissingOrDisabledOptionHandling()
       ref="outputElement"
       role="combobox"
       :name="context.node.name"
-      class="formkit-disabled:pointer-events-none flex grow items-center focus:outline-hidden"
+      class="flex grow items-center focus:outline-hidden formkit-disabled:pointer-events-none"
       tabindex="0"
       :aria-labelledby="`label-${context.id}`"
       :aria-disabled="context.disabled ? 'true' : undefined"
@@ -209,8 +212,8 @@ setupMissingOrDisabledOptionHandling()
       </div>
       <CommonIcon
         v-if="context.clearable && hasValue && !context.disabled"
-        :label="__('Clear Selection')"
-        class="text-gray absolute -mt-5 shrink-0 ltr:right-2 rtl:left-2"
+        :label="__('Clear selection')"
+        class="absolute -mt-5 shrink-0 text-gray ltr:right-2 rtl:left-2"
         name="close-small"
         size="base"
         role="button"

@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 // Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
 
 import { isRef } from 'vue'
@@ -10,3 +11,17 @@ describe('useTabGroup', () => {
     expect(isRef(composable.activeTab)).toBeTruthy()
   })
 })
+=======
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
+
+import { isRef } from 'vue'
+
+import { useTabGroup } from '#desktop/components/CommonTabGroup/useTabGroup.ts'
+
+describe('useTabGroup', () => {
+  it('test useTabGroup', () => {
+    const composable = useTabGroup()
+    expect(isRef(composable.activeTab)).toBeTruthy()
+  })
+})
+>>>>>>> upstream/develop

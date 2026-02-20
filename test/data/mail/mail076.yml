@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 --- !ruby/hash:ActiveSupport::HashWithIndifferentAccess
 from: '"Millions Lottery Spain transfer"@example.com>'
 from_email: '"Millions Lottery Spain transfer"@example.com>'
@@ -17,3 +18,14 @@ attachments:
     Message-ID: "<20180924102254.B52A3EAFDF0F87BA@example.com>"
     Subject: "[SPAM] (19.9) Your Winning Notification!!!"
     Charset: UTF-8
+=======
+--- !ruby/hash:ActiveSupport::HashWithIndifferentAccess
+from: '"Millions Lottery Spain transfer"@example.com>'
+from_email: '"Millions Lottery Spain transfer"@example.com>'
+from_display_name: Millions Lottery Spain transfer@example.com>
+to: info@example.de
+subject: "[SPAM] (19.9) Your Winning Notification!!!"
+body: test spam
+content_type: text/plain
+attachments: []
+>>>>>>> upstream/develop

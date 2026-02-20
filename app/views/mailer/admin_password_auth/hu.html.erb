@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 Rendszergazdai bejelentkezés a következő rendszerbe: #{config.product_name}
 
 <div>Üdvözöljük #{user.firstname},</div>
@@ -13,3 +14,20 @@ Rendszergazdai bejelentkezés a következő rendszerbe: #{config.product_name}
 <div>Amennyiben nem szeretne bejelentkezni, kérjük, hagyja figyelmen kívül ezt az üzenetet.</div>
 <br>
 <div>Az Ön #{config.product_name} csapata</div>
+=======
+Adminisztrátori bejelentkezés a következő rendszerbe: #{config.product_name}
+
+<div>Kedves #{user.firstname}!</div>
+<br>
+<div>Adminisztrátori bejelentkezési kérést kaptunk az Ön <b>#{user.login}</b> #{config.product_name}-fiókjához.</div>
+<br>
+<div>Kattintson a lenti hivatkozásra (vagy másolja le és illessze be az URL-t a böngészőjébe) a folytatáshoz:</div>
+<br>
+<div><a href="#{url}">#{url}</a></div>
+<br>
+<div>Ez a hivatkozás egy olyan oldalra vezeti Önt, ahol bejelentkezhet.</div>
+<br>
+<div>Ha nem szeretne bejelentkezni, akkor hagyja figyelmen kívül ezt az üzenetet.</div>
+<br>
+<div>Az Ön #{config.product_name} csapata</div>
+>>>>>>> upstream/develop

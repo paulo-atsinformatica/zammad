@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 class Taskbar < ApplicationModel
   include ChecksClientNotification
@@ -97,7 +97,7 @@ class Taskbar < ApplicationModel
 
   def self.taskbar_entities
     @taskbar_entities ||= begin
-      ApplicationModel.descendants.select { |model| model.included_modules.include?(HasTaskbars) }.each_with_object([]) do |model, result|
+      ApplicationModel.descendants.select { |model| model.include?(HasTaskbars) }.each_with_object([]) do |model, result|
         model.taskbar_entities&.each do |entity|
           result << entity
         end
@@ -107,7 +107,7 @@ class Taskbar < ApplicationModel
 
   def self.taskbar_ignore_state_updates_entities
     @taskbar_ignore_state_updates_entities ||= begin
-      ApplicationModel.descendants.select { |model| model.included_modules.include?(HasTaskbars) }.each_with_object([]) do |model, result|
+      ApplicationModel.descendants.select { |model| model.include?(HasTaskbars) }.each_with_object([]) do |model, result|
         model.taskbar_ignore_state_updates_entities&.each do |entity|
           result << entity
         end

@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import { getAllByTestId, getByTestId, within } from '@testing-library/vue'
 
@@ -100,7 +100,7 @@ describe('playing with overviews', () => {
     expect(notify).toHaveBeenCalledWith({
       id: 'overview-save',
       type: NotificationTypes.Success,
-      message: 'Ticket Overview settings are saved.',
+      message: 'Ticket overview settings are saved.',
     })
   })
 

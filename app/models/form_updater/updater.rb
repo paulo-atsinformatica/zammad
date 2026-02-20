@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 class FormUpdater::Updater
   include Mixin::RequiredSubPaths
@@ -46,7 +46,7 @@ class FormUpdater::Updater
   end
 
   def resolve
-    validate_workflows if self.class.included_modules.include?(FormUpdater::Concerns::ChecksCoreWorkflow)
+    validate_workflows if self.class.include?(FormUpdater::Concerns::ChecksCoreWorkflow)
     resolve_relation_fields if relation_fields.present?
 
     handle_updater_flags if self.class.method_defined?(:handle_updater_flags)

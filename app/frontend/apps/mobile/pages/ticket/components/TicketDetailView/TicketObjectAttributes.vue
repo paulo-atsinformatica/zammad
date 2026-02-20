@@ -1,4 +1,4 @@
-<!-- Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/ -->
+<!-- Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/ -->
 
 <script setup lang="ts">
 import { computed, toRef, ref } from 'vue'
@@ -47,7 +47,7 @@ const shownUnits = computed(() => {
 
 <template>
   <CommonSectionMenu v-if="isShown">
-    <CommonSectionMenuItem v-if="ticketData.timeUnit" :label="__('Total Accounted Time')">
+    <CommonSectionMenuItem v-if="ticketData.timeUnit" :label="__('Total accounted time')">
       {{ ticketData.timeUnit }}
       {{ $t(timeAccountingDisplayUnit) }}
     </CommonSectionMenuItem>

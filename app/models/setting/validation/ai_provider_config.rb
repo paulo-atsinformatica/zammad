@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 class Setting::Validation::AIProviderConfig < Setting::Validation::Base
   attr_reader :provider
@@ -61,7 +61,7 @@ class Setting::Validation::AIProviderConfig < Setting::Validation::Base
   end
 
   def required_attributes_zammad
-    return if Setting.get('system_online_service') || Setting.get('developer_mode')
+    return if Setting.get('system_online_service')
 
     required_attributes_token
   end

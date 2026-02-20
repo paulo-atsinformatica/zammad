@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 require 'rails_helper'
 
@@ -59,6 +59,13 @@ RSpec.describe AI::StoredResult, type: :model do
       it 'deletes records matching the specified object' do
         expect { described_class.cleanup(object:) }
           .to change(described_class, :all).to [record_a, record_b]
+      end
+    end
+
+    context 'when identifier is provided' do
+      it 'deletes records matching the specified identifier' do
+        expect { described_class.cleanup(identifier: record_a.identifier) }
+          .to change(described_class, :all).to [record_b, record_c]
       end
     end
 

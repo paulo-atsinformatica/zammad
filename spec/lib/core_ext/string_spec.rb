@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 # frozen_string_literal: true
 
@@ -198,6 +198,43 @@ RSpec.describe String do
 
         [1] https://zammad.org
       TEXT
+    end
+
+    context 'with link_style: :markdown option' do
+      it 'converts <a> elements to markdown style links' do
+        html = '<p>Check out <a href="https://example.com">our website</a> for more info.</p>'
+        expect(html.html2text(false, false, link_style: :markdown)).to eq('Check out [our website](https://example.com) for more info.')
+      end
+
+      it 'converts multiple <a> elements to markdown style links' do
+        html = '<p>See <a href="https://example.com">website</a> and <a href="https://docs.example.com">docs</a>.</p>'
+        expect(html.html2text(false, false, link_style: :markdown)).to eq('See [website](https://example.com) and [docs](https://docs.example.com).')
+      end
+
+      it 'uses consistent markdown format even when link text equals the URL' do
+        html = '<p>Visit <a href="https://example.com">https://example.com</a> now.</p>'
+        expect(html.html2text(false, false, link_style: :markdown)).to eq('Visit [https://example.com](https://example.com) now.')
+      end
+
+      it 'uses consistent markdown format even when link text is URL without protocol' do
+        html = '<p>Visit <a href="https://example.com">example.com</a> now.</p>'
+        expect(html.html2text(false, false, link_style: :markdown)).to eq('Visit [example.com](https://example.com) now.')
+      end
+
+      it 'removes empty links (no text between tags)' do
+        html = '<p>Click <a href="https://example.com"></a> here.</p>'
+        expect(html.html2text(false, false, link_style: :markdown)).to eq('Click here.')
+      end
+
+      it 'shows just the text when link has no href' do
+        html = '<p>See <a>some text</a> here.</p>'
+        expect(html.html2text(false, false, link_style: :markdown)).to eq('See some text here.')
+      end
+
+      it 'strips HTML tags from link text' do
+        html = '<p>Check <a href="https://example.com"><strong>bold link</strong></a> out.</p>'
+        expect(html.html2text(false, false, link_style: :markdown)).to eq('Check [bold link](https://example.com) out.')
+      end
     end
 
     it 'converts <hr> elements to separate paragraphs containing only "___"' do

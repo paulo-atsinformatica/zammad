@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 --- !ruby/hash:ActiveSupport::HashWithIndifferentAccess
 from: "+123@example.com"
 from_email: "+123@example.com"
@@ -21,3 +22,16 @@ attachments:
     Message-ID: "<gen-049636833d78842c2956d7ac18b798bd@zammad_generated>"
     Subject: test
     Charset: UTF-8
+=======
+--- !ruby/hash:ActiveSupport::HashWithIndifferentAccess
+from: "+123@example.com"
+from_email: "+123@example.com"
+from_display_name: ''
+to: "+123@example.com"
+subject: test
+body: 'some text
+
+  '
+content_type: text/plain
+attachments: []
+>>>>>>> upstream/develop

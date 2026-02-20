@@ -1,8 +1,14 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 module Exceptions
 
   class NotAuthorized < StandardError; end
+
+  class InvalidCSRFToken < NotAuthorized
+    def initialize
+      super(__('CSRF token verification failed.'))
+    end
+  end
 
   class Forbidden < StandardError; end
 

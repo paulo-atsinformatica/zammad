@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 --- !ruby/hash:ActiveSupport::HashWithIndifferentAccess
 from: '"Name R. John" <user.name@example.com>'
 from_email: user.name@example.com
@@ -34,3 +35,16 @@ attachments:
     Accept-Language: en-US
     Content-Language: en-US
     Charset: UTF-8
+=======
+--- !ruby/hash:ActiveSupport::HashWithIndifferentAccess
+from: '"Name R. John" <user.name@example.com>'
+from_email: user.name@example.com
+from_display_name: Name R. John
+to: To This Person <user@example.com>
+subject: Subject of message
+body: 'Message text
+
+  '
+content_type: text/plain
+attachments: []
+>>>>>>> upstream/develop

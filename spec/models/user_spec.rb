@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 require 'rails_helper'
 require 'models/application_model_examples'
@@ -548,7 +548,7 @@ RSpec.describe User, type: :model do
         before { user } # create user
 
         it 'does not attempt to update CallerId record' do
-          allow(Cti::CallerId).to receive(:build).with(any_args)
+          allow(Cti::CallerId).to receive(:add).with(any_args)
 
           expect(Cti::CallerId.where(object: 'User', o_id: user.id).count)
             .to eq(0)
@@ -556,7 +556,7 @@ RSpec.describe User, type: :model do
           expect { user.update(phone: new_number) }
             .not_to change { Cti::CallerId.where(object: 'User', o_id: user.id).count }
 
-          expect(Cti::CallerId).not_to have_received(:build)
+          expect(Cti::CallerId).not_to have_received(:add)
         end
       end
 
@@ -1126,17 +1126,17 @@ RSpec.describe User, type: :model do
       context 'with a #phone attribute' do
         subject(:user) { build(:user, phone: '1234567890') }
 
-        it 'adds CallerId record on creation (via Cti::CallerId.build)' do
-          expect(Cti::CallerId).to receive(:build).with(user)
+        it 'adds CallerId record on creation (via Cti::CallerId.add)' do
+          expect(Cti::CallerId).to receive(:add).with(user)
 
           user.save
         end
 
-        it 'does not update CallerId record on touch/update (via Cti::CallerId.build)' do
-          expect(Cti::CallerId).to receive(:build).with(user)
+        it 'does not update CallerId record on touch/update (via Cti::CallerId.add)' do
+          expect(Cti::CallerId).to receive(:add).with(user)
           user.save
 
-          expect(Cti::CallerId).not_to receive(:build).with(user)
+          expect(Cti::CallerId).not_to receive(:add).with(user)
           user.touch
         end
 
@@ -1452,6 +1452,31 @@ RSpec.describe User, type: :model do
 
       expect { user.update!(organization: organizations.second, organizations: [organizations.first]) }
         .not_to raise_error
+    end
+  end
+
+  describe '#all_organization_ids' do
+    it 'returns empty array when user has no organizations' do
+      user = create(:user, organization: nil, organization_ids: [])
+
+      expect(user.all_organization_ids).to eq([])
+    end
+
+    it 'returns only primary organization id when user has only primary organization' do
+      organization = create(:organization)
+      user = create(:user, organization: organization, organization_ids: [])
+
+      expect(user.all_organization_ids).to eq([organization.id])
+    end
+
+    it 'returns both primary and secondary organization ids' do
+      organization1 = create(:organization)
+      organization2 = create(:organization)
+      organization3 = create(:organization)
+
+      user = create(:user, organization: organization1, organizations: [organization2, organization3])
+
+      expect(user.all_organization_ids).to contain_exactly(organization1.id, organization2.id, organization3.id)
     end
   end
 end

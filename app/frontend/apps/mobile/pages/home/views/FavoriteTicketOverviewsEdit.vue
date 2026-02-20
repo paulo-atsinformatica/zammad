@@ -1,4 +1,4 @@
-<!-- Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/ -->
+<!-- Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/ -->
 
 <script setup lang="ts">
 import { animations, updateConfig } from '@formkit/drag-and-drop'
@@ -58,7 +58,7 @@ const { notify } = useNotifications()
 const walker = useWalker()
 
 useHeader({
-  title: __('Ticket Overview'),
+  title: __('Ticket overview'),
   backUrl: '/',
   backAvoidHomeButton: true,
   actionTitle: __('Save'),
@@ -78,7 +78,7 @@ useHeader({
 
     notify({
       id: 'overview-save',
-      message: __('Ticket Overview settings are saved.'),
+      message: __('Ticket overview settings are saved.'),
       type: NotificationTypes.Success,
     })
     walker.back('/')

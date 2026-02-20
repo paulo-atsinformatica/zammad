@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 Permission.create_if_not_exists(
   name:        'admin',
@@ -179,6 +179,18 @@ Permission.create_if_not_exists(
   label:       __('WhatsApp'),
   description: __('Manage WhatsApp channel of your system.'),
   preferences: { prio: 1290 }
+)
+Permission.create_if_not_exists(
+  name:        'admin.beta_ui',
+  label:       'BETA UI',
+  description: __('Manage BETA UI settings of your system.'),
+  preferences: {
+    prio:    1295,
+    setting: {
+      name:  'ui_desktop_beta_switch_admin_menu',
+      value: true,
+    },
+  },
 )
 Permission.create_if_not_exists(
   name:        'admin.branding',

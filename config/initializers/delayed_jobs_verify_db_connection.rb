@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
 
 require 'delayed_job'
@@ -10,3 +11,17 @@ module Delayed
     end
   end
 end
+=======
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
+
+require 'delayed_job'
+
+module Delayed
+  class Job < ::ActiveRecord::Base # rubocop:disable Rails/ApplicationRecord
+
+    def self.recover_from(_error)
+      ::ActiveRecord::Base.connection.verify!
+    end
+  end
+end
+>>>>>>> upstream/develop

@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import { initializeAiAssistantTextToolsLoadingBannerClasses } from '#shared/components/Form/fields/FieldEditor/features/ai-assistant-text-tools/AiAssistantLoadingBanner/initializeAiAssistantTextToolsLoadingBannerClasses.ts'
 import { initializeAiAssistantTextToolsClasses } from '#shared/components/Form/fields/FieldEditor/features/ai-assistant-text-tools/AiAssistantTextTools/initializeAiAssistantTextToolsClasses.ts'
@@ -52,7 +52,7 @@ export const initializeGlobalComponentStyles = () => {
 
   initializeNotificationClasses({
     base: 'rounded px-4 py-2',
-    baseContainer: 'ltr:right-0 rtl:left-0',
+    baseContainer: 'mx-auto max-w-full',
     error: 'bg-red/60 text-white',
     info: 'bg-white text-black',
     message: 'ltr:ml-2 rtl:mr-2',

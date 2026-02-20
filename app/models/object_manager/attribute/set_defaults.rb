@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 class ObjectManager
   class Attribute
@@ -35,7 +35,7 @@ class ObjectManager
 
         Time.use_zone(Setting.get('timezone_default')) do
           diff
-            .days
+            .hours
             .from_now
             .to_date
         end
@@ -48,7 +48,7 @@ class ObjectManager
 
         Time.use_zone(Setting.get('timezone_default')) do
           diff
-            .hours
+            .minutes
             .from_now
             .change(usec: 0, sec: 0)
             .utc

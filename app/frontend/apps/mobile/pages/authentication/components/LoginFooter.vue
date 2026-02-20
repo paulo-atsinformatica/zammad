@@ -1,4 +1,4 @@
-<!-- Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/ -->
+<!-- Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/ -->
 
 <script setup lang="ts">
 import { useApplicationStore } from '#shared/stores/application.ts'
@@ -8,7 +8,7 @@ const application = useApplicationStore()
 
 <template>
   <footer
-    class="text-gray mt-8 flex w-full max-w-md items-center justify-center border-t border-gray-600 py-2.5 align-middle leading-4 font-medium"
+    class="mt-8 flex w-full max-w-md items-center justify-center border-t border-gray-600 py-2.5 align-middle leading-4 font-medium text-gray"
   >
     <CommonLink
       v-if="application.hasCustomProductBranding"

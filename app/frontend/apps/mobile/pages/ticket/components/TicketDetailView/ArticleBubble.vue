@@ -1,4 +1,4 @@
-<!-- Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/ -->
+<!-- Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/ -->
 
 <script setup lang="ts">
 import { computed, nextTick, onMounted, ref, watch } from 'vue'
@@ -196,7 +196,7 @@ const onContextClick = () => {
         <div
           ref="bubbleElement"
           data-test-id="article-content"
-          class="overflow-hidden transition-[height] duration-200 text-base"
+          class="overflow-hidden text-base transition-[height] duration-200"
         >
           <!-- eslint-disable vue/no-v-html -->
           <div class="Content" v-html="body" />

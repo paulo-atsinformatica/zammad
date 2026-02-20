@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
 
 class Service::User::AccessToken::List < Service::Base
@@ -17,3 +18,24 @@ class Service::User::AccessToken::List < Service::Base
       .reorder(updated_at: :desc, name: :asc)
   end
 end
+=======
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
+
+class Service::User::AccessToken::List < Service::Base
+  attr_reader :user
+
+  def initialize(user)
+    super()
+
+    @user = user
+  end
+
+  def execute
+    user
+      .tokens
+      .without_sensitive_columns
+      .where(action: 'api', persistent: true)
+      .reorder(updated_at: :desc, name: :asc)
+  end
+end
+>>>>>>> upstream/develop

@@ -1,4 +1,4 @@
-<!-- Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/ -->
+<!-- Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/ -->
 
 <script setup lang="ts">
 import { computed, ref, toRef } from 'vue'
@@ -127,7 +127,7 @@ const tooltipMessages = computed(() => {
         v-if="tooltipMessages.length"
         :name="`security-${context.node.name}`"
         :messages="tooltipMessages"
-        :heading="__('Security Information')"
+        :heading="__('Security information')"
       >
         <CommonIcon name="tooltip" size="small" />
       </CommonTooltip>

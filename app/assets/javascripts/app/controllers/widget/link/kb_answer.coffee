@@ -23,6 +23,8 @@ class App.WidgetLinkKbAnswer extends App.WidgetLink
     data.include_locale    = true
     data.index             = 'KnowledgeBase::Answer::Translation'
     data.highlight_enabled = false
+    data.include_subtitle  = true
+    data.url_type          = 'agent'
 
     attributes.data = JSON.stringify(data)
 
@@ -64,6 +66,9 @@ class App.WidgetLinkKbAnswer extends App.WidgetLink
     @searchableSelect.addClass('hidden')
 
   didSubmit: =>
+    if @shadowField.val() == ''
+      return
+
     @clearDelay('hideField')
     @inputField.attr('disabled', true)
     @saveToServer(@shadowField.val())

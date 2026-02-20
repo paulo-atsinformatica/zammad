@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
 
 class SessionsPolicy < ApplicationPolicy
@@ -5,3 +6,12 @@ class SessionsPolicy < ApplicationPolicy
     user.permissions?('admin.user')
   end
 end
+=======
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
+
+class SessionsPolicy < ApplicationPolicy
+  def impersonate?
+    user.permissions?('admin.user')
+  end
+end
+>>>>>>> upstream/develop

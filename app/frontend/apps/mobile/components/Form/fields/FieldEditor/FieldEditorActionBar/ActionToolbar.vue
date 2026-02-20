@@ -1,4 +1,4 @@
-<!-- Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/ -->
+<!-- Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/ -->
 
 <script setup lang="ts">
 import { onKeyDown, useEventListener, whenever } from '@vueuse/core'
@@ -147,7 +147,7 @@ whenever(
           <CommonIcon v-if="action.subMenu" name="caret" size="xs" decorative />
           <div
             v-if="action.name === 'textColor'"
-            class="color-indicator absolute bottom-[0.6rem] h-1 w-1 border border-gray-400 rounded-xs box-content start-1/2 rtl:translate-x-1/2 ltr:-translate-x-1/2"
+            class="color-indicator absolute start-1/2 bottom-[0.6rem] box-content h-1 w-1 rounded-xs border border-gray-400 ltr:-translate-x-1/2 rtl:translate-x-1/2"
             :style="{
               backgroundColor: props.editor?.getAttributes('textStyle')?.color
                 ? props.editor.getAttributes('textStyle').color

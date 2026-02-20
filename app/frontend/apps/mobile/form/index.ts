@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import { defineAsyncComponent, type App } from 'vue'
 
@@ -82,6 +82,9 @@ export const initializeFormFields = () => {
     input: {
       container: 'p-2',
       inlineContainer: '',
+    },
+    tableMenu: {
+      triggerButton: 'w-7 h-7 flex items-center justify-center bg-blue/80 text-white',
     },
   })
 

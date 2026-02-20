@@ -1,7 +1,7 @@
 class App.SidebarTicketSummary extends App.Controller
   DISPLAY_STRUCTURE: [
     { key: 'customer_request', name: __('Customer Intent'), value: 'customer_request' },
-    { key: 'conversation_summary', name: __('Conversation Summary'), value: 'conversation_summary' },
+    { key: 'conversation_summary', name: __('Conversation Summary'), value: 'conversation_summary', type: 'paragraphs' },
     { key: 'open_questions', name: __('Open Questions'), value: 'open_questions', type: 'list' },
     { key: 'upcoming_events', name: __('Upcoming Events'), value: 'upcoming_events', type: 'list' },
     { key: 'customer_sentiment', name: __('Customer Sentiment'), value: ['customer_emotion', 'customer_mood'] },
@@ -30,10 +30,14 @@ class App.SidebarTicketSummary extends App.Controller
     @controllerBind('ticket::summary::update', (data) =>
       return if !@sidebarIsEnabled()
       return if data.ticket_id.toString() isnt @ticket.id.toString()
-      return if data.locale isnt App.i18n.get()
+      return if data.locale isnt App.i18n.get() && !data.error
 
       if data.error
-        @renderSummarization(error: true)
+        if data.ai_analytics_run_id
+          @loadSummarization(null, data.ai_analytics_run_id)
+        else
+          @renderSummarization(error: true)
+
         return
 
       if !@isLoadSummaryNow()
@@ -103,7 +107,7 @@ class App.SidebarTicketSummary extends App.Controller
       name:           'summary'
       badgeIcon:      'smart-assist'
       badgeCallback:  @badgeRender
-      sidebarHead:     __('Summary')
+      sidebarHead:     __('AI Summary')
       sidebarCallback: @sidebarCallback
       sidebarActions:  []
     }
@@ -224,7 +228,7 @@ class App.SidebarTicketSummary extends App.Controller
 
       sender.name != 'System' && article.body?.length > 0
 
-  loadSummarization: (regenerationOfId = null) =>
+  loadSummarization: (regenerationOfId = null, ai_analytics_run_id = null) =>
     return if !@sidebarIsEnabled()
 
     @waitingSummarization = false
@@ -232,6 +236,7 @@ class App.SidebarTicketSummary extends App.Controller
     data = {}
 
     data.regeneration_of_id = regenerationOfId if regenerationOfId
+    data.ai_analytics_run_error_id = ai_analytics_run_id if ai_analytics_run_id
 
     @startStripeAnimation()
 

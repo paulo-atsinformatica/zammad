@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 require 'rails_helper'
 
@@ -282,9 +282,9 @@ RSpec.describe Gql::Mutations::Ticket::Update, :aggregate_failures, type: :graph
           expect(gql.result.data).to eq({
                                           'ticket' => nil,
                                           'errors' => [
-                                            'message'   => 'The ticket checklist is incomplete.',
-                                            'field'     => nil,
-                                            'exception' => exception,
+                                            { 'message'   => 'The ticket checklist is incomplete.',
+                                              'field'     => nil,
+                                              'exception' => exception },
                                           ],
                                         })
         end

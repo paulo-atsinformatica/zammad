@@ -1,4 +1,4 @@
-<!-- Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/ -->
+<!-- Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/ -->
 
 <script setup lang="ts">
 import { toRef } from 'vue'
@@ -39,11 +39,11 @@ const { viewingUsers, idleUsers } = useTicketLiveUsersDisplay(toRef(() => props.
       />
     </CommonSectionMenu>
     <CommonSectionMenu v-if="isAiAgentRunning" :help="__('Currently processing this ticket…')">
-      <div class="p-3 flex gap-3 items-center">
+      <div class="flex items-center gap-3 p-3">
         <AiAgentAvatar size="large" />
-        <CommonLabel size="large" class="text-white">{{ $t('Ai Agent') }}</CommonLabel>
+        <CommonLabel size="large" class="text-white">{{ $t('AI agent') }}</CommonLabel>
         <CommonIcon
-          class="rtl:mr-auto ltr:ml-auto"
+          class="ltr:ml-auto rtl:mr-auto"
           :label="$t('Currently processing this ticket…')"
           name="avatar-indicator-editing-mobile"
         />

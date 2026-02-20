@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 // Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
 
 import { EnumSecurityStateType } from '#shared/graphql/types.ts'
@@ -11,3 +12,18 @@ export const translateArticleSecurity = (security: string) => {
 
   return i18n.t(typeLabels[security] || security)
 }
+=======
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
+
+import { EnumSecurityStateType } from '#shared/graphql/types.ts'
+import { i18n } from '#shared/i18n.ts'
+
+export const translateArticleSecurity = (security: string) => {
+  const typeLabels = {
+    [EnumSecurityStateType.Pgp]: __('PGP'),
+    [EnumSecurityStateType.Smime]: __('S/MIME'),
+  } as Record<string, string>
+
+  return i18n.t(typeLabels[security] || security)
+}
+>>>>>>> upstream/develop

@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
 
 module Gql::Subscriptions
@@ -20,3 +21,25 @@ module Gql::Subscriptions
     end
   end
 end
+=======
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
+
+module Gql::Subscriptions
+  class Ticket::OverviewUpdates < BaseSubscription
+
+    description 'Updates to overviews'
+
+    argument :ignore_user_conditions, Boolean, description: 'Include additional overviews by ignoring user conditions'
+
+    field :ticket_overviews, [Gql::Types::OverviewType], description: 'Current ticket overviews for the user.'
+
+    requires_permission 'ticket.agent', 'ticket.customer'
+
+    def update(ignore_user_conditions:)
+      {
+        ticket_overviews: ::Ticket::Overviews.all(current_user: context.current_user, ignore_user_conditions:)
+      }
+    end
+  end
+end
+>>>>>>> upstream/develop

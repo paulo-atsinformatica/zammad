@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import { computed } from 'vue'
 
@@ -58,17 +58,16 @@ export const useObjectLinks = (object: Ref<ObjectLike | undefined>, targetType: 
 
   const linkTypesWithLinks = computed(() => {
     return linkTypes
-      .map((type) => ({
-        ...type,
-        id: getUuid(),
-        links: links.value.filter((link) => link.type === type.value),
-      }))
+      .map((type) =>
+        Object.assign(type, {
+          id: getUuid(),
+          links: links.value.filter((link) => link.type === type.value),
+        }),
+      )
       .filter((type) => type.links.length > 0)
   })
 
-  const hasLinks = computed(() => {
-    return linkTypesWithLinks.value.some((type) => type.links.length > 0)
-  })
+  const hasLinks = computed(() => linkTypesWithLinks.value.some((type) => type.links.length > 0))
 
   return {
     linkListIsLoading: linkListQueryLoading,

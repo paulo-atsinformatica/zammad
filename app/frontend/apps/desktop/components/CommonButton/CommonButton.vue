@@ -1,4 +1,4 @@
-<!-- Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/ -->
+<!-- Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/ -->
 
 <script setup lang="ts">
 import { startCase } from 'lodash-es'
@@ -160,7 +160,7 @@ const iconSizeClass = computed(() => {
     :tabindex="disabled ? '-1' : '0'"
     :aria-disabled="disabled ? 'true' : undefined"
   >
-    <slot name="label">
+    <slot name="label" :icon-size="iconSizeClass">
       <CommonIcon
         v-if="prefixIcon"
         class="pointer-events-none shrink-0"

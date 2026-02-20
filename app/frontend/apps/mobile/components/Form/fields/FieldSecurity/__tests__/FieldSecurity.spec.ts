@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import { getNode } from '@formkit/core'
 import { FormKit } from '@formkit/vue'
@@ -292,7 +292,7 @@ describe('rendering security messages', () => {
 
     expect(view.baseElement).toHaveTextContent('Encryption: Custom encryption message')
     expect(view.baseElement).toHaveTextContent('Sign: Custom sign message')
-    expect(view.baseElement).toHaveTextContent('Security Information')
+    expect(view.baseElement).toHaveTextContent('Security information')
   })
 
   it("doesn't renders message if there is no messages in a different type", async () => {
@@ -313,7 +313,7 @@ describe('rendering security messages', () => {
 
     expect(view.baseElement).toHaveTextContent('Encryption: Custom encryption message')
     expect(view.baseElement).toHaveTextContent('Sign: Custom sign message')
-    expect(view.baseElement).toHaveTextContent('Security Information')
+    expect(view.baseElement).toHaveTextContent('Security information')
 
     await view.events.click(view.getByRole('option', { name: 'PGP' }))
 
@@ -342,7 +342,7 @@ describe('rendering security messages', () => {
 
     expect(view.baseElement).toHaveTextContent('Encryption: Custom S/MIME encryption message')
     expect(view.baseElement).toHaveTextContent('Sign: Custom S/MIME sign message')
-    expect(view.baseElement).toHaveTextContent('Security Information')
+    expect(view.baseElement).toHaveTextContent('Security information')
 
     await view.events.click(view.getByRole('option', { name: 'PGP' }))
     await view.events.click(view.getByTestId('tooltipTrigger'))

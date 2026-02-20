@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 import { waitFor } from '@testing-library/vue'
 import { ref, computed, effectScope } from 'vue'
 
@@ -106,8 +106,9 @@ const renderRenderTicketSidebarSummary = (ticket: Partial<TicketById> = defaultT
 const ticketAIAssistanceSummarizeMock = {
   summary: {
     customerRequest: 'Order not received after payment',
-    conversationSummary:
+    conversationSummary: [
       'The customer paid for an order but claims to have not received it. They provided the order number and requested assistance with tracking.',
+    ],
     openQuestions: ['What was the payment method used?'],
     upcomingEvents: [
       'Check the order status in the system',
@@ -143,17 +144,17 @@ describe('TicketSidebarSummary', () => {
 
     expect(
       await wrapper.findByRole('heading', {
-        name: 'Customer Intent',
+        name: 'Customer intent',
         level: 3,
       }),
     ).toBeInTheDocument()
 
     const headings = [
-      'Customer Intent',
-      'Conversation Summary',
-      'Open Questions',
-      'Upcoming Events',
-      'Customer Sentiment',
+      'Customer intent',
+      'Conversation summary',
+      'Open questions',
+      'Upcoming events',
+      'Customer sentiment',
     ]
 
     headings.forEach((heading) => {
@@ -167,7 +168,7 @@ describe('TicketSidebarSummary', () => {
 
     const content = [
       ticketAIAssistanceSummarizeMock.summary.customerRequest,
-      ticketAIAssistanceSummarizeMock.summary.conversationSummary,
+      ...ticketAIAssistanceSummarizeMock.summary.conversationSummary,
       ...ticketAIAssistanceSummarizeMock.summary.openQuestions,
       ...ticketAIAssistanceSummarizeMock.summary.upcomingEvents,
       `${ticketAIAssistanceSummarizeMock.summary.customerEmotion} ${ticketAIAssistanceSummarizeMock.summary.customerMood}`,
@@ -201,14 +202,14 @@ describe('TicketSidebarSummary', () => {
 
     expect(
       await wrapper.findByRole('heading', {
-        name: 'Customer Intent',
+        name: 'Customer intent',
         level: 3,
       }),
     ).toBeInTheDocument()
 
-    const enabledHeadings = ['Customer Intent', 'Conversation Summary', 'Upcoming Events']
+    const enabledHeadings = ['Customer intent', 'Conversation summary', 'Upcoming events']
 
-    const disabledHeadings = ['Open Questions', 'Customer Sentiment']
+    const disabledHeadings = ['Open questions', 'Customer sentiment']
 
     enabledHeadings.forEach((heading) => {
       expect(
@@ -379,7 +380,7 @@ describe('TicketSidebarSummary', () => {
 
     await waitForTicketAiAssistanceSummarizeMutationCalls()
 
-    await wrapper.events.click(await wrapper.findByRole('button', { name: 'Positive Feedback' }))
+    await wrapper.events.click(await wrapper.findByRole('button', { name: 'Positive feedback' }))
 
     await waitForTicketAiAssistanceSummarizeMutationCalls()
 
@@ -412,7 +413,7 @@ describe('TicketSidebarSummary', () => {
 
     await waitForTicketAiAssistanceSummarizeMutationCalls()
 
-    await wrapper.events.click(await wrapper.findByRole('button', { name: 'Negative Feedback' }))
+    await wrapper.events.click(await wrapper.findByRole('button', { name: 'Negative feedback' }))
 
     await waitForTicketAiAssistanceSummarizeMutationCalls()
 

@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import { renderComponent } from '#tests/support/components/index.ts'
 import { waitForNextTick } from '#tests/support/utils.ts'
@@ -76,11 +76,11 @@ describe('TicketSharedDraftFlyout.vue', () => {
 
     expect(
       wrapper.getByRole('complementary', {
-        name: 'Preview Shared Draft',
+        name: 'Preview shared draft',
       }),
     ).toBeInTheDocument()
 
-    expect(wrapper.getByRole('heading', { name: 'Preview Shared Draft' })).toBeInTheDocument()
+    expect(wrapper.getByRole('heading', { name: 'Preview shared draft' })).toBeInTheDocument()
 
     expect(wrapper.getByText('Author')).toBeInTheDocument()
     expect(wrapper.getByText('Erika Mustermann')).toBeInTheDocument()

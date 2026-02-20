@@ -1,4 +1,4 @@
-<!-- Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/ -->
+<!-- Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/ -->
 
 <script setup lang="ts">
 import { computed, ref, watchEffect } from 'vue'
@@ -73,7 +73,7 @@ const ticketsData = computed(() => getTicketData(organization.value))
           transparent-background
           @click="openEditOrganizationDialog(organization!)"
         >
-          {{ $t('Edit Organization') }}
+          {{ $t('Edit organization') }}
         </CommonButton>
       </template>
     </ObjectAttributes>

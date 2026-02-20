@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import type { FormRef, FormValues } from '#shared/components/Form/types.ts'
 import { useTicketSharedDraftStartDeleteMutation } from '#shared/entities/ticket-shared-draft-start/graphql/mutations/ticketSharedDraftStartDelete.api.ts'
@@ -9,7 +9,7 @@ import { removeSignatureFromBody } from '#shared/utils/dom.ts'
 
 import { openFlyout } from '#desktop/components/CommonFlyout/useFlyout.ts'
 
-export const useTicketSharedDraft = (setSkipNextStateUpdate?: (skip: boolean) => void) => {
+export const useTicketSharedDraft = () => {
   const mapSharedDraftParams = (ticketId: string, form?: FormRef) => {
     const { article: newArticle, ...ticketAttributes }: { article?: FormValues } =
       form?.values || {}
@@ -49,7 +49,6 @@ export const useTicketSharedDraft = (setSkipNextStateUpdate?: (skip: boolean) =>
           draftType === 'start'
             ? useTicketSharedDraftStartDeleteMutation
             : useTicketSharedDraftZoomDeleteMutation,
-        setSkipNextStateUpdate,
       },
       true, // global
     )

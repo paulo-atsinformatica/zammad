@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 require 'rails_helper'
 require 'models/application_model_examples'
@@ -256,8 +256,56 @@ RSpec.describe Trigger, type: :model do
         end
       end
 
+      context 'when ticket is created via Channel::EmailParser.process with inline image and trigger is a note (#5918)' do
+        let(:perform) do
+          { 'article.note' => { 'subject' => 'Test subject note', 'internal' => 'true', 'body' => 'some body with #{article.body_as_html}' } } # rubocop:disable Lint/InterpolationCheck
+        end
+
+        let(:raw_email) { Rails.root.join('test/data/mail/mail010.box').read }
+
+        it 'fires (without altering ticket state)' do
+          expect { Channel::EmailParser.new.process({}, raw_email) }
+            .to change(Ticket, :count).by(1)
+            .and change(Ticket::Article, :count).by(2)
+
+          expect(Ticket.last.state.name).to eq('new')
+
+          article = Ticket::Article.last
+          expect(article.type.name).to eq('note')
+          expect(article.sender.name).to eq('System')
+          expect(article.attachments.count).to eq(1)
+          expect(article.attachments[0].filename).to eq('image001.jpg')
+          expect(article.attachments[0].preferences['Content-ID']).to eq('image001.jpg@01CDB132.D8A510F0')
+          expect(article.body).to include('image001.jpg@01CDB132.D8A510F0')
+        end
+
+        context 'when first article' do
+          let(:perform) do
+            { 'article.note' => { 'subject' => 'Test subject note', 'internal' => 'true', 'body' => 'some body with #{first_article.body_as_html}' } } # rubocop:disable Lint/InterpolationCheck
+          end
+
+          let(:raw_email) { Rails.root.join('test/data/mail/mail010.box').read }
+
+          it 'fires (without altering ticket state)' do
+            expect { Channel::EmailParser.new.process({}, raw_email) }
+              .to change(Ticket, :count).by(1)
+              .and change(Ticket::Article, :count).by(2)
+
+            expect(Ticket.last.state.name).to eq('new')
+
+            article = Ticket::Article.last
+            expect(article.type.name).to eq('note')
+            expect(article.sender.name).to eq('System')
+            expect(article.attachments.count).to eq(1)
+            expect(article.attachments[0].filename).to eq('image001.jpg')
+            expect(article.attachments[0].preferences['Content-ID']).to eq('image001.jpg@01CDB132.D8A510F0')
+            expect(article.body).to include('image001.jpg@01CDB132.D8A510F0')
+          end
+        end
+      end
+
       context 'notification.email recipient' do
-        let!(:ticket) { create(:ticket) }
+        let!(:ticket)     { create(:ticket) }
         let!(:recipient1) { create(:user, email: 'test1@zammad-test.com') }
         let!(:recipient2) { create(:user, email: 'test2@zammad-test.com') }
         let!(:recipient3) { create(:user, email: 'test3@zammad-test.com') }
@@ -1551,28 +1599,54 @@ RSpec.describe Trigger, type: :model do
 
       it 'returns true if it was performed yesterday' do
         travel(-1.day) do
-          trigger.performed_on(ticket, activator_type: 'reminder_reached')
+          trigger.performable_on?(ticket, activator_type: 'reminder_reached')
         end
 
         expect(trigger).to be_performable_on(ticket, activator_type: 'reminder_reached')
       end
 
       it 'returns true if it was performed today on another ticket' do
-        trigger.performed_on(create(:ticket), activator_type: 'reminder_reached')
+        trigger.performable_on?(create(:ticket), activator_type: 'reminder_reached')
 
         expect(trigger).to be_performable_on(ticket, activator_type: 'reminder_reached')
       end
 
       it 'returns true if it was performed today by another activator' do
-        trigger.performed_on(ticket, activator_type: 'escalation')
+        trigger.performable_on?(ticket, activator_type: 'escalation')
 
         expect(trigger).to be_performable_on(ticket, activator_type: 'reminder_reached')
       end
 
       it 'returns false if it was performed today on the same ticket by the same activator and same user' do
-        trigger.performed_on(ticket, activator_type: 'reminder_reached')
+        trigger.performable_on?(ticket, activator_type: 'reminder_reached')
 
         expect(trigger).not_to be_performable_on(ticket, activator_type: 'reminder_reached')
+      end
+
+      # https://github.com/zammad/zammad/issues/5655
+      it 'returns true if it was performed today and then ticket related field was changed' do
+        ticket.update(pending_time: 30.minutes.from_now)
+        trigger.performable_on?(ticket, activator_type: 'reminder_reached')
+
+        expect { ticket.update(pending_time: 1.hour.from_now) }
+          .to change { trigger.performable_on?(ticket, activator_type: 'reminder_reached') }
+          .to true
+      end
+
+      # https://github.com/zammad/zammad/issues/5655
+      it 'returns true if it was performed today and then ticket related field was changed and reverted back to original' do
+        initial_pending_time = 1.hour.from_now
+        ticket.update(pending_time: initial_pending_time)
+
+        trigger.performable_on?(ticket, activator_type: 'reminder_reached')
+
+        ticket.update(pending_time: 2.hours.from_now)
+
+        trigger.performable_on?(ticket, activator_type: 'reminder_reached')
+
+        expect { ticket.update(pending_time: initial_pending_time) }
+          .to change { trigger.performable_on?(ticket, activator_type: 'reminder_reached') }
+          .to true
       end
     end
   end
@@ -1799,7 +1873,7 @@ RSpec.describe Trigger, type: :model do
   end
 
   describe 'Extend trigger conditions with an article accounted time entry flag #4760' do
-    let!(:ticket) { create(:ticket) }
+    let!(:ticket) { create(:ticket, state_name: 'pending reminder') }
 
     before do
       ticket && article && trigger

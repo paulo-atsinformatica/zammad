@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 // Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
 
 import type { ToggleClassMap } from './types.ts'
@@ -14,3 +15,21 @@ export const initializeToggleClasses = (classes: ToggleClassMap) => {
 }
 
 export const getToggleClasses = () => toggleClasses
+=======
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
+
+import type { ToggleClassMap } from './types.ts'
+
+// Provide your own map with the following keys, the values given here are just examples.
+let toggleClasses: ToggleClassMap = {
+  track: 'field-toggle-track',
+  trackOn: 'field-toggle-track--on',
+  knob: 'field-toggle-knob',
+}
+
+export const initializeToggleClasses = (classes: ToggleClassMap) => {
+  toggleClasses = classes
+}
+
+export const getToggleClasses = () => toggleClasses
+>>>>>>> upstream/develop

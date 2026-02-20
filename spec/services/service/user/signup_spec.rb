@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 require 'rails_helper'
 
@@ -23,7 +23,7 @@ RSpec.describe Service::User::Signup do
           expect(error).to be_a(klass)
             .and have_attributes(
               message:  include(message),
-              metadata: [include(message), *message_placeholder], # rubocop:disable Layout/EmptyLinesAfterModuleInclusion
+              metadata: [include(message), *message_placeholder],
             )
         end
       else

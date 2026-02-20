@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import { getNode } from '@formkit/core'
 import { FormKit } from '@formkit/vue'
@@ -562,7 +562,7 @@ describe('Form - Field - TreeSelect - Options', () => {
 describe('Form - Field - TreeSelect - Features', () => {
   // FIXME: Updating value prop does not seem to mutate it.
   //   It could be a bug in FormKit, though. Retry with next release.
-  it.todo('supports value mutation', async () => {
+  it.skip('supports value mutation', async () => {
     const wrapper = renderComponent(FormKit, {
       ...wrapperParameters,
       props: {
@@ -974,7 +974,7 @@ describe('Form - Field - TreeSelect - Features', () => {
 
     expect(selectOptions[0]).toHaveTextContent('Item IV — Item A › Item 2')
 
-    await wrapper.events.click(wrapper.getByLabelText('Clear Search'))
+    await wrapper.events.click(wrapper.getByLabelText('Clear search'))
 
     expect(filterElement).toHaveValue('')
 
@@ -1161,7 +1161,7 @@ describe('Form - Field - TreeSelect - Accessibility', () => {
       },
     })
 
-    expect(wrapper.getByRole('button')).toHaveAttribute('aria-label', 'Clear Selection')
+    expect(wrapper.getByRole('button')).toHaveAttribute('aria-label', 'Clear selection')
   })
 
   it('supports keyboard navigation', async () => {

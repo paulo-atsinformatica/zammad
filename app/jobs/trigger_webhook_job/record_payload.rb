@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
 
 class TriggerWebhookJob::RecordPayload
@@ -10,3 +11,17 @@ class TriggerWebhookJob::RecordPayload
     generator.generate
   end
 end
+=======
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
+
+class TriggerWebhookJob::RecordPayload
+
+  def self.generate(record)
+    return {} if record.blank?
+
+    backend   = "TriggerWebhookJob::RecordPayload::#{record.class.name}".constantize
+    generator = backend.new(record)
+    generator.generate
+  end
+end
+>>>>>>> upstream/develop

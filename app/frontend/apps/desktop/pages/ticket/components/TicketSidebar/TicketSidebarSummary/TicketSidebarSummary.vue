@@ -1,8 +1,7 @@
-<!-- Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/ -->
+<!-- Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/ -->
 
 <script setup lang="ts">
-import { storeToRefs } from 'pinia'
-import { computed, type EffectScope, effectScope, ref, watch } from 'vue'
+import { computed, type EffectScope, effectScope, ref, watch, toRef } from 'vue'
 
 import { useReactivate } from '#shared/composables/useReactivate.ts'
 import { useTicketArticleUpdatesSubscription } from '#shared/entities/ticket/graphql/subscriptions/ticketArticlesUpdates.api.ts'
@@ -34,8 +33,8 @@ import TicketSidebarWrapper from '../TicketSidebarWrapper.vue'
 defineProps<TicketSidebarProps>()
 const emit = defineEmits<TicketSidebarEmits>()
 
-const { user, hasPermission } = useSessionStore()
-const { config } = storeToRefs(useApplicationStore())
+const { user } = useSessionStore()
+const config = toRef(useApplicationStore(), 'config')
 const { persistentStates } = usePersistentStates()
 const { ticketId, ticket } = useTicketInformation()
 const { activeSidebar } = useTicketSidebar()
@@ -72,32 +71,34 @@ const isEnabled = computed(
       config.value.ai_assistance_ticket_summary
     ),
 )
-const showErrorDetails = computed(() => hasPermission('admin'))
 
 const headings = computed<SummaryItem[]>(() => [
   {
     key: 'customerRequest',
-    label: __('Customer Intent'),
+    label: __('Customer intent'),
     active: true,
   },
   {
     key: 'conversationSummary',
-    label: __('Conversation Summary'),
+    label: __('Conversation summary'),
     active: true,
+    type: 'paragraphs',
   },
   {
     key: 'openQuestions',
-    label: __('Open Questions'),
+    label: __('Open questions'),
     active: summaryConfig.value.open_questions,
+    type: 'list',
   },
   {
     key: 'upcomingEvents',
-    label: __('Upcoming Events'),
+    label: __('Upcoming events'),
     active: summaryConfig.value.upcoming_events,
+    type: 'list',
   },
   {
     key: ['customerEmotion', 'customerMood'],
-    label: __('Customer Sentiment'),
+    label: __('Customer sentiment'),
     active: summaryConfig.value.customer_sentiment,
   },
 ])
@@ -280,7 +281,6 @@ watch(
       :analytics-meta="analyticsMeta"
       :is-provider-configured="isProviderConfigured"
       :error="generationError"
-      :show-error-details="showErrorDetails"
       @retry-get-summary="retrySummaryGeneration"
       @regenerate-summary="regenerateSummary"
     />

@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 fragment currentUserAttributes on User {
   ...userAttributes
   authorizations {
@@ -11,3 +12,19 @@ fragment currentUserAttributes on User {
     names
   }
 }
+=======
+fragment currentUserAttributes on User {
+  ...userAttributes
+  authorizations {
+    id
+    provider
+    uid
+    username
+  }
+  email
+  permissions {
+    names
+  }
+  hasBetaUiSwitchAvailable
+}
+>>>>>>> upstream/develop

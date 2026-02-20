@@ -1,4 +1,4 @@
-<!-- Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/ -->
+<!-- Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/ -->
 
 <script setup lang="ts">
 import { onBeforeMount, watch } from 'vue'
@@ -19,11 +19,19 @@ import { useAuthenticationStore } from '#shared/stores/authentication.ts'
 import { useLocaleStore } from '#shared/stores/locale.ts'
 import { useSessionStore } from '#shared/stores/session.ts'
 
+import { useBetaUiDisclaimer } from '#desktop/components/BetaUi/composables/useBetaUiDisclaimer.ts'
+import {
+  useBetaUiFeedbackConsent,
+  initializeBetaUiFeedbackConsentDialog,
+} from '#desktop/components/BetaUi/composables/useBetaUiFeedbackConsent.ts'
 import { initializeConfirmationDialog } from '#desktop/components/CommonConfirmationDialog/initializeConfirmationDialog.ts'
-import { useBetaDisclaimer } from '#desktop/composables/useBetaDisclaimer.ts'
 import { useConnection } from '#desktop/composables/useConnection.ts'
 import { useTicketOverviewsStore } from '#desktop/entities/ticket/stores/ticketOverviews.ts'
 import { useUserCurrentTaskbarTabsStore } from '#desktop/entities/user/current/stores/taskbarTabs.ts'
+import { useAppUsageStore } from '#desktop/stores/appUsage.ts'
+
+import { useBetaUi } from './components/BetaUi/composables/useBetaUi.ts'
+import { useBetaUiFeedbackRouteGuard } from './components/BetaUi/composables/useBetaUiFeedbackRouteGuard.ts'
 
 const router = useRouter()
 
@@ -44,8 +52,24 @@ usePushMessages()
 // browser tab or maintenance mode switch).
 useAuthenticationChanges()
 
-// Shows the warning for the usage of the desktop view(beta). REMOVE when stable.
-useBetaDisclaimer()
+// TODO: Remove when desktop view is stable.
+const { switchValue } = useBetaUi()
+
+// Shows the feedback consent for the BETA usage of the desktop view.
+//  The user has by this point enrolled into the BETA program.
+
+initializeBetaUiFeedbackConsentDialog() // Calling it within the check also doesn't pick up the setup scope 😱
+
+if (switchValue.value) {
+  useBetaUiFeedbackConsent()
+  useBetaUiFeedbackRouteGuard()
+}
+
+// Shows the warning for the BETA usage of the desktop view.
+//   The user has not yet enrolled into the BETA program.
+else {
+  useBetaUiDisclaimer()
+}
 
 // We need to trigger a manual translation update for the form related strings.
 const formConfig = useFormKitConfig()
@@ -80,6 +104,7 @@ watch(
     useUserCurrentTaskbarTabsStore()
     useTicketOverviewsStore()
     initializeDefaultObjectAttributes()
+    useAppUsageStore()
   },
   { immediate: true },
 )

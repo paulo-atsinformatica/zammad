@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import { axe } from 'vitest-axe'
 
@@ -29,6 +29,8 @@ const mockActiveAvatar = async (deletable = true) => {
     userCurrentAvatarActive: getAvatarObject(deletable),
   })
 }
+
+// FIXME: All vitest-axe tests are currently skipped due to being incompatible with latest version of jsdom package.
 
 describe('testing account a11y', () => {
   beforeEach(() => {

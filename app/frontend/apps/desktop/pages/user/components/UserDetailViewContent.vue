@@ -1,4 +1,4 @@
-<!-- Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/ -->
+<!-- Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/ -->
 
 <script setup lang="ts">
 import { computed, ref, useTemplateRef } from 'vue'
@@ -9,6 +9,7 @@ import { useUserEntity } from '#shared/entities/user/composables/useUserEntity.t
 import { useUserNoteUpdateMutation } from '#shared/entities/user/graphql/mutations/noteUpdate.api.ts'
 import { convertToGraphQLId } from '#shared/graphql/utils.ts'
 import SubscriptionHandler from '#shared/server/apollo/handler/SubscriptionHandler.ts'
+import { useSessionStore } from '#shared/stores/session.ts'
 import { GraphQLErrorTypes } from '#shared/types/error.ts'
 import emitter from '#shared/utils/emitter.ts'
 
@@ -21,7 +22,7 @@ import LayoutContent from '#desktop/components/layout/LayoutContent.vue'
 import UserTicketBarChart from '#desktop/components/Ticket/TicketBarChart/UserTicketBarChart.vue'
 import { usePage } from '#desktop/composables/usePage.ts'
 import { useScrollPosition } from '#desktop/composables/useScrollPosition.ts'
-import { useCustomerTicketsByFilterUpdatesSubscription } from '#desktop/entities/ticket/graphql/subscriptions/customerTicketsByFilterUpdates.api.ts'
+import { useTicketByCustomerUpdatesSubscription } from '#desktop/entities/ticket/graphql/subscriptions/ticketByCustomerUpdates.api.ts'
 
 import UserDetailTopBar from './UserDetailTopBar.vue'
 import UserRelatedCustomerTickets from './UserRelatedCustomerTickets.vue'
@@ -59,6 +60,8 @@ const contentContainerElement = useTemplateRef('content-container')
 
 useScrollPosition(contentContainerElement)
 
+const { hasPermission } = useSessionStore()
+
 const customerTicketsTabs = computed(() => [
   {
     key: 'user',
@@ -76,14 +79,19 @@ const customerTicketsTabs = computed(() => [
 
 const activeCustomerTicketsTab = ref<'user' | 'organization'>('user')
 
-const customerTicketsByFilterSubscription = new SubscriptionHandler(
-  useCustomerTicketsByFilterUpdatesSubscription(() => ({
-    customerId: userId.value!,
-  })),
+const customerTicketsSubscription = new SubscriptionHandler(
+  useTicketByCustomerUpdatesSubscription(
+    () => ({
+      customerId: userId.value,
+    }),
+    {
+      enabled: hasPermission('ticket.agent'),
+    },
+  ),
 )
 
-customerTicketsByFilterSubscription.onResult(({ data }) => {
-  if (!data?.ticketCustomerTicketsByFilterUpdates.listChanged) return
+customerTicketsSubscription.onResult(({ data }) => {
+  if (!data?.ticketByCustomerUpdates.listChanged) return
 
   chartInstance.value?.refetchData()
 
@@ -106,8 +114,8 @@ customerTicketsByFilterSubscription.onResult(({ data }) => {
           :user-display-name="userDisplayName"
           :content-container-element="contentContainerElement"
         />
-        <section class="mx-auto w-full max-w-5xl grid grid-cols-2 gap-6 p-6">
-          <div class="self-start flex flex-col gap-6">
+        <section class="mx-auto grid w-full max-w-5xl grid-cols-2 gap-6 p-6">
+          <div class="flex flex-col gap-6 self-start">
             <CommonSectionContainer
               v-if="user?.hasSecondaryOrganizations"
               :label="__('Secondary organizations')"
@@ -136,28 +144,43 @@ customerTicketsByFilterSubscription.onResult(({ data }) => {
             />
           </div>
 
-          <CommonSectionContainer class="self-start" :label="__('Related tickets')">
-            <CommonTabGroup
-              v-model="activeCustomerTicketsTab"
-              class="mb-3"
-              :tabs="customerTicketsTabs"
-            />
-            <KeepAlive>
-              <UserRelatedCustomerTickets
-                v-if="activeCustomerTicketsTab === 'user'"
-                id="tab-panel-user"
-                :customer="user"
+          <CommonSectionContainer
+            v-if="
+              hasPermission('ticket.agent') &&
+              (user.ticketsCount?.open || user.ticketsCount?.closed)
+            "
+            class="self-start"
+            :label="__('Related tickets')"
+          >
+            <template v-if="user.organization">
+              <CommonTabGroup
+                v-model="activeCustomerTicketsTab"
+                class="mb-3"
+                :tabs="customerTicketsTabs"
               />
-              <UserRelatedCustomerTickets
-                v-else-if="activeCustomerTicketsTab === 'organization'"
-                id="tab-panel-organization"
-                :customer="user"
-                customer-organizations
-              />
-            </KeepAlive>
+              <KeepAlive>
+                <UserRelatedCustomerTickets
+                  v-if="activeCustomerTicketsTab === 'user'"
+                  id="tab-panel-user"
+                  :customer="user"
+                />
+                <UserRelatedCustomerTickets
+                  v-else-if="activeCustomerTicketsTab === 'organization'"
+                  id="tab-panel-organization"
+                  :customer="user"
+                  customer-organizations
+                />
+              </KeepAlive>
+            </template>
+            <UserRelatedCustomerTickets v-else :customer="user" />
           </CommonSectionContainer>
 
-          <UserTicketBarChart ref="chart" :user-id="userId" class="col-span-2" />
+          <UserTicketBarChart
+            v-if="hasPermission('ticket.agent')"
+            ref="chart"
+            :user-id="userId"
+            class="col-span-2"
+          />
         </section>
       </div>
     </CommonLoader>

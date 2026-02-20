@@ -1,4 +1,4 @@
-<!-- Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/ -->
+<!-- Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/ -->
 
 <script setup lang="ts">
 import { useEventListener } from '@vueuse/core'
@@ -12,11 +12,11 @@ import { useForm } from '#shared/components/Form/useForm.ts'
 import { useMultiStepForm } from '#shared/components/Form/useMultiStepForm.ts'
 import { useConfirmation } from '#shared/composables/useConfirmation.ts'
 import { useStickyHeader } from '#shared/composables/useStickyHeader.ts'
-import { useTicketSignature } from '#shared/composables/useTicketSignature.ts'
 import { useTicketCreate } from '#shared/entities/ticket/composables/useTicketCreate.ts'
 import { useTicketCreateArticleType } from '#shared/entities/ticket/composables/useTicketCreateArticleType.ts'
 import { useTicketCreateView } from '#shared/entities/ticket/composables/useTicketCreateView.ts'
 import { useTicketFormOrganizationHandler } from '#shared/entities/ticket/composables/useTicketFormOrganizationHandler.ts'
+import { useTicketSignature } from '#shared/entities/ticket/composables/useTicketSignature.ts'
 import type { TicketFormData } from '#shared/entities/ticket/types.ts'
 import { useUserQuery } from '#shared/entities/user/graphql/queries/user.api.ts'
 import { defineFormSchema } from '#shared/form/defineFormSchema.ts'
@@ -473,7 +473,7 @@ export default {
     class="h-16!"
     :style="stickyStyles.header"
     back-url="/"
-    :title="__('Create Ticket')"
+    :title="__('Create ticket')"
   >
     <template #after>
       <CommonButton
@@ -511,7 +511,7 @@ export default {
     :class="{
       'bg-gray-light backdrop-blur-lg': !isScrolledToBottom,
     }"
-    class="pb-safe fixed bottom-0 z-10 w-full px-4 transition"
+    class="fixed bottom-0 z-10 w-full px-4 pb-safe transition"
   >
     <FormKit
       :variant="lastStepName === activeStep ? 'submit' : 'primary'"

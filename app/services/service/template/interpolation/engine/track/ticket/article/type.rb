@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
 
 class Service::Template::Interpolation::Engine::Track::Ticket::Article::Type < Service::Template::Interpolation::Engine::Track
@@ -5,3 +6,12 @@ class Service::Template::Interpolation::Engine::Track::Ticket::Article::Type < S
     'Ticket::Article::Type'
   end
 end
+=======
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
+
+class Service::Template::Interpolation::Engine::Track::Ticket::Article::Type < Service::Template::Interpolation::Engine::Track
+  def self.klass
+    'Ticket::Article::Type'
+  end
+end
+>>>>>>> upstream/develop

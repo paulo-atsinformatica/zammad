@@ -1,4 +1,4 @@
-<!-- Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/ -->
+<!-- Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/ -->
 
 <script setup lang="ts">
 import { computed, nextTick, onMounted, useTemplateRef, watch } from 'vue'
@@ -68,6 +68,9 @@ const contentElement = useTemplateRef('content')
 
 const close = async (cancel?: boolean) => {
   if (props.noClose) return
+
+  // Close event will be emitted only if `noClose` prop is not set
+  //   To handle the actions in this case, please override the `#footer` slot.
   emit('close', cancel)
   await closeDialog(props.name, props.global)
 }
@@ -133,6 +136,7 @@ const transition = VITE_TEST_MODE
         :show-backdrop="isActive"
         :fullscreen="fullscreen"
         :aria-labelledby="`${dialogId}-title`"
+        :no-close-on-backdrop-click="noClose"
         @click-background="close()"
       >
         <component

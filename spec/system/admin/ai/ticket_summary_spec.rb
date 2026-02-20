@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 require 'rails_helper'
 
@@ -18,8 +18,8 @@ RSpec.describe 'Manage > AI > Ticket Summary', type: :system do
 
       expect(Setting.get('ai_assistance_ticket_summary_config')).to eq({
                                                                          'generate_on'        => 'on_ticket_detail_opening',
-                                                                         'open_questions'     => false, # true by default
-                                                                         'upcoming_events'    => false, # true by default
+                                                                         'open_questions'     => true, # false by default
+                                                                         'upcoming_events'    => true, # false by default
                                                                          'customer_sentiment' => false, # true by default
                                                                        })
     end

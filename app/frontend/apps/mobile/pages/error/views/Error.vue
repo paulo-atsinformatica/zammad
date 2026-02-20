@@ -1,4 +1,4 @@
-<!-- Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/ -->
+<!-- Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/ -->
 
 <script setup lang="ts">
 import { computed } from 'vue'
@@ -38,10 +38,10 @@ const errorImage = computed(() => {
       <h2 class="mt-9 max-w-prose text-center text-xl font-medium">
         {{ $t(errorOptions.title) }}
       </h2>
-      <p class="text-gray mt-4 min-h-16 max-w-prose text-center">
+      <p class="mt-4 min-h-16 max-w-prose text-center text-gray">
         {{ $t(errorOptions.message, ...(errorOptions.messagePlaceholder || [])) }}
       </p>
-      <p v-if="errorOptions.route" class="text-gray max-w-prose text-center">
+      <p v-if="errorOptions.route" class="max-w-prose text-center text-gray">
         {{ errorOptions.route }}
       </p>
     </main>

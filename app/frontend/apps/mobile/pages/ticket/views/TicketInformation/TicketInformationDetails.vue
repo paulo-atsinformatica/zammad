@@ -1,4 +1,4 @@
-<!-- Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/ -->
+<!-- Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/ -->
 
 <script setup lang="ts">
 import { computed, nextTick, onMounted, onUnmounted, watch } from 'vue'
@@ -143,18 +143,18 @@ const hasEscalation = computed(() => {
 
   <TicketObjectAttributes v-if="isTicketAgent && ticket" :ticket="ticket" />
 
-  <CommonSectionMenu v-if="ticket && hasEscalation" :header-label="__('Escalation Times')">
+  <CommonSectionMenu v-if="ticket && hasEscalation" :header-label="__('Escalation times')">
     <TicketEscalationTimeMenuItem
       :escalation-at="ticket.firstResponseEscalationAt"
-      :label="__('First Response Time')"
+      :label="__('First response time')"
     />
     <TicketEscalationTimeMenuItem
       :escalation-at="ticket.updateEscalationAt"
-      :label="__('Update Time')"
+      :label="__('Update time')"
     />
     <TicketEscalationTimeMenuItem
       :escalation-at="ticket.closeEscalationAt"
-      :label="__('Solution Time')"
+      :label="__('Solution time')"
     />
   </CommonSectionMenu>
 

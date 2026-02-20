@@ -1,4 +1,4 @@
-<!-- Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/ -->
+<!-- Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/ -->
 
 <script setup lang="ts">
 import { toRef } from 'vue'
@@ -129,7 +129,7 @@ defineExpose({ hasLinks })
           >
             <TicketPopoverWithTrigger
               :popover-config="{ orientation: 'left' }"
-              class="flex grow items-center rounded-md! px-1.5 rtl:translate-x-1 ltr:-translate-x-1"
+              class="flex grow items-center rounded-md! px-1.5 ltr:-translate-x-1 rtl:translate-x-1"
               :ticket="link.item as TicketById"
               no-wrap
             />

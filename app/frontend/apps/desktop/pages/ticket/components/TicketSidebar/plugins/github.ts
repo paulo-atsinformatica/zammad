@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import { useApplicationStore } from '#shared/stores/application.ts'
 
@@ -12,6 +12,7 @@ export default <TicketSidebarPlugin>{
   component: TicketSidebarGitHub,
   permissions: ['ticket.agent'],
   screens: [TicketSidebarScreenType.TicketDetailView, TicketSidebarScreenType.TicketCreate],
+  views: ['agent'],
   icon: 'github',
   order: 4000,
   available: () => useApplicationStore().config.github_integration,

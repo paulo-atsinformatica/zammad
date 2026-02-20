@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 class KnowledgeBase::Answer::Translation < ApplicationModel
   include HasDefaultModelUserRelations
@@ -97,8 +97,7 @@ class KnowledgeBase::Answer::Translation < ApplicationModel
 
   scope :apply_kb_scope, lambda { |scope|
     if scope.present?
-      output
-        .joins(:answer)
+      joins(:answer)
         .where(knowledge_base_answers: { category_id: scope })
     end
   }

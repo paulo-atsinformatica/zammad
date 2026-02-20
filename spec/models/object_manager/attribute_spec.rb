@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 require 'rails_helper'
 
@@ -129,6 +129,24 @@ RSpec.describe ObjectManager::Attribute, type: :model do
       expect do
         described_class.add attributes_for :object_manager_attribute_text
       end.not_to raise_error
+    end
+  end
+
+  describe 'validate that display label is not blank' do
+    subject(:attr) { create(:object_manager_attribute_text) }
+
+    context 'when display label is blank' do
+      it 'is not valid' do
+        attr.display = ''
+        expect(attr).not_to be_valid
+      end
+
+      it 'adds an error message' do
+        attr.display = ''
+        attr.valid?
+
+        expect(attr.errors[:display]).to include("can't be blank")
+      end
     end
   end
 

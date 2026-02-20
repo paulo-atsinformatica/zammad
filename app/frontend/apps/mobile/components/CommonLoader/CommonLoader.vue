@@ -1,4 +1,4 @@
-<!-- Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/ -->
+<!-- Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/ -->
 
 <script setup lang="ts">
 import { markup } from '#shared/utils/markup.ts'
@@ -37,7 +37,7 @@ export default {
   <div
     v-else-if="error"
     v-bind="$attrs"
-    class="text-red-bright flex items-center justify-center gap-2 text-base"
+    class="flex items-center justify-center gap-2 text-base text-red-bright"
   >
     <CommonIcon name="close-small" />
     <!--      eslint-disable vue/no-v-html -->

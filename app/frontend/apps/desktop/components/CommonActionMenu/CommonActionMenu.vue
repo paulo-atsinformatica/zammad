@@ -1,7 +1,8 @@
-<!-- Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/ -->
+<!-- Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/ -->
 
 <script setup lang="ts">
 import { computed, toRefs } from 'vue'
+import { useRouter } from 'vue-router'
 
 import type { Sizes } from '#shared/components/CommonIcon/types.ts'
 import type { ObjectLike } from '#shared/types/utils.ts'
@@ -85,6 +86,8 @@ const variantClasses = computed(() => {
   if (singleMenuItem.value?.variant === 'danger') return 'text-red-500!'
   return 'text-stone-200! dark:text-neutral-500!'
 })
+
+const router = useRouter()
 </script>
 
 <template>
@@ -93,7 +96,7 @@ const variantClasses = computed(() => {
       <CommonLink
         v-if="singleMenuItem?.link"
         v-tooltip="$t(singleActionAriaLabel)"
-        class="focus-visible-app-default flex"
+        class="flex focus-visible-app-default"
         :aria-label="$t(singleActionAriaLabel)"
         :disabled="disabled"
         :link="singleMenuItem.link"
@@ -115,7 +118,7 @@ const variantClasses = computed(() => {
         :aria-label="$t(singleActionAriaLabel)"
         :icon="singleMenuItem?.icon"
         :icon-class="singleMenuItem?.iconClass"
-        @click="singleMenuItem?.onClick?.(props.entity as ObjectLike)"
+        @click="singleMenuItem?.onClick?.(props.entity as ObjectLike, router)"
       />
     </template>
 

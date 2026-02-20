@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
 
 module Gql::Subscriptions
@@ -24,3 +25,24 @@ module Gql::Subscriptions
     end
   end
 end
+=======
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
+
+module Gql::Subscriptions
+  class Checklist::TemplateUpdates < BaseSubscription
+
+    description 'Subscription for checklist template changes.'
+
+    argument :only_active, Boolean, required: false, default_value: false, description: 'Fetch only active templates'
+
+    field :checklist_templates, [Gql::Types::Checklist::TemplateType, { null: false }], description: 'Checklist templates'
+
+    requires_enabled_setting 'checklist', error_message: __('The checklist feature is not active')
+    requires_permission 'ticket.agent'
+
+    def update(only_active:)
+      { checklist_templates: only_active ? ::ChecklistTemplate.where(active: true) : ::ChecklistTemplate.all }
+    end
+  end
+end
+>>>>>>> upstream/develop

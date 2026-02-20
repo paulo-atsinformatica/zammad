@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 require 'rails_helper'
 
@@ -49,7 +49,7 @@ RSpec.describe Gql::Mutations::Ticket::AIAssistance::Summarize, :aggregate_failu
       if expected_cache
         AI::StoredResult.create!(
           content:          expected_cache,
-          version:          AI::Service::TicketSummarize.lookup_version({ ticket: }, Locale.find_by(locale: agent.locale)),
+          version:          AI::Service::TicketSummarize.lookup_version({ articles: ticket.articles.without_system_notifications }, Locale.find_by(locale: agent.locale)),
           **AI::Service::TicketSummarize.lookup_attributes({ ticket: }, Locale.find_by(locale: agent.locale)),
           ai_analytics_run:
         )
@@ -66,7 +66,7 @@ RSpec.describe Gql::Mutations::Ticket::AIAssistance::Summarize, :aggregate_failu
       let(:expected_cache) do
         {
           'customer_request'     => 'example',
-          'conversation_summary' => 'example',
+          'conversation_summary' => ['example'],
           'open_questions'       => ['example'],
           'upcoming_events'      => ['example'],
           'customer_mood'        => 'example',
@@ -78,7 +78,7 @@ RSpec.describe Gql::Mutations::Ticket::AIAssistance::Summarize, :aggregate_failu
         expect(gql.result.data).to eq(
           'summary'   => {
             'customerRequest'     => 'example',
-            'conversationSummary' => 'example',
+            'conversationSummary' => ['example'],
             'openQuestions'       => ['example'],
             'upcomingEvents'      => ['example'],
             'customerMood'        => 'example',
@@ -111,7 +111,7 @@ RSpec.describe Gql::Mutations::Ticket::AIAssistance::Summarize, :aggregate_failu
             expect(gql.result.data).to eq(
               'summary'   => {
                 'customerRequest'     => 'example',
-                'conversationSummary' => 'example',
+                'conversationSummary' => ['example'],
                 'openQuestions'       => ['example'],
                 'upcomingEvents'      => ['example'],
                 'customerMood'        => 'example',
@@ -137,7 +137,7 @@ RSpec.describe Gql::Mutations::Ticket::AIAssistance::Summarize, :aggregate_failu
             expect(gql.result.data).to eq(
               'summary'   => {
                 'customerRequest'     => 'example',
-                'conversationSummary' => 'example',
+                'conversationSummary' => ['example'],
                 'openQuestions'       => ['example'],
                 'upcomingEvents'      => ['example'],
                 'customerMood'        => 'example',
