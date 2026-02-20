@@ -179,12 +179,11 @@ Alterações realizadas em: Dezembro 2024
 
 ## Manutenção Futura
 
-Para atualizar o Zammad original mantendo as customizações:
+Para sincronizar com o Zammad original sem perder as customizações ATS (branding e sistema de pausas), use o guia completo:
 
-1. Fazer merge da branch `main` do Zammad original
-2. Resolver conflitos mantendo as alterações de branding
-3. Testar em ambos os temas (claro e escuro)
-4. Rebuild da imagem Docker
+- **[.dev/sync-upstream-guide.md](.dev/sync-upstream-guide.md)** – Passo a passo, lista de arquivos a preservar em conflitos e script opcional.
+
+Resumo: fazer merge da branch `develop` (ou `stable-*`) do upstream; em conflitos nos arquivos de branding e do sistema de pausas, manter as alterações ATS; testar em ambos os temas (claro e escuro); rebuild da imagem Docker.
 
 ## Sistema de Controle de Tempo e Pausas
 
