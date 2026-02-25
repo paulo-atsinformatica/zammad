@@ -42,6 +42,10 @@ class User < ApplicationModel
   has_many                :cti_caller_ids,         class_name: 'Cti::CallerId', dependent: :destroy
   has_many                :customer_tickets,       class_name: 'Ticket', foreign_key: :customer_id, dependent: :destroy, inverse_of: :customer
   has_many                :owner_tickets,          class_name: 'Ticket', foreign_key: :owner_id, inverse_of: :owner
+  has_many                :user_pauses,            dependent: :destroy
+  has_many                :ticket_time_trackings,  dependent: :destroy
+  belongs_to              :current_active_ticket,  class_name: 'Ticket', foreign_key: :current_active_ticket_id, optional: true
+  belongs_to              :current_pause,         class_name: 'UserPause', foreign_key: :current_pause_id, optional: true
   has_many                :overview_sortings,      dependent: :destroy
   has_many                :created_recent_views,   class_name: 'RecentView', foreign_key: :created_by_id, dependent: :destroy, inverse_of: :created_by
   has_many                :recent_closes,          dependent: :delete_all
@@ -1152,5 +1156,33 @@ raise 'At least one user need to have admin permissions'
     errors.add :base, __('Secondary organizations cannot include the primary organization.')
 
     raise ActiveRecord::RecordInvalid, self
+  end
+
+  public
+
+  def in_pause?
+    current_state == 'pause' && current_pause_id.present? && active_pause.present?
+  end
+
+  def can_work?
+    !in_pause?
+  end
+
+  def active_pause
+    return nil if current_pause_id.blank?
+
+    user_pauses.find_by(id: current_pause_id, ended_at: nil)
+  end
+
+  def active_ticket_tracking
+    ticket_time_trackings.active.first
+  end
+
+  def offline?
+    current_state == 'offline'
+  end
+
+  def online?
+    current_state == 'online'
   end
 end
