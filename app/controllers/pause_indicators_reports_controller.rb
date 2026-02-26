@@ -14,10 +14,16 @@ class PauseIndicatorsReportsController < ApplicationController
                 .distinct
                 .includes(:roles)
 
+    if equipe_column? && params[:equipe].present?
+      teams = Array(params[:equipe]).reject(&:blank?)
+      users = users.where(equipe: teams) if teams.any?
+    end
+
     entries = users.map do |user|
       logged_in = UserPauseSession.active.exists?(user_id: user.id)
       in_pause = user.in_pause?
       state = user.current_state || 'offline'
+      active_pause = user.active_pause
 
       status = if !logged_in
                  __('Deslogado')
@@ -35,10 +41,36 @@ class PauseIndicatorsReportsController < ApplicationController
         logged_in: logged_in,
         in_pause: in_pause,
         state: state,
-        pause_name: user.active_pause&.pause_type&.name
+        pause_name: active_pause&.pause_type&.name,
+        pause_started_at: active_pause&.started_at&.iso8601,
+        pause_type_color: active_pause&.pause_type&.color
       }
     end
 
-    render json: { entries: entries }, status: :ok
+    response = { entries: entries }
+    response[:teams] = teams_list if equipe_column?
+
+    render json: response, status: :ok
+  end
+
+  private
+
+  def equipe_column?
+    @equipe_column ||= User.column_names.include?('equipe')
+  end
+
+  def teams_list
+    agent_role_ids = Role.joins(:permissions)
+                         .where(permissions: { name: 'ticket.agent', active: true }, roles: { active: true })
+                         .pluck(:id)
+
+    User.joins(:roles)
+        .where(roles: { id: agent_role_ids })
+        .where(users: { active: true })
+        .where.not(equipe: [nil, ''])
+        .distinct
+        .pluck(:equipe)
+        .compact
+        .sort
   end
 end

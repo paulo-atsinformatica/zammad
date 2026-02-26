@@ -395,6 +395,24 @@ Permission.create_if_not_exists(
   preferences: { prio: 1540 }
 )
 Permission.create_if_not_exists(
+  name:        'report.pause_indicators',
+  label:       __('Pause Indicators'),
+  description: __('Access to the Pause Indicators report.'),
+  preferences: { prio: 1541 }
+)
+Permission.create_if_not_exists(
+  name:        'report.user_pauses',
+  label:       __('User Pauses Report'),
+  description: __('Access to the User Pauses report.'),
+  preferences: { prio: 1542 }
+)
+Permission.create_if_not_exists(
+  name:        'report.ticket_time_trackings',
+  label:       __('Ticket Time Trackings Report'),
+  description: __('Access to the Ticket Time Trackings report.'),
+  preferences: { prio: 1543 }
+)
+Permission.create_if_not_exists(
   name:        'ticket',
   label:       __('Ticket'),
   description: __('Access to the ticket interface.'),

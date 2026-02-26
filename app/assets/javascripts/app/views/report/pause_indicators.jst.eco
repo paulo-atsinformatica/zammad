@@ -7,6 +7,7 @@
 
   <div class="page-body">
     <div class="page-main">
+      <div class="js-report-filters"></div>
       <div class="js-report-content"></div>
     </div>
   </div>

@@ -35,6 +35,7 @@ class App.PauseBlocker extends App.Controller
     , 30000)
 
   checkCurrentPause: ->
+    return if @visible && @currentPause
     @ajax(
       id:          'pause_blocker_check'
       type:        'GET'
@@ -44,7 +45,6 @@ class App.PauseBlocker extends App.Controller
         if data && data.id && data.active != false
           @currentPause = data
           @currentPause.active = true
-          @loadPauseType()
           @show()
         else
           @currentPause = null
@@ -64,10 +64,27 @@ class App.PauseBlocker extends App.Controller
       processData: true
       success:     (data) =>
         @pauseType = data
-        @render()
+        @applyPauseTypeColor()
       error: =>
         @pauseType = null
-        @render()
+    )
+
+  applyPauseTypeColor: ->
+    return if !@pauseType?.color
+    color = @pauseType.color
+    return if !color
+
+    $overlay = $('.pause-blocker-overlay')
+    $overlay.find('.pause-blocker-header').css('background', color)
+    $overlay.find('.pause-blocker-modal').css('border-color', color)
+    $overlay.find('.pause-blocker-pause-name').css(
+      'background': "#{color}20"
+      'border': "1px solid #{color}40"
+    )
+    $overlay.find('.pause-blocker-timer-value').css('color', color)
+    $overlay.find('.pause-blocker-footer .btn--primary').css(
+      'background': color
+      'border-color': color
     )
 
   show: ->
@@ -75,6 +92,7 @@ class App.PauseBlocker extends App.Controller
     @visible = true
     @render()
     @startElapsedTimer()
+    @loadPauseType()
 
   hide: ->
     return if !@visible
@@ -131,7 +149,6 @@ class App.PauseBlocker extends App.Controller
           </div>
           <div class="pause-blocker-footer">
             <button type="button" class="btn btn--primary btn--large js-end-pause">
-              #{App.Utils.icon('sign-in', 'btn-icon')}
               #{App.i18n.translateContent('Sair da Pausa')}
             </button>
           </div>
@@ -144,6 +161,8 @@ class App.PauseBlocker extends App.Controller
 
     # Bind events
     $('.pause-blocker-overlay .js-end-pause').on('click', @endPause)
+
+    @applyPauseTypeColor() if @pauseType?.color
 
   endPause: (e) =>
     e?.preventDefault()
@@ -185,10 +204,7 @@ class App.PauseBlocker extends App.Controller
           timeout: 3000
         )
       error: (xhr) =>
-        $('.js-end-pause').prop('disabled', false).html("""
-          #{App.Utils.icon('sign-in', 'btn-icon')}
-          #{App.i18n.translateContent('Sair da Pausa')}
-        """)
+        $('.js-end-pause').prop('disabled', false).text(App.i18n.translateContent('Sair da Pausa'))
         @notify(
           type:    'error'
           msg:     xhr.responseJSON?.error || App.i18n.translateContent('Erro ao finalizar pausa')

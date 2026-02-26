@@ -1,5 +1,5 @@
 class App.ReportUserPauses extends App.ControllerAppContent
-  @requiredPermission: 'report'
+  @requiredPermission: ['report', 'report.user_pauses']
 
   constructor: ->
     super
@@ -10,6 +10,8 @@ class App.ReportUserPauses extends App.ControllerAppContent
     @pause_type_id = 'all'
     @exceeded = 'all'
     @agent_query = ''
+    @selectedTeams = App.SessionStorage.get('report/user_pauses/equipe') || []
+    @teams = []
     @pauseTypes = []
     @render()
 
@@ -76,6 +78,26 @@ class App.ReportUserPauses extends App.ControllerAppContent
         @agent_query = $(e.currentTarget).val()
       ), 400)
     )
+
+  renderEquipeFilter: ->
+    $container = @el.find('.js-equipe-filter')
+    return if !$container.length
+    if @teams.length == 0
+      $container.empty()
+      return
+    list = @teams.map (team) =>
+      checked = if @selectedTeams.indexOf(team) >= 0 then ' checked' else ''
+      "<label class=\"inline-label checkbox-replacement\"><input type=\"checkbox\" class=\"js-team-checkbox\" value=\"#{App.Utils.htmlEscape(team)}\"#{checked}><span class=\"label-text\">#{App.Utils.htmlEscape(team)}</span></label>"
+    $container.html("<div class=\"checkbox-list\">#{list.join('')}</div>")
+    $container.find('.js-team-checkbox').off('change').on('change', (=> @onTeamCheckboxChange()))
+
+  onTeamCheckboxChange: ->
+    @applyEquipeFilter()
+
+  applyEquipeFilter: ->
+    @selectedTeams = @el.find('.js-team-checkbox:checked').map(-> $(this).val()).get()
+    App.SessionStorage.set('report/user_pauses/equipe', @selectedTeams)
+    @loadReport()
 
   bindSearch: ->
     @$('.js-report-search').on('click', (e) =>
@@ -157,19 +179,25 @@ class App.ReportUserPauses extends App.ControllerAppContent
     return if !@start_date || !@end_date
 
     @startLoading()
+    data =
+      start_date: @start_date
+      end_date: @end_date
+      pause_type_id: @pause_type_id
+      exceeded: @exceeded
+      agent_query: @agent_query
+    if @selectedTeams.length > 0
+      data.equipe = @selectedTeams
+
     @ajax(
       id:          'user_pauses_report'
       type:        'GET'
       url:         "#{@apiPath}/reports/user_pauses"
-      data:
-        start_date: @start_date
-        end_date: @end_date
-        pause_type_id: @pause_type_id
-        exceeded: @exceeded
-        agent_query: @agent_query
+      data:        data
       processData: true
       success:     (data, status, xhr) =>
         @stopLoading()
+        @teams = data.teams || []
+        @renderEquipeFilter()
         @renderReport(data)
       error: (xhr) =>
         @stopLoading()
@@ -207,5 +235,5 @@ App.Config.set('UserPausesReport', {
   name: __('Pausas de Usuários'), 
   parent: '#report', 
   target: '#report/user_pauses', 
-  permission: ['report']
+  permission: ['report', 'report.user_pauses']
 }, 'NavBarRight')

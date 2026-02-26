@@ -35,6 +35,11 @@ class TicketTimeTrackingsReportsController < ApplicationController
                            .where('users.firstname ILIKE ? OR users.lastname ILIKE ? OR users.email ILIKE ?', like, like, like)
     end
 
+    if equipe_column? && params[:equipe].present?
+      teams = Array(params[:equipe]).reject(&:blank?)
+      trackings = trackings.joins(:user).where(users: { equipe: teams }) if teams.any?
+    end
+
     entries = trackings.order(started_at: :desc).map do |tracking|
       ticket = tracking.ticket
       user = tracking.user
@@ -61,13 +66,37 @@ class TicketTimeTrackingsReportsController < ApplicationController
       }
     end
 
-    render json: {
+    response = {
       open_start_date: open_start_date,
       open_end_date: open_end_date,
       close_start_date: close_start_date,
       close_end_date: close_end_date,
       entries: entries
-    }, status: :ok
+    }
+    response[:teams] = teams_list if equipe_column?
+
+    render json: response, status: :ok
+  end
+
+  private
+
+  def equipe_column?
+    @equipe_column ||= User.column_names.include?('equipe')
+  end
+
+  def teams_list
+    agent_role_ids = Role.joins(:permissions)
+                         .where(permissions: { name: 'ticket.agent', active: true }, roles: { active: true })
+                         .pluck(:id)
+
+    User.joins(:roles)
+        .where(roles: { id: agent_role_ids })
+        .where(users: { active: true })
+        .where.not(equipe: [nil, ''])
+        .distinct
+        .pluck(:equipe)
+        .compact
+        .sort
   end
 end
 

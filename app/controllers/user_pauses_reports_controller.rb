@@ -21,6 +21,12 @@ class UserPausesReportsController < ApplicationController
         like, like, like
       )
     end
+
+    if equipe_column? && params[:equipe].present?
+      teams = Array(params[:equipe]).reject(&:blank?)
+      user_scope = user_scope.where(equipe: teams) if teams.any?
+    end
+
     user_ids = user_scope.select(:id)
 
     pauses_scope = UserPause.where(started_at: start_date.beginning_of_day..end_date.end_of_day)
@@ -76,11 +82,35 @@ class UserPausesReportsController < ApplicationController
 
     entries.sort_by! { |item| item[:started_at] || Time.zone.at(0) }.reverse!
 
-    render json: {
+    response = {
       start_date: start_date,
       end_date: end_date,
       entries: entries
-    }, status: :ok
+    }
+    response[:teams] = teams_list if equipe_column?
+
+    render json: response, status: :ok
+  end
+
+  private
+
+  def equipe_column?
+    @equipe_column ||= User.column_names.include?('equipe')
+  end
+
+  def teams_list
+    agent_role_ids = Role.joins(:permissions)
+                         .where(permissions: { name: 'ticket.agent', active: true }, roles: { active: true })
+                         .pluck(:id)
+
+    User.joins(:roles)
+        .where(roles: { id: agent_role_ids })
+        .where(users: { active: true })
+        .where.not(equipe: [nil, ''])
+        .distinct
+        .pluck(:equipe)
+        .compact
+        .sort
   end
 end
 

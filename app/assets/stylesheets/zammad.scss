@@ -15737,6 +15737,46 @@ span.is-disabled {
   }
 }
 
+/* Pause Indicators Report - status indicator and timer column */
+.table--pause-indicators {
+  .pause-indicators-col-indicator {
+    width: 32px;
+    text-align: center;
+    vertical-align: middle;
+  }
+
+  .pause-indicator {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    flex-shrink: 0;
+
+    &.pause-indicator--online {
+      background-color: #16a34a;
+      box-shadow: 0 0 0 2px rgba(22, 163, 74, 0.35);
+    }
+
+    &.pause-indicator--offline {
+      background-color: #dc2626;
+      box-shadow: 0 0 0 2px rgba(220, 38, 38, 0.35);
+    }
+
+    &.pause-indicator--pause {
+      box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.12);
+    }
+
+    &.pause-indicator--default {
+      background-color: #f59e0b;
+    }
+  }
+
+  .js-pause-duration {
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
+  }
+}
+
 .duplicate-ticket-detection {
   position: relative;
   margin-bottom: 0;
@@ -16750,6 +16790,7 @@ body.has-status-bar {
     border-radius: 8px;
     display: inline-flex;
     align-items: center;
+    justify-content: center;
     gap: 8px;
     background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
     border: none;
@@ -16775,9 +16816,7 @@ body.has-status-bar {
     }
 
     .btn-icon {
-      width: 20px;
-      height: 20px;
-      fill: currentColor;
+      display: none;
     }
   }
 }

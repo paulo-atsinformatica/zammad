@@ -104,8 +104,8 @@ msgid ""
 msgstr ""
 "# #{ticket.title}\n"
 "_<#{config.http_type}://#{config.fqdn}/#ticket/zoom/#{ticket.id}|"
-"Tíquete##{ticket.number}>: Escalado em #{ticket.escalation_at}_\n"
-"O tíquete (#{ticket.title}) de \"#{ticket.customer.longname}\" foi escalado "
+"Ticket##{ticket.number}>: Escalado em #{ticket.escalation_at}_\n"
+"O ticket (#{ticket.title}) de \"#{ticket.customer.longname}\" foi escalado "
 "desde \"#{ticket.escalation_at}\"!\n"
 "\n"
 "<% if @objects[:article] %>\n"
@@ -129,7 +129,7 @@ msgid ""
 msgstr ""
 "# #{ticket.title}\n"
 "_<#{config.http_type}://#{config.fqdn}/#ticket/zoom/#{ticket.id}|"
-"Tíquete##{ticket.number}>: Última atualização em #{ticket.updated_at}_\n"
+"Ticket##{ticket.number}>: Última atualização em #{ticket.updated_at}_\n"
 "* #{t('Group')}: #{ticket.group.name}\n"
 "* #{t('Owner')}: #{ticket.owner.fullname}\n"
 "* #{t('State')}: #{t(ticket.state.name)}\n"
@@ -154,8 +154,8 @@ msgid ""
 msgstr ""
 "# #{ticket.title}\n"
 "_<#{config.http_type}://#{config.fqdn}/#ticket/zoom/#{ticket.id}|"
-"Tíquete##{ticket.number}>: Lembrete!_\n"
-"Um tíquete precisa de atenção, lembrete criado para (#{ticket.title}) com "
+"Ticket##{ticket.number}>: Lembrete!_\n"
+"Um ticket precisa de atenção, lembrete criado para (#{ticket.title}) com "
 "usuário \"*#{ticket.customer.longname}*\".\n"
 "\n"
 "<% if @objects[:article] %>\n"
@@ -182,7 +182,7 @@ msgid ""
 msgstr ""
 "# #{ticket.title}\n"
 "_<#{config.http_type}://#{config.fqdn}/#ticket/zoom/#{ticket.id} |"
-"Tíquete##{ticket.number}>: Atualizado por #{current_user.longname} em "
+"Ticket##{ticket.number}>: Atualizado por #{current_user.longname} em "
 "#{ticket.updated_at}_\n"
 "<% if @objects[:changes].present? %>\n"
 "<% @objects[:changes].each do |key, value| %>\n"
@@ -210,8 +210,8 @@ msgid ""
 msgstr ""
 "# #{ticket.title}\n"
 "_<#{config.http_type}://#{config.fqdn}/#ticket/zoom/#{ticket.id}|"
-"Tíquete##{ticket.number}>: Vai ser escalado em #{ticket.escalation_at}_\n"
-"O tíquete (#{ticket.title}) de \"#{ticket.customer.longname}\" vai ser "
+"Ticket##{ticket.number}>: Vai ser escalado em #{ticket.escalation_at}_\n"
+"O ticket (#{ticket.title}) de \"#{ticket.customer.longname}\" vai ser "
 "escalado em \"#{ticket.escalation_at}\"!\n"
 "\n"
 "<% if @objects[:article] %>\n"
@@ -470,7 +470,7 @@ msgstr "%s criou o papel |%s|"
 #: app/assets/javascripts/app/models/ticket.coffee:109
 #: app/frontend/shared/composables/activity-message/activityMessageBuilder/builders/ticket.ts:21
 msgid "%s created ticket |%s|"
-msgstr "%s criou o tíquete |%s|"
+msgstr "%s criou o ticket |%s|"
 
 #: app/assets/javascripts/app/models/user.coffee:208
 #: app/frontend/shared/composables/activity-message/activityMessageBuilder/builders/user.ts:21
@@ -491,7 +491,7 @@ msgstr "%s dias atrás"
 #, fuzzy
 #| msgid "%s ticket selected"
 msgid "%s deselected."
-msgstr "%s chamado selecionado"
+msgstr "%s ticket selecionado"
 
 #: app/assets/javascripts/app/controllers/_channel/email.coffee:709
 #: app/assets/javascripts/app/controllers/getting_started/channel_email.coffee:260
@@ -591,11 +591,11 @@ msgstr "%s de %s"
 
 #: app/assets/javascripts/app/views/dashboard/stats/ticket_in_process.jst.eco:11
 msgid "%s of my tickets are currently in process."
-msgstr "%s dos meus tíquetes estão em progresso."
+msgstr "%s dos meus tickets estão em progresso."
 
 #: app/assets/javascripts/app/views/dashboard/stats/ticket_escalation.jst.eco:11
 msgid "%s of my tickets escalated"
-msgstr "%s dos meus tíquetes escaladas"
+msgstr "%s dos meus tickets escaladas"
 
 #: app/assets/javascripts/app/views/ticket_overview/batch_overlay_user_group.jst.eco:11
 #: app/graphql/gql/queries/autocomplete_search/generic.rb:61
@@ -640,22 +640,22 @@ msgstr "%s alternou para |%s|!"
 
 #: app/frontend/apps/desktop/components/Ticket/TicketBulkEditFlyout/TicketBulkEditFlyout.vue:70
 msgid "%s ticket selected"
-msgstr "%s chamado selecionado"
+msgstr "%s ticket selecionado"
 
 #: app/assets/javascripts/app/views/ticket_zoom/meta.jst.eco:30
 #: app/frontend/apps/desktop/pages/ticket/components/TicketDetailView/TicketDetailTopBar/TopBarHeader/TicketInformation/TicketInformationBadgeList/ReferencingTicketsBadgePopover.vue:63
 #: app/frontend/apps/mobile/components/Organization/OrganizationItem.vue:51
 #: app/frontend/apps/mobile/components/User/UserItem.vue:31
 msgid "%s tickets"
-msgstr "%s tíquetes"
+msgstr "%s tickets"
 
 #: app/frontend/apps/mobile/pages/ticket/components/TicketList/TicketList.vue:113
 msgid "%s tickets found"
-msgstr "%s tíquetes encontrados"
+msgstr "%s tickets encontrados"
 
 #: app/frontend/apps/desktop/components/Ticket/TicketBulkEditFlyout/TicketBulkEditFlyout.vue:71
 msgid "%s tickets selected"
-msgstr "%s chamados selecionados"
+msgstr "%s tickets selecionados"
 
 #: app/assets/javascripts/app/models/ticket_article.coffee:51
 #: app/frontend/shared/composables/activity-message/activityMessageBuilder/builders/ticket-article.ts:28
@@ -687,7 +687,7 @@ msgstr "%s atualizou o papel |%s|"
 #: app/assets/javascripts/app/models/ticket.coffee:111
 #: app/frontend/shared/composables/activity-message/activityMessageBuilder/builders/ticket.ts:23
 msgid "%s updated ticket |%s|"
-msgstr "%s atualizou o tíquete |%s|"
+msgstr "%s atualizou o ticket |%s|"
 
 #: app/assets/javascripts/app/models/user.coffee:210
 #: app/frontend/shared/composables/activity-message/activityMessageBuilder/builders/user.ts:23
@@ -753,7 +753,7 @@ msgid ""
 "the **Accounted Time** tab."
 msgstr ""
 "**Tipos de Atividade** podem ser usados para agrupar as diferentes entradas "
-"de contabilização de tempo de tíquete. Por exemplo, entradas que são "
+"de contabilização de tempo de ticket. Por exemplo, entradas que são "
 "relevantes para um tipo \"Faturamento\".\n"
 "\n"
 "Quando você habilita o registro do tipo de atividade, os usuários poderão "
@@ -776,7 +776,7 @@ msgstr ""
 "** Privacidade de Dados ** ajuda você a excluir e verificar a remoção de "
 "dados existentes do sistema.\n"
 "\n"
-"Ele pode ser usado para excluir tíquetes, organizações e usuários. A "
+"Ele pode ser usado para excluir tickets, organizações e usuários. A "
 "atribuição do proprietário será desativada caso o usuário excluído seja um "
 "agente.\n"
 "\n"
@@ -807,12 +807,12 @@ msgstr ""
 "sistema irá alertá-lo.\n"
 "\n"
 "Você pode definir metas para três métricas diferentes: **tempo de resposta** "
-"(tempo entre a criação de um tíquete e a primeira reação de um agente), "
+"(tempo entre a criação de um ticket e a primeira reação de um agente), "
 "**tempo de atualização** (tempo entre a solicitação de um cliente e a reação "
 "de um agente), e **tempo de solução** (tempo entre a criação e o fechamento "
-"de um tíquete).\n"
+"de um ticket).\n"
 "\n"
-"Todos os tíquetes escalados (ou seja, tíquetes que não atingiram o objetivo "
+"Todos os tickets escalados (ou seja, tickets que não atingiram o objetivo "
 "definido) são exibidos em uma exibição separada em suas visões gerais. Você "
 "também pode configurar **notificações por e-mail**."
 
@@ -927,7 +927,7 @@ msgstr ""
 "o horário comercial definido.\n"
 "\n"
 "Se você tiver clientes com horários comerciais diferentes, pode criar vários "
-"calendários. Os tíquetes são vinculados aos calendários por meio de **SLAs**."
+"calendários. Os tickets são vinculados aos calendários por meio de **SLAs**."
 
 #: app/frontend/apps/desktop/pages/personal-setting/views/PersonalSettingAppearance.vue:44
 msgid "A color scheme that uses dark-colored elements on a light background."
@@ -953,7 +953,7 @@ msgstr ""
 
 #: lib/validations/mention_validator.rb:7
 msgid "A mentioned user has no agent access to this ticket"
-msgstr "O usuário mencionado não tem acesso de agente a este tíquete"
+msgstr "O usuário mencionado não tem acesso de agente a este ticket"
 
 #: app/assets/javascripts/app/controllers/_plugin/session_taken_over.coffee:26
 msgid ""
@@ -987,12 +987,12 @@ msgstr "Uma fila é requerida!"
 msgid ""
 "A test ticket has been created, you can find it in your overview \"%s\" %l."
 msgstr ""
-"Um tíquete de teste foi criado, você pode procurar na sua Visão Geral \"%s\" "
+"Um ticket de teste foi criado, você pode procurar na sua Visão Geral \"%s\" "
 "%l."
 
 #: app/models/ticket.rb:299
 msgid "A ticket cannot be merged into itself."
-msgstr "Um tíquete não poder ser agrupado com ele mesmo."
+msgstr "Um ticket não poder ser agrupado com ele mesmo."
 
 #: app/assets/javascripts/app/models/ticket_priority.coffee
 msgid ""
@@ -1040,7 +1040,7 @@ msgstr "API"
 #, fuzzy
 #| msgid "Agent"
 msgid "AI Agent"
-msgstr "Agente"
+msgstr "Agente de IA"
 
 #: app/assets/javascripts/app/controllers/_ai/ai_agent.coffee:6
 #: app/assets/javascripts/app/views/generic/ticket_perform_action/ai_agent.jst.eco:3
@@ -1048,25 +1048,25 @@ msgstr "Agente"
 #, fuzzy
 #| msgid "Agents"
 msgid "AI Agents"
-msgstr "Atendentes"
+msgstr "Agentes de IA"
 
 #: db/seeds/permissions.rb:233
 #, fuzzy
 #| msgid "Provider"
 msgid "AI Provider"
-msgstr "Provedor"
+msgstr "Provedor de IA"
 
 #: db/seeds/settings.rb:6054
 #, fuzzy
 #| msgid "Provider"
 msgid "AI Provider Config"
-msgstr "Provedor"
+msgstr "Configuração do Provedor de IA"
 
 #: app/models/setting/validation/ai_provider_config.rb:71
 #, fuzzy
 #| msgid "The provided token is invalid."
 msgid "AI Provider Model is not set"
-msgstr "O token fornecido é inválido."
+msgstr "O modelo do provedor de IA não está definido."
 
 #: lib/excel_sheet/ai/analytics/errors.rb:26
 #: lib/excel_sheet/ai/analytics/with_usage.rb:26
@@ -1085,13 +1085,13 @@ msgstr "Resumo do Evento"
 #, fuzzy
 #| msgid "Waiting in %s"
 msgid "AI Writing Assistant Tools"
-msgstr "Aguardando em %s"
+msgstr "Ferramentas do Assistente de Redação por IA"
 
 #: app/assets/javascripts/app/controllers/text_tools_modal.coffee:24
 #, fuzzy
 #| msgid "Waiting in %s"
 msgid "AI Writing Assistant: %s"
-msgstr "Aguardando em %s"
+msgstr "Assistente de Redação por IA: %s"
 
 #: app/frontend/apps/desktop/components/AiAgent/AiAgentPopoverWithTrigger.vue:21
 #: app/frontend/apps/desktop/components/CommonHistoryFlyout/utils/historyEventIssuerNames.ts:7
@@ -1100,31 +1100,33 @@ msgstr "Aguardando em %s"
 #, fuzzy
 #| msgid "Agent"
 msgid "AI agent"
-msgstr "Agente"
+msgstr "agente de IA"
 
 #: app/services/service/ai/agent/run.rb:32
 msgid "AI agent result content does not match expected result structure."
-msgstr ""
+msgstr "O conteúdo do resultado do agente de IA não corresponde à estrutura esperada."
 
 #: app/assets/javascripts/app/controllers/_ai/ai_agent.coffee:33
 #, fuzzy
 #| msgid "Agents"
 msgid "AI agent used in"
-msgstr "Atendentes"
+msgstr "Agente de IA usado em"
 
 #: app/assets/javascripts/app/models/ai_agent.coffee
 msgid ""
 "AI agents enable streamlined processing powered by artificial intelligence. "
 "You can execute AI agents via triggers or schedulers."
 msgstr ""
+"Os agentes de IA permitem processamento simplificado com inteligência artificial. "
+"Você pode executar agentes de IA por meio de gatilhos ou agendadores."
 
 #: app/services/service/ai_assistance/text_tools.rb:22
 msgid "AI assistance text tool is inactive."
-msgstr ""
+msgstr "A ferramenta de texto do assistente de IA está inativa."
 
 #: app/services/service/ai_assistance/text_tools.rb:21
 msgid "AI assistance text tool is invalid."
-msgstr ""
+msgstr "A ferramenta de texto do assistente de IA é inválida."
 
 #: lib/excel_sheet/ai/analytics/errors.rb:4
 #, fuzzy
@@ -1136,29 +1138,29 @@ msgstr "Erro na API."
 #, fuzzy
 #| msgid "Provider"
 msgid "AI provider"
-msgstr "Provedor"
+msgstr "Provedor de IA"
 
 #: app/models/setting/validation/ai_provider_config.rb:7
 #, fuzzy
 #| msgid "The provided token is invalid."
 msgid "AI provider Azure configuration is incomplete"
-msgstr "O token fornecido é inválido."
+msgstr "A configuração do provedor de IA Azure está incompleta."
 
 #: app/models/setting/validation/ai_provider_config.rb:6
 msgid "AI provider Ollama URL is not set"
-msgstr ""
+msgstr "A URL do Ollama do provedor de IA não está definida."
 
 #: app/models/setting/validation/ai_provider_config.rb:70
 #, fuzzy
 #| msgid "The provided token is invalid."
 msgid "AI provider URL is not set"
-msgstr "O token fornecido é inválido."
+msgstr "A URL do provedor de IA não está definida."
 
 #: app/models/setting/validation/ai_provider_config.rb:75
 #, fuzzy
 #| msgid "Provider"
 msgid "AI provider is missing"
-msgstr "Provedor"
+msgstr "O provedor de IA está ausente."
 
 #: app/controllers/ticket/summarize_controller.rb:8
 #: app/graphql/gql/mutations/ticket/ai_assistance/summarize.rb:15
@@ -1169,21 +1171,21 @@ msgstr "Provedor"
 #, fuzzy
 #| msgid "The setting 'storage_provider' was not configured."
 msgid "AI provider is not configured."
-msgstr "A configuração 'storage_provider' não foi configurada."
+msgstr "O provedor de IA não está configurado."
 
 #: app/models/setting/validation/ai_provider_config.rb:76
 msgid "AI provider is not supported"
-msgstr ""
+msgstr "O provedor de IA não é suportado."
 
 #: app/models/setting/validation/ai_provider_config.rb:8
 #, fuzzy
 #| msgid "The provided token is invalid."
 msgid "AI provider token is not set"
-msgstr "O token fornecido é inválido."
+msgstr "O token do provedor de IA não está definido."
 
 #: lib/ai/service/ticket_summarize.rb:45
 msgid "AI service result is missing expected keys"
-msgstr ""
+msgstr "O resultado do serviço de IA não contém as chaves esperadas."
 
 #: app/frontend/apps/desktop/pages/ticket/components/TicketSidebar/plugins/ticket-summary.ts:11
 #, fuzzy
@@ -1193,20 +1195,20 @@ msgstr "Resumo do Evento"
 
 #: lib/excel_sheet/ai/analytics/with_usage.rb:4
 msgid "AI usage and feedback log"
-msgstr ""
+msgstr "Log de uso e feedback da IA"
 
 #: app/frontend/shared/components/Form/fields/FieldEditor/features/ai-assistant-text-tools/AiAssistantLoadingBanner/AiAssistantLoadingBanner.vue:35
 #, fuzzy
 #| msgid "Waiting in %s"
 msgid "AI writing assistant"
-msgstr "Aguardando em %s"
+msgstr "Assistente de redação por IA"
 
 #: app/frontend/apps/desktop/components/Form/fields/FieldEditor/useEditorActions.ts:68
 #: app/frontend/apps/mobile/components/Form/fields/FieldEditor/useEditorActions.ts:68
 #, fuzzy
 #| msgid "Waiting in %s"
 msgid "AI writing assistant tools"
-msgstr "Aguardando em %s"
+msgstr "Ferramentas do assistente de redação por IA"
 
 #: app/assets/javascripts/app/controllers/api.coffee:3
 #: app/assets/javascripts/app/views/api.jst.eco:2 db/seeds/permissions.rb:263
@@ -1317,7 +1319,7 @@ msgstr "Acesso à interface de relatórios."
 
 #: db/seeds/permissions.rb:400
 msgid "Access to the ticket interface."
-msgstr "Acesso a tíquetes de clientes."
+msgstr "Acesso a tickets de clientes."
 
 #: app/assets/javascripts/app/views/whatsapp/account_cloud_api.jst.eco:19
 msgid "Access token"
@@ -1667,7 +1669,7 @@ msgstr "Adicionar alarme para lembretes pendentes e tickets escalados"
 
 #: app/assets/javascripts/app/views/profile/calendar_subscriptions.jst.eco:34
 msgid "Add alarm to pending reminder and escalated tickets."
-msgstr "Adicionar alarme em tíquetes pendentes e escalonados."
+msgstr "Adicionar alarme em tickets pendentes e escalonados."
 
 #: app/frontend/shared/form/i18n/locales.ts:73
 msgid "Add all values"
@@ -1793,7 +1795,7 @@ msgstr "Informações adicionais e links"
 
 #: db/seeds/settings.rb:845
 msgid "Additional notes for ticket create types."
-msgstr "Notas adicionais para tipos de criação de tíquetes."
+msgstr "Notas adicionais para tipos de criação de tickets."
 
 #: app/frontend/apps/desktop/pages/ticket/components/TicketDetailView/TicketDetailBottomBar/TicketAgentUpdateButton.vue:115
 #, fuzzy
@@ -1991,7 +1993,7 @@ msgstr "AlarmEe"
 #: app/assets/javascripts/app/views/generic/notification_matrix.jst.eco:8
 #: app/assets/javascripts/app/views/profile/notification.jst.eco:30
 msgid "All Tickets"
-msgstr "Todos os Tíquetes"
+msgstr "Todos os Tickets"
 
 #: app/assets/javascripts/app/controllers/_ui_element/object_perform_action.coffee:124
 msgid ""
@@ -2436,7 +2438,7 @@ msgstr "Arquivado em"
 #, fuzzy
 #| msgid "Ticket update"
 msgid "Archive ticket target state"
-msgstr "Chamado foi atualizado"
+msgstr "Ticket foi atualizado"
 
 #: app/assets/javascripts/app/controllers/knowledge_base/content_can_be_published_form.coffee:113
 msgid "Archived"
@@ -4189,7 +4191,7 @@ msgstr "Fechar aba"
 #: app/frontend/apps/desktop/pages/ticket/components/TicketDetailView/TicketScreenBehavior/behaviorOptions.ts:16
 #: db/seeds/settings.rb:3015
 msgid "Close tab on ticket close"
-msgstr "Fechar aba ao fechar o tíquete"
+msgstr "Fechar aba ao fechar o ticket"
 
 #: app/frontend/shared/components/Form/fields/FieldDate/useDateTime.ts:51
 msgid "Close the time picker"
@@ -4213,7 +4215,7 @@ msgstr "Fechado em"
 #: app/assets/javascripts/app/controllers/widget/ticket_stats.coffee:130
 #: app/assets/javascripts/app/controllers/widget/user.coffee:80
 msgid "Closed Tickets"
-msgstr "Tíquetes Fechados"
+msgstr "Tickets Fechados"
 
 #: app/frontend/apps/desktop/pages/organization/components/OrganizationRelatedTickets.vue:27
 #: app/frontend/apps/desktop/pages/ticket/components/TicketSidebar/TicketSidebarCustomer/TicketSidebarCustomerContent.vue:136
@@ -4221,7 +4223,7 @@ msgstr "Tíquetes Fechados"
 #, fuzzy
 #| msgid "closed tickets"
 msgid "Closed tickets"
-msgstr "tíquetes fechados"
+msgstr "tickets fechados"
 
 #: app/assets/javascripts/app/models/ticket.coffee:25
 #: app/frontend/shared/entities/ticket/stores/objectAttributes.ts:74
@@ -4670,7 +4672,7 @@ msgstr "Copiar Texto"
 
 #: app/frontend/apps/desktop/pages/ticket/components/TicketDetailView/TicketDetailTopBar/TopBarHeader.vue:85
 msgid "Copy ticket number"
-msgstr "Copiar número do tíquete"
+msgstr "Copiar número do ticket"
 
 #: app/assets/javascripts/app/views/exchange/app_config.jst.eco:35
 #: app/assets/javascripts/app/views/facebook/app_config.jst.eco:27
@@ -5308,7 +5310,7 @@ msgid ""
 "Customer tickets of the user will get deleted on execution of the task. No "
 "rollback possible."
 msgstr ""
-"Os tíquetes do cliente do usuário serão excluídos na execução da tarefa. Não "
+"Os tickets do cliente do usuário serão excluídos na execução da tarefa. Não "
 "será possível reverter."
 
 #: app/assets/javascripts/app/models/organization.coffee:7
@@ -5746,7 +5748,7 @@ msgid ""
 "ticket zoom."
 msgstr ""
 "Define a configuração que determina quantos artigos podem ser criados em um "
-"intervalo de um minuto por tíquete."
+"intervalo de um minuto por ticket."
 
 #: db/seeds/settings.rb:2980
 msgid ""
@@ -5834,7 +5836,7 @@ msgstr "Define se a criptografia S/MIME está habilitada ou não."
 
 #: db/seeds/settings.rb:2953
 msgid "Defines if a customer can create tickets via the web interface."
-msgstr "Define se o cliente pode criar tíquetes pela Web."
+msgstr "Define se o cliente pode criar tickets pela Web."
 
 #: db/seeds/settings.rb:20
 msgid "Defines if application is in init mode."
@@ -5952,7 +5954,7 @@ msgstr ""
 msgid ""
 "Defines if the ticket conditions editor supports complex logical expressions."
 msgstr ""
-"Define se as condições do editor do tíquete suporta expressões lógicas "
+"Define se as condições do editor do ticket suporta expressões lógicas "
 "complexas."
 
 #: db/seeds/settings.rb:2402
@@ -6044,8 +6046,8 @@ msgstr ""
 msgid ""
 "Defines postmaster filter to identify follow-up ticket for merged tickets."
 msgstr ""
-"Define o filtro postmaster para identificar o tíquete de acompanhamento para "
-"tíquetes mesclados."
+"Define o filtro postmaster para identificar o ticket de acompanhamento para "
+"tickets mesclados."
 
 #: db/seeds/settings.rb:4241
 msgid ""
@@ -6261,7 +6263,7 @@ msgstr "Define o backend para imagens de usuarios e organizações."
 #, fuzzy
 #| msgid "Defines the tab behaviour after a ticket action."
 msgid "Defines the backend service for ticket article language detection."
-msgstr "Define o comportamento da guia depois de uma ação de tíquete."
+msgstr "Define o comportamento da guia depois de uma ação de ticket."
 
 #: db/seeds/settings.rb:2889
 msgid ""
@@ -6277,7 +6279,7 @@ msgid ""
 "per ticket."
 msgstr ""
 "Define a configuração que determina quantos artigos podem ser criados em um "
-"intervalo de um minuto por tíquete."
+"intervalo de um minuto por ticket."
 
 #: db/seeds/settings.rb:4116
 msgid ""
@@ -6333,7 +6335,7 @@ msgstr ""
 "Define o nome de dominio qualificado do sistema. Isso se transforma numa "
 "variável, #{setting.fqdn} que é utiliizada em todos os tipos de mensagens "
 "usadas por esta aplicação, alem de servir para construir links de URL que "
-"apontam diretamente para os tíquetes existentes neste sistema."
+"apontam diretamente para os tickets existentes neste sistema."
 
 #: db/seeds/settings.rb:4720
 msgid "Defines the group of created tickets."
@@ -6434,14 +6436,14 @@ msgid ""
 "ensures that only tickets which belong to your system will be processed as "
 "follow-ups (useful when communicating between two instances of Zammad)."
 msgstr ""
-"Define o identificador numérico do sistema. Todo chamado contem este ID. "
-"Serve para garantir que apenas tíquetes gerados pelo seu sistema serão "
+"Define o identificador numérico do sistema. Todo ticket contem este ID. "
+"Serve para garantir que apenas tickets gerados pelo seu sistema serão "
 "respondidos corretamente com follow-up (util caso exista comunicação entre "
 "dois sistemas Zammad)."
 
 #: db/seeds/settings.rb:3005
 msgid "Defines the tab behaviour after a ticket action."
-msgstr "Define o comportamento da guia depois de uma ação de tíquete."
+msgstr "Define o comportamento da guia depois de uma ação de ticket."
 
 #: db/seeds/settings.rb:2800
 msgid "Defines the ticket states used for lookups."
@@ -7120,7 +7122,7 @@ msgstr "Você quer continuar?"
 
 #: app/assets/javascripts/app/views/ticket_zoom/checklist_modal.jst.eco:4
 msgid "Do you want to handle them before closing this ticket?"
-msgstr "Você quer resolver isso antes de encerrar este tíquete?"
+msgstr "Você quer resolver isso antes de encerrar este ticket?"
 
 #: app/assets/javascripts/app/controllers/ticket_zoom/article_action/whatsapp_reply.coffee:64
 #: app/frontend/shared/entities/ticket-article/action/plugins/whatsapp.ts:39
@@ -7185,13 +7187,13 @@ msgstr "Certificado de Download"
 #, fuzzy
 #| msgid "Media Download Error"
 msgid "Download Error Logs"
-msgstr "Erro no Download de Mídia"
+msgstr "Baixar logs de erro"
 
 #: app/assets/javascripts/app/views/ai/provider_logs.jst.eco:7
 #, fuzzy
 #| msgid "Feedback"
 msgid "Download Feedback"
-msgstr "Feedback"
+msgstr "Baixar feedback"
 
 #: app/assets/javascripts/app/views/integration/pgp_list.jst.eco:59
 #: app/assets/javascripts/app/views/integration/smime_list.jst.eco:37
@@ -7298,9 +7300,9 @@ msgid ""
 "in OTRS."
 msgstr ""
 "Campos dinâmicos não são tão comuns no Zammad, pois ele adota uma abordagem "
-"diferente para os atributos de tíquetes. O Zammad também usa tags, além de "
-"campos personalizados, para classificar os tíquetes. Essa diferença pode "
-"criar uma nova filosofia para seus atributos/tags de tíquetes em comparação "
+"diferente para os atributos de tickets. O Zammad também usa tags, além de "
+"campos personalizados, para classificar os tickets. Essa diferença pode "
+"criar uma nova filosofia para seus atributos/tags de tickets em comparação "
 "com o uso atual de campos dinâmicos no OTRS."
 
 #: app/assets/javascripts/app/models/user.coffee:334
@@ -7400,7 +7402,7 @@ msgstr "Editar chaves de segurança"
 
 #: app/frontend/apps/desktop/pages/ticket/components/TicketDetailView/TicketDetailTopBar/TopBarHeader/TicketInformation.vue:84
 msgid "Edit ticket title"
-msgstr "Editar título do tíquete"
+msgstr "Editar título do ticket"
 
 #: app/frontend/apps/desktop/entities/user/composables/useUserEdit.ts:65
 #, fuzzy
@@ -7716,7 +7718,7 @@ msgstr "Habilitar Códigos de Recuperação"
 
 #: db/seeds/settings.rb:2950
 msgid "Enable Ticket creation"
-msgstr "Habilitar criação de Tíquete"
+msgstr "Habilitar criação de Ticket"
 
 #: app/assets/javascripts/app/views/time_accounting/types.jst.eco:6
 msgid ""
@@ -7853,7 +7855,7 @@ msgstr "Habilita log de console."
 #: db/seeds/settings.rb:973
 msgid "Enables display of ticket priority icons in UI."
 msgstr ""
-"Habilita a exibição de ícones de prioridade de tíquete na interface do "
+"Habilita a exibição de ícones de prioridade de ticket na interface do "
 "usuário."
 
 #: db/seeds/settings.rb:793
@@ -8075,7 +8077,7 @@ msgstr "Digite o código do seu aplicativo de autenticação em duas etapas."
 
 #: app/models/ai/agent/type/custom_ai_agent.rb:37
 msgid "Enter the instruction for the AI agent."
-msgstr ""
+msgstr "Informe a instrução para o agente de IA."
 
 #: app/assets/javascripts/app/views/import/otrs.jst.eco:24
 msgid ""
@@ -8095,7 +8097,7 @@ msgstr ""
 
 #: app/models/ai/agent/type/custom_ai_agent.rb:28
 msgid "Enter the role description of the AI agent."
-msgstr ""
+msgstr "Informe a descrição da função do agente de IA."
 
 #: app/assets/javascripts/app/views/widget/two_factor_configuration/authenticator_app.jst.eco:28
 #: app/frontend/apps/desktop/components/TwoFactor/TwoFactorConfiguration/TwoFactorConfigurationAuthenticatorApp.vue:275
@@ -8491,7 +8493,7 @@ msgstr "Expandir este elemento"
 #, fuzzy
 #| msgid "Expert"
 msgid "Experimental"
-msgstr "Especialista"
+msgstr "Experimental"
 
 #: app/assets/javascripts/app/views/integration/ldap_wizard.jst.eco:223
 msgid "Expert"
@@ -8687,7 +8689,7 @@ msgstr "Feedback"
 #, fuzzy
 #| msgid "Feedback Form"
 msgid "Feedback & Logs"
-msgstr "Formulário de Feedback"
+msgstr "Feedback e logs"
 
 #: app/assets/javascripts/app/views/channel/form.jst.eco:34
 msgid "Feedback Form"
@@ -8907,7 +8909,7 @@ msgstr "Para suporte adicional, consulte nosso guia de migração."
 #: app/assets/javascripts/app/views/dashboard.jst.eco:13
 msgid "For example, recently changed tickets, users, or organizations."
 msgstr ""
-"Por exemplo, chamados, usuários ou organizações alteradas recentemente."
+"Por exemplo, tickets, usuários ou organizações alteradas recentemente."
 
 #: app/models/ai/agent/type/custom_ai_agent.rb:21
 msgid ""
@@ -9068,7 +9070,7 @@ msgstr "Organizações secundárias"
 #, fuzzy
 #| msgid "open tickets"
 msgid "Found tickets"
-msgstr "tíquetes abertos"
+msgstr "tickets abertos"
 
 #: app/frontend/apps/desktop/components/Search/plugins/user.ts:15
 #, fuzzy
@@ -9498,11 +9500,11 @@ msgstr "Permissões do grupo"
 #: app/assets/javascripts/app/views/channel/form.jst.eco:18
 #: db/seeds/settings.rb:2977
 msgid "Group selection for Ticket creation"
-msgstr "Seleção de Grupos para criação de Chamados"
+msgstr "Seleção de Grupos para criação de Tickets"
 
 #: db/seeds/settings.rb:3065
 msgid "Group selection for ticket creation"
-msgstr "Seleção de Grupos para criação de Chamados"
+msgstr "Seleção de Grupos para criação de Tickets"
 
 #: app/assets/javascripts/app/controllers/ticket_overview/settings.coffee:60
 #: app/assets/javascripts/app/models/overview.coffee:42
@@ -9740,7 +9742,7 @@ msgid ""
 "asterisk §*§ to find anything, e.g. §smi*§ or §rosent*l§. You also can use ||"
 "quotation marks|| for searching phrases: §\"some phrase\"§."
 msgstr ""
-"Aqui você pode procurar por chamados, clientes e organizações. Utilize o "
+"Aqui você pode procurar por tickets, clientes e organizações. Utilize o "
 "caracter asterisco §*§ parar procurar por tudo. Por exemplo, §smi*§ ou "
 "§rosent*l§. Você pode usar, também, ||aspas duplas|| para procurar por "
 "frases, por exemplo, §\"uma frase\"§."
@@ -9770,7 +9772,7 @@ msgid ""
 "Here you find your ticket overviews for open, assigned, and escalated "
 "tickets."
 msgstr ""
-"Aqui você encontra suas visões para chamados abertos, atribuídos ou "
+"Aqui você encontra suas visões para tickets abertos, atribuídos ou "
 "escalonados."
 
 #: app/assets/javascripts/app/views/dashboard.jst.eco:12
@@ -9923,7 +9925,7 @@ msgid ""
 "How many of your tickets are coming from email, phone, or Facebook? (Shows "
 "percentages for both inbound and outbound tickets.)"
 msgstr ""
-"Quantos de seus chamados vêm de e-mail, telefone, Twitter ou Facebook? "
+"Quantos de seus tickets vêm de e-mail, telefone, Twitter ou Facebook? "
 "(Mostra as porcentagens dos ingressos de entrada e saída.)"
 
 #: app/assets/javascripts/app/controllers/_dashboard/stats/ticket_reopen.coffee:9
@@ -10325,29 +10327,29 @@ msgstr ""
 
 #: app/frontend/apps/desktop/pages/personal-setting/views/PersonalSettingCalendar.vue:73
 msgid "Include unassigned tickets in subscription for escalated tickets."
-msgstr "Incluir chamados não atribuídos na inscrição de chamados escalados."
+msgstr "Incluir tickets não atribuídos na inscrição de tickets escalados."
 
 #: app/frontend/apps/desktop/pages/personal-setting/views/PersonalSettingCalendar.vue:100
 msgid "Include unassigned tickets in subscription for new & open tickets."
 msgstr ""
-"Incluir chamados não atribuídos na inscrição de chamados novos e abertos."
+"Incluir tickets não atribuídos na inscrição de tickets novos e abertos."
 
 #: app/frontend/apps/desktop/pages/personal-setting/views/PersonalSettingCalendar.vue:127
 msgid "Include unassigned tickets in subscription for pending tickets."
-msgstr "Incluir chamados não atribuídos na inscrição de chamados pendentes."
+msgstr "Incluir tickets não atribuídos na inscrição de tickets pendentes."
 
 #: app/frontend/apps/desktop/pages/personal-setting/views/PersonalSettingCalendar.vue:61
 msgid "Include your own tickets in subscription for escalated tickets."
-msgstr "Incluir seus próprios chamados na inscrição de chamados não escalados."
+msgstr "Incluir seus próprios tickets na inscrição de tickets não escalados."
 
 #: app/frontend/apps/desktop/pages/personal-setting/views/PersonalSettingCalendar.vue:88
 msgid "Include your own tickets in subscription for new & open tickets."
 msgstr ""
-"Incluir seus próprios chamados na inscrição de chamados novos e abertos."
+"Incluir seus próprios tickets na inscrição de tickets novos e abertos."
 
 #: app/frontend/apps/desktop/pages/personal-setting/views/PersonalSettingCalendar.vue:115
 msgid "Include your own tickets in subscription for pending tickets."
-msgstr "Incluir seus próprios chamados na inscrição de chamados pendentes."
+msgstr "Incluir seus próprios tickets na inscrição de tickets pendentes."
 
 #: app/frontend/apps/mobile/pages/home/views/FavoriteTicketOverviewsEdit.vue:113
 msgid "Included ticket overviews"
@@ -10355,7 +10357,7 @@ msgstr "Visão geral de tickets incluídas"
 
 #: app/frontend/apps/desktop/pages/personal-setting/views/PersonalSettingCalendar.vue:288
 msgid "Includes escalated, new & open and pending tickets."
-msgstr "Inclui chamados escalados, novos, abertos e pendentes."
+msgstr "Inclui tickets escalados, novos, abertos e pendentes."
 
 #: app/assets/javascripts/app/views/integration/pgp_list.jst.eco:26
 #: app/assets/javascripts/app/views/integration/smime_list.jst.eco:21
@@ -10370,7 +10372,7 @@ msgstr "Versão do Elasticsearch"
 
 #: app/assets/javascripts/app/controllers/ticket_zoom/checklist_modal.coffee:10
 msgid "Incomplete Ticket Checklist"
-msgstr "Lista de Verificação de Tíquete Incompleto"
+msgstr "Lista de Verificação de Ticket Incompleto"
 
 #: app/frontend/apps/desktop/pages/ticket/components/TicketSidebar/TicketSidebarChecklist/TicketSidebarChecklist.vue:30
 msgid "Incomplete checklist items"
@@ -10386,7 +10388,7 @@ msgstr "Credenciais incompletas"
 #, fuzzy
 #| msgid "Incomplete Ticket Checklist"
 msgid "Incomplete ticket checklist"
-msgstr "Lista de Verificação de Tíquete Incompleto"
+msgstr "Lista de Verificação de Ticket Incompleto"
 
 #: db/seeds/settings.rb:2440
 msgid "Increment (SystemID.Counter)"
@@ -11227,7 +11229,7 @@ msgstr ""
 #, fuzzy
 #| msgid "Information"
 msgid "Legal Information"
-msgstr "Informação"
+msgstr "Informações legais"
 
 #: app/frontend/apps/mobile/pages/account/views/PersonalSettingAvatar.vue:199
 msgid "Library"
@@ -11316,7 +11318,7 @@ msgstr "Resposta do link"
 
 #: app/assets/javascripts/app/controllers/_integration/github.coffee:76
 msgid "Link GitHub issues to your tickets."
-msgstr "Vincule problemas do GitHub aos seus tíquetes."
+msgstr "Vincule problemas do GitHub aos seus tickets."
 
 #: app/assets/javascripts/app/controllers/_integration/gitlab.coffee:99
 msgid "Link GitLab issues to your tickets."
@@ -11340,7 +11342,7 @@ msgstr "Vincular conta em %s"
 #, fuzzy
 #| msgid "Ticket tag added successfully."
 msgid "Link added successfully"
-msgstr "Tag do chamado adicionada com sucesso."
+msgstr "Tag do ticket adicionada com sucesso."
 
 #: lib/validations/link_uniqueness_validator.rb:9
 #, fuzzy
@@ -11367,7 +11369,7 @@ msgstr "Tickets Vinculados"
 #, fuzzy
 #| msgid "Ticket tag removed successfully."
 msgid "Link removed successfully"
-msgstr "Tag do chamado removida com sucesso."
+msgstr "Tag do ticket removida com sucesso."
 
 #: app/assets/javascripts/app/controllers/_ui_element/object_manager_attribute.coffee:259
 msgid "Link template"
@@ -11667,7 +11669,7 @@ msgstr "Gerenciar"
 #, fuzzy
 #| msgid "Manage ticket settings of your system."
 msgid "Manage AI agents of your system."
-msgstr "Gerenciar configurações de tíquetes do seu sistema."
+msgstr "Gerenciar os agentes de IA do seu sistema."
 
 #: db/seeds/permissions.rb:234
 #, fuzzy
@@ -11683,7 +11685,7 @@ msgstr "Gerenciar a API do seu sistema."
 #, fuzzy
 #| msgid "Manage ticket settings of your system."
 msgid "Manage BETA UI settings of your system."
-msgstr "Gerenciar configurações de tíquetes do seu sistema."
+msgstr "Gerenciar configurações de tickets do seu sistema."
 
 #: app/assets/javascripts/app/controllers/checklist_template.coffee:30
 msgid "Manage Checklist Template"
@@ -11893,51 +11895,51 @@ msgstr "Gerenciar módulos de texto do seu sistema."
 #: db/seeds/permissions.rb:222
 msgid "Manage ticket auto assignment settings of your system."
 msgstr ""
-"Gerencie as configurações de atribuição automática de chamados do seu "
+"Gerencie as configurações de atribuição automática de tickets do seu "
 "sistema."
 
 #: db/seeds/permissions.rb:336
 msgid "Manage ticket checklists of your system."
-msgstr "Gerenciar listas de verificação de tíquetes do seu sistema."
+msgstr "Gerenciar listas de verificação de tickets do seu sistema."
 
 #: db/seeds/permissions.rb:228
 msgid "Manage ticket duplicate detection settings of your system."
 msgstr ""
-"Gerencie as configurações de detecção de chamados duplicados do seu sistema."
+"Gerencie as configurações de detecção de tickets duplicados do seu sistema."
 
 #: db/seeds/permissions.rb:48
 msgid "Manage ticket macros of your system."
-msgstr "Gerenciar macros de tíquetes do seu sistema."
+msgstr "Gerenciar macros de tickets do seu sistema."
 
 #: db/seeds/permissions.rb:36
 msgid "Manage ticket overviews of your system."
-msgstr "Gerenciar visões gerais de tíquetes do seu sistema."
+msgstr "Gerenciar visões gerais de tickets do seu sistema."
 
 #: db/seeds/permissions.rb:282
 msgid "Manage ticket priorities of your system."
-msgstr "Gerenciar prioridades de tíquetes do seu sistema."
+msgstr "Gerenciar prioridades de tickets do seu sistema."
 
 #: db/seeds/permissions.rb:216
 msgid "Manage ticket settings of your system."
-msgstr "Gerenciar configurações de tíquetes do seu sistema."
+msgstr "Gerenciar configurações de tickets do seu sistema."
 
 #: db/seeds/permissions.rb:276
 msgid "Manage ticket states of your system."
-msgstr "Gerenciar estados de tíquetes do seu sistema."
+msgstr "Gerenciar estados de tickets do seu sistema."
 
 #: db/seeds/permissions.rb:240
 #, fuzzy
 #| msgid "Manage ticket macros of your system."
 msgid "Manage ticket summarization of your system."
-msgstr "Gerenciar macros de tíquetes do seu sistema."
+msgstr "Gerenciar macros de tickets do seu sistema."
 
 #: db/seeds/permissions.rb:60
 msgid "Manage ticket tags of your system."
-msgstr "Gerenciar tags de tíquetes do seu sistema."
+msgstr "Gerenciar tags de tickets do seu sistema."
 
 #: db/seeds/permissions.rb:54
 msgid "Manage ticket templates of your system."
-msgstr "Gerenciar modelos de tíquetes do seu sistema."
+msgstr "Gerenciar modelos de tickets do seu sistema."
 
 #: db/seeds/permissions.rb:108
 msgid "Manage time accounting settings of your system."
@@ -11963,7 +11965,7 @@ msgstr "Gerenciar webhooks do seu sistema."
 #, fuzzy
 #| msgid "Manage ticket macros of your system."
 msgid "Manage writing assistant text tools of your system."
-msgstr "Gerenciar macros de tíquetes do seu sistema."
+msgstr "Gerenciar macros de tickets do seu sistema."
 
 #: app/views/mailer/application.html.erb:47
 msgid "Manage your notification settings"
@@ -11992,10 +11994,10 @@ msgid ""
 "use of dynamic fields in OTRS."
 msgstr ""
 "Muitos campos dinâmicos foram encontrados. Este não é um padrão comum no "
-"Zammad, que adota uma abordagem diferente para os atributos de tíquete. O "
+"Zammad, que adota uma abordagem diferente para os atributos de ticket. O "
 "Zammad também usa tags, além de campos personalizados, para classificar "
-"tíquetes. Essa diferença pode criar uma nova filosofia para os atributos/"
-"tags de seus tíquetes em comparação com seu uso atual de campos dinâmicos no "
+"tickets. Essa diferença pode criar uma nova filosofia para os atributos/"
+"tags de seus tickets em comparação com seu uso atual de campos dinâmicos no "
 "OTRS."
 
 #: app/assets/javascripts/app/views/integration/clearbit.jst.eco:22
@@ -12097,7 +12099,7 @@ msgstr "Tamanho máximo do email"
 
 #: db/seeds/settings.rb:2905
 msgid "Maximum Recursive Ticket Triggers Depth"
-msgstr "Profundidade Máxima de Gatilhos Recursivos de Chamados"
+msgstr "Profundidade Máxima de Gatilhos Recursivos de Tickets"
 
 #: db/seeds/settings.rb:2227
 msgid "Maximum failed logins"
@@ -12540,7 +12542,7 @@ msgstr "Meus tickets"
 
 #: app/assets/javascripts/app/views/dashboard/stats/ticket_in_process.jst.eco:3
 msgid "My tickets in process"
-msgstr "Meus chamados em andamento"
+msgstr "Meus tickets em andamento"
 
 #: app/assets/javascripts/app/controllers/_integration/nagios.coffee:3
 msgid "Nagios"
@@ -12717,13 +12719,13 @@ msgstr "Nova"
 #, fuzzy
 #| msgid "New & Open Tickets"
 msgid "New & open tickets"
-msgstr "Tíquetes Novos e Abertos"
+msgstr "Tickets Novos e Abertos"
 
 #: app/assets/javascripts/app/controllers/_ai/ai_agent.coffee:69
 #, fuzzy
 #| msgid "Agent"
 msgid "New AI Agent"
-msgstr "Agente"
+msgstr "Novo Agente de IA"
 
 #: app/assets/javascripts/app/controllers/api.coffee:190
 msgid "New Access Token is"
@@ -12839,7 +12841,7 @@ msgstr "Novo modelo"
 #: app/assets/javascripts/app/views/customer_ticket_create.jst.eco:6
 #: app/assets/javascripts/app/views/navigation/menu_cti_ringing.jst.eco:25
 msgid "New Ticket"
-msgstr "Novo Chamado"
+msgstr "Novo Ticket"
 
 #: app/assets/javascripts/app/controllers/ticket_state.coffee:23
 msgid "New Ticket State"
@@ -12879,7 +12881,7 @@ msgstr "Novo fluxo de trabalho (Workflow)"
 #, fuzzy
 #| msgid "Waiting in %s"
 msgid "New Writing Assistant Tool"
-msgstr "Aguardando em %s"
+msgstr "Nova Ferramenta do Assistente de Redação"
 
 #: app/frontend/apps/desktop/components/BetaUi/composables/useBetaUiDisclaimer.ts:42
 #, fuzzy
@@ -12918,7 +12920,7 @@ msgstr "Novo Modulo de Texto"
 #: app/frontend/apps/desktop/pages/ticket/routes.ts:19
 #: app/frontend/apps/desktop/pages/user/components/UserDetailTopBar/actions/newTicket.ts:11
 msgid "New ticket"
-msgstr "Novo tíquete"
+msgstr "Novo ticket"
 
 #. This is the template file app/views/mailer/ticket_create/en.html.erb in ERB/HTML format.
 #. Please make sure to translate it to a valid corresponding output structure.
@@ -12982,7 +12984,7 @@ msgstr ""
 #, fuzzy
 #| msgid "New Ticket: %s"
 msgid "New ticket: %s"
-msgstr "Novo Tíquete: %s"
+msgstr "Novo Ticket: %s"
 
 #: app/frontend/apps/desktop/entities/user/composables/useUserCreate.ts:69
 #: app/frontend/apps/desktop/pages/organization/components/OrganizationDetailTopBar/actions/newUser.ts:13
@@ -13161,7 +13163,7 @@ msgstr "Nenhum certificado encontrado."
 #: app/assets/javascripts/app/views/ticket_zoom/sidebar_checklist/start.jst.eco:3
 #: app/frontend/apps/desktop/pages/ticket/components/TicketSidebar/TicketSidebarChecklist/TicketSidebarChecklistContent.vue:435
 msgid "No checklist added to this ticket yet."
-msgstr "Nenhuma lista de verificação adicionada a este tíquete ainda."
+msgstr "Nenhuma lista de verificação adicionada a este ticket ainda."
 
 #: app/frontend/apps/desktop/pages/ticket/components/TicketSidebar/TicketSidebarChecklist/TicketSidebarChecklistContent/ChecklistItems.vue:184
 msgid "No checklist items yet"
@@ -13407,7 +13409,7 @@ msgstr "Sem x-zammad-session-user-id, sem conjunto de remetentes!"
 #: app/assets/javascripts/app/controllers/ticket_zoom/checklist_modal.coffee:8
 #: app/frontend/apps/desktop/pages/ticket/components/TicketDetailView/TicketDetailViewContent.vue:387
 msgid "No, just close the ticket"
-msgstr "Não, apenas feche o tíquete"
+msgstr "Não, apenas feche o ticket"
 
 #: app/frontend/shared/composables/form/useCheckBodyAttachmentReference.ts:51
 msgid "No, thanks"
@@ -13428,7 +13430,7 @@ msgstr "Normal"
 #: app/assets/javascripts/app/views/profile/calendar_subscriptions.jst.eco:64
 #: app/assets/javascripts/app/views/profile/notification.jst.eco:30
 msgid "Not Assigned"
-msgstr "Chamado atribuido"
+msgstr "Ticket atribuido"
 
 #: app/assets/javascripts/app/controllers/knowledge_base/agent_controller.coffee:247
 msgid "Not Available"
@@ -13919,18 +13921,18 @@ msgstr "Opções"
 
 #: app/assets/javascripts/app/views/dashboard/first_steps_test_ticket_finish.jst.eco:3
 msgid "Open Ticket# %s"
-msgstr "Abrir Chamado# %s"
+msgstr "Abrir Ticket# %s"
 
 #: app/assets/javascripts/app/controllers/widget/ticket_stats.coffee:122
 #: app/assets/javascripts/app/controllers/widget/user.coffee:70
 #: db/seeds/overviews.rb:109
 msgid "Open Tickets"
-msgstr "chamados abertos"
+msgstr "tickets abertos"
 
 #: app/models/system_report/plugin/entities/ticket.rb:4
 msgid "Open and closed tickets ratio (ticket counts based on state)"
 msgstr ""
-"Proporção de chamados abertos e fechados (número de chamados baseados no "
+"Proporção de tickets abertos e fechados (número de tickets baseados no "
 "estado)"
 
 #: app/frontend/apps/desktop/pages/ticket/components/TicketDetailView/TicketDetailTopBar/TopBarHeader/TicketInformation/TicketInformationBadgeList/ChecklistBadgeList.vue:31
@@ -13965,7 +13967,7 @@ msgstr "Opções"
 #, fuzzy
 #| msgid "Open Ticket# %s"
 msgid "Open quick search"
-msgstr "Abrir Chamado# %s"
+msgstr "Abrir Ticket# %s"
 
 #: app/frontend/shared/components/Form/fields/FieldDate/useDateTime.ts:77
 msgid "Open the hours overlay"
@@ -14093,7 +14095,7 @@ msgstr "Ordem das Visões Gerais"
 
 #: app/frontend/apps/desktop/pages/personal-setting/views/PersonalSettingOverviews.vue:120
 msgid "Order of ticket overviews"
-msgstr "Ordem das visões gerais dos tíquetes"
+msgstr "Ordem das visões gerais dos tickets"
 
 #: app/assets/javascripts/app/controllers/_ui_element/_application_selector.coffee:17
 #: app/assets/javascripts/app/controllers/_ui_element/core_workflow_condition.coffee:32
@@ -14405,7 +14407,7 @@ msgid ""
 "Owner tickets of the user will not get deleted. The owner will be mapped to "
 "the system user (ID 1)."
 msgstr ""
-"Os chamados com propriedade do usuário não serão excluídos. O proprietário "
+"Os tickets com propriedade do usuário não serão excluídos. O proprietário "
 "será mapeado para o usuário do sistema (ID 1)."
 
 #: app/assets/javascripts/app/controllers/_integration/pgp.coffee:3
@@ -14625,7 +14627,7 @@ msgstr "Lembrete para ticket |%s| pendente alcançado"
 #, fuzzy
 #| msgid "Pending Tickets"
 msgid "Pending tickets"
-msgstr "Tíquetes Pendentes"
+msgstr "Tickets Pendentes"
 
 #: app/assets/javascripts/app/models/ticket.coffee:13
 #: app/graphql/gql/types/overview_type.rb:98
@@ -15401,7 +15403,7 @@ msgstr "Chamada Recebida: %s"
 #: app/assets/javascripts/app/views/agent_ticket_merge.jst.eco:5
 #: app/assets/javascripts/app/views/link/ticket/add.jst.eco:30
 msgid "Recent Customer Tickets"
-msgstr "CHAMADOS DE CLIENTES RECENTES"
+msgstr "TICKETS DE CLIENTES RECENTES"
 
 #: app/assets/javascripts/app/views/widget/http_log.jst.eco:2
 msgid "Recent Logs"
@@ -15411,13 +15413,13 @@ msgstr "Logs Recentes"
 #, fuzzy
 #| msgid "Recent Customer Tickets"
 msgid "Recent customer tickets"
-msgstr "CHAMADOS DE CLIENTES RECENTES"
+msgstr "Tickets de clientes recentes"
 
 #: app/frontend/apps/desktop/components/Search/QuickSearch/QuickSearch.vue:95
 #, fuzzy
 #| msgid "Ticket tag removed successfully."
 msgid "Recent search was removed successfully."
-msgstr "Tag do chamado removida com sucesso."
+msgstr "Tag do ticket removida com sucesso."
 
 #: app/frontend/apps/desktop/components/Search/QuickSearch/QuickSearch.vue:112
 #: app/frontend/apps/mobile/pages/search/views/SearchOverview.vue:250
@@ -15503,7 +15505,7 @@ msgstr ""
 
 #: db/seeds/settings.rb:2841
 msgid "Recursive Ticket Triggers"
-msgstr "Acionadores de tíquetes recursivos"
+msgstr "Acionadores de tickets recursivos"
 
 #: app/models/system_report/plugin/redis.rb:4
 msgid "Redis version"
@@ -15791,7 +15793,7 @@ msgstr "responder a todos"
 
 #: lib/validations/ticket_article_validator/whatsapp_message.rb:62
 msgid "Reply allowed only for open tickets"
-msgstr "Resposta permitida apenas para tíquetes abertos"
+msgstr "Resposta permitida apenas para tickets abertos"
 
 #: app/assets/javascripts/app/controllers/_plugin/keyboard_shortcuts.coffee:478
 msgid "Reply to last article"
@@ -15819,6 +15821,22 @@ msgstr "Perfil de Relatório"
 #: app/assets/javascripts/app/views/report/main.jst.eco:5
 msgid "Reporting"
 msgstr "Relatório"
+
+#: app/assets/javascripts/app/controllers/report.coffee
+msgid "Attendance Report"
+msgstr "Relatório de atendimento"
+
+#: app/assets/javascripts/app/views/report/pause_indicators_content.jst.eco
+msgid "Tempo em pausa"
+msgstr "Tempo em pausa"
+
+#: app/assets/javascripts/app/controllers/report/pause_indicators.coffee
+msgid "Equipe"
+msgstr "Equipe"
+
+#: app/assets/javascripts/app/controllers/report/pause_indicators.coffee
+msgid "Aplicar filtro"
+msgstr "Aplicar filtro"
 
 #: app/assets/javascripts/app/views/widget/http_log.jst.eco:18
 #: app/assets/javascripts/app/views/widget/http_log_show.jst.eco:17
@@ -16022,7 +16040,7 @@ msgstr ""
 
 #: app/frontend/apps/desktop/pages/personal-setting/views/PersonalSettingOverviews.vue:89
 msgid "Resetting the order of your ticket overviews failed."
-msgstr "A redefinição da ordem da visão geral dos seus chamados falhou."
+msgstr "A redefinição da ordem da visão geral dos seus tickets falhou."
 
 #: app/frontend/apps/desktop/pages/ticket/components/TicketDetailView/ArticleReply.vue:193
 #, fuzzy
@@ -16531,7 +16549,7 @@ msgstr "Procurar"
 #, fuzzy
 #| msgid "Search for users"
 msgid "Search for AI agents"
-msgstr "Pesquisar por usuários"
+msgstr "Pesquisar agentes de IA"
 
 #: app/assets/javascripts/app/controllers/_integration/ldap.coffee:25
 #, fuzzy
@@ -16651,7 +16669,7 @@ msgstr "Pesquisar por usuários"
 #, fuzzy
 #| msgid "Waiting in %s"
 msgid "Search for writing assistant tools"
-msgstr "Aguardando em %s"
+msgstr "Pesquisar ferramentas do assistente de redação"
 
 #: app/frontend/apps/mobile/pages/search/views/SearchOverview.vue:230
 msgid "Search for…"
@@ -16916,7 +16934,7 @@ msgid ""
 "See your tickets from within your favorite calendar by adding the "
 "subscription URL to your calendar app."
 msgstr ""
-"Veja seus tíquetes no seu calendário favorito adicionando a URL de "
+"Veja seus tickets no seu calendário favorito adicionando a URL de "
 "assinatura ao seu aplicativo de calendário."
 
 #: app/assets/javascripts/app/controllers/_plugin/electron_events.coffee:38
@@ -17019,7 +17037,7 @@ msgstr "Seletor"
 
 #: app/assets/javascripts/app/views/settings/ticket_number.jst.eco:4
 msgid "Selects the ticket number generator module."
-msgstr "Selecionar o módulo gerador de números para chamado."
+msgstr "Selecionar o módulo gerador de números para ticket."
 
 #: app/frontend/apps/desktop/components/CommonSelect/CommonSelect.vue:428
 #: app/frontend/apps/desktop/components/Form/fields/FieldTreeSelect/FieldTreeSelectInputDropdown.vue:444
@@ -17483,7 +17501,7 @@ msgstr "Mostrar Detalhes da Pesquisa"
 msgid ""
 "Show additional notes for ticket creation depending on the selected type."
 msgstr ""
-"Mostrar notas adicionais para a criação de chamados dependendo do tipo "
+"Mostrar notas adicionais para a criação de tickets dependendo do tipo "
 "selecionado."
 
 #: app/assets/javascripts/app/views/generic/reference_list.jst.eco:21
@@ -18267,7 +18285,7 @@ msgstr "Tickets inscritos"
 
 #: app/frontend/apps/desktop/components/Form/fields/FieldNotifications/FieldNotificationsInput.vue:49
 msgid "Subscribed tickets"
-msgstr "Tíquetes assinados"
+msgstr "Tickets assinados"
 
 #: app/frontend/apps/desktop/pages/ticket/components/TicketSidebar/TicketSidebarInformation/TicketSidebarInformationContent.vue:133
 #: app/frontend/apps/mobile/pages/ticket/views/TicketInformation/TicketInformationDetails.vue:169
@@ -18291,13 +18309,13 @@ msgstr ""
 #, fuzzy
 #| msgid "Start new conversation"
 msgid "Summary Generation"
-msgstr "Iniciar uma nova conversa"
+msgstr "Geração do resumo"
 
 #: app/assets/javascripts/app/views/ai/ticket_summary.jst.eco:22
 #, fuzzy
 #| msgid "Image Service"
 msgid "Summary Services"
-msgstr "Serviço de imagens"
+msgstr "Serviços de resumo"
 
 #: app/assets/javascripts/app/views/ticket_zoom/sidebar_ticket_summary.jst.eco:53
 #: app/frontend/apps/desktop/pages/ticket/components/TicketSidebar/TicketSidebarSummary/TicketSidebarSummaryContent.vue:139
@@ -18625,7 +18643,7 @@ msgstr "Texto ou anexo é obrigatório"
 #: app/assets/javascripts/app/views/ticket_zoom/sidebar_checklist/item_edit.jst.eco:6
 #: app/frontend/apps/desktop/pages/ticket/components/TicketSidebar/TicketSidebarChecklist/TicketSidebarChecklistContent/ChecklistItem.vue:141
 msgid "Text or ticket identifier"
-msgstr "Texto ou identificador do tíquete"
+msgstr "Texto ou identificador do ticket"
 
 #: app/assets/javascripts/app/views/translation/description.jst.eco:12
 msgid "Text with disabled inline translations looks like"
@@ -18692,7 +18710,7 @@ msgstr ""
 #, fuzzy
 #| msgid "The login is not possible."
 msgid "The AI Provider is not accessible."
-msgstr "O login não é possível."
+msgstr "O Provedor de IA não está acessível."
 
 #: lib/monitoring_helper/health_checker/ai_provider_accessible.rb:14
 #, fuzzy
@@ -19149,7 +19167,7 @@ msgstr "O divisor entre TicketHook e o número do ticket. Por exemplo. ': '."
 #, fuzzy
 #| msgid "Media download failed. Please try again later."
 msgid "The download could not be started. Please try again later."
-msgstr "Falha no download de mídia. Por favor, tente novamente mais tarde."
+msgstr "O download não pôde ser iniciado. Tente novamente mais tarde."
 
 #: app/assets/javascripts/app/views/microsoft365/duplicate_email_address.jst.eco:3
 #, fuzzy
@@ -19305,8 +19323,8 @@ msgid ""
 "The identifier for a ticket, e.g. Ticket#, Call#, MyTicket#. The default is "
 "Ticket#."
 msgstr ""
-"É um identificador do Chamado, ex. Ticket#, Chamado#, MeuChamado#. O padrão "
-"é Chamado#."
+"É um identificador do Ticket, ex. Ticket#, Ticket#, MeuTicket#. O padrão "
+"é Ticket#."
 
 #: app/graphql/gql/mutations/ticket/external_references/idoit_object_add.rb:30
 #, fuzzy
@@ -19318,7 +19336,7 @@ msgstr "O objeto não pôde ser encontrado."
 #, fuzzy
 #| msgid "Checklist is already created for this ticket"
 msgid "The idoit object is already present on the ticket."
-msgstr "A lista de verificação já foi criada para este tíquete"
+msgstr "A lista de verificação já foi criada para este ticket"
 
 #: app/services/service/avatar/image_validate.rb:10
 msgid "The image is invalid."
@@ -19974,11 +19992,11 @@ msgstr ""
 #, fuzzy
 #| msgid "Manage ticket checklists of your system."
 msgid "The ticket checklist is incomplete."
-msgstr "Gerenciar listas de verificação de tíquetes do seu sistema."
+msgstr "Gerenciar listas de verificação de tickets do seu sistema."
 
 #: app/services/service/ticket/update/validator/time_accounting.rb:19
 msgid "The ticket time accounting condition is met."
-msgstr "A condição de contabilização do tempo do chamado foi atendida."
+msgstr "A condição de contabilização do tempo do ticket foi atendida."
 
 #: app/assets/javascripts/app/controllers/agent_ticket_merge.coffee:111
 msgid "The tickets could not be merged."
@@ -20718,7 +20736,7 @@ msgstr "Este serviço permite conectar-se %s com % s."
 #, fuzzy
 #| msgid "This service allows you to connect %s with %s."
 msgid "This service allows you to connect Zammad with an AI provider."
-msgstr "Este serviço permite conectar-se %s com % s."
+msgstr "Este serviço permite conectar o Zammad a um provedor de IA."
 
 #: app/assets/javascripts/app/controllers/_ai/provider.coffee:43
 msgid ""
@@ -20811,7 +20829,7 @@ msgstr ""
 
 #: app/models/ticket/checklists.rb:38
 msgid "This ticket already has a checklist."
-msgstr "Este chamado já possui uma lista de verificação."
+msgstr "Este ticket já possui uma lista de verificação."
 
 #: app/models/ai/agent/type/ticket_categorizer.rb:15
 msgid ""
@@ -20892,15 +20910,15 @@ msgstr "Quinta"
 #: app/frontend/apps/mobile/pages/ticket/views/TicketInformation/plugins/ticket.ts:6
 #: db/seeds/permissions.rb:215
 msgid "Ticket"
-msgstr "Tíquete"
+msgstr "Ticket"
 
 #: app/assets/javascripts/app/controllers/agent_ticket_create.coffee:793
 msgid "Ticket %s created!"
-msgstr "Chamado %s criado!"
+msgstr "Ticket %s criado!"
 
 #: app/assets/javascripts/app/controllers/agent_ticket_merge.coffee:93
 msgid "Ticket %s merged."
-msgstr "Chamado %s fundido."
+msgstr "Ticket %s fundido."
 
 #. This is the template file app/views/mailer/ticket_update_merged_into/en.html.erb in ERB/HTML format.
 #. Please make sure to translate it to a valid corresponding output structure.
@@ -20940,7 +20958,7 @@ msgstr "Ticket (censurado):"
 
 #: db/seeds/permissions.rb:221
 msgid "Ticket Auto Assignment"
-msgstr "Atribuição Automática de Chamados"
+msgstr "Atribuição Automática de Tickets"
 
 #: app/models/ai/agent/type/ticket_categorizer.rb:11
 #, fuzzy
@@ -20966,17 +20984,17 @@ msgstr "Cliente do Ticket"
 
 #: db/seeds/permissions.rb:227
 msgid "Ticket Duplicate Detection"
-msgstr "Detecção de Chamados Duplicados"
+msgstr "Detecção de Tickets Duplicados"
 
 #: app/models/ai/agent/type/ticket_group_dispatcher.rb:6
 #, fuzzy
 #| msgid "Ticket update"
 msgid "Ticket Group Dispatcher"
-msgstr "Chamado foi atualizado"
+msgstr "Ticket foi atualizado"
 
 #: db/seeds/settings.rb:2268
 msgid "Ticket Hook"
-msgstr "Amarração do chamado"
+msgstr "Amarração do ticket"
 
 #: db/seeds/settings.rb:2293
 msgid "Ticket Hook Divider"
@@ -20992,11 +21010,11 @@ msgstr "Procedimento do último contato do ticket"
 
 #: db/seeds/settings.rb:2425
 msgid "Ticket Number Format"
-msgstr "Formato do Número de Chamado"
+msgstr "Formato do Número de Ticket"
 
 #: db/seeds/settings.rb:2455
 msgid "Ticket Number Increment"
-msgstr "Número de incremento de Chamado"
+msgstr "Número de incremento de Ticket"
 
 #: db/seeds/settings.rb:2512
 msgid "Ticket Number Increment Date"
@@ -21041,11 +21059,11 @@ msgstr "Ícones de Prioridade de Tickets"
 
 #: app/assets/javascripts/app/models/sla.coffee:7
 msgid "Ticket Selector"
-msgstr "seletor de chamados"
+msgstr "seletor de tickets"
 
 #: app/assets/javascripts/app/views/whatsapp/account_phone_number.jst.eco:21
 msgid "Ticket Settings"
-msgstr "Configurações do Tíquete"
+msgstr "Configurações do Ticket"
 
 #: app/assets/javascripts/app/controllers/ticket_state.coffee:3
 msgid "Ticket State"
@@ -21058,7 +21076,7 @@ msgstr "Estados dos Tickets"
 
 #: db/seeds/settings.rb:3204
 msgid "Ticket Subject Forward"
-msgstr "Passar Assunto do Chamado adiante"
+msgstr "Passar Assunto do Ticket adiante"
 
 #: db/seeds/settings.rb:3182
 msgid "Ticket Subject Reply"
@@ -21070,7 +21088,7 @@ msgstr "Limite do campo Assunto"
 
 #: app/assets/javascripts/app/views/profile/calendar_subscriptions.jst.eco:7
 msgid "Ticket Subscriptions"
-msgstr "Inscrições à Chamado(s)"
+msgstr "Inscrições à Ticket(s)"
 
 #: app/assets/javascripts/app/controllers/_ai/ticket_summary.coffee:2
 #: app/assets/javascripts/app/views/ai/ticket_summary.jst.eco:7
@@ -21078,7 +21096,7 @@ msgstr "Inscrições à Chamado(s)"
 #, fuzzy
 #| msgid "Event Summary"
 msgid "Ticket Summary"
-msgstr "Resumo do Evento"
+msgstr "Resumo do ticket"
 
 #: db/seeds/settings.rb:6084
 #, fuzzy
@@ -21118,7 +21136,7 @@ msgstr "Não foi possível criar o ticket."
 
 #: app/assets/javascripts/app/controllers/_ui_element/postmaster_set.coffee:8
 msgid "Ticket creation"
-msgstr "Criação de chamado"
+msgstr "Criação de ticket"
 
 #: app/frontend/shared/entities/ticket/composables/useTicketChangeCustomer.ts:46
 msgid "Ticket customer updated successfully."
@@ -21128,7 +21146,7 @@ msgstr "Cliente do ticket atualizado com sucesso."
 #: app/assets/javascripts/app/controllers/_ui_element/notification_matrix.coffee:13
 #: app/frontend/apps/desktop/components/Form/fields/FieldNotifications/FieldNotificationsInput.vue:89
 msgid "Ticket escalation"
-msgstr "Escalonamento de Chamado"
+msgstr "Escalonamento de Ticket"
 
 #: app/assets/javascripts/app/lib/mixins/ticket_mass_updatable.coffee:33
 msgid "Ticket failed to save: %s"
@@ -21167,7 +21185,7 @@ msgstr "Etiquetas do tickets atualizadas com sucesso."
 #, fuzzy
 #| msgid "Ticket Number Format"
 msgid "Ticket number or title"
-msgstr "Formato do Número de Chamado"
+msgstr "Formato do Número de Ticket"
 
 #: app/frontend/apps/mobile/pages/home/routes.ts:28
 #: app/frontend/apps/mobile/pages/home/views/FavoriteTicketOverviewsEdit.vue:61
@@ -21193,7 +21211,7 @@ msgstr "Visão Geral de Tickets"
 #: app/assets/javascripts/app/controllers/_ui_element/notification_matrix.coffee:11
 #: app/frontend/apps/desktop/components/Form/fields/FieldNotifications/FieldNotificationsInput.vue:84
 msgid "Ticket reminder reached"
-msgstr "Lembrete de Chamado"
+msgstr "Lembrete de Ticket"
 
 #. This is the template file app/views/mailer/ticket_reminder_reached/en.html.erb in ERB/HTML format.
 #. Please make sure to translate it to a valid corresponding output structure.
@@ -21243,7 +21261,7 @@ msgstr ""
 
 #: app/frontend/apps/desktop/pages/ticket/components/TicketDetailView/TicketScreenBehavior/TicketScreenBehavior.vue:56
 msgid "Ticket screen behavior updated successfully"
-msgstr "Comportamento da tela de chamados atualizado com sucesso"
+msgstr "Comportamento da tela de tickets atualizado com sucesso"
 
 #: app/assets/javascripts/app/controllers/_ui_element/_application_selector_expert.coffee:131
 msgid ""
@@ -21256,19 +21274,19 @@ msgstr ""
 
 #: app/frontend/apps/desktop/pages/ticket/components/TicketSidebar/TicketSidebarInformation/TicketSidebarInformationContent/TicketTags.vue:108
 msgid "Ticket tag added successfully."
-msgstr "Tag do chamado adicionada com sucesso."
+msgstr "Tag do ticket adicionada com sucesso."
 
 #: app/frontend/apps/desktop/pages/ticket/components/TicketSidebar/TicketSidebarInformation/TicketSidebarInformationContent/TicketTags.vue:68
 msgid "Ticket tag could not be added."
-msgstr "Não foi possível adicionar a tag ao chamado."
+msgstr "Não foi possível adicionar a tag ao ticket."
 
 #: app/frontend/apps/desktop/pages/ticket/components/TicketSidebar/TicketSidebarInformation/TicketSidebarInformationContent/TicketTags.vue:114
 msgid "Ticket tag could not be removed."
-msgstr "Não foi possível remover a tag do chamado."
+msgstr "Não foi possível remover a tag do ticket."
 
 #: app/frontend/apps/desktop/pages/ticket/components/TicketSidebar/TicketSidebarInformation/TicketSidebarInformationContent/TicketTags.vue:133
 msgid "Ticket tag removed successfully."
-msgstr "Tag do chamado removida com sucesso."
+msgstr "Tag do ticket removida com sucesso."
 
 #: app/frontend/apps/mobile/pages/ticket/components/TicketDetailView/TicketTags.vue:35
 msgid "Ticket tags could not be updated."
@@ -21287,11 +21305,11 @@ msgstr "Título do ticket"
 #: app/assets/javascripts/app/controllers/_ui_element/postmaster_set.coffee:11
 #: app/frontend/apps/desktop/components/Form/fields/FieldNotifications/FieldNotificationsInput.vue:79
 msgid "Ticket update"
-msgstr "Chamado foi atualizado"
+msgstr "Ticket foi atualizado"
 
 #: app/frontend/shared/entities/ticket/composables/useTicketEdit.ts:48
 msgid "Ticket update failed."
-msgstr "Falha na atualização do chamado."
+msgstr "Falha na atualização do ticket."
 
 #: app/frontend/apps/desktop/pages/ticket/components/TicketDetailView/TicketDetailTopBar/useTicketEditTitle.ts:26
 #: app/frontend/apps/desktop/pages/ticket/components/TicketDetailView/TicketDetailViewContent.vue:476
@@ -21370,7 +21388,7 @@ msgstr "Ticket |%s| foi mesclado em outro ticket"
 #: app/assets/javascripts/app/models/ticket.coffee:117
 #: app/frontend/shared/composables/activity-message/activityMessageBuilder/builders/ticket.ts:29
 msgid "Ticket |%s| will escalate soon!"
-msgstr "Chamado |%s| irá escalonar em breve!"
+msgstr "Ticket |%s| irá escalonar em breve!"
 
 #: app/assets/javascripts/app/views/time_accounting/by_activity.jst.eco:9
 #: app/assets/javascripts/app/views/time_accounting/by_ticket.jst.eco:9
@@ -21400,7 +21418,7 @@ msgstr "TicketID"
 #: app/frontend/apps/mobile/pages/ticket/routes.ts:50
 #: app/frontend/apps/mobile/pages/ticket/views/TicketOverview.vue:159
 msgid "Tickets"
-msgstr "Chamados"
+msgstr "Tickets"
 
 #: app/assets/javascripts/app/views/settings/ticket_auto_assignment.jst.eco:13
 msgid ""
@@ -21415,13 +21433,13 @@ msgstr "Os ingressos são ordenados pela coluna \"%s\" (%s)."
 
 #: app/assets/javascripts/app/views/dashboard/stats/ticket_load_measure.jst.eco:18
 msgid "Tickets assigned to me: %s of %s"
-msgstr "Chamados atribuídos a mim: %s of %s"
+msgstr "Tickets atribuídos a mim: %s of %s"
 
 #: app/frontend/apps/desktop/components/Ticket/TicketBulkEditFlyout/TicketBulkEditFlyout.vue:282
 #, fuzzy
 #| msgid "Ticket update"
 msgid "Tickets bulk edit"
-msgstr "Chamado foi atualizado"
+msgstr "Ticket foi atualizado"
 
 #: app/controllers/ticket_articles_controller.rb:236
 #: app/controllers/tickets_controller.rb:441
@@ -21432,11 +21450,11 @@ msgstr ""
 
 #: app/assets/javascripts/app/views/widget/ticket_stats.jst.eco:4
 msgid "Tickets of Organization"
-msgstr "Chamados de uma Organização"
+msgstr "Tickets de uma Organização"
 
 #: app/assets/javascripts/app/views/widget/ticket_stats.jst.eco:3
 msgid "Tickets of User"
-msgstr "Chamados do Usuário"
+msgstr "Tickets do Usuário"
 
 #: app/frontend/apps/mobile/pages/search/plugins/ticket.ts:10
 msgid "Tickets with \"%s\""
@@ -21534,14 +21552,14 @@ msgstr ""
 #: app/assets/javascripts/app/views/generic/sla_times.jst.eco:72
 msgid "Timeframe for solving the problem."
 msgstr ""
-"Período de tempo no qual todas as questões ou problemas descritos no chamado "
+"Período de tempo no qual todas as questões ou problemas descritos no ticket "
 "devem ser concluídas."
 
 #: app/assets/javascripts/app/views/generic/sla_times.jst.eco:18
 msgid "Timeframe for the first response."
 msgstr ""
 "Tempo máximo permitido até ser feito o primeiro contato (humano) relacionado "
-"ao chamado."
+"ao ticket."
 
 #: app/assets/javascripts/app/models/job.coffee:14
 #: app/assets/javascripts/app/models/trigger.coffee:13 db/seeds/settings.rb:207
@@ -21692,7 +21710,7 @@ msgstr ""
 
 #: db/seeds/roles.rb:15
 msgid "To work on Tickets."
-msgstr "Para trabalhar em Chamados."
+msgstr "Para trabalhar em Tickets."
 
 #: app/frontend/apps/desktop/components/Form/fields/FieldDate/FieldDateTimeInput.vue:45
 #: app/frontend/apps/mobile/components/Form/fields/FieldDate/FieldDateTimeInput.vue:42
@@ -21881,13 +21899,13 @@ msgstr "o gatilho '%s' foi acionado porque o lembrete pendente foi alcançado"
 #, fuzzy
 #| msgid "%s of my tickets escalated"
 msgid "Triggered because ticket was escalated"
-msgstr "%s dos meus tíquetes escaladas"
+msgstr "%s dos meus tickets escaladas"
 
 #: app/frontend/apps/desktop/components/CommonHistoryFlyout/event-actions/time-trigger-performed.ts:24
 #, fuzzy
 #| msgid "Ticket |%s| will escalate soon!"
 msgid "Triggered because ticket will escalate soon"
-msgstr "Chamado |%s| irá escalonar em breve!"
+msgstr "Ticket |%s| irá escalonar em breve!"
 
 #: app/frontend/apps/desktop/components/CommonHistoryFlyout/event-actions/time-trigger-performed.ts:29
 #, fuzzy
@@ -22196,7 +22214,7 @@ msgstr "Erro desconhecido"
 #: app/models/failed_email.rb:7
 msgid "Unknown error: Could not create a ticket from this email."
 msgstr ""
-"Erro desconhecido: Não foi possível criar um chamado a partir deste e-mail."
+"Erro desconhecido: Não foi possível criar um ticket a partir deste e-mail."
 
 #: app/assets/javascripts/app/views/widget/two_factor_configuration/authenticator_app.jst.eco:5
 #: app/frontend/apps/desktop/components/TwoFactor/TwoFactorConfiguration/TwoFactorConfigurationAuthenticatorApp.vue:215
@@ -22286,7 +22304,7 @@ msgstr ""
 #, fuzzy
 #| msgid "Customer tickets"
 msgid "Unused AI agent"
-msgstr "Tickets do cliente"
+msgstr "Agente de IA não utilizado"
 
 #: app/assets/javascripts/app/views/translation/support.jst.eco:6
 msgid ""
@@ -22561,7 +22579,7 @@ msgid ""
 "a>\n"
 "</div>\n"
 msgstr ""
-"Artigo do chamado atualizado (#{ticket.title})\n"
+"Artigo do ticket atualizado (#{ticket.title})\n"
 "\n"
 "<div>Olá #{recipient.firstname},</div>\n"
 "<br>\n"
@@ -22591,7 +22609,7 @@ msgstr "Atualizando Base de Dados"
 
 #: app/frontend/apps/desktop/pages/personal-setting/views/PersonalSettingOverviews.vue:74
 msgid "Updating the order of your ticket overviews failed."
-msgstr "A atualização da ordem das visões gerais dos seus chamados falhou."
+msgstr "A atualização da ordem das visões gerais dos seus tickets falhou."
 
 #: app/frontend/apps/desktop/pages/personal-setting/views/PersonalSettingCalendar.vue:244
 msgid "Updating your calendar subscription settings failed."
@@ -22744,7 +22762,7 @@ msgstr "Usado ao compor um texto"
 
 #: app/assets/javascripts/app/controllers/_plugin/keyboard_shortcuts.coffee:457
 msgid "Used when viewing a Ticket"
-msgstr "Usado ao visualizar um chamado"
+msgstr "Usado ao visualizar um ticket"
 
 #: app/assets/javascripts/app/controllers/_channel/email.coffee:428
 #: app/assets/javascripts/app/controllers/_manage/ticket_duplicate_detection.coffee:37
@@ -23480,7 +23498,7 @@ msgid ""
 "tasks."
 msgstr ""
 "Com as listas de verificação, você pode acompanhar o progresso das tarefas "
-"relacionadas aos seus tíquetes."
+"relacionadas aos seus tickets."
 
 #: app/assets/javascripts/app/controllers/_channel/_email_filter.coffee:14
 msgid ""
@@ -23500,7 +23518,7 @@ msgstr ""
 
 #: app/assets/javascripts/app/models/template.coffee
 msgid "With templates it is possible to pre-fill tickets quickly and easily."
-msgstr "Com modelos, é possível preencher rapidamente e facilmente tíquetes."
+msgstr "Com modelos, é possível preencher rapidamente e facilmente tickets."
 
 #: app/assets/javascripts/app/views/widget/template.jst.eco:15
 msgid "With templates you can pre-fill ticket attributes."
@@ -23551,25 +23569,25 @@ msgstr "Feedback"
 #, fuzzy
 #| msgid "Waiting in %s"
 msgid "Writing Assistant"
-msgstr "Aguardando em %s"
+msgstr "Assistente de Redação"
 
 #: db/seeds/settings.rb:6117
 #, fuzzy
 #| msgid "Waiting in %s"
 msgid "Writing Assistant Fixed Instructions"
-msgstr "Aguardando em %s"
+msgstr "Instruções fixas do Assistente de Redação"
 
 #: app/assets/javascripts/app/controllers/_ai/text_tool.coffee:16
 #, fuzzy
 #| msgid "Waiting in %s"
 msgid "Writing Assistant Tool"
-msgstr "Aguardando em %s"
+msgstr "Ferramenta do Assistente de Redação"
 
 #: app/assets/javascripts/app/controllers/_ai/text_tool.coffee:17
 #, fuzzy
 #| msgid "Waiting in %s"
 msgid "Writing Assistant Tools"
-msgstr "Aguardando em %s"
+msgstr "Ferramentas do Assistente de Redação"
 
 #: app/assets/javascripts/app/models/ai_text_tool.coffee
 msgid ""
@@ -24015,7 +24033,7 @@ msgid ""
 "closing this ticket?"
 msgstr ""
 "Você tem itens não marcados na lista de verificação. Deseja tratá-los antes "
-"de fechar este chamado?"
+"de fechar este ticket?"
 
 #: app/assets/javascripts/app/views/after_auth/two_factor_configuration.jst.eco:4
 #: app/frontend/apps/desktop/components/TwoFactor/TwoFactorConfiguration/TwoFactorConfigurationMethodList.vue:37
@@ -24120,7 +24138,7 @@ msgstr ""
 #, fuzzy
 #| msgid "Ticket tag could not be removed."
 msgid "Your AI result usage could not be recorded."
-msgstr "Não foi possível remover a tag do chamado."
+msgstr "Não foi possível remover a tag do ticket."
 
 #: app/assets/javascripts/app/controllers/_integration/clearbit.coffee:64
 msgid "Your API key."
@@ -24546,7 +24564,7 @@ msgstr "fechado"
 
 #: app/frontend/apps/desktop/pages/ticket/components/TicketSidebar/TicketSidebarCustomer/TicketSidebarCustomerContent.vue:135
 msgid "closed tickets"
-msgstr "tíquetes fechados"
+msgstr "tickets fechados"
 
 #: app/assets/javascripts/app/controllers/cti.coffee:157
 msgid "connected"
@@ -25452,7 +25470,7 @@ msgstr "notificação enviada para '%s'"
 
 #: app/frontend/apps/desktop/pages/personal-setting/views/PersonalSetting/plugins/notifications.ts:25
 msgid "notifications,tickets"
-msgstr "notificações, tíquetes"
+msgstr "notificações, tickets"
 
 #: app/assets/javascripts/app/controllers/knowledge_base/content_can_be_published_form.coffee:48
 msgid "now"
@@ -25469,7 +25487,7 @@ msgstr "aberto"
 
 #: app/frontend/apps/desktop/pages/ticket/components/TicketSidebar/TicketSidebarCustomer/TicketSidebarCustomerContent.vue:126
 msgid "open tickets"
-msgstr "tíquetes abertos"
+msgstr "tickets abertos"
 
 #: app/assets/javascripts/app/controllers/_channel/google.coffee:283
 msgid "optional"
@@ -25490,7 +25508,7 @@ msgstr "ou entre usando"
 
 #: app/frontend/apps/desktop/pages/personal-setting/views/PersonalSetting/plugins/ticketOverviews.ts:25
 msgid "order,sort,overview,ticket,sorting"
-msgstr "ordenar,classificar,visão geral,chamado,classificação"
+msgstr "ordenar,classificar,visão geral,ticket,classificação"
 
 #: app/assets/javascripts/app/controllers/_profile/calendar_subscriptions.coffee:18
 msgid "pending"
@@ -25556,7 +25574,7 @@ msgstr "códigos de recuperação"
 
 #: app/models/checklist/item.rb:99
 msgid "reference must not be the checklist ticket."
-msgstr "A referência não deve ser o tíquete da lista de verificação."
+msgstr "A referência não deve ser o ticket da lista de verificação."
 
 #: app/assets/javascripts/app/controllers/_ui_element/_application_action.coffee:111
 msgid "relative"
@@ -25753,7 +25771,7 @@ msgstr "começa com um dos"
 
 #: app/frontend/apps/desktop/pages/personal-setting/views/PersonalSetting/plugins/calendar.ts:25
 msgid "subscription,calendars,ticket,ical"
-msgstr "inscrição,calendários,chamado,ical"
+msgstr "inscrição,calendários,ticket,ical"
 
 #: app/assets/javascripts/app/views/getting_started/email.jst.eco:16
 msgid "support@example.com"
@@ -25784,7 +25802,7 @@ msgstr "este ticket foi mesclado com o ticket %s"
 #: app/frontend/apps/mobile/components/Organization/OrganizationItem.vue:50
 #: app/frontend/apps/mobile/components/User/UserItem.vue:30
 msgid "ticket"
-msgstr "tíquete"
+msgstr "ticket"
 
 #: app/assets/javascripts/app/controllers/_application_controller/_modal_generic_history.coffee:117
 msgid "ticket %s was merged into this ticket"
@@ -25966,7 +25984,7 @@ msgid ""
 "|Increment| increases the ticket number. The SystemID and the counter are "
 "used with \"SystemID.Counter\" format (e.g. 1010138, 1010139)."
 msgstr ""
-"|Increment| aumenta o número do chamado. O System.ID e o contador são usados "
+"|Increment| aumenta o número do ticket. O System.ID e o contador são usados "
 "no formato \"SystemID.Counter\" (por exemplo, 1010138, 1010139)."
 
 #: app/assets/javascripts/app/views/settings/ticket_hook_position.jst.eco:6
@@ -25983,7 +26001,7 @@ msgstr ""
 
 #: app/assets/javascripts/app/views/settings/ticket_hook_position.jst.eco:5
 msgid "|Right| means |Some Subject [Ticket#12345]|"
-msgstr "|Direita| resulta |Assunto qualquer [Chamado#12345]|"
+msgstr "|Direita| resulta |Assunto qualquer [Ticket#12345]|"
 
 #: app/assets/javascripts/app/controllers/_plugin/keyboard_shortcuts.coffee:407
 msgid "…add object link URL"
@@ -26115,7 +26133,7 @@ msgstr "∅ tempo de espera hoje"
 #~ msgstr "Conexão perdida!"
 
 #~ msgid "Merge Tickets"
-#~ msgstr "Mesclar Chamados"
+#~ msgstr "Mesclar Tickets"
 
 #~ msgid "Regenerate Recovery Codes"
 #~ msgstr "Regenerar Códigos de Recuperação"
@@ -26276,7 +26294,7 @@ msgstr "∅ tempo de espera hoje"
 #, fuzzy
 #~| msgid "Manage ticket macros of your system."
 #~ msgid "Manage Zammad Smart Assist ticket summarization of your system."
-#~ msgstr "Gerenciar macros de tíquetes do seu sistema."
+#~ msgstr "Gerenciar macros de tickets do seu sistema."
 
 #, fuzzy
 #~| msgid "Ticket updated successfully."
@@ -26291,12 +26309,12 @@ msgstr "∅ tempo de espera hoje"
 #, fuzzy
 #~| msgid "Ticket tag could not be added."
 #~ msgid "The checklist item could not be added."
-#~ msgstr "Não foi possível adicionar a tag ao chamado."
+#~ msgstr "Não foi possível adicionar a tag ao ticket."
 
 #, fuzzy
 #~| msgid "Ticket Hook"
 #~ msgid "Ticket Tools"
-#~ msgstr "Amarração do chamado"
+#~ msgstr "Amarração do ticket"
 
 #, fuzzy
 #~| msgid "Zammad User Agent"
@@ -26304,19 +26322,19 @@ msgstr "∅ tempo de espera hoje"
 #~ msgstr "Usuário agente do Zammad"
 
 #~ msgid "1. Ticket Create"
-#~ msgstr "1. Criar Tíquete"
+#~ msgstr "1. Criar Ticket"
 
 #~ msgid "2. Ticket Update"
-#~ msgstr "2. Atualizar Tíquete"
+#~ msgstr "2. Atualizar Ticket"
 
 #~ msgid "3. Ticket Reminder Reached"
-#~ msgstr "4. Lembrete de Tíquete"
+#~ msgstr "4. Lembrete de Ticket"
 
 #~ msgid "4. Ticket Escalation"
-#~ msgstr "4. Escalonamento de Tíquete"
+#~ msgstr "4. Escalonamento de Ticket"
 
 #~ msgid "5. Ticket Escalation Warning"
-#~ msgstr "5. Aviso de Escalonamento de Tíquete"
+#~ msgstr "5. Aviso de Escalonamento de Ticket"
 
 #~ msgid ""
 #~ "A team communication tool for the 21st century. Compatible with tools "
@@ -26332,7 +26350,7 @@ msgstr "∅ tempo de espera hoje"
 #~ msgstr "Checar os fluxos do 'Canal'."
 
 #~ msgid "Choose if retweets should also be converted to tickets."
-#~ msgstr "Escolha se retweets devem ser convertidos em tíquetes."
+#~ msgstr "Escolha se retweets devem ser convertidos em tickets."
 
 #~ msgid "Choose the group to which direct messages will get added."
 #~ msgstr "Escolha o grupo no qual as mensagens diretas serão adicionadas."
@@ -26344,7 +26362,7 @@ msgstr "∅ tempo de espera hoje"
 #~ msgstr "Conectar Twitter App"
 
 #~ msgid "Conversion of retweets into tickets is turned off."
-#~ msgstr "Conversão de retweets em tíquetes está desabilitada."
+#~ msgstr "Conversão de retweets em tickets está desabilitada."
 
 #~ msgid "Defines if Slack (http://www.slack.org) is enabled or not."
 #~ msgstr "Define se o Slack (http://www.slack.org) está habilitado ou não."
@@ -26645,7 +26663,7 @@ msgstr "∅ tempo de espera hoje"
 #~ "Além disso, foram encontrados e-mails em sua caixa de entrada que são "
 #~ "mais antigos que %s semanas. Você pode importar esses e-mails como um "
 #~ "\"arquivo\", o que significa que nenhuma notificação será enviada e os "
-#~ "tíquetes terão o status \"fechado\". No entanto, você pode encontrá-los "
+#~ "tickets terão o status \"fechado\". No entanto, você pode encontrá-los "
 #~ "no Zammad a qualquer momento usando a função de pesquisa."
 
 #~ msgid ""
@@ -26672,7 +26690,7 @@ msgstr "∅ tempo de espera hoje"
 #~ "Além disso, foram encontrados e-mails em sua caixa de entrada que são "
 #~ "mais antigos que %s semanas. Você pode importar esses e-mails como um "
 #~ "\"arquivo\", o que significa que nenhuma notificação será enviada e os "
-#~ "tíquetes terão o status \"fechado\". No entanto, você pode encontrá-los "
+#~ "tickets terão o status \"fechado\". No entanto, você pode encontrá-los "
 #~ "no Zammad a qualquer momento usando a função de pesquisa."
 
 #~ msgid "Gmail"
@@ -26838,7 +26856,7 @@ msgstr "∅ tempo de espera hoje"
 #, fuzzy
 #~| msgid "Ticket update"
 #~ msgid "Ticket Update"
-#~ msgstr "Chamado foi atualizado"
+#~ msgstr "Ticket foi atualizado"
 
 #~ msgid "Area for calendar days display"
 #~ msgstr "Área para a exibição dos dias do calendário"
@@ -27099,10 +27117,10 @@ msgstr "∅ tempo de espera hoje"
 
 #~ msgid "Access to Customer Tickets based on current_user and organization"
 #~ msgstr ""
-#~ "Acesso aos tíquetes de cliente com base no current_user e na organização"
+#~ "Acesso aos tickets de cliente com base no current_user e na organização"
 
 #~ msgid "Recursive Ticket Triggers Loop Max."
-#~ msgstr "Máximo de Laço Recursivo para Gatilhos de Tíquete."
+#~ msgstr "Máximo de Laço Recursivo para Gatilhos de Ticket."
 
 #~ msgid "to"
 #~ msgstr "para"
@@ -27508,19 +27526,19 @@ msgstr "∅ tempo de espera hoje"
 #~ msgstr "Você está no |%s|."
 
 #~ msgid "You have answered a ticket within 1h"
-#~ msgstr "Você respondeu um chamado em 1 hora"
+#~ msgstr "Você respondeu um ticket em 1 hora"
 
 #~ msgid "You have closed a ticket"
-#~ msgstr "Você fechou um chamado"
+#~ msgstr "Você fechou um ticket"
 
 #~ msgid "You have created a ticket"
 #~ msgstr "Você criou um ticket"
 
 #~ msgid "You have escalated tickets"
-#~ msgstr "Você escalonou um chamado"
+#~ msgstr "Você escalonou um ticket"
 
 #~ msgid "You have tickets that are over 2 days overdue"
-#~ msgstr "Você tem chamado(s) que venceram a 2 dias"
+#~ msgstr "Você tem ticket(s) que venceram a 2 dias"
 
 #~ msgid ""
 #~ "You |accumulate positive Karma| when you regularly answer and close "
@@ -27531,8 +27549,8 @@ msgstr "∅ tempo de espera hoje"
 #~ msgstr ""
 #~ "Você |acumula Karma positivo| quando responde regularmente, encerra no "
 #~ "prazo ou quando utiliza funcionalidades avançadas como módulos de texto, "
-#~ "lembres nos chamados ou rótulos. O |karma irá diminuir| quando os "
-#~ "chamados forem reabertos, escalonados ou quando estiverem atrasados há "
+#~ "lembres nos tickets ou rótulos. O |karma irá diminuir| quando os "
+#~ "tickets forem reabertos, escalonados ou quando estiverem atrasados há "
 #~ "mais de 2 dias."
 
 #~ msgid "Your current level"
@@ -27770,4 +27788,4 @@ msgstr "∅ tempo de espera hoje"
 #~ msgstr ""
 #~ "Intervalo de tempo no qual o atendente deve prestar outro retorno "
 #~ "informando as tratativas sobre o trabalho a ser feito ou que já esteja em "
-#~ "andamento para se resolver o chamado aberto."
+#~ "andamento para se resolver o ticket aberto."

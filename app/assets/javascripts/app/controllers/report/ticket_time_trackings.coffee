@@ -1,7 +1,7 @@
 # Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
 
 class App.ReportTicketTimeTrackings extends App.ControllerAppContent
-  @requiredPermission: 'report'
+  @requiredPermission: ['report', 'report.ticket_time_trackings']
 
   constructor: ->
     super
@@ -13,6 +13,8 @@ class App.ReportTicketTimeTrackings extends App.ControllerAppContent
     @close_end_date = null
     @ticket_query = ''
     @agent_query = ''
+    @selectedTeams = App.SessionStorage.get('report/ticket_time_trackings/equipe') || []
+    @teams = []
     @render()
 
   render: ->
@@ -109,6 +111,26 @@ class App.ReportTicketTimeTrackings extends App.ControllerAppContent
       ), 400)
     )
 
+  renderEquipeFilter: ->
+    $container = @el.find('.js-equipe-filter')
+    return if !$container.length
+    if @teams.length == 0
+      $container.empty()
+      return
+    list = @teams.map (team) =>
+      checked = if @selectedTeams.indexOf(team) >= 0 then ' checked' else ''
+      "<label class=\"inline-label checkbox-replacement\"><input type=\"checkbox\" class=\"js-team-checkbox\" value=\"#{App.Utils.htmlEscape(team)}\"#{checked}><span class=\"label-text\">#{App.Utils.htmlEscape(team)}</span></label>"
+    $container.html("<div class=\"checkbox-list\">#{list.join('')}</div>")
+    $container.find('.js-team-checkbox').off('change').on('change', (=> @onTeamCheckboxChange()))
+
+  onTeamCheckboxChange: ->
+    @applyEquipeFilter()
+
+  applyEquipeFilter: ->
+    @selectedTeams = @el.find('.js-team-checkbox:checked').map(-> $(this).val()).get()
+    App.SessionStorage.set('report/ticket_time_trackings/equipe', @selectedTeams)
+    @loadReport()
+
   bindSearch: ->
     @$('.js-report-search').on('click', (e) =>
       e.preventDefault()
@@ -166,20 +188,26 @@ class App.ReportTicketTimeTrackings extends App.ControllerAppContent
     return if !@open_start_date || !@open_end_date
 
     @startLoading()
+    data =
+      open_start_date: @open_start_date
+      open_end_date: @open_end_date
+      close_start_date: @close_start_date
+      close_end_date: @close_end_date
+      ticket_query: @ticket_query
+      agent_query: @agent_query
+    if @selectedTeams.length > 0
+      data.equipe = @selectedTeams
+
     @ajax(
       id:          'ticket_time_trackings_report'
       type:        'GET'
       url:         "#{@apiPath}/reports/ticket_time_trackings"
-      data:
-        open_start_date: @open_start_date
-        open_end_date: @open_end_date
-        close_start_date: @close_start_date
-        close_end_date: @close_end_date
-        ticket_query: @ticket_query
-        agent_query: @agent_query
+      data:        data
       processData: true
       success:     (data, status, xhr) =>
         @stopLoading()
+        @teams = data.teams || []
+        @renderEquipeFilter()
         @renderReport(data)
       error: (xhr) =>
         @stopLoading()
@@ -217,5 +245,5 @@ App.Config.set('TicketTimeTrackingsReport', {
   name: __('Tempo de Atendimento'), 
   parent: '#report', 
   target: '#report/ticket_time_trackings', 
-  permission: ['report']
+  permission: ['report', 'report.ticket_time_trackings']
 }, 'NavBarRight')

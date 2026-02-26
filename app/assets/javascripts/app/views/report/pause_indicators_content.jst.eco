@@ -1,39 +1,50 @@
 <div class="report-content">
-  <table class="table">
+  <table class="table table--pause-indicators">
     <thead>
       <tr>
+        <th class="pause-indicators-col-indicator"></th>
         <th><%- @T('Colaborador') %></th>
         <th><%- @T('Status') %></th>
         <th><%- @T('Em pausa') %></th>
+        <th><%- @T('Tempo em pausa') %></th>
         <th><%- @T('Logado') %></th>
-        <th><%- @T('Estado') %></th>
         <th><%- @T('Pausa ativa') %></th>
       </tr>
     </thead>
     <tbody>
       <% if !@data.entries || @data.entries.length == 0: %>
       <tr>
-        <td colspan="6"><%- @T('Nenhum registro encontrado') %></td>
+        <td colspan="7"><%- @T('Nenhum registro encontrado') %></td>
       </tr>
       <% else: %>
         <% for item in @data.entries: %>
-          <tr>
+          <tr class="pause-indicators-row" data-state="<%= item.state %>" data-in-pause="<%= item.in_pause %>" data-pause-started-at="<%= item.pause_started_at || '' %>" data-pause-color="<%= item.pause_type_color || '' %>">
+            <td class="pause-indicators-col-indicator">
+              <% if item.state == 'online': %>
+                <span class="pause-indicator pause-indicator--online" title="<%- @T('Online') %>"></span>
+              <% else if item.state == 'offline': %>
+                <span class="pause-indicator pause-indicator--offline" title="<%- @T('Offline') %>"></span>
+              <% else if item.in_pause && item.pause_type_color: %>
+                <span class="pause-indicator pause-indicator--pause" style="background-color: <%= item.pause_type_color %>" title="<%- @T('Em pausa') %>"></span>
+              <% else if item.in_pause: %>
+                <span class="pause-indicator pause-indicator--pause pause-indicator--default" title="<%- @T('Em pausa') %>"></span>
+              <% else: %>
+                <span class="pause-indicator pause-indicator--offline" title="<%= item.state %>"></span>
+              <% end %>
+            </td>
             <td><%= item.user?.firstname %> <%= item.user?.lastname %></td>
             <td><%= item.status %></td>
             <% if item.in_pause: %>
               <td><%- @T('Sim') %></td>
+              <td class="js-pause-duration-cell" data-started-at="<%= item.pause_started_at || '' %>"><span class="js-pause-duration">00:00</span></td>
             <% else: %>
               <td><%- @T('Não') %></td>
+              <td>-</td>
             <% end %>
             <% if item.logged_in: %>
               <td><%- @T('Sim') %></td>
             <% else: %>
               <td><%- @T('Não') %></td>
-            <% end %>
-            <% if item.state: %>
-              <td><%= item.state %></td>
-            <% else: %>
-              <td>-</td>
             <% end %>
             <% if item.pause_name: %>
               <td><%= item.pause_name %></td>
