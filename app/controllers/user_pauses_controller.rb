@@ -1,7 +1,7 @@
 # Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
 
 class UserPausesController < ApplicationController
-  prepend_before_action :authentication_check
+  prepend_before_action :authenticate_and_authorize!
 
   def start
     service = UserPauseService.new(

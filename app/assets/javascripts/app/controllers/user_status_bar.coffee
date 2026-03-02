@@ -227,6 +227,23 @@ class App.UserStatusBar extends App.Controller
     return if !@isLoggedIn
     return if @currentPause?.active
 
+    previousState = @currentState
+    pauseType = @pauseTypes.find((p) => p.id == pauseTypeId)
+
+    @currentState = 'pause'
+    @currentPause = {
+      active: true
+      pause_type_id: pauseTypeId
+      started_at: new Date().toISOString()
+      time_limit: pauseType?.time_limit || 0
+    }
+    App.User.current().in_pause = true
+    App.User.current().current_state = 'pause'
+    @startElapsedTimer()
+    @render()
+    App.Event.trigger('user_state:changed')
+    App.Event.trigger('pause:started')
+
     @ajax(
       id:          'status_bar_start_pause'
       type:        'POST'
@@ -235,16 +252,16 @@ class App.UserStatusBar extends App.Controller
       processData: false
       contentType: 'application/json'
       success:     (data) =>
-        @currentState = 'pause'
         @currentPause = data
         @currentPause.active = true
-        App.User.current().in_pause = true
-        App.User.current().current_state = 'pause'
-        @startElapsedTimer()
+      error: (xhr) =>
+        @currentState = previousState
+        @currentPause = null
+        @stopElapsedTimer()
+        App.User.current().in_pause = false
+        App.User.current().current_state = previousState
         @render()
         App.Event.trigger('user_state:changed')
-        App.Event.trigger('pause:started')
-      error: (xhr) =>
         @notify(
           type:    'error'
           msg:     xhr.responseJSON?.error || App.i18n.translateContent('Failed to start pause')
@@ -256,6 +273,18 @@ class App.UserStatusBar extends App.Controller
     return if !@isLoggedIn
     return if !@currentPause?.active
 
+    previousPause = @currentPause
+    previousState = @currentState
+
+    @currentState = 'online'
+    @currentPause = null
+    @stopElapsedTimer()
+    App.User.current().in_pause = false
+    App.User.current().current_state = 'online'
+    @render()
+    App.Event.trigger('user_state:changed')
+    App.Event.trigger('pause:ended')
+
     @ajax(
       id:          'status_bar_end_pause'
       type:        'POST'
@@ -264,15 +293,15 @@ class App.UserStatusBar extends App.Controller
       processData: false
       contentType: 'application/json'
       success:     (data) =>
-        @currentState = 'online'
-        @currentPause = null
-        @stopElapsedTimer()
-        App.User.current().in_pause = false
-        App.User.current().current_state = 'online'
+        # Already updated optimistically
+      error: (xhr) =>
+        @currentState = previousState
+        @currentPause = previousPause
+        App.User.current().in_pause = true
+        App.User.current().current_state = previousState
+        @startElapsedTimer()
         @render()
         App.Event.trigger('user_state:changed')
-        App.Event.trigger('pause:ended')
-      error: (xhr) =>
         @notify(
           type:    'error'
           msg:     xhr.responseJSON?.error || App.i18n.translateContent('Failed to end pause')

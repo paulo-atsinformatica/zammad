@@ -12,9 +12,10 @@ class App.ReportTicketTimeTrackings extends App.ControllerAppContent
     @close_start_date = null
     @close_end_date = null
     @ticket_query = ''
-    @agent_query = ''
+    @agent_id = ''
     @selectedTeams = App.SessionStorage.get('report/ticket_time_trackings/equipe') || []
     @teams = []
+    @agents = []
     @render()
 
   render: ->
@@ -95,6 +96,7 @@ class App.ReportTicketTimeTrackings extends App.ControllerAppContent
 
     @bindFilters()
     @bindSearch()
+    @loadReport()
 
   bindFilters: ->
     @$('.js-ticket-query').on('input', (e) =>
@@ -104,12 +106,19 @@ class App.ReportTicketTimeTrackings extends App.ControllerAppContent
       ), 400)
     )
 
-    @$('.js-agent-query').on('input', (e) =>
-      clearTimeout(@agentQueryTimer) if @agentQueryTimer
-      @agentQueryTimer = setTimeout((=>
-        @agent_query = $(e.currentTarget).val()
-      ), 400)
+    @$('.js-agent-select').on('change', (e) =>
+      @agent_id = $(e.currentTarget).val()
     )
+
+  renderAgentOptions: ->
+    $select = @$('.js-agent-select')
+    return if !$select.length
+    currentVal = @agent_id
+    options = ["<option value=\"\">#{__('Todos')}</option>"]
+    for agent in @agents
+      options.push "<option value=\"#{agent.id}\">#{App.Utils.htmlEscape(agent.name)}</option>"
+    $select.html(options.join(''))
+    $select.val(currentVal) if currentVal
 
   renderEquipeFilter: ->
     $container = @el.find('.js-equipe-filter')
@@ -194,7 +203,7 @@ class App.ReportTicketTimeTrackings extends App.ControllerAppContent
       close_start_date: @close_start_date
       close_end_date: @close_end_date
       ticket_query: @ticket_query
-      agent_query: @agent_query
+      agent_id: @agent_id
     if @selectedTeams.length > 0
       data.equipe = @selectedTeams
 
@@ -207,6 +216,8 @@ class App.ReportTicketTimeTrackings extends App.ControllerAppContent
       success:     (data, status, xhr) =>
         @stopLoading()
         @teams = data.teams || []
+        @agents = data.agents || []
+        @renderAgentOptions()
         @renderEquipeFilter()
         @renderReport(data)
       error: (xhr) =>

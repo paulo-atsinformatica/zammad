@@ -30,8 +30,10 @@
             </select>
           </div>
           <div class="form-group report-filter-field">
-            <label><%- @T('Agente') %></label>
-            <input type="text" class="form-control js-agent-query" placeholder="<%- @T('Nome ou email') %>">
+            <label><%- @T('Responsável') %></label>
+            <select class="form-control js-agent-select">
+              <option value=""><%- @T('Todos') %></option>
+            </select>
           </div>
           <div class="form-group report-filter-field report-filter-field--equipe">
             <label><%- @T('Equipe') %></label>

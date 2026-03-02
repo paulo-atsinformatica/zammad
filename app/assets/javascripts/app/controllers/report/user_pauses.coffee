@@ -9,9 +9,10 @@ class App.ReportUserPauses extends App.ControllerAppContent
     @end_date = null
     @pause_type_id = 'all'
     @exceeded = 'all'
-    @agent_query = ''
+    @agent_id = ''
     @selectedTeams = App.SessionStorage.get('report/user_pauses/equipe') || []
     @teams = []
+    @agents = []
     @pauseTypes = []
     @render()
 
@@ -62,6 +63,7 @@ class App.ReportUserPauses extends App.ControllerAppContent
     @loadPauseTypes()
     @bindFilters()
     @bindSearch()
+    @loadReport()
 
   bindFilters: ->
     @$('.js-pause-type').on('change', (e) =>
@@ -72,12 +74,19 @@ class App.ReportUserPauses extends App.ControllerAppContent
       @exceeded = $(e.currentTarget).val()
     )
 
-    @$('.js-agent-query').on('input', (e) =>
-      clearTimeout(@agentQueryTimer) if @agentQueryTimer
-      @agentQueryTimer = setTimeout((=>
-        @agent_query = $(e.currentTarget).val()
-      ), 400)
+    @$('.js-agent-select').on('change', (e) =>
+      @agent_id = $(e.currentTarget).val()
     )
+
+  renderAgentOptions: ->
+    $select = @$('.js-agent-select')
+    return if !$select.length
+    currentVal = @agent_id
+    options = ["<option value=\"\">#{__('Todos')}</option>"]
+    for agent in @agents
+      options.push "<option value=\"#{agent.id}\">#{App.Utils.htmlEscape(agent.name)}</option>"
+    $select.html(options.join(''))
+    $select.val(currentVal) if currentVal
 
   renderEquipeFilter: ->
     $container = @el.find('.js-equipe-filter')
@@ -184,7 +193,7 @@ class App.ReportUserPauses extends App.ControllerAppContent
       end_date: @end_date
       pause_type_id: @pause_type_id
       exceeded: @exceeded
-      agent_query: @agent_query
+      agent_id: @agent_id
     if @selectedTeams.length > 0
       data.equipe = @selectedTeams
 
@@ -197,6 +206,8 @@ class App.ReportUserPauses extends App.ControllerAppContent
       success:     (data, status, xhr) =>
         @stopLoading()
         @teams = data.teams || []
+        @agents = data.agents || []
+        @renderAgentOptions()
         @renderEquipeFilter()
         @renderReport(data)
       error: (xhr) =>

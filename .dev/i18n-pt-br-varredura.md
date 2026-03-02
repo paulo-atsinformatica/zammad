@@ -10,7 +10,7 @@ Este documento lista o que ainda precisa de tradução para pt-BR no projeto, co
 
 Há **cerca de 99 entradas** no `zammad.pt-br.po` com `msgstr ""` (além do cabeçalho do arquivo). Ou seja, essas strings existem no catálogo mas ainda não têm tradução em pt-BR.
 
-**Observação:** O Zammad oficial gerencia traduções via [translations.zammad.org](https://translations.zammad.org/). Pull requests que alterem os `.po` diretamente são rejeitados. Para contribuir com pt-BR no upstream, é preciso usar o Weblate. Para uso local/ATS, você pode editar o `.po` e rodar `rails r Translation.sync` para importar.
+**Observação:** O Zammad oficial gerencia traduções via [translations.zammad.org](https://translations.zammad.org/). Pull requests que alterem os `.po` diretamente são rejeitados. Para contribuir com pt-BR no upstream, use o Weblate. **Neste fork (ATS):** o arquivo `i18n/zammad.pt-br.po` é mantido igual ao upstream. As customizações (ex.: padronização "ticket" em vez de "Chamado"/"Tíquete", e ajustes de IA) são aplicadas **no banco**, como se feitas pela interface: após `Translation.sync`, o módulo `TranslationOverridesPtBr` (em `lib/translation_overrides_pt_br.rb`) é executado e atualiza as traduções pt-BR. Assim o .po não é alterado e as customizações persistem no banco.
 
 ### Exemplos de strings sem tradução (amostra)
 
@@ -149,6 +149,8 @@ Foram corrigidas e preenchidas no `i18n/zammad.pt-br.po` as seguintes strings da
 - **Mensagens de erro e estado:** AI provider is not configured / missing / not supported, AI provider URL/Model/Token not set, AI agent result content..., AI assistance text tool is inactive/invalid, AI service result is missing expected keys, AI usage and feedback log, The AI Provider is not accessible, Enter the instruction/role description for the AI agent, Unused AI agent, AI agent used in, This service allows you to connect Zammad with an AI provider, The download could not be started..., Manage AI agents of your system.
 - **Descrições:** AI agents enable streamlined processing..., Writing Assistant (e variantes) que estavam erroneamente como "Aguardando em %s" foram corrigidas para "Assistente de Redação" / "Ferramentas do Assistente de Redação".
 
-Na view **Ticket Summary** (`app/assets/javascripts/app/views/ai/ticket_summary.jst.eco`), o botão "Submit" foi alterado para `<%- @T('Submit') %>` para usar a tradução (já existente como "Enviar" em pt-BR).
+Na view **Ticket Summary** (`app/assets/javascripts/app/views/ai/ticket_summary.jst.eco`), o botão "Submit" usa `<%- @T('Submit') %>` (tradução "Enviar" em pt-BR).
 
-Para aplicar as alterações do .po no banco: `rails r Translation.sync`.
+**Customizações via banco (sem editar .po):** As traduções customizadas (ticket/chamado/tíquete, AI, etc.) estão em `lib/translation_overrides_pt_br.rb`. São aplicadas após `Translation.sync` no init Docker ou manualmente com:
+`bundle exec rake zammad:translation_overrides_pt_br`
+Para adicionar novas entradas: edite o hash `OVERRIDES` em `lib/translation_overrides_pt_br.rb` (source => target).

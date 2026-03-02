@@ -85,7 +85,8 @@ class UserPausesReportsController < ApplicationController
     response = {
       start_date: start_date,
       end_date: end_date,
-      entries: entries
+      entries: entries,
+      agents: agents_list
     }
     response[:teams] = teams_list if equipe_column?
 
@@ -96,6 +97,19 @@ class UserPausesReportsController < ApplicationController
 
   def equipe_column?
     @equipe_column ||= User.column_names.include?('equipe')
+  end
+
+  def agents_list
+    agent_role_ids = Role.joins(:permissions)
+                         .where(permissions: { name: 'ticket.agent', active: true }, roles: { active: true })
+                         .pluck(:id)
+
+    User.joins(:roles)
+        .where(roles: { id: agent_role_ids })
+        .where(users: { active: true })
+        .distinct
+        .order(:firstname, :lastname)
+        .map { |u| { id: u.id, name: "#{u.firstname} #{u.lastname}".strip } }
   end
 
   def teams_list

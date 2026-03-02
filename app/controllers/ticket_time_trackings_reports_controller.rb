@@ -9,6 +9,7 @@ class TicketTimeTrackingsReportsController < ApplicationController
     close_start_date = params[:close_start_date].present? ? Date.parse(params[:close_start_date]) : nil
     close_end_date = params[:close_end_date].present? ? Date.parse(params[:close_end_date]) : nil
     ticket_query = params[:ticket_query].presence
+    agent_id = params[:agent_id].presence
     agent_query = params[:agent_query].presence
 
     trackings = TicketTimeTracking.joins(:ticket)
@@ -29,7 +30,9 @@ class TicketTimeTrackingsReportsController < ApplicationController
       trackings = trackings.where('tickets.number ILIKE ? OR tickets.title ILIKE ?', like, like)
     end
 
-    if agent_query
+    if agent_id
+      trackings = trackings.where(user_id: agent_id)
+    elsif agent_query
       like = "%#{agent_query}%"
       trackings = trackings.joins(:user)
                            .where('users.firstname ILIKE ? OR users.lastname ILIKE ? OR users.email ILIKE ?', like, like, like)
@@ -71,7 +74,8 @@ class TicketTimeTrackingsReportsController < ApplicationController
       open_end_date: open_end_date,
       close_start_date: close_start_date,
       close_end_date: close_end_date,
-      entries: entries
+      entries: entries,
+      agents: agents_list
     }
     response[:teams] = teams_list if equipe_column?
 
@@ -82,6 +86,19 @@ class TicketTimeTrackingsReportsController < ApplicationController
 
   def equipe_column?
     @equipe_column ||= User.column_names.include?('equipe')
+  end
+
+  def agents_list
+    agent_role_ids = Role.joins(:permissions)
+                         .where(permissions: { name: 'ticket.agent', active: true }, roles: { active: true })
+                         .pluck(:id)
+
+    User.joins(:roles)
+        .where(roles: { id: agent_role_ids })
+        .where(users: { active: true })
+        .distinct
+        .order(:firstname, :lastname)
+        .map { |u| { id: u.id, name: "#{u.firstname} #{u.lastname}".strip } }
   end
 
   def teams_list

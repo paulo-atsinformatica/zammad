@@ -1,6 +1,15 @@
 # Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 class Locale < ApplicationModel
+  # Lista mínima quando config/locales.yml está truncado no container (ex.: só "---")
+  FALLBACK_LOCALES_YAML = [
+    { 'locale' => 'en-us', 'alias' => 'en', 'name' => 'English (United States)', 'active' => true, 'dir' => 'ltr' },
+    { 'locale' => 'pt-br', 'alias' => '', 'name' => 'Português (Brasil) - Portuguese (Brazil)', 'active' => true, 'dir' => 'ltr' },
+    { 'locale' => 'de-de', 'alias' => 'de', 'name' => 'Deutsch - German', 'active' => true, 'dir' => 'ltr' },
+    { 'locale' => 'es-es', 'alias' => 'es', 'name' => 'Español - Spanish', 'active' => true, 'dir' => 'ltr' },
+    { 'locale' => 'fr-fr', 'alias' => 'fr', 'name' => 'Français - French', 'active' => true, 'dir' => 'ltr' },
+  ].freeze
+
   has_many :knowledge_base_locales, inverse_of: :system_locale, dependent: :restrict_with_error,
                                     class_name: 'KnowledgeBase::Locale', foreign_key: :system_locale_id
 
@@ -30,6 +39,29 @@ sync locales from config/locales.yml
     return false if !File.exist?(file)
 
     data = YAML.load_file(file)
+
+    if data.nil? || data.is_a?(String)
+      Rails.logger.warn "[Locale.sync] config/locales.yml retornou #{data.class.name} (primeiros 200 chars): #{data.to_s.truncate(200)}"
+      raw = File.read(file, encoding: 'UTF-8')
+      if raw.size > 100
+        data = Psych.load(raw)
+        Rails.logger.info "[Locale.sync] fallback Psych.load(raw) ok, tipo=#{data.class.name}" if data.is_a?(Array)
+      else
+        # Arquivo no container truncado. Usar lista mínima para en-us + pt-br (fallback de último recurso).
+        Rails.logger.warn "[Locale.sync] arquivo muito curto (#{raw.size} bytes) em #{file}, usando locales mínimos"
+        data = FALLBACK_LOCALES_YAML
+      end
+    end
+
+    if data.is_a?(Hash)
+      data = data.fetch('locales', nil)
+      return false if data.nil?
+    end
+    unless data.is_a?(Array) && data.respond_to?(:each)
+      Rails.logger.warn "[Locale.sync] config/locales.yml retornou tipo inesperado: #{data.class.name}"
+      return false
+    end
+
     to_database(data)
     true
   end
@@ -43,15 +75,17 @@ sync locales from config/locales.yml
   end
 
   private_class_method def self.to_database(data)
-    ActiveRecord::Base.transaction do
-      data.each do |locale|
-        exists = Locale.find_by(locale: locale['locale'])
-        if exists
-          exists.update!(locale.symbolize_keys!)
-        else
-          Locale.create!(locale.symbolize_keys!)
-        end
+    return unless data.is_a?(Array)
+
+    data.each do |locale|
+      exists = Locale.find_by(locale: locale['locale'])
+      if exists
+        exists.update!(locale.symbolize_keys!)
+      else
+        Locale.create!(locale.symbolize_keys!)
       end
+    rescue => e
+      Rails.logger.warn "[Locale.to_database] Falha ao salvar locale '#{locale['locale']}': #{e.message}"
     end
   end
 

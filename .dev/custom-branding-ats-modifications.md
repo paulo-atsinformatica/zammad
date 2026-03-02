@@ -266,6 +266,30 @@ Este sistema foi implementado para controlar o tempo de atendimento por ticket e
 - `spec/models/ticket_time_tracking_spec.rb`
 - Factories criadas em `spec/factories/`
 
+## Init em loop / "undefined method 'each' for String" (Docker)
+
+**Contexto:** Após corrigir as variáveis de ambiente do Postgres (POSTGRESQL_* no compose), o `zammad-init` pode passar a chegar na etapa "Synchronizing locales and translations..." e falhar com `undefined method 'each' for an instance of String`, entrando em loop (restart on-failure).
+
+**Causa do erro:** O código chama `Locale.sync`, que faz `YAML.load_file('config/locales.yml')`. O Psych (YAML do Ruby) retorna uma **String** quando o documento YAML tem como raiz um escalar (ex.: arquivo contendo só `---` e uma linha de texto, ou conteúdo que o parser interpreta como uma única string). Nesse caso, `data.each` quebra porque String não tem `.each` em Ruby 3.
+
+**Quando o YAML pode retornar String:**
+- **Volume ou mount** sobrescrevendo `config/` ou `/opt/zammad`: se no Coolify (ou no host) um volume montar em cima de `config/` ou do app, o arquivo `config/locales.yml` dentro do container pode ser outro (ex.: vazio, ou um arquivo de config que é um único valor).
+- **Build da imagem:** se o contexto de build (ou um `.dockerignore` não documentado) não incluir `config/locales.yml` corretamente, o arquivo na imagem pode estar vazio ou ser outro.
+- **Encoding / BOM:** em casos raros, BOM ou encoding do arquivo pode fazer o parser interpretar o documento como um único escalar.
+
+**Por que apareceu “após as alterações recentes”:** Antes, o init falhava na conexão com o Postgres (variáveis POSTGRES_* vs POSTGRESQL_*). Depois de corrigir isso, o init passou a chegar na etapa de sync; aí o bug do YAML (ou do conteúdo do arquivo no ambiente) passou a se manifestar.
+
+**O que foi feito no código:** Em `app/models/locale.rb`, `Locale.sync` foi tornado defensivo: se o YAML retornar String ou tipo inesperado, o método retorna `false` sem chamar `.each`, e grava no log um aviso com os primeiros 200 caracteres do valor (para diagnóstico). Assim o init não entra mais em loop por esse motivo.
+
+**Como diagnosticar no próximo deploy:** Nos logs do container `zammad-init`, procure por:
+`[Locale.sync] config/locales.yml retornou String (primeiros 200 chars): ...`
+Isso mostra o que o arquivo realmente contém no ambiente. Se aparecer, confira no Coolify se há volume montado em `/opt/zammad` ou `config/` e se o `config/locales.yml` na imagem está correto (ex.: `docker run --rm ghcr.io/.../zammad:latest cat /opt/zammad/config/locales.yml | head -20`).
+
+**Descobrindo a causa raiz (arquivo truncado no container):** Antes das alterações de i18n (chamado/tíquete → ticket) os idiomas funcionavam; depois o arquivo passou a ser lido como String "---" (truncado). Possíveis causas:
+- **Cache do Docker build:** a camada `COPY . .` pode estar em cache de um build antigo em que o contexto tinha o arquivo ausente ou truncado. **Solução:** fazer build com `--no-cache` (ou `docker build --no-cache ...`) para forçar nova cópia do contexto; assim o `config/locales.yml` do repositório atual entra na imagem.
+- **Verificação no build:** no `Dockerfile` foi adicionado um `RUN` que falha se `config/locales.yml` tiver menos de 500 bytes. Se o build passar, a imagem tem o arquivo completo; se falhar, o contexto ou o cache está com o arquivo errado (usar `--no-cache` e rebuild).
+- **Diagnóstico no container (Coolify):** dentro do container em execução, rodar `wc -c /opt/zammad/config/locales.yml` e `head -5 /opt/zammad/config/locales.yml`. Se o tamanho for &lt; 500 bytes ou o conteúdo só "---", a imagem usada pelo Coolify está com o arquivo truncado (rebuild sem cache ou conferir qual imagem/digest o Coolify está puxando).
+
 ## Referências
 
 - Repositório original: https://github.com/zammad/zammad

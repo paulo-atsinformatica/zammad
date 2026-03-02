@@ -87,6 +87,22 @@ if [ "$1" = 'zammad-init' ]; then
     bundle exec rails r "Locale.sync; Translation.sync"
   fi
 
+  echo "Ensuring pt-br locale and applying translation overrides..."
+  bundle exec rails r "
+    Locale.find_or_create_by!(locale: 'pt-br') do |l|
+      l.name   = 'Português (Brasil) - Portuguese (Brazil)'
+      l.alias  = ''
+      l.active = true
+      l.dir    = 'ltr'
+    end
+    Locale.find_by(locale: 'pt-br')&.update!(active: true)
+    ActiveRecord::Base.transaction do
+      Translation.sync_locale_from_po('pt-br')
+    end
+    require Rails.root.join('lib', 'translation_overrides_pt_br')
+    TranslationOverridesPtBr.apply
+  "
+
   # es config
   echo "changing settings..."
   if [ "${ELASTICSEARCH_ENABLED}" == "false" ]; then

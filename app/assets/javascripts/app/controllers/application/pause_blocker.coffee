@@ -101,6 +101,12 @@ class App.ApplicationPauseBlocker extends App.Controller
       @endPause()
 
   endPause: (delayReason = null) ->
+    App.User.current().current_state = 'online'
+    App.User.current().in_pause = false
+    @hideBlocker()
+    App.Event.trigger('pause:ended')
+    App.Event.trigger('user_state:changed')
+
     @ajax(
       id:          'user_pause_end'
       type:        'POST'
@@ -109,12 +115,12 @@ class App.ApplicationPauseBlocker extends App.Controller
       processData: false
       contentType: 'application/json'
       success:     (data, status, xhr) =>
-        App.User.current().current_state = 'online'
-        App.User.current().in_pause = false
-        @hideBlocker()
-        @controllerTrigger('pause:ended')
-        @controllerTrigger('user_state:changed')
+        # Already updated optimistically
       error: (xhr) =>
+        App.User.current().current_state = 'pause'
+        App.User.current().in_pause = true
+        @showBlocker()
+        App.Event.trigger('user_state:changed')
         @notify(
           type:    'error'
           msg:     xhr.responseJSON?.error || __('Failed to end pause')

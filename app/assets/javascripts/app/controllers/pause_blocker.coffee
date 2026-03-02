@@ -184,7 +184,14 @@ class App.PauseBlocker extends App.Controller
       @doEndPause(null)
 
   doEndPause: (delayReason) ->
-    $('.js-end-pause').prop('disabled', true).text(App.i18n.translateContent('Saindo...'))
+    previousPause = @currentPause
+
+    @currentPause = null
+    @hide()
+    App.User.current().in_pause = false
+    App.User.current().current_state = 'online'
+    App.Event.trigger('user_state:changed')
+    App.Event.trigger('pause:ended')
 
     @ajax(
       id:          'pause_blocker_end'
@@ -194,17 +201,17 @@ class App.PauseBlocker extends App.Controller
       processData: false
       contentType: 'application/json'
       success:     (data) =>
-        @currentPause = null
-        @hide()
-        App.Event.trigger('user_state:changed')
-        App.Event.trigger('pause:ended')
         @notify(
           type:    'success'
           msg:     App.i18n.translateContent('Pausa finalizada. Você está online.')
           timeout: 3000
         )
       error: (xhr) =>
-        $('.js-end-pause').prop('disabled', false).text(App.i18n.translateContent('Sair da Pausa'))
+        @currentPause = previousPause
+        App.User.current().in_pause = true
+        App.User.current().current_state = 'pause'
+        @show()
+        App.Event.trigger('user_state:changed')
         @notify(
           type:    'error'
           msg:     xhr.responseJSON?.error || App.i18n.translateContent('Erro ao finalizar pausa')

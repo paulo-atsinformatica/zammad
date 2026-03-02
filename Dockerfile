@@ -59,6 +59,9 @@ RUN pnpm install --frozen-lockfile
 # Copy application code
 COPY . .
 
+# Garantir que config/locales.yml está completo (evita cache com arquivo truncado)
+RUN test -f config/locales.yml && test $(wc -c < config/locales.yml) -gt 500 || (echo "ERROR: config/locales.yml missing or too small"; exit 1)
+
 # Append build information to the Zammad VERSION.
 RUN if [ -z "${COMMIT_SHA}" ]; then \
     echo "Error: the required build argument \$COMMIT_SHA is missing."; \
