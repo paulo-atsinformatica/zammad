@@ -7,7 +7,9 @@ class TicketTimeTrackingService < Service::BaseWithCurrentUser
   end
 
   def start_tracking
-    return error(__('User does not have time tracking enabled')) if !current_user.permissions?('user.ticket_time_tracking')
+    # Permissão passa a ser controlada apenas em nível de papel/ticket,
+    # usando a permissão padrão "ticket.time_tracking".
+    return error(__('User does not have time tracking enabled')) if !current_user.permissions?('ticket.time_tracking')
     return error(__('User is in pause')) if current_user.in_pause?
     return error(__('Ticket is closed')) if @ticket.state&.state_type&.name == 'closed'
     return error(__('Ticket is not assigned to user')) if @ticket.owner_id != current_user.id
@@ -47,7 +49,7 @@ class TicketTimeTrackingService < Service::BaseWithCurrentUser
   end
 
   def resume_tracking
-    return error(__('User does not have time tracking enabled')) if !current_user.permissions?('user.ticket_time_tracking')
+    return error(__('User does not have time tracking enabled')) if !current_user.permissions?('ticket.time_tracking')
     return error(__('User is in pause')) if current_user.in_pause?
     return error(__('Ticket is closed')) if @ticket.state&.state_type&.name == 'closed'
     return error(__('Ticket is not assigned to user')) if @ticket.owner_id != current_user.id

@@ -25,19 +25,15 @@
             <label><%- @T('Data de Fechamento (Final)') %></label>
             <input type="text" class="form-control js-close-end-date" readonly>
           </div>
-          <div class="form-group report-filter-field">
-            <label><%- @T('Ticket') %></label>
-            <input type="text" class="form-control js-ticket-query" placeholder="<%- @T('Número ou título') %>">
-          </div>
-          <div class="form-group report-filter-field">
+          <div class="form-group report-filter-field report-filter-field--responsavel">
             <label><%- @T('Responsável') %></label>
             <select class="form-control js-agent-select">
               <option value=""><%- @T('Todos') %></option>
             </select>
           </div>
-          <div class="form-group report-filter-field report-filter-field--equipe">
-            <label><%- @T('Equipe') %></label>
-            <div class="js-equipe-filter"></div>
+          <div class="form-group report-filter-field">
+            <label><%- @T('Ticket') %></label>
+            <input type="text" class="form-control js-ticket-query" placeholder="<%- @T('Número ou título') %>">
           </div>
         </div>
         <div class="report-filters-actions">

@@ -5,8 +5,9 @@ class UserPausesController < ApplicationController
 
   def start
     service = UserPauseService.new(
-      current_user: current_user,
-      pause_type_id: params[:pause_type_id]
+      current_user:   current_user,
+      pause_type_id:  params[:pause_type_id],
+      started_at:     params[:started_at]
     )
     result = service.start_pause
 
@@ -19,7 +20,7 @@ class UserPausesController < ApplicationController
 
   def end
     service = UserPauseService.new(current_user: current_user)
-    result = service.end_pause(delay_reason: params[:delay_reason])
+    result = service.end_pause(delay_reason: params[:delay_reason], ended_at: params[:ended_at])
 
     if result.success?
       response_data = result.data.attributes_with_association_ids

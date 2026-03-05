@@ -1,13 +1,18 @@
 <div class="report-content">
+  <% if @downloadCount > 0: %>
+  <div class="report-download-actions" style="margin-bottom: 12px;">
+    <a class="btn btn--action" href="<%= @downloadUrl %>" target="_blank" data-type="attachment"><%- @Icon('download') %><span><%- @T('Baixar %s registro(s)', @downloadCount) %></span></a>
+  </div>
+  <% end %>
   <table class="table">
     <thead>
       <tr>
-        <th><%- @T('Agente') %></th>
-        <th><%- @T('Nome da Pausa/Login/Logout') %></th>
+        <th><%- @T('Responsável') %></th>
+        <th><%- @T('Nome da Pausa') %></th>
         <th><%- @T('Data') %></th>
-        <th><%- @T('Hora') %></th>
+        <th><%- @T('Hora Início') %></th>
         <th><%- @T('Hora Fim') %></th>
-        <th><%- @T('Tempo Máximo Permitido') %></th>
+        <th><%- @T('Tempo Máximo') %></th>
         <th><%- @T('Duração Total') %></th>
         <th><%- @T('Tempo excedido') %></th>
       </tr>
@@ -23,10 +28,10 @@
             <td><%= item.agent?.firstname %> <%= item.agent?.lastname %></td>
             <td><%= item.name %></td>
             <td><%= @formatDate(item.started_at) %></td>
-            <td><%= @formatTime(item.started_at) %></td>
-            <td><%= @formatTime(item.ended_at) %></td>
-            <% if item.time_limit: %>
-              <td><%= item.time_limit %></td>
+            <td><%= @formatTimeWithSeconds(item.started_at) %></td>
+            <td><%= @formatTimeWithSeconds(item.ended_at) %></td>
+            <% if item.time_limit != null && item.time_limit != undefined: %>
+              <td><%= @formatTimeLimitMinutes(item.time_limit) %></td>
             <% else: %>
               <td>-</td>
             <% end %>
@@ -41,6 +46,26 @@
       <% end %>
     </tbody>
   </table>
+  <% if @data.pagination && @data.pagination.total_count > 0: %>
+  <div class="report-pagination">
+    <span class="report-pagination-info">
+      <%- @T('Mostrando') %> <%= (@data.pagination.page - 1) * @data.pagination.per_page + 1 %>-<%= Math.min(@data.pagination.page * @data.pagination.per_page, @data.pagination.total_count) %> <%- @T('de') %> <%= @data.pagination.total_count %> <%- @T('registros') %>
+    </span>
+    <span class="report-pagination-nav">
+      <a href="#" class="js-page-prev btn btn-default btn-sm <%= if @data.pagination.page <= 1 then 'disabled' else '' %>"><%- @T('Anterior') %></a>
+      <span class="report-pagination-page"><%- @T('Página') %> <%= @data.pagination.page %> <%- @T('de') %> <%= @data.pagination.total_pages %></span>
+      <a href="#" class="js-page-next btn btn-default btn-sm <%= if @data.pagination.page >= @data.pagination.total_pages then 'disabled' else '' %>"><%- @T('Próxima') %></a>
+    </span>
+    <span class="report-pagination-per-page">
+      <label><%- @T('Registros por página') %></label>
+      <select class="js-per-page form-control input-sm" style="display:inline-block;width:auto;">
+        <option value="25" <%= if @data.pagination.per_page == 25 then 'selected' else '' %>>25</option>
+        <option value="50" <%= if @data.pagination.per_page == 50 then 'selected' else '' %>>50</option>
+        <option value="100" <%= if @data.pagination.per_page == 100 then 'selected' else '' %>>100</option>
+      </select>
+    </span>
+  </div>
+  <% end %>
 </div>
 
 

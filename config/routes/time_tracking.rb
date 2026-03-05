@@ -38,9 +38,11 @@ Zammad::Application.routes.draw do
 
   # User Pauses Reports
   match api_path + '/reports/user_pauses', to: 'user_pauses_reports#index', via: :get
+  match api_path + '/reports/user_pauses/download', to: 'user_pauses_reports#download', via: :get
 
   # Ticket Time Trackings Reports
   match api_path + '/reports/ticket_time_trackings', to: 'ticket_time_trackings_reports#index', via: :get
+  match api_path + '/reports/ticket_time_trackings/download', to: 'ticket_time_trackings_reports#download', via: :get
 
   # Pause Indicators Report
   match api_path + '/reports/pause_indicators', to: 'pause_indicators_reports#index', via: :get

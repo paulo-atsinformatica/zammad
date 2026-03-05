@@ -13,14 +13,29 @@ class App.UserStatusBar extends App.Controller
     @currentPause = null
     @isLoggedIn = false
     @elapsedTimer = null
+    @skipNextCurrentCheck = false
 
     # Load data
     @loadPauseTypes()
     @checkPauseLogin()
 
-    # Listen for state changes
+    # Listen for state changes (skip refetch when we just updated from our own start/end)
     @controllerBind('user_state:changed', =>
+      if @skipNextCurrentCheck
+        @skipNextCurrentCheck = false
+        return
       @checkCurrentPause()
+    )
+
+    # Quando o blocker (ou outro) encerra a pausa, atualizar estado na hora para não precisar de segundo clique
+    @controllerBind('pause:ended', =>
+      @currentPause = null
+      @currentState = 'online'
+      @stopElapsedTimer()
+      App.User.current().in_pause = false
+      App.User.current().current_state = 'online'
+      @skipNextCurrentCheck = true
+      @render()
     )
 
     # Check pause time limit periodically
@@ -156,6 +171,7 @@ class App.UserStatusBar extends App.Controller
         @stopElapsedTimer()
         @getCurrentState()
         @render()
+        @skipNextCurrentCheck = true
         App.Event.trigger('pause_control:logout')
         App.Event.trigger('user_state:changed')
       error: (xhr) =>
@@ -214,6 +230,7 @@ class App.UserStatusBar extends App.Controller
         @currentState = data.state
         App.User.current().current_state = data.state
         @render()
+        @skipNextCurrentCheck = true
         App.Event.trigger('user_state:changed')
       error: (xhr) =>
         @notify(
@@ -227,41 +244,52 @@ class App.UserStatusBar extends App.Controller
     return if !@isLoggedIn
     return if @currentPause?.active
 
-    previousState = @currentState
-    pauseType = @pauseTypes.find((p) => p.id == pauseTypeId)
-
+    # Otimista: mostra pausa e inicia contagem na hora (usuário não perde tempo esperando a rede)
+    startedAt = new Date().toISOString()
+    optimisticPause =
+      id:             null
+      pause_type_id:  parseInt(pauseTypeId, 10)
+      started_at:     startedAt
+      created_at:     startedAt
+      active:         true
     @currentState = 'pause'
-    @currentPause = {
-      active: true
-      pause_type_id: pauseTypeId
-      started_at: new Date().toISOString()
-      time_limit: pauseType?.time_limit || 0
-    }
+    @currentPause = optimisticPause
     App.User.current().in_pause = true
     App.User.current().current_state = 'pause'
     @startElapsedTimer()
     @render()
+    @skipNextCurrentCheck = true
     App.Event.trigger('user_state:changed')
-    App.Event.trigger('pause:started')
+    App.Event.trigger('pause:started', optimisticPause)
 
     @ajax(
       id:          'status_bar_start_pause'
       type:        'POST'
       url:         "#{@apiPath}/user_pauses/start"
-      data:        JSON.stringify(pause_type_id: pauseTypeId)
+      data:        JSON.stringify(pause_type_id: pauseTypeId, started_at: startedAt)
       processData: false
       contentType: 'application/json'
       success:     (data) =>
+        # Mantém started_at otimista se for anterior à resposta do servidor
+        if data.started_at && @currentPause
+          serverStarted = new Date(data.started_at).getTime()
+          clientStarted = new Date(@currentPause.started_at).getTime()
+          data.started_at = @currentPause.started_at if clientStarted < serverStarted
         @currentPause = data
         @currentPause.active = true
+        App.User.current().in_pause = true
+        @render()
+        # Notifica o blocker em tela cheia para exibir overlay (agora com id do servidor)
+        App.Event.trigger('pause:started', @currentPause)
       error: (xhr) =>
-        @currentState = previousState
+        @currentState = 'online'
         @currentPause = null
         @stopElapsedTimer()
         App.User.current().in_pause = false
-        App.User.current().current_state = previousState
+        App.User.current().current_state = 'online'
         @render()
         App.Event.trigger('user_state:changed')
+        App.Event.trigger('pause:ended')
         @notify(
           type:    'error'
           msg:     xhr.responseJSON?.error || App.i18n.translateContent('Failed to start pause')
@@ -273,40 +301,39 @@ class App.UserStatusBar extends App.Controller
     return if !@isLoggedIn
     return if !@currentPause?.active
 
-    previousPause = @currentPause
-    previousState = @currentState
-
+    # Otimista: para o timer e mostra "online" na hora (não penaliza por rede lenta ou queda)
+    endedAt = new Date().toISOString()
     @currentState = 'online'
     @currentPause = null
     @stopElapsedTimer()
     App.User.current().in_pause = false
     App.User.current().current_state = 'online'
     @render()
+    @skipNextCurrentCheck = true
     App.Event.trigger('user_state:changed')
     App.Event.trigger('pause:ended')
 
+    payload = delay_reason: delayReason, ended_at: endedAt
     @ajax(
       id:          'status_bar_end_pause'
       type:        'POST'
       url:         "#{@apiPath}/user_pauses/end"
-      data:        JSON.stringify(delay_reason: delayReason)
+      data:        JSON.stringify(payload)
       processData: false
       contentType: 'application/json'
       success:     (data) =>
-        # Already updated optimistically
+        @notify(
+          type:    'success'
+          msg:     App.i18n.translateContent('Pausa finalizada.')
+          timeout: 2000
+        )
       error: (xhr) =>
-        @currentState = previousState
-        @currentPause = previousPause
-        App.User.current().in_pause = true
-        App.User.current().current_state = previousState
-        @startElapsedTimer()
-        @render()
-        App.Event.trigger('user_state:changed')
         @notify(
           type:    'error'
-          msg:     xhr.responseJSON?.error || App.i18n.translateContent('Failed to end pause')
-          timeout: 3000
+          msg:     xhr.responseJSON?.error || App.i18n.translateContent('Falha ao finalizar pausa. Verifique a conexão.')
+          timeout: 5000
         )
+        @checkCurrentPause()
     )
 
   checkPauseTimeLimit: ->

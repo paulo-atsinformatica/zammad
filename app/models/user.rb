@@ -130,6 +130,7 @@ class User < ApplicationModel
                          :overview_sortings
 
   validates :note, length: { maximum: 5000 }
+  validates :current_state, inclusion: { in: %w[offline online pause] }, allow_nil: true
   sanitized_html :note, no_images: true
 
   def ignore_search_indexing?(_action)

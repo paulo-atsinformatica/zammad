@@ -94,7 +94,7 @@ class App.TicketZoomTimeTracking extends App.Controller
   canInteract: ->
     pauseLoggedIn = App.Config.get('pause_control_logged_in')
     return false if pauseLoggedIn is false
-    return false if !@currentUser?.permission('user.ticket_time_tracking')
+    return false if !@currentUser?.permission('ticket.time_tracking')
     return false if @ticket.owner_id != @currentUser.id # Must be assigned to user
     return false if @currentUser.in_pause # User is in global pause
     return false if @currentUser.current_state == 'offline' # User is offline
@@ -161,7 +161,7 @@ class App.TicketZoomTimeTracking extends App.Controller
     pauseLoggedIn = App.Config.get('pause_control_logged_in')
     if pauseLoggedIn is false
       return App.i18n.translateContent('Faça login no controle de pausas')
-    if !@currentUser?.permission('user.ticket_time_tracking')
+    if !@currentUser?.permission('ticket.time_tracking')
       return App.i18n.translateContent('Sem permissão para controle de tempo')
     if @ticket.owner_id != @currentUser.id
       return App.i18n.translateContent('Ticket não está atribuído a você')

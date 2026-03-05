@@ -10,10 +10,10 @@ class App.ReportUserPauses extends App.ControllerAppContent
     @pause_type_id = 'all'
     @exceeded = 'all'
     @agent_id = ''
-    @selectedTeams = App.SessionStorage.get('report/user_pauses/equipe') || []
-    @teams = []
     @agents = []
     @pauseTypes = []
+    @page = 1
+    @per_page = 50
     @render()
 
   render: ->
@@ -87,26 +87,6 @@ class App.ReportUserPauses extends App.ControllerAppContent
       options.push "<option value=\"#{agent.id}\">#{App.Utils.htmlEscape(agent.name)}</option>"
     $select.html(options.join(''))
     $select.val(currentVal) if currentVal
-
-  renderEquipeFilter: ->
-    $container = @el.find('.js-equipe-filter')
-    return if !$container.length
-    if @teams.length == 0
-      $container.empty()
-      return
-    list = @teams.map (team) =>
-      checked = if @selectedTeams.indexOf(team) >= 0 then ' checked' else ''
-      "<label class=\"inline-label checkbox-replacement\"><input type=\"checkbox\" class=\"js-team-checkbox\" value=\"#{App.Utils.htmlEscape(team)}\"#{checked}><span class=\"label-text\">#{App.Utils.htmlEscape(team)}</span></label>"
-    $container.html("<div class=\"checkbox-list\">#{list.join('')}</div>")
-    $container.find('.js-team-checkbox').off('change').on('change', (=> @onTeamCheckboxChange()))
-
-  onTeamCheckboxChange: ->
-    @applyEquipeFilter()
-
-  applyEquipeFilter: ->
-    @selectedTeams = @el.find('.js-team-checkbox:checked').map(-> $(this).val()).get()
-    App.SessionStorage.set('report/user_pauses/equipe', @selectedTeams)
-    @loadReport()
 
   bindSearch: ->
     @$('.js-report-search').on('click', (e) =>
@@ -184,6 +164,20 @@ class App.ReportUserPauses extends App.ControllerAppContent
     M = App.Utils.formatTime(timeObject.getMinutes(), 2)
     "#{H}:#{M}"
 
+  formatTimeWithSecondsFromValue: (value) ->
+    return '' unless value
+    timeObject = new Date(value)
+    return '' if isNaN(timeObject.getTime())
+    H = App.Utils.formatTime(timeObject.getHours(), 2)
+    M = App.Utils.formatTime(timeObject.getMinutes(), 2)
+    S = App.Utils.formatTime(timeObject.getSeconds(), 2)
+    "#{H}:#{M}:#{S}"
+
+  formatTimeLimitFromMinutes: (minutes) ->
+    return '-' if minutes == null || minutes == undefined
+    totalSeconds = parseInt(minutes, 10) * 60
+    return @formatDuration(totalSeconds)
+
   loadReport: ->
     return if !@start_date || !@end_date
 
@@ -194,8 +188,8 @@ class App.ReportUserPauses extends App.ControllerAppContent
       pause_type_id: @pause_type_id
       exceeded: @exceeded
       agent_id: @agent_id
-    if @selectedTeams.length > 0
-      data.equipe = @selectedTeams
+      page: @page
+      per_page: @per_page
 
     @ajax(
       id:          'user_pauses_report'
@@ -205,11 +199,10 @@ class App.ReportUserPauses extends App.ControllerAppContent
       processData: true
       success:     (data, status, xhr) =>
         @stopLoading()
-        @teams = data.teams || []
         @agents = data.agents || []
         @renderAgentOptions()
-        @renderEquipeFilter()
         @renderReport(data)
+        @bindPagination(data.pagination)
       error: (xhr) =>
         @stopLoading()
         @notify(
@@ -220,11 +213,46 @@ class App.ReportUserPauses extends App.ControllerAppContent
     )
 
   renderReport: (data) ->
+    downloadUrl = @buildUserPausesDownloadUrl()
+    downloadCount = data.pagination?.total_count || 0
     @el.find('.js-report-content').html App.view('report/user_pauses_content')(
       data: data
       formatDuration: @formatDuration
       formatDate: @formatDateFromValue
       formatTime: @formatTimeFromValue
+      formatTimeWithSeconds: @formatTimeWithSecondsFromValue
+      formatTimeLimitMinutes: @formatTimeLimitFromMinutes
+      downloadUrl: downloadUrl
+      downloadCount: downloadCount
+    )
+
+  buildUserPausesDownloadUrl: ->
+    params =
+      start_date: @start_date
+      end_date: @end_date
+      pause_type_id: @pause_type_id
+      exceeded: @exceeded
+      agent_id: @agent_id
+    "#{@apiPath}/reports/user_pauses/download?#{$.param(params)}"
+
+  bindPagination: (pagination) ->
+    return if !pagination
+    @el.find('.js-page-prev').off('click').on('click', (e) =>
+      e.preventDefault()
+      return if pagination.page <= 1
+      @page = pagination.page - 1
+      @loadReport()
+    )
+    @el.find('.js-page-next').off('click').on('click', (e) =>
+      e.preventDefault()
+      return if pagination.page >= pagination.total_pages
+      @page = pagination.page + 1
+      @loadReport()
+    )
+    @el.find('.js-per-page').off('change').on('change', (e) =>
+      @per_page = parseInt($(e.currentTarget).val(), 10)
+      @page = 1
+      @loadReport()
     )
 
   formatDuration: (totalSeconds) ->

@@ -9,64 +9,72 @@ class App.ReportPauseIndicators extends App.ControllerAppContent
     @navupdate '#report/pause_indicators'
     @pollTimer = null
     @durationTimer = null
-    @selectedTeams = App.SessionStorage.get('report/pause_indicators/equipe') || []
-    @teams = []
+    @agents = []
+    @selectedUserIds = []
+    @restoreSelectedFromStorage()
     @render()
+
+  restoreSelectedFromStorage: ->
+    try
+      stored = sessionStorage.getItem('report/pause_indicators/colaboradores')
+      if stored
+        parsed = JSON.parse(stored)
+        @selectedUserIds = parsed if Array.isArray(parsed)
+    catch e
+      @selectedUserIds = []
+
+  saveSelectedToStorage: ->
+    try
+      sessionStorage.setItem('report/pause_indicators/colaboradores', JSON.stringify(@selectedUserIds))
+    catch e
+      #
 
   render: ->
     @html App.view('report/pause_indicators')()
-    @renderTeamsFilter()
     @loadReport()
+    @bindFilterEvents()
     @startPolling()
     @startDurationTimer()
 
-  renderTeamsFilter: ->
-    $container = @el.find('.js-report-filters')
-    if @teams.length == 0
-      $container.empty()
-      return
-    list = @teams.map (team) =>
-      checked = if @selectedTeams.indexOf(team) >= 0 then ' checked' else ''
-      "<label class=\"inline-label checkbox-replacement\"><input type=\"checkbox\" class=\"js-team-checkbox\" value=\"#{App.Utils.htmlEscape(team)}\"#{checked}><span class=\"label-text\">#{App.Utils.htmlEscape(team)}</span></label>"
-    html = """
-      <div class="report-filters well report-filters-equipe">
-        <div class="report-filters-grid">
-          <div class="form-group report-filter-field report-filter-field--equipe">
-            <label>#{App.i18n.translateContent('Equipe')}</label>
-            <div class="js-teams-list checkbox-list">#{list.join('')}</div>
-          </div>
-        </div>
-        <div class="report-filters-actions">
-          <button type="button" class="btn btn--primary js-apply-equipe-filter">#{App.i18n.translateContent('Aplicar filtro')}</button>
-        </div>
-      </div>
-    """
-    $container.html(html)
-    $container.find('.js-team-checkbox').on('change', (=> @onTeamCheckboxChange()))
-    $container.find('.js-apply-equipe-filter').on('click', (=> @applyEquipeFilter()))
+  bindFilterEvents: ->
+    @el.find('.js-apply-colaboradores-filter').on('click', => @applyColaboradoresFilter())
+    @el.find('.js-clear-colaboradores-filter').on('click', => @clearColaboradoresFilter())
 
-  onTeamCheckboxChange: ->
-    @applyEquipeFilter()
-
-  applyEquipeFilter: ->
-    @selectedTeams = @el.find('.js-team-checkbox:checked').map(-> $(this).val()).get()
-    App.SessionStorage.set('report/pause_indicators/equipe', @selectedTeams)
+  applyColaboradoresFilter: ->
+    @selectedUserIds = @el.find('.js-colaborador-checkbox:checked').map(-> parseInt($(this).val(), 10) ).get()
+    @saveSelectedToStorage()
     @loadReport()
+
+  clearColaboradoresFilter: ->
+    @selectedUserIds = []
+    @el.find('.js-colaborador-checkbox').prop('checked', false)
+    @saveSelectedToStorage()
+    @loadReport()
+
+  renderColaboradoresFilter: (agents) ->
+    return if !agents || agents.length is 0
+    @agents = agents
+    html = ''
+    for agent in agents
+      checked = @selectedUserIds.indexOf(agent.id) >= 0
+      safeName = App.Utils.htmlEscape(agent.name)
+      html += "<label class=\"checkbox-inline\"><input type=\"checkbox\" class=\"js-colaborador-checkbox\" value=\"#{agent.id}\" #{if checked then 'checked' else ''}> #{safeName}</label> "
+    @el.find('.js-colaboradores-filter').html(html)
 
   loadReport: ->
     return if window.location.hash isnt '#report/pause_indicators'
-    url = "#{@apiPath}/reports/pause_indicators"
-    if @selectedTeams.length > 0
-      url += '?' + $.param(equipe: @selectedTeams)
+    params = {}
+    if @selectedUserIds.length > 0
+      params.user_ids = @selectedUserIds
     @ajax(
       id:          'pause_indicators_report'
       type:        'GET'
-      url:         url
+      url:         "#{@apiPath}/reports/pause_indicators"
+      data:        params
       processData: true
       success:     (data) =>
         return if window.location.hash isnt '#report/pause_indicators'
-        @teams = data.teams || []
-        @renderTeamsFilter()
+        @renderColaboradoresFilter(data.agents) if data.agents
         @renderReport(data)
         @startDurationTimer()
       error: (xhr) =>

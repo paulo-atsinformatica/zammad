@@ -6,36 +6,123 @@ class UserPausesReportsController < ApplicationController
   def index
     start_date = params[:start_date].present? ? Date.parse(params[:start_date]) : 30.days.ago.to_date
     end_date = params[:end_date].present? ? Date.parse(params[:end_date]) : Date.today
+    page = [1, (params[:page].presence || 1).to_i].max
+    per_page = [[1, (params[:per_page].presence || 50).to_i].max, 100].min
+
+    entries = build_entries_for_report
+    total_count = entries.size
+    total_pages = (total_count.to_f / per_page).ceil
+    page = total_pages if page > total_pages && total_pages > 0
+    offset = (page - 1) * per_page
+    entries = entries.slice(offset, per_page) || []
+
+    response = {
+      start_date: start_date,
+      end_date: end_date,
+      entries: entries,
+      agents: agents_list,
+      pagination: {
+        page: page,
+        per_page: per_page,
+        total_count: total_count,
+        total_pages: total_pages
+      }
+    }
+
+    render json: response, status: :ok
+  end
+
+  # GET /api/v1/reports/user_pauses/download?start_date=...&end_date=... (same filters as index)
+  def download
+    entries = build_entries_for_report
+    header = [
+      { display: __('Responsável'), width: 22 },
+      { display: __('Nome da Pausa'), width: 20 },
+      { display: __('Data'), width: 12 },
+      { display: __('Hora Início'), width: 12 },
+      { display: __('Hora Fim'), width: 12 },
+      { display: __('Tempo Máximo'), width: 14 },
+      { display: __('Duração Total'), width: 14 },
+      { display: __('Tempo excedido'), width: 12 }
+    ]
+    records = entries.map do |item|
+      agent_name = item[:agent].present? ? "#{item[:agent]['firstname']} #{item[:agent]['lastname']}".strip : ''
+      [
+        agent_name,
+        item[:name],
+        item[:started_at]&.in_time_zone(timezone_default).strftime('%Y-%m-%d'),
+        format_time_with_seconds(item[:started_at]),
+        format_time_with_seconds(item[:ended_at]),
+        item[:time_limit].present? ? format_duration_from_minutes(item[:time_limit]) : '-',
+        format_duration_from_seconds(item[:duration_seconds]),
+        item[:exceeded] ? __('Sim') : __('Não')
+      ]
+    end
+    excel = ExcelSheet.new(
+      title:    __('Relatório de Pausas de Usuários'),
+      header:   header,
+      records:  records,
+      timezone: timezone_default,
+      locale:   current_user.locale
+    )
+    filename = "pausas-usuarios-#{params[:start_date]}-#{params[:end_date]}.xlsx"
+    send_data(
+      excel.content,
+      filename:    filename,
+      type:        ExcelSheet::CONTENT_TYPE,
+      disposition: 'attachment'
+    )
+  end
+
+  private
+
+  def timezone_default
+    Setting.get('timezone_default') || 'UTC'
+  end
+
+  def format_time_with_seconds(t)
+    return '' if t.blank?
+    t.in_time_zone(timezone_default).strftime('%H:%M:%S')
+  end
+
+  def format_duration_from_seconds(sec)
+    return '' if sec.nil? || sec < 0
+    h = sec / 3600
+    m = (sec % 3600) / 60
+    s = sec % 60
+    format('%d:%02d:%02d', h, m, s)
+  end
+
+  def format_duration_from_minutes(minutes)
+    format_duration_from_seconds((minutes.to_i) * 60)
+  end
+
+  def build_entries_for_report
+    start_date = params[:start_date].present? ? Date.parse(params[:start_date]) : 30.days.ago.to_date
+    end_date = params[:end_date].present? ? Date.parse(params[:end_date]) : Date.today
     pause_type_id = params[:pause_type_id].presence
     exceeded_filter = params[:exceeded].presence
     agent_id = params[:agent_id].presence
     agent_query = params[:agent_query].presence
 
     user_scope = User.all
-    if agent_id
+    if agent_id.present?
       user_scope = user_scope.where(id: agent_id)
-    elsif agent_query
+    elsif agent_query.present?
       like = "%#{agent_query}%"
       user_scope = user_scope.where(
         'firstname ILIKE ? OR lastname ILIKE ? OR email ILIKE ?',
         like, like, like
       )
     end
-
-    if equipe_column? && params[:equipe].present?
-      teams = Array(params[:equipe]).reject(&:blank?)
-      user_scope = user_scope.where(equipe: teams) if teams.any?
-    end
-
     user_ids = user_scope.select(:id)
 
     pauses_scope = UserPause.where(started_at: start_date.beginning_of_day..end_date.end_of_day)
                             .includes(:user, :pause_type)
     sessions_scope = UserPauseSession.where(started_at: start_date.beginning_of_day..end_date.end_of_day)
                                      .includes(:user)
-
-    pauses_scope = pauses_scope.where(user_id: user_ids) if agent_id || agent_query
-    sessions_scope = sessions_scope.where(user_id: user_ids) if agent_id || agent_query
+    pauses_scope = pauses_scope.where(user_id: user_ids) if agent_id.present? || agent_query.present?
+    sessions_scope = sessions_scope.where(user_id: user_ids) if agent_id.present? || agent_query.present?
 
     if pause_type_id == 'login_logout'
       pauses_scope = pauses_scope.none
@@ -45,7 +132,6 @@ class UserPausesReportsController < ApplicationController
     end
 
     entries = []
-
     pauses_scope.find_each do |pause|
       duration_minutes = pause.duration_minutes
       exceeded = pause.time_limit.to_i.positive? && duration_minutes > pause.time_limit
@@ -60,7 +146,6 @@ class UserPausesReportsController < ApplicationController
         exceeded: exceeded
       }
     end
-
     sessions_scope.find_each do |session|
       entries << {
         type: 'login_logout',
@@ -79,24 +164,8 @@ class UserPausesReportsController < ApplicationController
     elsif exceeded_filter == 'no'
       entries.select! { |item| !item[:exceeded] }
     end
-
     entries.sort_by! { |item| item[:started_at] || Time.zone.at(0) }.reverse!
-
-    response = {
-      start_date: start_date,
-      end_date: end_date,
-      entries: entries,
-      agents: agents_list
-    }
-    response[:teams] = teams_list if equipe_column?
-
-    render json: response, status: :ok
-  end
-
-  private
-
-  def equipe_column?
-    @equipe_column ||= User.column_names.include?('equipe')
+    entries
   end
 
   def agents_list
@@ -110,21 +179,6 @@ class UserPausesReportsController < ApplicationController
         .distinct
         .order(:firstname, :lastname)
         .map { |u| { id: u.id, name: "#{u.firstname} #{u.lastname}".strip } }
-  end
-
-  def teams_list
-    agent_role_ids = Role.joins(:permissions)
-                         .where(permissions: { name: 'ticket.agent', active: true }, roles: { active: true })
-                         .pluck(:id)
-
-    User.joins(:roles)
-        .where(roles: { id: agent_role_ids })
-        .where(users: { active: true })
-        .where.not(equipe: [nil, ''])
-        .distinct
-        .pluck(:equipe)
-        .compact
-        .sort
   end
 end
 

@@ -34,7 +34,11 @@ class UserPauseSessionsController < ApplicationController
     end
 
     active_session.end_session!
-    render json: { logged_in: false }, status: :ok
+    # Ao sair do controle de pausa, o usuário deve ficar explicitamente offline
+    # e sem pausa ativa associada, para manter consistência de estado.
+    current_user.update!(current_state: 'offline', current_pause_id: nil)
+
+    render json: { logged_in: false, state: current_user.current_state }, status: :ok
   end
 
   def current

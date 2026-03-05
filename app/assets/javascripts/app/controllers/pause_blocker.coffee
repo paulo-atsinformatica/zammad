@@ -17,8 +17,13 @@ class App.PauseBlocker extends App.Controller
     @checkCurrentPause()
 
     # Listen for pause events
-    @controllerBind('pause:started', =>
-      @checkCurrentPause()
+    @controllerBind('pause:started', (data) =>
+      if data && (data.id || data.started_at) && data.active != false
+        @currentPause = data
+        @currentPause.active = true
+        @show()
+      else
+        @checkCurrentPause()
     )
 
     @controllerBind('pause:ended', =>
@@ -26,6 +31,7 @@ class App.PauseBlocker extends App.Controller
     )
 
     @controllerBind('user_state:changed', =>
+      return if @visible && @currentPause
       @checkCurrentPause()
     )
 
@@ -64,7 +70,9 @@ class App.PauseBlocker extends App.Controller
       processData: true
       success:     (data) =>
         @pauseType = data
-        @applyPauseTypeColor()
+        # Defer para depois do paint: na 1ª abertura o CSS/cores podem não estar aplicados ainda
+        setTimeout (=> @applyPauseTypeColor()), 0
+        requestAnimationFrame (=> requestAnimationFrame (=> @applyPauseTypeColor()))
       error: =>
         @pauseType = null
     )
@@ -74,7 +82,11 @@ class App.PauseBlocker extends App.Controller
     color = @pauseType.color
     return if !color
 
-    $overlay = $('.pause-blocker-overlay')
+    # Sempre usar o overlay atual no DOM (evita referência obsoleta na 1ª abertura)
+    $overlay = $('.pause-blocker-overlay--fullscreen').last()
+    return if !$overlay.length
+    @$overlay = $overlay
+
     $overlay.find('.pause-blocker-header').css('background', color)
     $overlay.find('.pause-blocker-modal').css('border-color', color)
     $overlay.find('.pause-blocker-pause-name').css(
@@ -97,16 +109,18 @@ class App.PauseBlocker extends App.Controller
   hide: ->
     return if !@visible
     @visible = false
+    @$overlay = null
     @stopElapsedTimer()
-    $('.pause-blocker-overlay').remove()
+    $('.pause-blocker-overlay--fullscreen').remove()
     $('body').removeClass('is-pause-blocked')
 
   render: ->
     return if !@visible
     return if !@currentPause
 
-    # Remove existing
-    $('.pause-blocker-overlay').remove()
+    # Remove existing (only our fullscreen overlay)
+    $('.pause-blocker-overlay--fullscreen').remove()
+    @$overlay = null
 
     pauseName = @pauseType?.name || App.i18n.translateContent('Pausa')
     timeLimit = @pauseType?.time_limit || @currentPause?.time_limit || 0
@@ -132,7 +146,7 @@ class App.PauseBlocker extends App.Controller
       ''
 
     html = """
-      <div class="pause-blocker-overlay #{exceededClass}">
+      <div class="pause-blocker-overlay pause-blocker-overlay--fullscreen #{exceededClass}">
         <div class="pause-blocker-modal">
           <div class="pause-blocker-header">
             <div class="pause-blocker-icon">#{App.Utils.icon('stopwatch', 'icon-pause')}</div>
@@ -157,12 +171,16 @@ class App.PauseBlocker extends App.Controller
     """
 
     $('body').append(html)
+    @$overlay = $('.pause-blocker-overlay--fullscreen').last()
     $('body').addClass('is-pause-blocked')
 
-    # Bind events
-    $('.pause-blocker-overlay .js-end-pause').on('click', @endPause)
+    # Bind events (only to our overlay)
+    @$overlay.find('.js-end-pause').on('click', @endPause)
 
-    @applyPauseTypeColor() if @pauseType?.color
+    if @pauseType?.color
+      @applyPauseTypeColor()
+      # Segundo frame: garante que cores/CSS apareçam após o primeiro paint
+      requestAnimationFrame (=> requestAnimationFrame (=> @applyPauseTypeColor()))
 
   endPause: (e) =>
     e?.preventDefault()
@@ -184,20 +202,19 @@ class App.PauseBlocker extends App.Controller
       @doEndPause(null)
 
   doEndPause: (delayReason) ->
-    previousPause = @currentPause
-
+    # Otimista: para o timer e esconde na hora (não penaliza por rede lenta ou queda)
+    endedAt = new Date().toISOString()
     @currentPause = null
     @hide()
-    App.User.current().in_pause = false
-    App.User.current().current_state = 'online'
     App.Event.trigger('user_state:changed')
     App.Event.trigger('pause:ended')
 
+    payload = delay_reason: delayReason, ended_at: endedAt
     @ajax(
       id:          'pause_blocker_end'
       type:        'POST'
       url:         "#{@apiPath}/user_pauses/end"
-      data:        JSON.stringify(delay_reason: delayReason)
+      data:        JSON.stringify(payload)
       processData: false
       contentType: 'application/json'
       success:     (data) =>
@@ -207,16 +224,13 @@ class App.PauseBlocker extends App.Controller
           timeout: 3000
         )
       error: (xhr) =>
-        @currentPause = previousPause
-        App.User.current().in_pause = true
-        App.User.current().current_state = 'pause'
-        @show()
-        App.Event.trigger('user_state:changed')
         @notify(
           type:    'error'
-          msg:     xhr.responseJSON?.error || App.i18n.translateContent('Erro ao finalizar pausa')
-          timeout: 3000
+          msg:     xhr.responseJSON?.error || App.i18n.translateContent('Erro ao finalizar pausa. Verifique a conexão e tente novamente.')
+          timeout: 5000
         )
+        # Re-sincroniza: se o servidor ainda tem a pausa, o overlay volta
+        @checkCurrentPause()
     )
 
   getElapsedSeconds: ->
@@ -244,12 +258,13 @@ class App.PauseBlocker extends App.Controller
     if h > 0 then "#{h}:#{pad(m)}:#{pad(s)}" else "#{pad(m)}:#{pad(s)}"
 
   updateElapsed: ->
-    return if !@visible
-    return if !@currentPause
+    return if !@visible || !@currentPause
+    $overlay = @$overlay || $('.pause-blocker-overlay--fullscreen')
+    return if !$overlay.length
 
     elapsed = @getElapsedSeconds()
     elapsedFormatted = @formatDuration(elapsed)
-    $('.js-elapsed-time').text(elapsedFormatted)
+    $overlay.find('.js-elapsed-time').text(elapsedFormatted)
 
     # Check if time just exceeded
     timeLimit = @pauseType?.time_limit || @currentPause?.time_limit || 0
@@ -274,7 +289,8 @@ class App.PauseBlocker extends App.Controller
     if @statusTimer
       clearInterval(@statusTimer)
       @statusTimer = null
-    $('.pause-blocker-overlay').remove()
+    @$overlay = null
+    $('.pause-blocker-overlay--fullscreen').remove()
     $('body').removeClass('is-pause-blocked')
     super
 

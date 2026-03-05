@@ -610,7 +610,7 @@ class App.TicketZoom extends App.Controller
 
         # Time tracking control
         currentUser = App.User.current()
-        if @ticket.editable() && currentUser?.permission('user.ticket_time_tracking')
+        if @ticket.editable() && currentUser?.permission('ticket.time_tracking')
           @timeTracking = new App.TicketZoomTimeTracking(
             el:        elLocal.find('.js-timeTrackingContainer')
             ticket:    @ticket

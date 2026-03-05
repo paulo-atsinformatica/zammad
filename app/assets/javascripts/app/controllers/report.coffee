@@ -332,7 +332,7 @@ class Download extends App.Controller
     for key, value of @params.profileSelected
       if value
         profile_id = key
-    downloadUrl = "#{@apiPath}/reports/sets?sheet=true;metric=#{@params.metric};year=#{@params.year};month=#{@params.month};week=#{@params.week};day=#{@params.day};timeRange=#{@params.timeRange};profile_id=#{profile_id};downloadBackendSelected=#{@params.downloadBackendSelected}"
+    downloadUrl = "#{@apiPath}/reports/sets?sheet=true&metric=#{@params.metric}&year=#{@params.year}&month=#{@params.month}&week=#{@params.week}&day=#{@params.day}&timeRange=#{@params.timeRange}&profile_id=#{profile_id}&downloadBackendSelected=#{@params.downloadBackendSelected}"
 
     if count > 0
       @$('.js-dataDownloadButton').html(App.view('report/download_button')(
@@ -650,4 +650,4 @@ App.Config.set('report', Reporting, 'Routes')
 App.Config.set('Reporting', { prio: 8000, parent: '', name: __('Reporting'), translate: true, target: '#report', icon: 'report', permission: ['report', 'report.pause_indicators', 'report.user_pauses', 'report.ticket_time_trackings'] }, 'NavBarRight')
 
 # Native attendance report - must appear as first option in Reporting dropdown (so user can select it)
-App.Config.set('ReportAttendance', { prio: 100, name: __('Attendance Report'), parent: '#report', target: '#report', permission: ['report'], translate: true }, 'NavBarRight')
+App.Config.set('ReportAttendance', { prio: 100, name: __('Relatório de Atendimento'), parent: '#report', target: '#report', permission: ['report'], translate: true }, 'NavBarRight')

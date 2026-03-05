@@ -1,9 +1,10 @@
 # Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
 
 class UserPauseService < Service::BaseWithCurrentUser
-  def initialize(current_user:, pause_type_id: nil)
+  def initialize(current_user:, pause_type_id: nil, started_at: nil)
     super(current_user: current_user)
     @pause_type_id = pause_type_id
+    @started_at = started_at
   end
 
   def start_pause
@@ -14,6 +15,9 @@ class UserPauseService < Service::BaseWithCurrentUser
     pause_type = @pause_type_id.present? ? PauseType.find_by(id: @pause_type_id, active: true) : nil
     time_limit = pause_type&.time_limit || 0
 
+    # Usa horário enviado pelo cliente (quando clicou em "Iniciar pausa") para não perder tempo na espera da rede.
+    started_at_time = parse_client_started_at(@started_at)
+
     # Pause any active ticket tracking
     active_tracking = current_user.active_ticket_tracking
     active_tracking&.pause!
@@ -21,7 +25,7 @@ class UserPauseService < Service::BaseWithCurrentUser
     user_pause = UserPause.create!(
       user: current_user,
       pause_type: pause_type,
-      started_at: Time.zone.now,
+      started_at: started_at_time,
       time_limit: time_limit,
       created_by_id: current_user.id,
       updated_by_id: current_user.id
@@ -35,9 +39,15 @@ class UserPauseService < Service::BaseWithCurrentUser
     success(user_pause)
   end
 
-  def end_pause(delay_reason: nil)
+  def end_pause(delay_reason: nil, ended_at: nil)
     return error(__('User is not logged in to pause control')) if !pause_control_logged_in?
-    return error(__('User is not in pause')) if !current_user.in_pause?
+
+    # Idempotente: se já não está em pausa (ex.: outra aba encerrou), retorna sucesso para não gerar 422
+    if !current_user.in_pause?
+      last_pause = current_user.user_pauses.recent.first
+      return success(last_pause) if last_pause.present?
+      return error(__('User is not in pause'))
+    end
 
     active_pause = current_user.active_pause
     return error(__('Active pause not found')) if active_pause.blank?
@@ -47,7 +57,7 @@ class UserPauseService < Service::BaseWithCurrentUser
       return error(__('Delay reason is required when time limit is exceeded'))
     end
 
-    active_pause.end_pause!(delay_reason: delay_reason)
+    active_pause.end_pause!(delay_reason: delay_reason, ended_at: ended_at)
 
     current_user.update!(
       current_state: 'online',
@@ -86,6 +96,19 @@ class UserPauseService < Service::BaseWithCurrentUser
   end
 
   private
+
+  def parse_client_started_at(client_started_at)
+    return Time.zone.now if client_started_at.blank?
+
+    t = Time.zone.parse(client_started_at.to_s)
+    return Time.zone.now if t.blank?
+    # Não aceita futuro
+    return Time.zone.now if t > Time.zone.now
+    # Não aceita mais que 5 minutos no passado (evita abuso; atraso de rede raramente > 1 min)
+    return Time.zone.now - 5.minutes if t < Time.zone.now - 5.minutes
+
+    t
+  end
 
   def pause_control_logged_in?
     UserPauseSession.active.exists?(user_id: current_user.id)

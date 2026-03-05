@@ -1,12 +1,13 @@
 class App.ApplicationPauseBlocker extends App.Controller
   constructor: ->
     super
-    # Ensure element is hidden by default and has correct class
-    if @el && !@el.hasClass('pause-blocker-overlay')
-      @el.addClass('pause-blocker-overlay')
-    @el.hide() if @el
-    @checkPause()
-    @setupListeners()
+    # Este controlador existia como fallback antigo para usuários sem permissão
+    # de controle de pausa. O novo sistema usa apenas o plugin fullscreen
+    # App.PauseBlocker. Para evitar dois popups e duplas chamadas de "Sair da pausa",
+    # desativamos este overlay legado.
+    if @el
+      @el.hide()
+    return
 
   setupListeners: ->
     @controllerBind('pause:started', =>
@@ -21,6 +22,8 @@ class App.ApplicationPauseBlocker extends App.Controller
 
   checkPause: ->
     user = App.User.current()
+    # Quem tem controle de pausa usa o plugin PauseBlocker (overlay fullscreen); não mostrar este overlay para evitar dois popups.
+    return @hideBlocker() if user?.permission('user.pause_control')
     if user && user.in_pause
       @showBlocker()
     else
@@ -28,6 +31,8 @@ class App.ApplicationPauseBlocker extends App.Controller
 
   showBlocker: ->
     return if @blockerVisible
+    # Plugin PauseBlocker cuida do overlay fullscreen para usuários com user.pause_control; não duplicar.
+    return if App.User.current()?.permission('user.pause_control')
 
     user = App.User.current()
     return if !user || !user.in_pause
@@ -101,12 +106,6 @@ class App.ApplicationPauseBlocker extends App.Controller
       @endPause()
 
   endPause: (delayReason = null) ->
-    App.User.current().current_state = 'online'
-    App.User.current().in_pause = false
-    @hideBlocker()
-    App.Event.trigger('pause:ended')
-    App.Event.trigger('user_state:changed')
-
     @ajax(
       id:          'user_pause_end'
       type:        'POST'
@@ -115,12 +114,12 @@ class App.ApplicationPauseBlocker extends App.Controller
       processData: false
       contentType: 'application/json'
       success:     (data, status, xhr) =>
-        # Already updated optimistically
+        App.User.current().current_state = 'online'
+        App.User.current().in_pause = false
+        @hideBlocker()
+        @controllerTrigger('pause:ended')
+        @controllerTrigger('user_state:changed')
       error: (xhr) =>
-        App.User.current().current_state = 'pause'
-        App.User.current().in_pause = true
-        @showBlocker()
-        App.Event.trigger('user_state:changed')
         @notify(
           type:    'error'
           msg:     xhr.responseJSON?.error || __('Failed to end pause')

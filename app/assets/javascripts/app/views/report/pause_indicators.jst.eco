@@ -7,7 +7,16 @@
 
   <div class="page-body">
     <div class="page-main">
-      <div class="js-report-filters"></div>
+      <div class="js-pause-indicators-filters panel panel-default">
+        <div class="panel-heading">
+          <span><%- @T('Filtrar por colaboradores') %></span>
+        </div>
+        <div class="panel-body">
+          <div class="js-colaboradores-filter form-group"></div>
+          <button type="button" class="btn btn-primary js-apply-colaboradores-filter"><%- @T('Aplicar') %></button>
+          <button type="button" class="btn btn-default js-clear-colaboradores-filter"><%- @T('Limpar') %></button>
+        </div>
+      </div>
       <div class="js-report-content"></div>
     </div>
   </div>

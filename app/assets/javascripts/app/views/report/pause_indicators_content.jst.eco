@@ -4,7 +4,6 @@
       <tr>
         <th class="pause-indicators-col-indicator"></th>
         <th><%- @T('Colaborador') %></th>
-        <th><%- @T('Equipe') %></th>
         <th><%- @T('Status') %></th>
         <th><%- @T('Em pausa') %></th>
         <th><%- @T('Tempo em pausa') %></th>
@@ -15,14 +14,14 @@
     <tbody>
       <% if !@data.entries || @data.entries.length == 0: %>
       <tr>
-        <td colspan="8"><%- @T('Nenhum registro encontrado') %></td>
+        <td colspan="7"><%- @T('Nenhum registro encontrado') %></td>
       </tr>
       <% else: %>
         <% for item in @data.entries: %>
           <tr class="pause-indicators-row" data-state="<%= item.state %>" data-in-pause="<%= item.in_pause %>" data-pause-started-at="<%= item.pause_started_at || '' %>" data-pause-color="<%= item.pause_type_color || '' %>">
             <td class="pause-indicators-col-indicator">
               <% if !item.logged_in: %>
-                <span class="pause-indicator pause-indicator--offline" title="<%- @T('Deslogado') %>"></span>
+                <span class="pause-indicator pause-indicator--logged-out" title="<%- @T('Deslogado') %>"></span>
               <% else if item.in_pause && item.pause_type_color: %>
                 <span class="pause-indicator pause-indicator--pause" style="background-color: <%= item.pause_type_color %>" title="<%- @T('Em pausa') %>"></span>
               <% else if item.in_pause: %>
@@ -34,7 +33,6 @@
               <% end %>
             </td>
             <td><%= item.user?.firstname %> <%= item.user?.lastname %></td>
-            <td><%= item.user?.equipe || '-' %></td>
             <td><%= item.status %></td>
             <% if item.in_pause: %>
               <td><%- @T('Sim') %></td>

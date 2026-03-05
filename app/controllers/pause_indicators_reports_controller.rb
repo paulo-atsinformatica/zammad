@@ -4,19 +4,15 @@ class PauseIndicatorsReportsController < ApplicationController
   prepend_before_action :authenticate_and_authorize!
 
   def index
-    agent_role_ids = Role.joins(:permissions)
-                         .where(permissions: { name: 'ticket.agent', active: true }, roles: { active: true })
-                         .pluck(:id)
-
     users = User.joins(:roles)
-                .where(roles: { id: agent_role_ids })
+                .where(roles: { id: eligible_role_ids })
                 .where(users: { active: true })
                 .distinct
                 .includes(:roles)
 
-    if equipe_column? && params[:equipe].present?
-      teams = Array(params[:equipe]).reject(&:blank?)
-      users = users.where(equipe: teams) if teams.any?
+    if params[:user_ids].present?
+      ids = Array(params[:user_ids]).reject(&:blank?).map(&:to_i)
+      users = users.where(id: ids) if ids.any?
     end
 
     entries = users.map do |user|
@@ -47,30 +43,26 @@ class PauseIndicatorsReportsController < ApplicationController
       }
     end
 
-    response = { entries: entries }
-    response[:teams] = teams_list if equipe_column?
+    response = { entries: entries, agents: agents_list }
 
     render json: response, status: :ok
   end
 
   private
 
-  def equipe_column?
-    @equipe_column ||= User.column_names.include?('equipe')
+  def eligible_role_ids
+    @eligible_role_ids ||= Role.joins(:permissions)
+                               .where(permissions: { name: 'user.pause_control', active: true }, roles: { active: true })
+                               .where.not(roles: { name: %w[Admin Customer] })
+                               .pluck(:id)
   end
 
-  def teams_list
-    agent_role_ids = Role.joins(:permissions)
-                         .where(permissions: { name: 'ticket.agent', active: true }, roles: { active: true })
-                         .pluck(:id)
-
+  def agents_list
     User.joins(:roles)
-        .where(roles: { id: agent_role_ids })
+        .where(roles: { id: eligible_role_ids })
         .where(users: { active: true })
-        .where.not(equipe: [nil, ''])
         .distinct
-        .pluck(:equipe)
-        .compact
-        .sort
+        .order(:firstname, :lastname)
+        .map { |u| { id: u.id, name: "#{u.firstname} #{u.lastname}".strip.presence || u.login } }
   end
 end

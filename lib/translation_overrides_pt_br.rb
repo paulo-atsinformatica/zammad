@@ -69,6 +69,7 @@ module TranslationOverridesPtBr
     'Access to the Ticket Time Trackings report.' => 'Acesso ao relatório de Tempo de Atendimento.',
     'Failed to load report' => 'Falha ao carregar relatório',
     'You do not have permission to use pause control.' => 'Você não tem permissão para usar o controle de pausas.',
+    'Nenhuma equipe cadastrada. Preencha o campo Equipe nos usuários.' => 'Nenhuma equipe cadastrada. Preencha o campo Equipe nos usuários.',
   }.freeze
 
   class << self

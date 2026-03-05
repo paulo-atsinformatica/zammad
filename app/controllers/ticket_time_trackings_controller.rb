@@ -102,7 +102,7 @@ class TicketTimeTrackingsController < ApplicationController
   private
 
   def check_time_tracking_permission
-    return if current_user.permissions?('user.ticket_time_tracking')
+    return if current_user.permissions?('ticket.time_tracking')
 
     render json: { error: __('You do not have permission to track time on tickets.') }, status: :forbidden
   end
