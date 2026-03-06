@@ -15782,6 +15782,33 @@ span.is-disabled {
   }
 }
 
+/* Pause Indicators Report - filter list of collaborators */
+.pause-indicators-colaboradores-list {
+  max-height: 280px;
+  overflow-y: auto;
+  border: 1px solid #e5e7eb;
+  border-radius: 4px;
+  padding: 8px;
+  margin-bottom: 10px;
+  background: #fafafa;
+
+  .pause-indicators-colaborador-item {
+    display: block;
+    padding: 6px 8px;
+    margin: 0;
+    cursor: pointer;
+    border-radius: 4px;
+
+    &:hover {
+      background: #f3f4f6;
+    }
+
+    input {
+      margin-right: 8px;
+    }
+  }
+}
+
 .duplicate-ticket-detection {
   position: relative;
   margin-bottom: 0;
@@ -16499,6 +16526,12 @@ div.accounted-time-value {
     .status-dropdown-icon {
       color: #1d4ed8;
     }
+  }
+
+  &.is-disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
   }
 
   &--action {

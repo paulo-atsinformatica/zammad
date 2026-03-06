@@ -15,12 +15,13 @@
         <th><%- @T('Tempo Máximo') %></th>
         <th><%- @T('Duração Total') %></th>
         <th><%- @T('Tempo excedido') %></th>
+        <th><%- @T('Motivo do atraso') %></th>
       </tr>
     </thead>
     <tbody>
       <% if !@data.entries || @data.entries.length == 0: %>
       <tr>
-        <td colspan="8"><%- @T('Nenhum registro encontrado') %></td>
+        <td colspan="9"><%- @T('Nenhum registro encontrado') %></td>
       </tr>
       <% else: %>
         <% for item in @data.entries: %>
@@ -41,6 +42,7 @@
             <% else: %>
               <td><%- @T('Não') %></td>
             <% end %>
+            <td><%= item.delay_reason || '-' %></td>
           </tr>
         <% end %>
       <% end %>

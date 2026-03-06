@@ -43,7 +43,8 @@ class UserPausesReportsController < ApplicationController
       { display: __('Hora Fim'), width: 12 },
       { display: __('Tempo Máximo'), width: 14 },
       { display: __('Duração Total'), width: 14 },
-      { display: __('Tempo excedido'), width: 12 }
+      { display: __('Tempo excedido'), width: 12 },
+      { display: __('Motivo do atraso'), width: 24 }
     ]
     records = entries.map do |item|
       agent_name = item[:agent].present? ? "#{item[:agent]['firstname']} #{item[:agent]['lastname']}".strip : ''
@@ -55,7 +56,8 @@ class UserPausesReportsController < ApplicationController
         format_time_with_seconds(item[:ended_at]),
         item[:time_limit].present? ? format_duration_from_minutes(item[:time_limit]) : '-',
         format_duration_from_seconds(item[:duration_seconds]),
-        item[:exceeded] ? __('Sim') : __('Não')
+        item[:exceeded] ? __('Sim') : __('Não'),
+        item[:delay_reason].to_s.presence || '-'
       ]
     end
     excel = ExcelSheet.new(
@@ -143,7 +145,8 @@ class UserPausesReportsController < ApplicationController
         ended_at: pause.ended_at,
         time_limit: pause.time_limit,
         duration_seconds: pause.duration_seconds,
-        exceeded: exceeded
+        exceeded: exceeded,
+        delay_reason: pause.delay_reason
       }
     end
     sessions_scope.find_each do |session|
@@ -155,7 +158,8 @@ class UserPausesReportsController < ApplicationController
         ended_at: session.ended_at,
         time_limit: nil,
         duration_seconds: session.duration_seconds,
-        exceeded: false
+        exceeded: false,
+        delay_reason: nil
       }
     end
 

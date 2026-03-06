@@ -61,6 +61,8 @@ COPY . .
 
 # Garantir que config/locales.yml está completo (evita cache com arquivo truncado)
 RUN test -f config/locales.yml && test $(wc -c < config/locales.yml) -gt 500 || (echo "ERROR: config/locales.yml missing or too small"; exit 1)
+# Cópia para restaurar em runtime se um volume sobrescrever config/
+RUN mkdir -p /opt/zammad/default-config && cp config/locales.yml /opt/zammad/default-config/locales.yml
 
 # Append build information to the Zammad VERSION.
 RUN if [ -z "${COMMIT_SHA}" ]; then \

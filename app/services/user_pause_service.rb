@@ -12,6 +12,26 @@ class UserPauseService < Service::BaseWithCurrentUser
     return error(__('User is not logged in to pause control')) if !pause_control_logged_in?
     return error(__('User is already in pause')) if current_user.in_pause?
 
+    active_pauses = current_user.user_pauses.active.to_a
+
+    # Se houver pausas ativas "fantasmas" (no banco, mas o usuário não está em pausa),
+    # encerramos automaticamente antes de criar uma nova. Isso corrige estados
+    # inconsistentes herdados de versões anteriores sem exigir intervenção manual.
+    if active_pauses.any? && !current_user.in_pause?
+      active_pauses.each do |pause|
+        pause.update!(
+          ended_at:    Time.zone.now,
+          delay_reason: pause.delay_reason.presence || 'Auto-closed stale pause by system'
+        )
+      end
+      active_pauses = []
+    end
+
+    # Se após a correção ainda houver pausa ativa, tratamos como "já em pausa".
+    if active_pauses.any?
+      return error(__('User is already in pause'))
+    end
+
     pause_type = @pause_type_id.present? ? PauseType.find_by(id: @pause_type_id, active: true) : nil
     time_limit = pause_type&.time_limit || 0
 
@@ -22,14 +42,19 @@ class UserPauseService < Service::BaseWithCurrentUser
     active_tracking = current_user.active_ticket_tracking
     active_tracking&.pause!
 
-    user_pause = UserPause.create!(
-      user: current_user,
-      pause_type: pause_type,
-      started_at: started_at_time,
-      time_limit: time_limit,
-      created_by_id: current_user.id,
-      updated_by_id: current_user.id
-    )
+    begin
+      user_pause = UserPause.create!(
+        user: current_user,
+        pause_type: pause_type,
+        started_at: started_at_time,
+        time_limit: time_limit,
+        created_by_id: current_user.id,
+        updated_by_id: current_user.id
+      )
+    rescue ActiveRecord::RecordNotUnique => e
+      Rails.logger.warn "[UserPauseService] Active pause already exists for user #{current_user.id}: #{e.message}"
+      return error(__('User is already in pause'))
+    end
 
     current_user.update!(
       current_state: 'pause',
