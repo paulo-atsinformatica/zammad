@@ -15,7 +15,7 @@
         <th><%- @T('Tempo Máximo') %></th>
         <th><%- @T('Duração Total') %></th>
         <th><%- @T('Tempo excedido') %></th>
-        <th><%- @T('Motivo do atraso') %></th>
+        <th><%- @T('Justificativa') %></th>
       </tr>
     </thead>
     <tbody>

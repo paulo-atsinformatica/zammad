@@ -204,8 +204,21 @@ class App.UserStatusBar extends App.Controller
   endPauseClick: (e) =>
     e?.preventDefault()
     e?.stopPropagation()
-    @closeDropdown()
-    @endPause()
+    if @isTimeExceeded()
+      reason = @el.find('.js-delay-reason').val()?.trim()
+      if !reason
+        @notify(
+          type:    'error'
+          msg:     App.i18n.translateContent('Por favor, informe a justificativa do atraso.')
+          timeout: 3000
+        )
+        @el.find('.js-delay-reason').focus()
+        return
+      @closeDropdown()
+      @endPause(reason)
+    else
+      @closeDropdown()
+      @endPause()
 
   toggleDropdown: (e) =>
     e?.preventDefault()
@@ -305,6 +318,7 @@ class App.UserStatusBar extends App.Controller
     endedAt = new Date().toISOString()
     @currentState = 'online'
     @currentPause = null
+    @exceededRendered = false
     @stopElapsedTimer()
     App.User.current().in_pause = false
     App.User.current().current_state = 'online'
@@ -373,18 +387,24 @@ class App.UserStatusBar extends App.Controller
 
   updateElapsed: ->
     $target = @$('.js-pause-elapsed')
-    return if !$target?.length
-
     if @currentState isnt 'pause' || !@currentPause?.active
-      $target.text('')
+      @exceededRendered = false
+      $target?.text('')
       return
 
     startedAt = @pauseStartedAt()
-    return $target.text('') if !startedAt
+    if !startedAt
+      $target?.text('')
+      return
 
     now = new Date()
     diffSeconds = (now.getTime() - startedAt.getTime()) / 1000
-    $target.text(@formatDuration(diffSeconds))
+    $target?.text(@formatDuration(diffSeconds))
+
+    # Ao ultrapassar o tempo limite, re-renderiza para exibir o campo de justificativa (uma vez)
+    if @isTimeExceeded() && !@exceededRendered
+      @exceededRendered = true
+      @render()
 
   startElapsedTimer: ->
     return if @elapsedTimer
@@ -404,6 +424,17 @@ class App.UserStatusBar extends App.Controller
     return null if !@currentPause?.pause_type_id
     pauseType = @pauseTypes.find((p) => p.id == @currentPause.pause_type_id)
     pauseType?.time_limit || null
+
+  getElapsedSeconds: ->
+    return 0 if !@currentPause?.active
+    startedAt = @pauseStartedAt()
+    return 0 if !startedAt
+    Math.floor((new Date().getTime() - startedAt.getTime()) / 1000)
+
+  isTimeExceeded: ->
+    limit = @getPauseTypeLimit()
+    return false if !limit? or limit <= 0
+    @getElapsedSeconds() > (limit * 60)
 
   buildStatusDot: (type, label = null) ->
     cssClass = switch type
@@ -462,42 +493,54 @@ class App.UserStatusBar extends App.Controller
       when 'pause' then @buildStatusDot('pause', if pauseLimit? then pauseLimit else '')
       else @buildStatusDot('offline')
 
-    # Build pause options
-    pauseOptions = ''
-    if @pauseTypes.length > 0
-      pauseOptions = '<div class="status-dropdown-divider"></div>'
-      pauseOptions += "<div class=\"status-dropdown-header\">#{App.i18n.translateContent('Pausas')}</div>"
-      for pauseType in @pauseTypes
-        isActive = @currentState == 'pause' && @currentPause?.pause_type_id == pauseType.id
-        activeClass = if isActive then 'is-active' else ''
-        pauseLimitLabel = if pauseType.time_limit? then pauseType.time_limit else ''
-        pauseOptions += """
-          <a href="#" class="status-dropdown-item js-select-pause #{activeClass}" data-pause-type-id="#{pauseType.id}">
-            #{@buildStatusDot('pause', pauseLimitLabel)}
-            <span class="status-dropdown-item-name">#{App.Utils.htmlEscape(pauseType.name)}</span>
-            #{if isActive then App.Utils.icon('checkmark', 'status-dropdown-check') else ''}
-          </a>
+    # Quando em pausa ativa: dropdown mostra só "Sair da Pausa" (e justificativa se tempo excedido)
+    inActivePause = @currentPause?.active
+    if inActivePause
+      exceededHtml = ''
+      if @isTimeExceeded()
+        exceededHtml = """
+          <div class="status-dropdown-exceeded">
+            <div class="status-dropdown-exceeded-text">#{App.i18n.translateContent('Tempo limite excedido!')}</div>
+            <label for="status-bar-delay-reason" class="status-dropdown-exceeded-label">#{App.i18n.translateContent('Justificativa (obrigatória)')}</label>
+            <textarea id="status-bar-delay-reason" class="form-control form-control--small js-delay-reason status-dropdown-reason" rows="2" placeholder="#{App.i18n.translateContent('Informe o motivo do atraso...')}"></textarea>
+          </div>
         """
-
-    # End pause option
-    endPauseOption = ''
-    if @currentPause?.active
       endPauseOption = """
         <div class="status-dropdown-divider"></div>
+        #{exceededHtml}
         <a href="#" class="status-dropdown-item status-dropdown-item--center js-end-pause status-dropdown-item--action">
           <span class="status-dropdown-item-name">#{App.i18n.translateContent('Sair da Pausa')}</span>
         </a>
       """
-
-    logoutOption = ''
-    if @isLoggedIn
-      logoutOption = """
-        <div class="status-dropdown-divider"></div>
-        <a href="#" class="status-dropdown-item js-status-logout status-dropdown-item--action">
-          #{App.Utils.icon('external', 'status-dropdown-icon')}
-          <span class="status-dropdown-item-name">#{App.i18n.translateContent('Finalizar')}</span>
-        </a>
-      """
+      pauseOptions = ''
+      logoutOption = ''
+    else
+      # Fora da pausa: lista de pausas, offline, online e finalizar
+      pauseOptions = ''
+      if @pauseTypes.length > 0
+        pauseOptions = '<div class="status-dropdown-divider"></div>'
+        pauseOptions += "<div class=\"status-dropdown-header\">#{App.i18n.translateContent('Pausas')}</div>"
+        for pauseType in @pauseTypes
+          isActive = @currentState == 'pause' && @currentPause?.pause_type_id == pauseType.id
+          activeClass = if isActive then 'is-active' else ''
+          pauseLimitLabel = if pauseType.time_limit? then pauseType.time_limit else ''
+          pauseOptions += """
+            <a href="#" class="status-dropdown-item js-select-pause #{activeClass}" data-pause-type-id="#{pauseType.id}">
+              #{@buildStatusDot('pause', pauseLimitLabel)}
+              <span class="status-dropdown-item-name">#{App.Utils.htmlEscape(pauseType.name)}</span>
+              #{if isActive then App.Utils.icon('checkmark', 'status-dropdown-check') else ''}
+            </a>
+          """
+      endPauseOption = ''
+      logoutOption = ''
+      if @isLoggedIn
+        logoutOption = """
+          <div class="status-dropdown-divider"></div>
+          <a href="#" class="status-dropdown-item js-status-logout status-dropdown-item--action">
+            #{App.Utils.icon('external', 'status-dropdown-icon')}
+            <span class="status-dropdown-item-name">#{App.i18n.translateContent('Finalizar')}</span>
+          </a>
+        """
 
     # Elapsed time badge
     elapsedBadge = ''
@@ -516,6 +559,25 @@ class App.UserStatusBar extends App.Controller
         </div>
       """
 
+    dropdownContent = if inActivePause
+      endPauseOption
+    else
+      """
+        <a href="#" class="status-dropdown-item js-set-offline #{if @currentState == 'offline' then 'is-active' else ''}">
+          #{@buildStatusDot('offline')}
+          <span class="status-dropdown-item-name">#{App.i18n.translateContent('Offline')}</span>
+          #{if @currentState == 'offline' then App.Utils.icon('checkmark', 'status-dropdown-check') else ''}
+        </a>
+        <a href="#" class="status-dropdown-item js-set-online #{if @currentState == 'online' then 'is-active' else ''}">
+          #{@buildStatusDot('online')}
+          <span class="status-dropdown-item-name">#{App.i18n.translateContent('Online')}</span>
+          #{if @currentState == 'online' then App.Utils.icon('checkmark', 'status-dropdown-check') else ''}
+        </a>
+        #{pauseOptions}
+        #{endPauseOption}
+        #{logoutOption}
+      """
+
     """
       <div class="user-status-bar">
         <div class="status-bar-container">
@@ -528,19 +590,7 @@ class App.UserStatusBar extends App.Controller
               #{App.Utils.icon('arrow-down', 'status-bar-arrow')}
             </button>
             <div class="status-dropdown">
-              <a href="#" class="status-dropdown-item js-set-offline #{if @currentState == 'offline' then 'is-active' else ''}">
-                #{@buildStatusDot('offline')}
-                <span class="status-dropdown-item-name">#{App.i18n.translateContent('Offline')}</span>
-                #{if @currentState == 'offline' then App.Utils.icon('checkmark', 'status-dropdown-check') else ''}
-              </a>
-              <a href="#" class="status-dropdown-item js-set-online #{if @currentState == 'online' then 'is-active' else ''}">
-                #{@buildStatusDot('online')}
-                <span class="status-dropdown-item-name">#{App.i18n.translateContent('Online')}</span>
-                #{if @currentState == 'online' then App.Utils.icon('checkmark', 'status-dropdown-check') else ''}
-              </a>
-              #{pauseOptions}
-              #{endPauseOption}
-              #{logoutOption}
+              #{dropdownContent}
             </div>
           </div>
         </div>

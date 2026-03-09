@@ -16592,6 +16592,34 @@ div.accounted-time-value {
   letter-spacing: 0.5px;
 }
 
+/* Bloco de justificativa quando tempo de pausa excedido */
+.status-dropdown-exceeded {
+  padding: 8px 12px 4px;
+  margin: 0 0 4px;
+}
+
+.status-dropdown-exceeded-text {
+  font-size: 12px;
+  font-weight: 600;
+  color: #b91c1c;
+  margin-bottom: 6px;
+}
+
+.status-dropdown-exceeded-label {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 4px;
+}
+
+.status-dropdown-reason {
+  width: 100%;
+  min-height: 48px;
+  resize: vertical;
+  margin-bottom: 8px;
+}
+
 /* Adjust layout when status bar is present */
 body.has-status-bar {
   /* Main content area - push down to make room for status bar */
