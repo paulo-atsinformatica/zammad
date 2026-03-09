@@ -54,18 +54,15 @@ class App.ReportPauseIndicators extends App.ControllerAppContent
   renderColaboradoresFilter: (agents) ->
     return if !agents || agents.length is 0
     @agents = agents
-    html = '<div class="pause-indicators-colaboradores-list">'
+    html = ''
     for agent in agents
       checked = @selectedUserIds.indexOf(agent.id) >= 0
       safeName = App.Utils.htmlEscape(agent.name)
-      html += "<label class=\"pause-indicators-colaborador-item\"><input type=\"checkbox\" class=\"js-colaborador-checkbox\" value=\"#{agent.id}\" #{if checked then 'checked' else ''}> #{safeName}</label>"
-    html += '</div>'
+      html += "<label class=\"checkbox-inline\"><input type=\"checkbox\" class=\"js-colaborador-checkbox\" value=\"#{agent.id}\" #{if checked then 'checked' else ''}> #{safeName}</label> "
     @el.find('.js-colaboradores-filter').html(html)
 
   loadReport: ->
     return if window.location.hash isnt '#report/pause_indicators'
-    return if @loadInProgress
-    @loadInProgress = true
     params = {}
     if @selectedUserIds.length > 0
       params.user_ids = @selectedUserIds
@@ -76,14 +73,11 @@ class App.ReportPauseIndicators extends App.ControllerAppContent
       data:        params
       processData: true
       success:     (data) =>
-        @loadInProgress = false
         return if window.location.hash isnt '#report/pause_indicators'
         @renderColaboradoresFilter(data.agents) if data.agents
         @renderReport(data)
         @startDurationTimer()
-      error: (xhr, statusText, error) =>
-        @loadInProgress = false
-        return if statusText is 'abort' || (xhr && xhr.statusText is 'abort')
+      error: (xhr) =>
         @notify(
           type:    'error'
           msg:     __('Failed to load report')
