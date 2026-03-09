@@ -77,7 +77,9 @@ class App.ReportPauseIndicators extends App.ControllerAppContent
         @renderColaboradoresFilter(data.agents) if data.agents
         @renderReport(data)
         @startDurationTimer()
-      error: (xhr) =>
+      error: (xhr, statusText, error) =>
+        return if window.location.hash isnt '#report/pause_indicators'
+        return if statusText is 'abort' or (xhr && xhr.statusText is 'abort')
         @notify(
           type:    'error'
           msg:     __('Failed to load report')
