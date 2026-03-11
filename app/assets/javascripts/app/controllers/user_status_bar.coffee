@@ -14,6 +14,10 @@ class App.UserStatusBar extends App.Controller
     @isLoggedIn = false
     @elapsedTimer = null
     @skipNextCurrentCheck = false
+    @loginInProgress = false
+    @actionInProgress = false  # startPause, endPause, setState
+    @_renderTimer = null
+    @_checkPauseTimer = null
 
     # Load data
     @loadPauseTypes()
@@ -24,7 +28,7 @@ class App.UserStatusBar extends App.Controller
       if @skipNextCurrentCheck
         @skipNextCurrentCheck = false
         return
-      @checkCurrentPause()
+      @scheduleCheckCurrentPause()
     )
 
     # Quando o blocker (ou outro) encerra a pausa, atualizar estado na hora para não precisar de segundo clique
@@ -38,10 +42,30 @@ class App.UserStatusBar extends App.Controller
       @render()
     )
 
-    # Check pause time limit periodically
+    # Check pause time limit periodically (só quando em pausa, intervalo maior para reduzir carga)
     @timer = setInterval(=>
-      @checkPauseTimeLimit()
-    , 30000)
+      @checkPauseTimeLimit() if @currentPause?.active
+    , 60000)
+
+  scheduleRender: (immediate = false) ->
+    if immediate
+      clearTimeout(@_renderTimer) if @_renderTimer
+      @_renderTimer = null
+      @render()
+      return
+    return if @_renderTimer
+    @_renderTimer = setTimeout(=>
+      @_renderTimer = null
+      @render()
+    , 120)
+
+  scheduleCheckCurrentPause: ->
+    return if !@isLoggedIn
+    clearTimeout(@_checkPauseTimer) if @_checkPauseTimer
+    @_checkPauseTimer = setTimeout(=>
+      @_checkPauseTimer = null
+      @checkCurrentPause()
+    , 200)
 
   loadPauseTypes: ->
     @ajax(
@@ -54,10 +78,10 @@ class App.UserStatusBar extends App.Controller
           @pauseTypes = data.filter((p) -> p.active)
         else
           @pauseTypes = []
-        @render()
+        @scheduleRender()
       error: =>
         @pauseTypes = []
-        @render()
+        @scheduleRender()
     )
 
   checkPauseLogin: ->
@@ -75,14 +99,14 @@ class App.UserStatusBar extends App.Controller
           @currentPause = null
           @stopElapsedTimer()
           @getCurrentState()
-          @render()
+          @scheduleRender()
       error: =>
         @isLoggedIn = false
         App.Config.set('pause_control_logged_in', false)
         @currentPause = null
         @stopElapsedTimer()
         @getCurrentState()
-        @render()
+        @scheduleRender()
     )
 
   checkCurrentPause: ->
@@ -105,15 +129,16 @@ class App.UserStatusBar extends App.Controller
           @currentPause = null
           @stopElapsedTimer()
           App.User.current().in_pause = false
-          # Get current state from user
+          @currentState = 'online'
           @getCurrentState()
-        @render()
+        @scheduleRender()
       error: =>
         @currentPause = null
         @stopElapsedTimer()
         App.User.current().in_pause = false
+        @currentState = 'online'
         @getCurrentState()
-        @render()
+        @scheduleRender()
     )
 
   getCurrentState: ->
@@ -125,28 +150,36 @@ class App.UserStatusBar extends App.Controller
       success:     (data) =>
         @currentState = data?.state || 'offline'
         App.User.current().current_state = @currentState
-        @render()
+        @scheduleRender()
       error: =>
         @currentState = 'offline'
         App.User.current().current_state = 'offline'
-        @render()
+        @scheduleRender()
     )
 
   loginControl: (e) =>
     e?.preventDefault()
     e?.stopPropagation()
+    return if @loginInProgress
+
+        @loginInProgress = true
+        @scheduleRender(true)
 
     @ajax(
       id:          'status_bar_login'
       type:        'POST'
       url:         "#{@apiPath}/user_pause_sessions/login"
       processData: true
+      timeout:     60000
       success:     (data) =>
+        @loginInProgress = false
         @isLoggedIn = true
         App.Config.set('pause_control_logged_in', true)
         App.Event.trigger('pause_control:login')
         @checkCurrentPause()
       error: (xhr) =>
+        @loginInProgress = false
+        @scheduleRender(true)
         @notify(
           type:    'error'
           msg:     xhr.responseJSON?.error || App.i18n.translateContent('Falha ao efetuar login no controle de pausas')
@@ -164,13 +197,14 @@ class App.UserStatusBar extends App.Controller
       type:        'POST'
       url:         "#{@apiPath}/user_pause_sessions/logout"
       processData: true
+      timeout:     60000
       success:     (data) =>
         @isLoggedIn = false
         App.Config.set('pause_control_logged_in', false)
         @currentPause = null
         @stopElapsedTimer()
         @getCurrentState()
-        @render()
+        @scheduleRender()
         @skipNextCurrentCheck = true
         App.Event.trigger('pause_control:logout')
         App.Event.trigger('user_state:changed')
@@ -239,10 +273,11 @@ class App.UserStatusBar extends App.Controller
       data:        JSON.stringify(state: state)
       processData: false
       contentType: 'application/json'
+      timeout:     60000
       success:     (data) =>
         @currentState = data.state
         App.User.current().current_state = data.state
-        @render()
+        @scheduleRender()
         @skipNextCurrentCheck = true
         App.Event.trigger('user_state:changed')
       error: (xhr) =>
@@ -270,7 +305,7 @@ class App.UserStatusBar extends App.Controller
     App.User.current().in_pause = true
     App.User.current().current_state = 'pause'
     @startElapsedTimer()
-    @render()
+    @scheduleRender(true)
     @skipNextCurrentCheck = true
     App.Event.trigger('user_state:changed')
     App.Event.trigger('pause:started', optimisticPause)
@@ -282,6 +317,7 @@ class App.UserStatusBar extends App.Controller
       data:        JSON.stringify(pause_type_id: pauseTypeId, started_at: startedAt)
       processData: false
       contentType: 'application/json'
+      timeout:     60000
       success:     (data) =>
         # Mantém started_at otimista se for anterior à resposta do servidor
         if data.started_at && @currentPause
@@ -291,8 +327,7 @@ class App.UserStatusBar extends App.Controller
         @currentPause = data
         @currentPause.active = true
         App.User.current().in_pause = true
-        @render()
-        # Notifica o blocker em tela cheia para exibir overlay (agora com id do servidor)
+        @scheduleRender()
         App.Event.trigger('pause:started', @currentPause)
       error: (xhr) =>
         @currentState = 'online'
@@ -300,7 +335,7 @@ class App.UserStatusBar extends App.Controller
         @stopElapsedTimer()
         App.User.current().in_pause = false
         App.User.current().current_state = 'online'
-        @render()
+        @scheduleRender(true)
         App.Event.trigger('user_state:changed')
         App.Event.trigger('pause:ended')
         @notify(
@@ -322,7 +357,7 @@ class App.UserStatusBar extends App.Controller
     @stopElapsedTimer()
     App.User.current().in_pause = false
     App.User.current().current_state = 'online'
-    @render()
+    @scheduleRender(true)
     @skipNextCurrentCheck = true
     App.Event.trigger('user_state:changed')
     App.Event.trigger('pause:ended')
@@ -335,6 +370,7 @@ class App.UserStatusBar extends App.Controller
       data:        JSON.stringify(payload)
       processData: false
       contentType: 'application/json'
+      timeout:     60000
       success:     (data) =>
         @notify(
           type:    'success'
@@ -404,14 +440,30 @@ class App.UserStatusBar extends App.Controller
     # Ao ultrapassar o tempo limite, re-renderiza para exibir o campo de justificativa (uma vez)
     if @isTimeExceeded() && !@exceededRendered
       @exceededRendered = true
-      @render()
+      @scheduleRender(true)
 
   startElapsedTimer: ->
     return if @elapsedTimer
     @elapsedTimer = setInterval((=> @updateElapsed()), 1000)
+    # Quando a aba fica em segundo plano, pausar o timer para economizar CPU (Chrome)
+    @_visibilityHandler = => @onVisibilityChange()
+    $(document).on('visibilitychange.statusbar', @_visibilityHandler)
+
+  onVisibilityChange: ->
+    if document.hidden
+      if @elapsedTimer
+        clearInterval(@elapsedTimer)
+        @elapsedTimer = null
+    else
+      return unless @currentState is 'pause' and @currentPause?.active
+      return if @elapsedTimer
+      @elapsedTimer = setInterval((=> @updateElapsed()), 1000)
+      @updateElapsed()
 
   stopElapsedTimer: ->
-    return if !@elapsedTimer
+    $(document).off('visibilitychange.statusbar', @_visibilityHandler) if @_visibilityHandler
+    @_visibilityHandler = null
+    return unless @elapsedTimer
     clearInterval(@elapsedTimer)
     @elapsedTimer = null
 
@@ -548,12 +600,14 @@ class App.UserStatusBar extends App.Controller
       elapsedBadge = '<span class="status-bar-elapsed js-pause-elapsed"></span>'
 
     if !@isLoggedIn
+      loginBtnDisabled = if @loginInProgress then 'disabled' else ''
+      loginBtnText = if @loginInProgress then App.i18n.translateContent('Carregando...') else App.i18n.translateContent('Iniciar')
       return """
         <div class="user-status-bar">
           <div class="status-bar-container">
             <div class="status-bar-title">#{App.i18n.translateContent('Controle de pausas')}</div>
-            <button type="button" class="status-bar-login js-status-login">
-              #{App.i18n.translateContent('Iniciar')}
+            <button type="button" class="status-bar-login js-status-login" #{loginBtnDisabled}>
+              #{loginBtnText}
             </button>
           </div>
         </div>
@@ -598,6 +652,10 @@ class App.UserStatusBar extends App.Controller
     """
 
   release: ->
+    clearTimeout(@_renderTimer) if @_renderTimer
+    @_renderTimer = null
+    clearTimeout(@_checkPauseTimer) if @_checkPauseTimer
+    @_checkPauseTimer = null
     if @timer
       clearInterval(@timer)
       @timer = null

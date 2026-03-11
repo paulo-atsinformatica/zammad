@@ -1,4 +1,4 @@
-﻿# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 THROTTLE_PUBLIC_ENDPOINTS = [
   {
@@ -15,14 +15,19 @@ THROTTLE_PUBLIC_ENDPOINTS = [
   },
 ].freeze
 
+# Limites por endpoint: por identificador (username/email) e por IP.
+# Valores mais altos para reduzir 429 em ambientes com NAT/proxy ou múltiplos cliques.
+THROTTLE_LIMIT_PER_FIELD = 10   # requisições por minuto por username/email
+THROTTLE_LIMIT_PER_IP      = 30  # requisições por minuto por IP (ex.: escritório atrás de NAT)
+
 THROTTLE_PUBLIC_ENDPOINTS.each do |config|
-  Rack::Attack.throttle("limit #{config[:url]} requests per #{config[:field]}", limit: 3, period: 1.minute.to_i) do |req|
+  Rack::Attack.throttle("limit #{config[:url]} requests per #{config[:field]}", limit: THROTTLE_LIMIT_PER_FIELD, period: 1.minute.to_i) do |req|
     if req.path.start_with?(config[:url]) && req.post?
       # Normalize to protect against rate limit bypasses.
       req.params[config[:field]].to_s.downcase.gsub(%r{\s+}, '')
     end
   end
-  Rack::Attack.throttle("limit #{config[:url]} requests per source IP address", limit: 3, period: 1.minute.to_i) do |req|
+  Rack::Attack.throttle("limit #{config[:url]} requests per source IP address", limit: THROTTLE_LIMIT_PER_IP, period: 1.minute.to_i) do |req|
     if req.path.start_with?(config[:url]) && req.post?
       req.ip
     end

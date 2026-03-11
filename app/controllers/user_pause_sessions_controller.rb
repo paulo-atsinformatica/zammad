@@ -18,6 +18,7 @@ class UserPauseSessionsController < ApplicationController
       updated_by_id: current_user.id
     )
 
+    PauseIndicatorsBroadcast.broadcast_change
     render json: { logged_in: true, session: session.attributes_with_association_ids }, status: :created
   end
 
@@ -38,6 +39,7 @@ class UserPauseSessionsController < ApplicationController
     # e sem pausa ativa associada, para manter consistência de estado.
     current_user.update!(current_state: 'offline', current_pause_id: nil)
 
+    PauseIndicatorsBroadcast.broadcast_change
     render json: { logged_in: false, state: current_user.current_state }, status: :ok
   end
 

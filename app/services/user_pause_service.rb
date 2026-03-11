@@ -61,6 +61,7 @@ class UserPauseService < Service::BaseWithCurrentUser
       current_pause_id: user_pause.id
     )
 
+    PauseIndicatorsBroadcast.broadcast_change
     success(user_pause)
   end
 
@@ -77,18 +78,24 @@ class UserPauseService < Service::BaseWithCurrentUser
     active_pause = current_user.active_pause
     return error(__('Active pause not found')) if active_pause.blank?
 
-    # Check if time limit was exceeded
-    if active_pause.exceeded_time_limit? && delay_reason.blank?
+    # Usa o horário enviado pelo cliente (momento do clique em "Sair da pausa")
+    # para determinar se o tempo limite foi excedido, evitando penalizar por
+    # latência de rede ou processamento no servidor.
+    proposed_end_time = active_pause.parse_client_ended_at(ended_at)
+
+    # Check if time limit was exceeded at the moment of click
+    if active_pause.exceeded_time_limit_at?(proposed_end_time) && delay_reason.blank?
       return error(__('Delay reason is required when time limit is exceeded'))
     end
 
-    active_pause.end_pause!(delay_reason: delay_reason, ended_at: ended_at)
+    active_pause.end_pause!(delay_reason: delay_reason, ended_at: proposed_end_time)
 
     current_user.update!(
       current_state: 'online',
       current_pause_id: nil
     )
 
+    PauseIndicatorsBroadcast.broadcast_change
     # Offer to resume ticket tracking if it was paused
     active_tracking = current_user.active_ticket_tracking
     if active_tracking&.paused?

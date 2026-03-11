@@ -13,6 +13,7 @@ class UserStatesController < ApplicationController
     end
 
     current_user.update!(current_state: state)
+    PauseIndicatorsBroadcast.broadcast_change
     render json: { state: current_user.current_state }, status: :ok
   end
 

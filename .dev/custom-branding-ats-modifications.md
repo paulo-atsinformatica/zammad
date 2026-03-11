@@ -266,6 +266,61 @@ Este sistema foi implementado para controlar o tempo de atendimento por ticket e
 - `spec/models/ticket_time_tracking_spec.rb`
 - Factories criadas em `spec/factories/`
 
+### Painel público de indicadores de pausa – SSE (tempo real)
+
+O painel em `/monitor/pause_indicators` usa **Server-Sent Events (SSE)** para atualizar em tempo real quando alguém muda estado/pausa. Para isso funcionar na produção:
+
+1. **Redis** deve estar acessível pelo Zammad (o endpoint `/api/v1/public_pause_indicators/stream` retorna 503 se Redis não estiver disponível e o frontend cai no polling de 5s).
+2. **Nginx (ou proxy reverso)** deve tratar o endpoint de stream sem buffering e com timeout longo:
+   - `proxy_buffering off;` e `proxy_cache off;`
+   - `proxy_read_timeout` e `proxy_send_timeout` longos (ex.: 86400s)
+   - `chunked_transfer_encoding off;` (recomendado para SSE)
+
+Os exemplos em `contrib/nginx/zammad.conf` e `contrib/nginx/zammad_ssl.conf` incluem um bloco `location /api/v1/public_pause_indicators/stream` com essa configuração. Se usar outro proxy (Coolify, Traefik, etc.), garanta o equivalente para que a conexão SSE permaneça aberta e não seja bufferizada.
+
+Se nos logs do nginx **não** aparecer nenhuma requisição a `/api/v1/public_pause_indicators/stream` e só aparecer `GET /api/v1/public_pause_indicators?...` a cada ~5s, o SSE não está em uso e o painel está em modo polling.
+
+### Balanceamento de carga (Nginx) e Redis
+
+Para o **controle de pausas** funcionar corretamente com **vários nós** atrás de um balanceador (Nginx ou outro):
+
+1. **Redis obrigatório**
+   - Defina `REDIS_URL` (ou `REDIS_SENTINELS` para cluster) em todos os nós da aplicação.
+   - O Zammad usa Redis para:
+     - **WebSocket session store**: sessões de conexão longa e filas de mensagens; com Redis, todos os nós enxergam as mesmas sessões e o evento `pause_indicators:changed` chega a todos os clientes.
+     - **Pub/Sub do painel público**: `PauseIndicatorsBroadcast` publica no canal `zammad:pause_indicators_changed`; cada nó que tem conexões SSE abertas inscreve-se nesse canal e repassa o evento aos clientes.
+   - Se Redis não estiver configurado, o store de WebSocket usa arquivo (por nó) e o painel público não usa SSE (só polling).
+
+2. **Sessão HTTP (Rails)**
+   - O Zammad usa **Active Record** como session store (banco de dados), não cookie em memória. Assim, qualquer nó pode atender qualquer requisição HTTP; não é necessário sticky session para a API REST.
+
+3. **WebSocket (`/ws`)**
+   - A conexão WebSocket é longa e fica em um único nó. Para o mesmo cliente sempre ser atendido pelo mesmo backend, use **sticky session** no Nginx para o `location /ws`, por exemplo `ip_hash` no `upstream` (veja exemplo abaixo).
+
+4. **SSE (`/api/v1/public_pause_indicators/stream`)**
+   - Cada conexão SSE fica em um nó até fechar. Não é necessário sticky para o stream: quando alguém altera pausa, o servidor publica no Redis e **todos** os nós que têm clientes inscritos recebem e enviam `data: refresh` aos seus clientes.
+
+5. **Exemplo de upstream com vários backends (Nginx)**
+
+```nginx
+# Vários nós Rails; ip_hash para que /ws caia sempre no mesmo backend por cliente
+upstream zammad-railsserver {
+  ip_hash;
+  server 10.0.1.1:3000;
+  server 10.0.1.2:3000;
+  server 10.0.1.3:3000;
+}
+
+upstream zammad-websocket {
+  ip_hash;
+  server 10.0.1.1:6042;
+  server 10.0.1.2:6042;
+  server 10.0.1.3:6042;
+}
+```
+
+Garanta que todos os nós usem o mesmo `REDIS_URL` (e o mesmo PostgreSQL). Os exemplos em `contrib/nginx/zammad.conf` e `contrib/nginx/zammad_ssl.conf` podem ser adaptados com esse `upstream` quando houver mais de um backend.
+
 ## Init em loop / "undefined method 'each' for String" (Docker)
 
 **Contexto:** Após corrigir as variáveis de ambiente do Postgres (POSTGRESQL_* no compose), o `zammad-init` pode passar a chegar na etapa "Synchronizing locales and translations..." e falhar com `undefined method 'each' for an instance of String`, entrando em loop (restart on-failure).

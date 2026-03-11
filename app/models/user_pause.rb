@@ -26,7 +26,7 @@ class UserPause < ApplicationModel
     return false if !active?
     return false if time_limit.zero?
 
-    duration_minutes >= time_limit
+    exceeded_time_limit_at?(ended_at || Time.zone.now)
   end
 
   def duration_seconds
@@ -36,6 +36,13 @@ class UserPause < ApplicationModel
 
   def duration_minutes
     duration_seconds / 60
+  end
+
+  def exceeded_time_limit_at?(end_time)
+    return false if time_limit.zero?
+    return false if end_time.blank?
+
+    ((end_time - started_at).to_i / 60) >= time_limit
   end
 
   def end_pause!(delay_reason: nil, ended_at: nil)
@@ -48,12 +55,18 @@ class UserPause < ApplicationModel
 
   # Usa horário enviado pelo cliente (quando clicou em "Sair da pausa") para não penalizar por latência/rede.
   def parse_client_ended_at(client_ended_at)
-    return Time.zone.now if client_ended_at.blank?
+    now = Time.zone.now
+    return now if client_ended_at.blank?
 
     t = Time.zone.parse(client_ended_at.to_s)
-    return Time.zone.now if t.blank?
-    return Time.zone.now if t > Time.zone.now
-    return started_at if t < started_at
+    return now if t.blank?
+
+    # Nunca permite horário no futuro.
+    t = now if t > now
+
+    # Não permite "voltar no tempo" mais do que 5 minutos em relação ao relógio do servidor.
+    min_allowed = [started_at, now - 5.minutes].max
+    t = min_allowed if t < min_allowed
 
     t
   end

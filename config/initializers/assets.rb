@@ -1,4 +1,4 @@
-﻿# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 # Be sure to restart your server when you modify this file.
 
@@ -18,3 +18,4 @@ Rails.application.config.assets.precompile += %w[application-print.css]
 Rails.application.config.assets.precompile += %w[print.css]
 Rails.application.config.assets.precompile += %w[knowledge_base.css knowledge_base_public.js knowledge_base_public_polyfills.js]
 Rails.application.config.assets.precompile += %w[ie11CustomProperties.min.js]
+Rails.application.config.assets.precompile += %w[public_monitor.js]

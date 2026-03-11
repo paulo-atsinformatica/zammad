@@ -9,6 +9,9 @@
         <th><%- @T('Tempo em pausa') %></th>
         <th><%- @T('Logado') %></th>
         <th><%- @T('Pausa ativa') %></th>
+        <% if @can_control: %>
+          <th class="pause-indicators-col-actions text-right"><%- @T('Ações') %></th>
+        <% end %>
       </tr>
     </thead>
     <tbody>
@@ -18,7 +21,7 @@
       </tr>
       <% else: %>
         <% for item in @data.entries: %>
-          <tr class="pause-indicators-row" data-state="<%= item.state %>" data-in-pause="<%= item.in_pause %>" data-pause-started-at="<%= item.pause_started_at || '' %>" data-pause-color="<%= item.pause_type_color || '' %>">
+          <tr class="pause-indicators-row" data-user-id="<%= item.user?.id %>" data-state="<%= item.state %>" data-in-pause="<%= item.in_pause %>" data-pause-started-at="<%= item.pause_started_at || '' %>" data-pause-color="<%= item.pause_type_color || '' %>">
             <td class="pause-indicators-col-indicator">
               <% if !item.logged_in: %>
                 <span class="pause-indicator pause-indicator--logged-out" title="<%- @T('Deslogado') %>"></span>
@@ -50,6 +53,68 @@
               <td><%= item.pause_name %></td>
             <% else: %>
               <td>-</td>
+            <% end %>
+            <% if @can_control: %>
+              <td class="pause-indicators-col-actions text-right">
+                <div class="buttonDropdown dropdown dropup pause-indicators-actions" style="display: inline-block;">
+                  <button class="btn btn--action btn--small status-bar-toggle status-bar-toggle--report" data-toggle="dropdown" data-bs-auto-close="outside" title="<%- @T('Ações de pausa') %>">
+                    <% if !item.logged_in: %>
+                      <span class="status-dot status-dot--offline"></span>
+                      <span class="status-bar-text"><%- @T('Iniciar') %></span>
+                    <% else if item.in_pause: %>
+                      <span class="status-dot status-dot--pause"></span>
+                      <span class="status-bar-text"><%= item.pause_name || @T('Em Pausa') %></span>
+                    <% else if item.state == 'online': %>
+                      <span class="status-dot status-dot--online"></span>
+                      <span class="status-bar-text"><%- @T('Online') %></span>
+                    <% else: %>
+                      <span class="status-dot status-dot--offline"></span>
+                      <span class="status-bar-text"><%- @T('Offline') %></span>
+                    <% end %>
+                    <svg class="icon icon-arrow-down status-bar-arrow"><use xlink:href="assets/images/icons.svg#icon-arrow-down"></use></svg>
+                  </button>
+                  <ul class="dropdown-menu dropdown-menu-right report-status-dropdown" role="menu">
+                    <li class="dropdown-status-inner">
+                      <div class="status-dropdown">
+                        <% if !item.logged_in: %>
+                          <a href="javascript:void(0)" class="status-dropdown-item status-dropdown-item--action js-row-action" data-action="login">
+                            <span class="status-dropdown-item-name"><%- @T('Iniciar') %></span>
+                          </a>
+                        <% else: %>
+                          <a href="javascript:void(0)" class="status-dropdown-item js-row-action <%= 'is-active' if item.state == 'offline' %>" data-action="set_offline">
+                            <span class="status-dot status-dot--offline"></span>
+                            <span class="status-dropdown-item-name"><%- @T('Offline') %></span>
+                          </a>
+                          <a href="javascript:void(0)" class="status-dropdown-item js-row-action <%= 'is-active' if item.state == 'online' %>" data-action="set_online">
+                            <span class="status-dot status-dot--online"></span>
+                            <span class="status-dropdown-item-name"><%- @T('Online') %></span>
+                          </a>
+                          <% if @data.pause_types && @data.pause_types.length > 0: %>
+                            <div class="status-dropdown-divider"></div>
+                            <div class="status-dropdown-header"><%- @T('Pausas') %></div>
+                            <% for pt in @data.pause_types: %>
+                              <a href="javascript:void(0)" class="status-dropdown-item js-row-action" data-action="start_pause" data-pause-type-id="<%= pt.id %>">
+                                <span class="status-dot status-dot--pause"><%= pt.time_limit || '' %></span>
+                                <span class="status-dropdown-item-name"><%= pt.name %></span>
+                              </a>
+                            <% end %>
+                          <% end %>
+                          <% if item.in_pause: %>
+                            <div class="status-dropdown-divider"></div>
+                            <a href="javascript:void(0)" class="status-dropdown-item status-dropdown-item--center status-dropdown-item--action js-row-action" data-action="end_pause">
+                              <span class="status-dropdown-item-name"><%- @T('Sair da Pausa') %></span>
+                            </a>
+                          <% end %>
+                          <div class="status-dropdown-divider"></div>
+                          <a href="javascript:void(0)" class="status-dropdown-item status-dropdown-item--action js-row-action" data-action="logout">
+                            <span class="status-dropdown-item-name"><%- @T('Finalizar') %></span>
+                          </a>
+                        <% end %>
+                      </div>
+                    </li>
+                  </ul>
+                </div>
+              </td>
             <% end %>
           </tr>
         <% end %>

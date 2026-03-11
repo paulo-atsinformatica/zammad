@@ -1,10 +1,14 @@
 # Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
 
 # Pause Blocker - Blocks the entire UI when user is in pause
+# DESATIVADO: o controle de pausa é feito apenas pela topbar (UserStatusBar).
+# Mantemos a classe para compatibilidade, mas não exibimos mais overlay fullscreen.
 class App.PauseBlocker extends App.Controller
 
   constructor: ->
     super
+    return  # Desativado - controle de pausa só na topbar
+
     @currentUser = App.User.current()
     return if !@currentUser?.permission('user.pause_control')
 

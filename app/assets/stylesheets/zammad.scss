@@ -15782,6 +15782,38 @@ span.is-disabled {
   }
 }
 
+/* Pause Indicators Report - dropdown de ações em portal (não cortado pelo overflow) */
+.dropdown-menu--portal-pause {
+  display: block;
+  z-index: 1060;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.175);
+  max-width: min(280px, 95vw);
+  width: max-content;
+}
+
+/* Mesma lista da topbar: wrapper e conteúdo no relatório */
+.report-status-dropdown .dropdown-status-inner {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  border: 0;
+}
+
+.report-status-dropdown .status-dropdown {
+  position: static;
+  opacity: 1;
+  visibility: visible;
+  transform: none;
+  box-shadow: none;
+  min-width: 180px;
+  max-width: min(280px, 95vw);
+  width: max-content;
+  padding: 6px 0;
+  max-height: 280px; /* mesmo limite visual da lista de pausas/topbar */
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
 /* Pause Indicators Report - filter list of collaborators */
 .pause-indicators-colaboradores-list {
   max-height: 280px;

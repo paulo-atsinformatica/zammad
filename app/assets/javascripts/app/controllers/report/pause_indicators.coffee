@@ -12,6 +12,8 @@ class App.ReportPauseIndicators extends App.ControllerAppContent
     @agents = []
     @selectedUserIds = []
     @restoreSelectedFromStorage()
+    # Atualização em tempo real: quando alguém alterar status (login/logout/pausa), o servidor envia este evento via WebSocket
+    @controllerBind('pause_indicators:changed', => @loadReport())
     @render()
 
   restoreSelectedFromStorage: ->
@@ -41,24 +43,30 @@ class App.ReportPauseIndicators extends App.ControllerAppContent
     @el.find('.js-clear-colaboradores-filter').on('click', => @clearColaboradoresFilter())
 
   applyColaboradoresFilter: ->
-    @selectedUserIds = @el.find('.js-colaborador-checkbox:checked').map(-> parseInt($(this).val(), 10) ).get()
+    values = @el.find('.js-colaboradores-select').val() or []
+    @selectedUserIds = (parseInt(id, 10) for id in values)
     @saveSelectedToStorage()
     @loadReport()
 
   clearColaboradoresFilter: ->
     @selectedUserIds = []
-    @el.find('.js-colaborador-checkbox').prop('checked', false)
+    @el.find('.js-colaboradores-select').val([])
     @saveSelectedToStorage()
     @loadReport()
 
   renderColaboradoresFilter: (agents) ->
     return if !agents || agents.length is 0
     @agents = agents
-    html = ''
+    options = ''
     for agent in agents
-      checked = @selectedUserIds.indexOf(agent.id) >= 0
       safeName = App.Utils.htmlEscape(agent.name)
-      html += "<label class=\"checkbox-inline\"><input type=\"checkbox\" class=\"js-colaborador-checkbox\" value=\"#{agent.id}\" #{if checked then 'checked' else ''}> #{safeName}</label> "
+      selected = @selectedUserIds.indexOf(agent.id) >= 0
+      options += "<option value=\"#{agent.id}\" #{if selected then 'selected' else ''}>#{safeName}</option>"
+    html = """
+      <select class="form-control js-colaboradores-select" multiple="multiple" size="10">
+        #{options}
+      </select>
+    """
     @el.find('.js-colaboradores-filter').html(html)
 
   loadReport: ->
@@ -89,9 +97,110 @@ class App.ReportPauseIndicators extends App.ControllerAppContent
 
   renderReport: (data) ->
     @el.find('.js-report-content').html App.view('report/pause_indicators_content')(
-      data: data
+      data:        data
+      can_control: data.can_control
     )
     @updateAllDurations()
+    @bindRowActions()
+    @bindDropdownPortal()
+
+  bindDropdownPortal: ->
+    # Evita que o dropdown de ações seja cortado pelo overflow do .content: move o menu para body com position fixed
+    @el.off('show.bs.dropdown.pausePortal hidden.bs.dropdown.pausePortal', '.pause-indicators-actions')
+    @el.on 'show.bs.dropdown.pausePortal', '.pause-indicators-actions', (e) =>
+      $dropdown = $(e.target)
+      $menu = $dropdown.find('.dropdown-menu').first()
+      return if !$menu.length
+      userId = $dropdown.closest('tr.pause-indicators-row').data('user-id')
+      $dropdown.data('pause-portal-menu', $menu)
+      $menu.data('pause-user-id', userId)
+      $menu.appendTo(document.body)
+      $menu.addClass('dropdown-menu--portal-pause')
+    @el.on 'shown.bs.dropdown.pausePortal', '.pause-indicators-actions', (e) =>
+      $dropdown = $(e.target)
+      $menu = $dropdown.data('pause-portal-menu')
+      return if !$menu?.length
+      $toggle = $dropdown.find('[data-toggle="dropdown"]').first()
+      return if !$toggle.length
+      rect = $toggle[0].getBoundingClientRect()
+      # dropup + dropdown-menu-right: acima do botão, alinhado à direita
+      top = rect.top - $menu.outerHeight()
+      left = rect.right - $menu.outerWidth()
+      $menu.css(
+        position: 'fixed'
+        top: "#{top}px"
+        left: "#{left}px"
+        zIndex: 1060
+      )
+    @el.on 'hidden.bs.dropdown.pausePortal', '.pause-indicators-actions', (e) =>
+      $dropdown = $(e.target)
+      $menu = $dropdown.data('pause-portal-menu')
+      return if !$menu?.length
+      $menu.appendTo($dropdown)
+      $menu.removeClass('dropdown-menu--portal-pause')
+      $menu.css(position: '', top: '', left: '', zIndex: '')
+      $dropdown.removeData('pause-portal-menu')
+
+  bindRowActions: ->
+    table = @el.find('.table--pause-indicators')
+    return if !table.length
+
+    table.off('.pause-actions')
+    $(document).off('click.pause-actions-report')
+
+    # Delegação na tabela (quando o menu ainda está dentro da linha)
+    table.on 'click.pause-actions', '.js-row-action', (e) =>
+      e.preventDefault()
+      e.stopPropagation()
+      action = $(e.currentTarget).data('action')
+      $row = $(e.currentTarget).closest('tr.pause-indicators-row')
+      userId = $row.data('user-id')
+      return unless action && userId
+      @rowAction(action, e, userId)
+
+    # Delegação no document (quando o menu foi movido para body pelo portal: clique ainda deve executar a ação)
+    $(document).on 'click.pause-actions-report', '.dropdown-menu--portal-pause .js-row-action', (e) =>
+      e.preventDefault()
+      e.stopPropagation()
+      $link = $(e.currentTarget)
+      $menu = $link.closest('.dropdown-menu')
+      userId = $menu.data('pause-user-id')
+      action = $link.data('action')
+      return unless action && userId
+      @rowAction(action, e, userId)
+
+  rowAction: (action, event, userId) ->
+    return if !userId
+
+    $link = $(event.currentTarget)
+    payload = { user_id: userId }
+
+    if action == 'set_offline' or action == 'set_online'
+      url = "#{@apiPath}/pause_indicators/set_state"
+      payload.state = if action == 'set_offline' then 'offline' else 'online'
+    else if action == 'start_pause'
+      pauseTypeId = $link.data('pause-type-id')
+      url = "#{@apiPath}/pause_indicators/start_pause"
+      payload.pause_type_id = pauseTypeId if pauseTypeId?
+    else
+      url = "#{@apiPath}/pause_indicators/#{action}"
+
+    @ajax(
+      id:          "pause_indicators_#{action}_#{userId}"
+      type:        'POST'
+      url:         url
+      data:        JSON.stringify(payload)
+      processData: false
+      contentType: 'application/json'
+      success:     =>
+        @loadReport()
+      error:       (xhr) =>
+        @notify(
+          type:    'error'
+          msg:     xhr.responseJSON?.error || __('Falha ao alterar status de pausa')
+          timeout: 5000
+        )
+    )
 
   formatDuration: (startedAt) ->
     return '00:00' if !startedAt
@@ -106,6 +215,7 @@ class App.ReportPauseIndicators extends App.ControllerAppContent
     if h > 0 then "#{pad(h)}:#{pad(m)}:#{pad(s)}" else "#{pad(m)}:#{pad(s)}"
 
   updateAllDurations: ->
+    return if window.location.hash isnt '#report/pause_indicators'
     self = @
     @el.find('.js-pause-duration-cell').each ->
       $cell = $(this)
@@ -127,10 +237,11 @@ class App.ReportPauseIndicators extends App.ControllerAppContent
 
   startPolling: ->
     return if @pollTimer
+    # Fallback a cada 60s caso o WebSocket falhe ou não esteja disponível; a atualização principal é via evento pause_indicators:changed
     @pollTimer = setInterval(=>
       return if window.location.hash isnt '#report/pause_indicators'
       @loadReport()
-    , 10000)
+    , 60000)
 
   stopPolling: ->
     return if !@pollTimer
@@ -138,6 +249,7 @@ class App.ReportPauseIndicators extends App.ControllerAppContent
     @pollTimer = null
 
   release: ->
+    $(document).off('click.pause-actions-report')
     @stopPolling()
     @stopDurationTimer()
     super
