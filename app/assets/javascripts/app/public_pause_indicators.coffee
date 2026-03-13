@@ -253,7 +253,10 @@ do ->
         eventSource.onmessage = ->
           loadData()
         eventSource.onerror = ->
-          eventSource?.close()
+          # Guard: só age se eventSource ainda não foi encerrado por chamada anterior
+          # (onerror pode disparar múltiplas vezes antes do close() surtir efeito)
+          return unless eventSource?
+          eventSource.close()
           eventSource = null
           startPollingFallback()
       catch err

@@ -42,24 +42,26 @@ class UserPauseService < Service::BaseWithCurrentUser
     active_tracking = current_user.active_ticket_tracking
     active_tracking&.pause!
 
+    user_pause = nil
     begin
-      user_pause = UserPause.create!(
-        user: current_user,
-        pause_type: pause_type,
-        started_at: started_at_time,
-        time_limit: time_limit,
-        created_by_id: current_user.id,
-        updated_by_id: current_user.id
-      )
+      ActiveRecord::Base.transaction do
+        user_pause = UserPause.create!(
+          user:          current_user,
+          pause_type:    pause_type,
+          started_at:    started_at_time,
+          time_limit:    time_limit,
+          created_by_id: current_user.id,
+          updated_by_id: current_user.id
+        )
+        current_user.update!(
+          current_state:    'pause',
+          current_pause_id: user_pause.id
+        )
+      end
     rescue ActiveRecord::RecordNotUnique => e
       Rails.logger.warn "[UserPauseService] Active pause already exists for user #{current_user.id}: #{e.message}"
       return error(__('User is already in pause'))
     end
-
-    current_user.update!(
-      current_state: 'pause',
-      current_pause_id: user_pause.id
-    )
 
     PauseIndicatorsBroadcast.broadcast_change
     success(user_pause)
@@ -88,12 +90,13 @@ class UserPauseService < Service::BaseWithCurrentUser
       return error(__('Delay reason is required when time limit is exceeded'))
     end
 
-    active_pause.end_pause!(delay_reason: delay_reason, ended_at: proposed_end_time)
-
-    current_user.update!(
-      current_state: 'online',
-      current_pause_id: nil
-    )
+    ActiveRecord::Base.transaction do
+      active_pause.end_pause!(delay_reason: delay_reason, ended_at: proposed_end_time)
+      current_user.update!(
+        current_state:    'online',
+        current_pause_id: nil
+      )
+    end
 
     PauseIndicatorsBroadcast.broadcast_change
     # Offer to resume ticket tracking if it was paused

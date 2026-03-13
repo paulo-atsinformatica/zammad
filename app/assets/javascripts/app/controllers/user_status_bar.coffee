@@ -162,8 +162,8 @@ class App.UserStatusBar extends App.Controller
     e?.stopPropagation()
     return if @loginInProgress
 
-        @loginInProgress = true
-        @scheduleRender(true)
+    @loginInProgress = true
+    @scheduleRender(true)
 
     @ajax(
       id:          'status_bar_login'

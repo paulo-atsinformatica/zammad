@@ -123,8 +123,8 @@ class App.ReportPauseIndicators extends App.ControllerAppContent
       $toggle = $dropdown.find('[data-toggle="dropdown"]').first()
       return if !$toggle.length
       rect = $toggle[0].getBoundingClientRect()
-      # dropup + dropdown-menu-right: acima do botão, alinhado à direita
-      top = rect.top - $menu.outerHeight()
+      # logo abaixo do botão, alinhado à direita do botão
+      top = rect.bottom + 4
       left = rect.right - $menu.outerWidth()
       $menu.css(
         position: 'fixed'
@@ -148,43 +148,59 @@ class App.ReportPauseIndicators extends App.ControllerAppContent
     table.off('.pause-actions')
     $(document).off('click.pause-actions-report')
 
-    # Delegação na tabela (quando o menu ainda está dentro da linha)
+    # Delegação na tabela (menu ainda dentro da linha)
     table.on 'click.pause-actions', '.js-row-action', (e) =>
       e.preventDefault()
       e.stopPropagation()
       action = $(e.currentTarget).data('action')
-      $row = $(e.currentTarget).closest('tr.pause-indicators-row')
+      $row   = $(e.currentTarget).closest('tr.pause-indicators-row')
       userId = $row.data('user-id')
       return unless action && userId
-      @rowAction(action, e, userId)
+      @rowAction(action, e, userId, $row)
 
-    # Delegação no document (quando o menu foi movido para body pelo portal: clique ainda deve executar a ação)
+    # Delegação no document (menu movido para body pelo portal)
     $(document).on 'click.pause-actions-report', '.dropdown-menu--portal-pause .js-row-action', (e) =>
       e.preventDefault()
       e.stopPropagation()
-      $link = $(e.currentTarget)
-      $menu = $link.closest('.dropdown-menu')
+      $link  = $(e.currentTarget)
+      $menu  = $link.closest('.dropdown-menu')
       userId = $menu.data('pause-user-id')
       action = $link.data('action')
       return unless action && userId
-      @rowAction(action, e, userId)
+      $row   = @el.find("tr.pause-indicators-row[data-user-id='#{userId}']")
+      @rowAction(action, e, userId, $row)
 
-  rowAction: (action, event, userId) ->
+  rowAction: (action, event, userId, $row) ->
     return if !userId
 
     $link = $(event.currentTarget)
+
+    # 1. Fecha dropdown imediatamente sem esperar resposta da rede
+    @closeRowDropdown($row)
+
+    # 2. Feedback visual imediato no botão da linha
+    $btn = $row.find('.js-row-action-toggle')
+    @setRowLoading($btn, true)
+
+    # 3. Monta payload e URL
     payload = { user_id: userId }
+    url     = "#{@apiPath}/pause_indicators/#{action}"
 
     if action == 'set_offline' or action == 'set_online'
-      url = "#{@apiPath}/pause_indicators/set_state"
+      url           = "#{@apiPath}/pause_indicators/set_state"
       payload.state = if action == 'set_offline' then 'offline' else 'online'
     else if action == 'start_pause'
-      pauseTypeId = $link.data('pause-type-id')
-      url = "#{@apiPath}/pause_indicators/start_pause"
+      pauseTypeId        = $link.data('pause-type-id')
+      url                = "#{@apiPath}/pause_indicators/start_pause"
       payload.pause_type_id = pauseTypeId if pauseTypeId?
-    else
-      url = "#{@apiPath}/pause_indicators/#{action}"
 
+    # 4. Envia requisição
+    # Não chama loadReport() no success: o servidor faz broadcast via WebSocket
+    # que já dispara @controllerBind('pause_indicators:changed', => @loadReport()).
+    # Isso elimina o loadReport() duplo (WebSocket + success callback) que causava
+    # o "trava um pouco" — agora há apenas uma atualização da tabela.
+    # Fallback: se o evento WebSocket não chegar em 5s (WebSocket desconectado),
+    # força refresh manualmente.
     @ajax(
       id:          "pause_indicators_#{action}_#{userId}"
       type:        'POST'
@@ -192,15 +208,43 @@ class App.ReportPauseIndicators extends App.ControllerAppContent
       data:        JSON.stringify(payload)
       processData: false
       contentType: 'application/json'
-      success:     =>
+      success: =>
+        clearTimeout(@_actionFallbackTimer) if @_actionFallbackTimer
+        @_actionFallbackTimer = setTimeout(=>
+          @_actionFallbackTimer = null
+          @setRowLoading($btn, false)
+          @loadReport() if window.location.hash is '#report/pause_indicators'
+        , 5000)
+      error: (xhr) =>
+        @setRowLoading($btn, false)
         @loadReport()
-      error:       (xhr) =>
         @notify(
           type:    'error'
           msg:     xhr.responseJSON?.error || __('Falha ao alterar status de pausa')
           timeout: 5000
         )
     )
+
+  # Fecha o dropdown Bootstrap 3 da linha (funciona com ou sem portal)
+  closeRowDropdown: ($row) ->
+    return unless $row?.length
+    $dropdown = $row.find('.pause-indicators-actions')
+    # Devolve menu do portal ao DOM original antes de fechar
+    $portalMenu = $dropdown.data('pause-portal-menu')
+    if $portalMenu?.length
+      $portalMenu.appendTo($dropdown)
+      $portalMenu.removeClass('dropdown-menu--portal-pause')
+      $portalMenu.css(position: '', top: '', left: '', zIndex: '')
+      $dropdown.removeData('pause-portal-menu')
+    $dropdown.removeClass('open')
+
+  setRowLoading: ($btn, loading) ->
+    return unless $btn?.length
+    if loading
+      $btn.prop('disabled', true).addClass('is-loading')
+      $btn.find('.status-bar-text').text(App.i18n.translateContent('Aguardando...'))
+    else
+      $btn.prop('disabled', false).removeClass('is-loading')
 
   formatDuration: (startedAt) ->
     return '00:00' if !startedAt
@@ -250,6 +294,8 @@ class App.ReportPauseIndicators extends App.ControllerAppContent
 
   release: ->
     $(document).off('click.pause-actions-report')
+    clearTimeout(@_actionFallbackTimer) if @_actionFallbackTimer
+    @_actionFallbackTimer = null
     @stopPolling()
     @stopDurationTimer()
     super

@@ -56,11 +56,13 @@
             <% end %>
             <% if @can_control: %>
               <td class="pause-indicators-col-actions text-right">
-                <div class="buttonDropdown dropdown dropup pause-indicators-actions" style="display: inline-block;">
-                  <button class="btn btn--action btn--small status-bar-toggle status-bar-toggle--report" data-toggle="dropdown" data-bs-auto-close="outside" title="<%- @T('Ações de pausa') %>">
+                <%# Bootstrap 3: .dropdown (não .dropup); o portal JS posiciona abaixo do botão. %>
+                <%# data-toggle="dropdown" é o atributo correto para Bootstrap 3. %>
+                <div class="buttonDropdown dropdown pause-indicators-actions" style="display: inline-block;">
+                  <button class="btn btn--action btn--small status-bar-toggle status-bar-toggle--report js-row-action-toggle" data-toggle="dropdown" title="<%- @T('Ações de pausa') %>">
                     <% if !item.logged_in: %>
                       <span class="status-dot status-dot--offline"></span>
-                      <span class="status-bar-text"><%- @T('Iniciar') %></span>
+                      <span class="status-bar-text"><%- @T('Deslogado') %></span>
                     <% else if item.in_pause: %>
                       <span class="status-dot status-dot--pause"></span>
                       <span class="status-bar-text"><%= item.pause_name || @T('Em Pausa') %></span>
@@ -77,21 +79,27 @@
                     <li class="dropdown-status-inner">
                       <div class="status-dropdown">
                         <% if !item.logged_in: %>
+                          <%# Usuário deslogado: única ação disponível é iniciar sessão %>
                           <a href="javascript:void(0)" class="status-dropdown-item status-dropdown-item--action js-row-action" data-action="login">
-                            <span class="status-dropdown-item-name"><%- @T('Iniciar') %></span>
+                            <%- @T('Iniciar sessão') %>
                           </a>
                         <% else: %>
-                          <a href="javascript:void(0)" class="status-dropdown-item js-row-action <%= 'is-active' if item.state == 'offline' %>" data-action="set_offline">
+                          <%# Usuário logado: mostra ações disponíveis conforme estado atual %>
+
+                          <%# Estado online/offline — desabilitado se em pausa %>
+                          <a href="javascript:void(0)" class="status-dropdown-item js-row-action <%= 'is-active' if item.state == 'offline' && !item.in_pause %> <%= 'is-disabled' if item.in_pause %>" data-action="set_offline">
                             <span class="status-dot status-dot--offline"></span>
                             <span class="status-dropdown-item-name"><%- @T('Offline') %></span>
                           </a>
-                          <a href="javascript:void(0)" class="status-dropdown-item js-row-action <%= 'is-active' if item.state == 'online' %>" data-action="set_online">
+                          <a href="javascript:void(0)" class="status-dropdown-item js-row-action <%= 'is-active' if item.state == 'online' && !item.in_pause %> <%= 'is-disabled' if item.in_pause %>" data-action="set_online">
                             <span class="status-dot status-dot--online"></span>
                             <span class="status-dropdown-item-name"><%- @T('Online') %></span>
                           </a>
-                          <% if @data.pause_types && @data.pause_types.length > 0: %>
+
+                          <%# Tipos de pausa disponíveis — só se não estiver já em pausa %>
+                          <% if @data.pause_types && @data.pause_types.length > 0 && !item.in_pause: %>
                             <div class="status-dropdown-divider"></div>
-                            <div class="status-dropdown-header"><%- @T('Pausas') %></div>
+                            <div class="status-dropdown-header"><%- @T('Iniciar pausa') %></div>
                             <% for pt in @data.pause_types: %>
                               <a href="javascript:void(0)" class="status-dropdown-item js-row-action" data-action="start_pause" data-pause-type-id="<%= pt.id %>">
                                 <span class="status-dot status-dot--pause"><%= pt.time_limit || '' %></span>
@@ -99,15 +107,19 @@
                               </a>
                             <% end %>
                           <% end %>
+
+                          <%# Encerrar pausa — só disponível se estiver em pausa %>
                           <% if item.in_pause: %>
                             <div class="status-dropdown-divider"></div>
                             <a href="javascript:void(0)" class="status-dropdown-item status-dropdown-item--center status-dropdown-item--action js-row-action" data-action="end_pause">
-                              <span class="status-dropdown-item-name"><%- @T('Sair da Pausa') %></span>
+                              <span class="status-dropdown-item-name"><%- @T('Encerrar pausa') %></span>
                             </a>
                           <% end %>
+
                           <div class="status-dropdown-divider"></div>
-                          <a href="javascript:void(0)" class="status-dropdown-item status-dropdown-item--action js-row-action" data-action="logout">
-                            <span class="status-dropdown-item-name"><%- @T('Finalizar') %></span>
+                          <%# Finalizar sessão — bloqueado se em pausa %>
+                          <a href="javascript:void(0)" class="status-dropdown-item status-dropdown-item--action js-row-action <%= 'is-disabled' if item.in_pause %>" data-action="logout">
+                            <span class="status-dropdown-item-name"><%- @T('Finalizar sessão') %></span>
                           </a>
                         <% end %>
                       </div>

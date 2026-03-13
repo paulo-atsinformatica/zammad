@@ -15787,16 +15787,24 @@ span.is-disabled {
   display: block;
   z-index: 1060;
   box-shadow: 0 6px 12px rgba(0, 0, 0, 0.175);
+  min-width: 0; /* anula o min-width: 100% do .dropdown-menu global que gerava quadrado cinza */
   max-width: min(280px, 95vw);
   width: max-content;
 }
 
-/* Mesma lista da topbar: wrapper e conteúdo no relatório */
+/* Mesma lista da topbar: wrapper e conteúdo no relatório; evita que o menu estique (quadrado cinza) */
+.report-status-dropdown {
+  min-width: 0;
+  width: max-content;
+}
+
 .report-status-dropdown .dropdown-status-inner {
   list-style: none;
   padding: 0;
   margin: 0;
   border: 0;
+  width: max-content;
+  min-width: 0;
 }
 
 .report-status-dropdown .status-dropdown {
@@ -15812,6 +15820,19 @@ span.is-disabled {
   max-height: 280px; /* mesmo limite visual da lista de pausas/topbar */
   overflow-y: auto;
   overflow-x: hidden;
+}
+
+/* Itens desabilitados no dropdown de ações do relatório (ex.: set_offline/logout quando em pausa) */
+.report-status-dropdown .status-dropdown-item.is-disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* Botão de ação da linha em estado loading */
+.status-bar-toggle--report.is-loading {
+  opacity: 0.6;
+  cursor: wait;
 }
 
 /* Pause Indicators Report - filter list of collaborators */

@@ -25,14 +25,12 @@ module PauseIndicatorsBroadcast
 
     private
 
+    # Sem memoização permanente: se o Redis cair e voltar, o broadcast
+    # recupera automaticamente sem precisar reiniciar o processo.
     def redis_available?
-      return @redis_available if defined?(@redis_available)
-
-      @redis_available = begin
-        Zammad::Service::Redis.new.ping == 'PONG'
-      rescue StandardError
-        false
-      end
+      Zammad::Service::Redis.new.ping == 'PONG'
+    rescue StandardError
+      false
     end
 
     def publish_redis

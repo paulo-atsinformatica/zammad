@@ -30,11 +30,25 @@ class PauseIndicatorsReportsController < ApplicationController
       users = users.where(id: ids) if ids.any?
     end
 
-    entries = users.map do |user|
-      logged_in = UserPauseSession.active.exists?(user_id: user.id)
-      in_pause = user.in_pause?
-      state = user.current_state || 'offline'
-      active_pause = user.active_pause
+    user_list = users.to_a
+
+    # Carrega sessões ativas em lote (substitui N chamadas exists? por 1 query)
+    logged_in_ids = UserPauseSession.active
+                                    .where(user_id: user_list.map(&:id))
+                                    .pluck(:user_id)
+                                    .to_set
+
+    # Carrega pausas ativas com pause_type em lote (substitui N find_by + N eager load)
+    active_pause_ids = user_list.map(&:current_pause_id).compact
+    pauses_by_id     = UserPause.includes(:pause_type)
+                                .where(id: active_pause_ids, ended_at: nil)
+                                .index_by(&:id)
+
+    entries = user_list.map do |user|
+      logged_in    = logged_in_ids.include?(user.id)
+      active_pause = user.current_pause_id ? pauses_by_id[user.current_pause_id] : nil
+      in_pause     = user.current_state == 'pause' && active_pause.present?
+      state        = user.current_state || 'offline'
 
       status = if !logged_in
                  __('Deslogado')
@@ -47,12 +61,12 @@ class PauseIndicatorsReportsController < ApplicationController
                end
 
       {
-        user: user.attributes_with_association_ids,
-        status: status,
-        logged_in: logged_in,
-        in_pause: in_pause,
-        state: state,
-        pause_name: active_pause&.pause_type&.name,
+        user:             user.attributes_with_association_ids,
+        status:           status,
+        logged_in:        logged_in,
+        in_pause:         in_pause,
+        state:            state,
+        pause_name:       active_pause&.pause_type&.name,
         pause_started_at: active_pause&.started_at&.iso8601,
         pause_type_color: active_pause&.pause_type&.color
       }

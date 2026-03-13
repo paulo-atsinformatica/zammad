@@ -61,14 +61,15 @@ module PauseIndicatorsCache
       Rails.logger.warn "[PauseIndicatorsCache] invalidate error: #{e.message}"
     end
 
+    # Sem memoização permanente: se o Redis cair e voltar, o cache
+    # recupera automaticamente sem precisar reiniciar o processo.
+    # Em caso de falha de conexão, reset de @redis para forçar reconexão
+    # na próxima chamada.
     def redis_available?
-      return @redis_available if defined?(@redis_available)
-
-      @redis_available = begin
-        redis.ping == 'PONG'
-      rescue StandardError
-        false
-      end
+      redis.ping == 'PONG'
+    rescue StandardError
+      @redis = nil
+      false
     end
 
     def redis

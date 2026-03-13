@@ -7,29 +7,35 @@ class PublicPauseIndicatorsController < ApplicationController
   end
 
   # SSE: notifica o painel público quando o estado de pausa de qualquer usuário mudar (requer Redis).
+  #
+  # Usa PauseIndicatorsSseBroadcaster para compartilhar 1 conexão Redis por processo
+  # entre todos os clientes SSE conectados, evitando Errno::EMFILE (Too many open files)
+  # quando muitas abas estão abertas simultaneamente.
   def stream
     unless redis_available?
       head :service_unavailable
       return
     end
+
     response.headers['Content-Type'] = 'text/event-stream'
     response.headers['Cache-Control'] = 'no-cache'
     response.headers['X-Accel-Buffering'] = 'no'
-    redis = Zammad::Service::Redis.new
-    redis.subscribe(PauseIndicatorsBroadcast::CHANNEL) do |on|
-      on.message do |_ch, _msg|
-        begin
-          response.stream.write("data: refresh\n\n")
-        rescue IOError, Errno::EPIPE
-          redis.unsubscribe
-        end
+
+    queue = PauseIndicatorsSseBroadcaster.subscribe
+
+    loop do
+      msg = queue.pop
+      case msg
+      when :refresh
+        response.stream.write("data: refresh\n\n")
+      when :heartbeat
+        response.stream.write(": heartbeat\n\n")
       end
     end
-  rescue IOError, Errno::EPIPE
-    # Cliente desconectou
+  rescue IOError, Errno::EPIPE, Redis::BaseConnectionError
+    # Cliente desconectou ou Redis caiu — encerra graciosamente
   ensure
-    redis&.unsubscribe rescue nil
-    redis&.close rescue nil
+    PauseIndicatorsSseBroadcaster.unsubscribe(queue)
     response.stream.close if response.stream.respond_to?(:close)
   end
 
@@ -126,12 +132,26 @@ class PublicPauseIndicatorsController < ApplicationController
   end
 
   def build_public_entries_full
-    users = base_scope
-    users.map do |user|
-      logged_in    = UserPauseSession.active.exists?(user_id: user.id)
-      in_pause     = user.in_pause?
+    user_list = base_scope.to_a
+
+    # Carrega sessões ativas em lote (substitui N chamadas exists? por 1 query)
+    logged_in_ids = UserPauseSession.active
+                                    .where(user_id: user_list.map(&:id))
+                                    .pluck(:user_id)
+                                    .to_set
+
+    # Carrega pausas ativas com pause_type em lote (substitui N find_by + N eager load)
+    active_pause_ids = user_list.map(&:current_pause_id).compact
+    pauses_by_id     = UserPause.includes(:pause_type)
+                                .where(id: active_pause_ids, ended_at: nil)
+                                .index_by(&:id)
+
+    user_list.map do |user|
+      logged_in    = logged_in_ids.include?(user.id)
+      active_pause = user.current_pause_id ? pauses_by_id[user.current_pause_id] : nil
+      in_pause     = user.current_state == 'pause' && active_pause.present?
       state        = user.current_state || 'offline'
-      active_pause = user.active_pause
+
       entry = {
         id:               user.id,
         name:             "#{user.firstname} #{user.lastname}".strip.presence || user.login,
