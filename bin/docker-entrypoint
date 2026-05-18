@@ -90,7 +90,7 @@ if [ "$1" = 'zammad-init' ]; then
     bundle exec rake db:migrate
 
     echo Synchronizing locales and translations...
-    bundle exec rails r "Locale.sync; Translation.sync"
+    bundle exec rails r "Locale.sync; Translation.any? || Translation.sync"
   fi
 
   echo "Ensuring pt-br locale and applying translation overrides..."
