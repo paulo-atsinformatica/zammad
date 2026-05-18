@@ -67,8 +67,8 @@ services:
   zammad-nginx:
     image: 'ghcr.io/paulo-atsinformatica/zammad:7.1.4'
     restart: '${RESTART:-always}'
-    mem_limit: 128m
-    memswap_limit: 128m
+    mem_limit: '${NGINX_MEM_LIMIT:-512m}'
+    memswap_limit: '${NGINX_MEM_LIMIT:-512m}'
     environment:
       MEMCACHE_SERVERS: '${MEMCACHE_SERVERS:-zammad-memcached:11211}'
       POSTGRESQL_DB: '${POSTGRES_DB:-zammad_production}'
