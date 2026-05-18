@@ -42,7 +42,7 @@ sync locales from config/locales.yml
 
     if data.nil? || data.is_a?(String)
       Rails.logger.warn "[Locale.sync] config/locales.yml retornou #{data.class.name} (primeiros 200 chars): #{data.to_s.truncate(200)}"
-      raw = File.read(file, encoding: 'UTF-8')
+      raw = File.read(file, encoding: 'bom|utf-8')
       if raw.size > 100
         data = Psych.load(raw)
         Rails.logger.info "[Locale.sync] fallback Psych.load(raw) ok, tipo=#{data.class.name}" if data.is_a?(Array)
