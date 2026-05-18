@@ -115,7 +115,10 @@ class User < ApplicationModel
                                   :image,
                                   :image_source,
                                   :source,
-                                  :login_failed
+                                  :login_failed,
+                                  :current_pause_id,
+                                  :current_active_ticket_id,
+                                  :current_state
 
   csv_object_ids_ignored 1
 
