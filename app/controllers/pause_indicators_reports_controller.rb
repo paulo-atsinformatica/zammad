@@ -32,7 +32,7 @@ class PauseIndicatorsReportsController < ApplicationController
       users = users.where(id: ids) if ids.any?
     end
 
-    if params[:equipes].present? && User.column_exists?(:equipe)
+    if params[:equipes].present? && User.column_names.include?('equipe')
       equipes = Array(params[:equipes]).reject(&:blank?)
       users = users.where(equipe: equipes) if equipes.any?
     end
@@ -109,7 +109,7 @@ class PauseIndicatorsReportsController < ApplicationController
   end
 
   def filter_entries_by_equipe(entries, equipes_param)
-    return entries if equipes_param.blank? || !User.column_exists?(:equipe)
+    return entries if equipes_param.blank? || !User.column_names.include?('equipe')
 
     equipes = Array(equipes_param).reject(&:blank?)
     return entries if equipes.empty?
@@ -118,7 +118,7 @@ class PauseIndicatorsReportsController < ApplicationController
   end
 
   def teams_list
-    return [] unless User.column_exists?(:equipe)
+    return [] unless User.column_names.include?('equipe')
 
     User.joins(:roles)
         .where(roles: { id: eligible_role_ids })

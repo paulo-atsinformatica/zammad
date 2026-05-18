@@ -111,7 +111,7 @@ class UserPausesReportsController < ApplicationController
     equipe_filter = params[:equipe].presence
 
     user_scope = User.all
-    if equipe_filter.present? && User.column_exists?(:equipe)
+    if equipe_filter.present? && User.column_names.include?('equipe')
       user_scope = user_scope.where(equipe: equipe_filter)
     end
     if agent_id.present?
@@ -194,7 +194,7 @@ class UserPausesReportsController < ApplicationController
   end
 
   def teams_list
-    return [] unless User.column_exists?(:equipe)
+    return [] unless User.column_names.include?('equipe')
 
     eligible_ids = Role.joins(:permissions)
                        .where(permissions: { name: 'user.pause_control', active: true }, roles: { active: true })
