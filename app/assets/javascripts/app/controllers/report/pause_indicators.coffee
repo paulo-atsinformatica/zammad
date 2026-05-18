@@ -123,8 +123,13 @@ class App.ReportPauseIndicators extends App.ControllerAppContent
       $toggle = $dropdown.find('[data-toggle="dropdown"]').first()
       return if !$toggle.length
       rect = $toggle[0].getBoundingClientRect()
-      # logo abaixo do botão, alinhado à direita do botão
-      top = rect.bottom + 4
+      menuH = $menu.outerHeight()
+      spaceBelow = window.innerHeight - rect.bottom
+      # Abre acima se não cabe abaixo
+      if spaceBelow < menuH + 8 && rect.top > menuH + 8
+        top = rect.top - menuH - 4
+      else
+        top = rect.bottom + 4
       left = rect.right - $menu.outerWidth()
       $menu.css(
         position: 'fixed'
