@@ -20,7 +20,8 @@
 #   N clientes SSE → 1 conexão Redis (era N conexões Redis).
 #
 module PauseIndicatorsSseBroadcaster
-  HEARTBEAT_INTERVAL = 25 # segundos — abaixo do timeout de maioria dos proxies (30s)
+  HEARTBEAT_INTERVAL    = 25  # segundos — abaixo do timeout de maioria dos proxies (30s)
+  MAX_RECONNECT_ATTEMPTS = 10 # tentativas consecutivas antes de parar o listener
 
   @mutex           = Mutex.new
   @queues          = []
@@ -74,8 +75,11 @@ module PauseIndicatorsSseBroadcaster
     end
 
     # Loop único que mantém 1 conexão Redis por processo.
-    # Se o Redis cair, aguarda 2s e tenta novamente enquanto houver clientes.
+    # Backoff exponencial (2s, 4s, ... 30s cap) com limite de tentativas consecutivas.
+    # Após MAX_RECONNECT_ATTEMPTS falhas sem sucesso, o thread encerra —
+    # o próximo cliente que chamar subscribe() reiniciará o listener.
     def listener_loop
+      consecutive_errors = 0
       loop do
         break if @mutex.synchronize { @queues.empty? }
 
@@ -85,32 +89,46 @@ module PauseIndicatorsSseBroadcaster
           redis.subscribe(PauseIndicatorsBroadcast::CHANNEL) do |on|
             on.message { |_ch, _msg| fan_out(:refresh) }
           end
+          consecutive_errors = 0
         rescue Redis::BaseConnectionError, Redis::CommandError => e
-          Rails.logger.warn "[PauseIndicatorsSseBroadcaster] Redis connection error: #{e.message}. Retrying in 2s."
-          sleep 2
-          retry if @mutex.synchronize { @queues.any? }
+          consecutive_errors += 1
+          delay = [[2 * consecutive_errors, 30].min, 2].max
+          Rails.logger.warn "[PauseIndicatorsSseBroadcaster] Redis error (#{consecutive_errors}/#{MAX_RECONNECT_ATTEMPTS}): #{e.message}. Retry in #{delay}s."
+          if consecutive_errors >= MAX_RECONNECT_ATTEMPTS
+            Rails.logger.error '[PauseIndicatorsSseBroadcaster] Max reconnect attempts reached. Stopping listener.'
+            break
+          end
+          sleep delay
         rescue StandardError => e
+          consecutive_errors += 1
           Rails.logger.error "[PauseIndicatorsSseBroadcaster] Unexpected error: #{e.message}. Retrying in 2s."
           sleep 2
-          retry if @mutex.synchronize { @queues.any? }
         ensure
           redis&.close rescue nil
         end
+
+        break unless @mutex.synchronize { @queues.any? }
       end
     ensure
       @mutex.synchronize { @listener_thread = nil }
     end
 
     # Envia heartbeat periódico para evitar que proxies fechem conexões silenciosas.
+    #
+    # ATENÇÃO: `break` dentro de um bloco `@mutex.synchronize { }` apenas quebra o
+    # bloco (retorna do synchronize), NÃO o loop externo. Por isso o teste de saída
+    # é feito FORA do synchronize, onde `break` realmente encerra o loop.
     def heartbeat_loop
       loop do
         sleep HEARTBEAT_INTERVAL
-        @mutex.synchronize do
-          break if @queues.empty?
 
+        empty = @mutex.synchronize do
           @queues.reject! { |q| q.closed? rescue true }
           @queues.each { |q| q.push(:heartbeat) rescue nil }
+          @queues.empty?
         end
+
+        break if empty
       end
     ensure
       @mutex.synchronize { @heartbeat_thread = nil }

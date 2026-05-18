@@ -18,10 +18,15 @@ class App.UserStatusBar extends App.Controller
     @actionInProgress = false  # startPause, endPause, setState
     @_renderTimer = null
     @_checkPauseTimer = null
+    @endPauseIntentKey = "pause_end_intent_user_#{@currentUser?.id || 'current'}"
+    @pendingEndPause = null
+    @endPauseRetryTimer = null
+    @hasShownEndPauseRetryNotice = false
 
     # Load data
     @loadPauseTypes()
     @checkPauseLogin()
+    @restorePendingEndPauseIntent()
 
     # Listen for state changes (skip refetch when we just updated from our own start/end)
     @controllerBind('user_state:changed', =>
@@ -125,11 +130,13 @@ class App.UserStatusBar extends App.Controller
           App.User.current().in_pause = true
           App.User.current().current_state = 'pause'
           @startElapsedTimer()
+          @retryPendingEndPauseIfNeeded()
         else
           @currentPause = null
           @stopElapsedTimer()
           App.User.current().in_pause = false
           @currentState = 'online'
+          @clearPendingEndPauseIntent()
           @getCurrentState()
         @scheduleRender()
       error: =>
@@ -363,28 +370,142 @@ class App.UserStatusBar extends App.Controller
     App.Event.trigger('pause:ended')
 
     payload = delay_reason: delayReason, ended_at: endedAt
+    @persistPendingEndPauseIntent(payload)
+    @attemptEndPauseRequest()
+
+  attemptEndPauseRequest: ->
+    return unless @pendingEndPause?
+
+    payload = @pendingEndPause.payload || {}
+    attempt = (@pendingEndPause.attempt || 0) + 1
+    @pendingEndPause.attempt = attempt
+    @persistPendingEndPauseIntentData()
+
     @ajax(
-      id:          'status_bar_end_pause'
+      id:          "status_bar_end_pause_#{attempt}"
       type:        'POST'
       url:         "#{@apiPath}/user_pauses/end"
       data:        JSON.stringify(payload)
       processData: false
       contentType: 'application/json'
-      timeout:     60000
+      timeout:     15000
       success:     (data) =>
+        @clearPendingEndPauseIntent()
+        @hasShownEndPauseRetryNotice = false
         @notify(
           type:    'success'
           msg:     App.i18n.translateContent('Pausa finalizada.')
           timeout: 2000
         )
       error: (xhr) =>
-        @notify(
-          type:    'error'
-          msg:     xhr.responseJSON?.error || App.i18n.translateContent('Falha ao finalizar pausa. Verifique a conexão.')
-          timeout: 5000
-        )
-        @checkCurrentPause()
+        @verifyPauseEndedOrRetry(xhr)
     )
+
+  verifyPauseEndedOrRetry: (xhr) ->
+    @ajax(
+      id:          'status_bar_verify_pause_after_end'
+      type:        'GET'
+      url:         "#{@apiPath}/user_pauses/current"
+      processData: true
+      timeout:     10000
+      success:     (data) =>
+        if !data?.id or data?.active == false
+          @clearPendingEndPauseIntent()
+          @hasShownEndPauseRetryNotice = false
+          @currentPause = null
+          @currentState = 'online'
+          App.User.current().in_pause = false
+          App.User.current().current_state = 'online'
+          @stopElapsedTimer()
+          @scheduleRender(true)
+          return
+
+        @currentPause = data
+        @currentPause.active = true
+        @currentState = 'pause'
+        App.User.current().in_pause = true
+        App.User.current().current_state = 'pause'
+        @startElapsedTimer()
+        @scheduleRender(true)
+        @scheduleEndPauseRetry(xhr)
+      error: =>
+        @scheduleEndPauseRetry(xhr)
+    )
+
+  scheduleEndPauseRetry: (xhr = null) ->
+    return unless @pendingEndPause?
+    return unless @shouldRetryEndPause(xhr)
+
+    clearTimeout(@endPauseRetryTimer) if @endPauseRetryTimer
+    attempt = @pendingEndPause.attempt || 1
+    base    = Math.min(30000, 1500 * Math.pow(2, Math.min(attempt - 1, 4)))
+    delay   = Math.floor(base * (1 + Math.random() * 0.3))
+    @endPauseRetryTimer = setTimeout((=>
+      @endPauseRetryTimer = null
+      @attemptEndPauseRequest()
+    ), delay)
+
+    if !@hasShownEndPauseRetryNotice
+      @hasShownEndPauseRetryNotice = true
+      @notify(
+        type:    'warning'
+        msg:     App.i18n.translateContent('Conexao instavel. Tentando finalizar a pausa automaticamente...')
+        timeout: 5000
+      )
+
+  shouldRetryEndPause: (xhr) ->
+    status = xhr?.status
+    return true if !status?
+    return true if status == 0
+    return true if status == 429
+    return true if status >= 500
+    false
+
+  persistPendingEndPauseIntent: (payload) ->
+    @pendingEndPause =
+      payload: payload
+      createdAt: Date.now()
+      attempt: 0
+    @persistPendingEndPauseIntentData()
+
+  persistPendingEndPauseIntentData: ->
+    return unless @pendingEndPause?
+    try
+      window.localStorage.setItem(@endPauseIntentKey, JSON.stringify(@pendingEndPause))
+    catch error
+      # QuotaExceededError ou SecurityError — retry continua em memória nesta sessão
+      App.Log.error('UserStatusBar', "localStorage indisponível: #{error.message}")
+      return
+
+  clearPendingEndPauseIntent: ->
+    @pendingEndPause = null
+    clearTimeout(@endPauseRetryTimer) if @endPauseRetryTimer
+    @endPauseRetryTimer = null
+    try
+      window.localStorage.removeItem(@endPauseIntentKey)
+    catch error
+      return
+
+  restorePendingEndPauseIntent: ->
+    try
+      raw = window.localStorage.getItem(@endPauseIntentKey)
+      return unless raw
+      parsed = JSON.parse(raw)
+      return unless parsed?.payload?
+      # intenção muito antiga é descartada
+      if parsed.createdAt? and (Date.now() - parsed.createdAt) > (30 * 60 * 1000)
+        @clearPendingEndPauseIntent()
+        return
+      @pendingEndPause = parsed
+      @retryPendingEndPauseIfNeeded()
+    catch error
+      @clearPendingEndPauseIntent()
+
+  retryPendingEndPauseIfNeeded: ->
+    return unless @pendingEndPause?
+    return unless @isLoggedIn
+    return unless @currentPause?.active
+    @scheduleEndPauseRetry()
 
   checkPauseTimeLimit: ->
     return if !@currentPause?.active
@@ -659,6 +780,8 @@ class App.UserStatusBar extends App.Controller
     if @timer
       clearInterval(@timer)
       @timer = null
+    clearTimeout(@endPauseRetryTimer) if @endPauseRetryTimer
+    @endPauseRetryTimer = null
     @stopElapsedTimer()
     $('.user-status-bar').remove()
     $('body').removeClass('has-status-bar')

@@ -8,9 +8,10 @@
 # do Redis em vez de repetir dezenas de queries por request.
 #
 module PauseIndicatorsCache
-  KEY_REPORT  = 'zammad:pause_indicators_report'
-  KEY_PUBLIC  = 'zammad:public_pause_indicators'
-  TTL_SECONDS = 60
+  KEY_REPORT      = 'zammad:pause_indicators_report'
+  KEY_PUBLIC      = 'zammad:public_pause_indicators'
+  TTL_SECONDS     = 60
+  PING_TTL_SECONDS = 5 # evita ping em rajada quando Redis está instável
 
   class << self
     def report_get
@@ -61,14 +62,19 @@ module PauseIndicatorsCache
       Rails.logger.warn "[PauseIndicatorsCache] invalidate error: #{e.message}"
     end
 
-    # Sem memoização permanente: se o Redis cair e voltar, o cache
-    # recupera automaticamente sem precisar reiniciar o processo.
-    # Em caso de falha de conexão, reset de @redis para forçar reconexão
-    # na próxima chamada.
+    # Sem memoização permanente: se o Redis cair e voltar, o cache recupera
+    # automaticamente. Resultado do ping é cacheado por PING_TTL_SECONDS para
+    # evitar múltiplos pings no mesmo request (ou rajada quando Redis está instável).
     def redis_available?
-      redis.ping == 'PONG'
+      now = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+      return @redis_ping_cache if @redis_ping_at && (now - @redis_ping_at) < PING_TTL_SECONDS
+
+      @redis_ping_at    = now
+      @redis_ping_cache = (redis.ping == 'PONG')
     rescue StandardError
-      @redis = nil
+      @redis            = nil
+      @redis_ping_cache = false
+      @redis_ping_at    = Process.clock_gettime(Process::CLOCK_MONOTONIC)
       false
     end
 

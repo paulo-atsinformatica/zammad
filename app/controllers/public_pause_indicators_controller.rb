@@ -2,6 +2,16 @@ class PublicPauseIndicatorsController < ApplicationController
   include ActionController::Live
   layout 'public_monitor', only: [:page]
 
+  # Duração máxima de uma conexão SSE antes de encerrar graciosamente.
+  # O EventSource do browser reconecta automaticamente — isso garante rotatividade
+  # de threads do Puma e evita que conexões zumbi acumulem indefinidamente.
+  SSE_MAX_DURATION = 300 # segundos (5 minutos)
+
+  # Timeout de pop da fila por iteração. Garante que o Puma thread acorde
+  # periodicamente e detecte clientes desconectados mesmo se o broadcaster
+  # falhar (ex.: thread de heartbeat encerrado por exceção).
+  SSE_POP_TIMEOUT = 30 # segundos
+
   # Página HTML pública
   def page
   end
@@ -11,6 +21,11 @@ class PublicPauseIndicatorsController < ApplicationController
   # Usa PauseIndicatorsSseBroadcaster para compartilhar 1 conexão Redis por processo
   # entre todos os clientes SSE conectados, evitando Errno::EMFILE (Too many open files)
   # quando muitas abas estão abertas simultaneamente.
+  #
+  # O loop usa queue.pop com timeout para garantir que o Puma thread NÃO fique
+  # bloqueado indefinidamente. Mesmo que o broadcaster pare de enviar heartbeats,
+  # o thread acordará a cada SSE_POP_TIMEOUT segundos, escreverá um heartbeat e
+  # detectará clientes desconectados via IOError/Errno::EPIPE.
   def stream
     unless redis_available?
       head :service_unavailable
@@ -21,14 +36,22 @@ class PublicPauseIndicatorsController < ApplicationController
     response.headers['Cache-Control'] = 'no-cache'
     response.headers['X-Accel-Buffering'] = 'no'
 
-    queue = PauseIndicatorsSseBroadcaster.subscribe
+    queue    = PauseIndicatorsSseBroadcaster.subscribe
+    deadline = Process.clock_gettime(Process::CLOCK_MONOTONIC) + SSE_MAX_DURATION
 
     loop do
-      msg = queue.pop
+      remaining = deadline - Process.clock_gettime(Process::CLOCK_MONOTONIC)
+      break if remaining <= 0
+
+      msg = queue.pop(timeout: [remaining, SSE_POP_TIMEOUT].min)
+
       case msg
       when :refresh
         response.stream.write("data: refresh\n\n")
       when :heartbeat
+        response.stream.write(": heartbeat\n\n")
+      when nil
+        # pop atingiu o timeout — escreve heartbeat para detectar clientes desconectados
         response.stream.write(": heartbeat\n\n")
       end
     end
