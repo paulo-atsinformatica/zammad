@@ -1,4 +1,4 @@
-﻿# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 class CreateBase < ActiveRecord::Migration[4.2]
   def up
@@ -618,6 +618,7 @@ class CreateBase < ActiveRecord::Migration[4.2]
       t.text :data_option,                    limit: 800.kilobytes + 1,  null: true
       t.text :data_option_new,                limit: 800.kilobytes + 1,  null: true
       t.boolean :editable,                                  null: false, default: true
+      t.boolean :internal,                                  null: false, default: false
       t.boolean :active,                                    null: false, default: true
       t.string :screens,                      limit: 2000,  null: true
       t.boolean :to_create,                                 null: false, default: false

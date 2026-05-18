@@ -26,6 +26,7 @@ import { useObjectAttributeFormFields } from '#shared/entities/object-attributes
 import { useObjectAttributeLoadFormFields } from '#shared/entities/object-attributes/composables/useObjectAttributeLoadFormFields.ts'
 import { flattenObjectAttributeValues } from '#shared/entities/object-attributes/utils.ts'
 import UserError from '#shared/errors/UserError.ts'
+import { extractEntityIds } from '#shared/form/utils/entity.ts'
 import type {
   EnumObjectManagerObjects,
   EnumFormUpdaterId,
@@ -36,7 +37,6 @@ import type {
   FormUpdaterMetaInput,
   FormUpdaterChangedFieldInput,
 } from '#shared/graphql/types.ts'
-import { parseGraphqlId } from '#shared/graphql/utils.ts'
 import { I18N, i18n } from '#shared/i18n.ts'
 import { QueryHandler } from '#shared/server/apollo/handler/index.ts'
 import type { EntityObject } from '#shared/types/entity.ts'
@@ -48,7 +48,6 @@ import type {
 import { camelize } from '#shared/utils/formatter.ts'
 import { getFirstFocusableElement } from '#shared/utils/getFocusableElements.ts'
 import getUuid from '#shared/utils/getUuid.ts'
-import { edgesToArray } from '#shared/utils/helpers.ts'
 import log from '#shared/utils/log.ts'
 import { markup } from '#shared/utils/markup.ts'
 import testFlags from '#shared/utils/testFlags.ts'
@@ -57,6 +56,8 @@ import FormGroup from './FormGroup.vue'
 import FormLayout from './FormLayout.vue'
 import { useFormUpdaterQuery } from './graphql/queries/formUpdater.api.ts'
 import { getFormClasses } from './initializeFormClasses.ts'
+import addTranslationFunctionPlugin from './plugins/addTranslationFunctionPlugin.ts'
+import initializeFieldInitialValuesCleanupPlugin from './plugins/initializeFieldInitialValuesCleanupPlugin.ts'
 import { FormHandlerExecution, FormValidationVisibility } from './types.ts'
 import { getNodeByName as getFormkitFieldNode, getNodeId, setErrors } from './utils.ts'
 
@@ -89,6 +90,7 @@ import type {
 import type { Except, SetRequired } from 'type-fest'
 import type { Component, Ref, SetupContext } from 'vue'
 
+// oxlint-disable no-use-before-define
 export interface Props {
   id?: string
   schema?: FormSchemaNode[]
@@ -242,6 +244,7 @@ const setFormNode = (node: FormKitNode) => {
       changeInitialValue.clear()
 
       formKitInitialNodesSettled.value = true
+      if (formNode.value) formNode.value.props._formSettled = true
 
       // Reset directly after the initial request.
       updaterChangedFields.clear()
@@ -405,7 +408,12 @@ const delayedSubmitPlugin = (node: FormKitNode) => {
 }
 
 const localFormKitPlugins = computed(() => {
-  return [delayedSubmitPlugin, ...(props.formKitPlugins || [])]
+  return [
+    initializeFieldInitialValuesCleanupPlugin,
+    delayedSubmitPlugin,
+    addTranslationFunctionPlugin,
+    ...(props.formKitPlugins || []),
+  ]
 })
 
 const formConfig = computed(() => {
@@ -443,13 +451,6 @@ const schemaDataFlags = computed(() => schemaData.flags)
 
 const internalFieldCamelizeName: Record<string, string> = {}
 
-const getInternalId = (item?: { id?: string; internalId?: number }) => {
-  if (!item) return undefined
-  if (item.internalId) return item.internalId
-  if (!item.id) return undefined
-  return parseGraphqlId(item.id).id
-}
-
 let initialEntityObjectAttributeMap: Record<string, FormFieldValue> = {}
 const setInitialEntityObjectAttributeMap = (initialEntityObject = props.initialEntityObject) => {
   if (isEmpty(initialEntityObject)) return
@@ -476,16 +477,7 @@ const getInitialEntityObjectValue = (
   let value: FormFieldValue
   if (relationFieldBelongsToObjectField[fieldName]) {
     const belongsToObject = initialEntityObject[relationFieldBelongsToObjectField[fieldName]]
-
-    if (!belongsToObject) return undefined
-
-    if ('edges' in belongsToObject) {
-      value = edgesToArray(belongsToObject as { edges?: { node: { internalId: number } }[] }).map(
-        (item) => getInternalId(item),
-      )
-    } else {
-      value = getInternalId(belongsToObject)
-    }
+    value = extractEntityIds(belongsToObject)
   }
 
   if (!value) {
@@ -783,8 +775,12 @@ const updateChangedFields = (
     const showField = Boolean(!schemaData.fields[fieldName].show && field.show)
     const staticShowCondition = schemaData.fields[fieldName].staticCondition
 
+    // For post-initial show-field cases, `value` alone must not become the dirty
+    // baseline — only an explicit `initialValue` represents the real initial.
+    // Reuse the pendingValueUpdate path to apply `value` via node.input() after
+    // the field is rendered (which correctly makes it dirty relative to `_init`).
     const pendingValueUpdate =
-      !showField &&
+      (!showField || formKitInitialNodesSettled.value) &&
       (!staticShowCondition || (staticShowCondition && currentCreatedFormFields.has(fieldName))) &&
       value !== undefined &&
       !isEqual(value, values.value[fieldName])
@@ -799,7 +795,11 @@ const updateChangedFields = (
     // Sometimes the value from the server is the "real" initial value, for this the `initialValue` can be used.
     handleUpdatedInitialFieldValue(
       fieldName,
-      value ?? initialValue,
+      // For post-initial show-field: only `initialValue` sets the dirty baseline in the
+      // schema. If absent, the early-return in handleUpdatedInitialFieldValue leaves
+      // field.value unset and the plugin captures the natural field default as _init.
+      // During initial load the original `value ?? initialValue` behaviour is kept.
+      showField && formKitInitialNodesSettled.value ? initialValue : (value ?? initialValue),
       showField ||
         initialValue !== undefined ||
         !!(
@@ -825,11 +825,25 @@ const updateChangedFields = (
     if (!formKitInitialNodesSettled.value) return
 
     if (pendingValueUpdate) {
-      const node = field.id ? getNode(field.id) : getNodeByName(fieldName)
-
-      // Update the value in the next tick, so that all other props are already updated.
+      // Resolve the node inside nextTick so newly shown fields (created by
+      // updateSchemaDataField above) are already registered by FormKit.
       nextTick(() => {
-        node?.input(value, false)
+        const node = field.id ? getNode(field.id) : getNodeByName(fieldName)
+
+        if (showField && node) {
+          // For newly shown fields, the node's initial empty-value commit fires
+          // before this tick and resets formUpdaterValueChange to false. Re-apply
+          // it so our input is not mistaken for a user change.
+          node.props.formUpdaterValueChange = true
+
+          // node.settled guarantees hasTicked=true inside FormKit, so the commit
+          // from node.input() will automatically trigger dirty re-evaluation.
+          // The plugin already captured _init synchronously during field creation,
+          // before settled resolves, so the baseline is correct.
+          node.settled.then(() => node.input(value, false))
+        } else {
+          node?.input(value, false)
+        }
       })
     }
   })
@@ -1517,6 +1531,7 @@ export default {
     @submit-raw="onSubmitRaw"
   >
     <FormKitMessages
+      :node="formNode"
       :sections-schema="{
         messages: {
           $el: 'div',
@@ -1533,9 +1548,7 @@ export default {
               else: '$message.type',
             },
           },
-          slots: {
-            default: '$message.value',
-          },
+          children: '$fns.t($message.value)',
         },
       }"
     />

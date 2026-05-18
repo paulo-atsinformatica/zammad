@@ -48,6 +48,8 @@ class SessionsController < ApplicationController
   def create_sso
     raise Exceptions::Forbidden, 'SSO authentication disabled!' if !Setting.get('auth_sso')
 
+    verify_sso_trusted_ip!
+
     user = begin
       login = request.env['REMOTE_USER'] ||
               request.env['HTTP_REMOTE_USER'] ||
@@ -96,9 +98,9 @@ class SessionsController < ApplicationController
     auth = request.env['omniauth.auth']
 
     redirect_url = if request.env['omniauth.origin']&.include?('/mobile')
-                     '/mobile'
+                     "/mobile#{omniauth_redirect_path}"
                    elsif request.env['omniauth.origin']&.include?('/desktop')
-                     '/desktop'
+                     "/desktop#{omniauth_redirect_path}"
                    else
                      '/#'
                    end
@@ -278,6 +280,13 @@ class SessionsController < ApplicationController
 
   private
 
+  def verify_sso_trusted_ip!
+    trusted_ips = Auth::Sso::TrustedIps.new(Setting.get('auth_sso_trusted_ips'))
+    return if trusted_ips.blank?
+
+    raise Exceptions::Forbidden, __('SSO request from untrusted IP address.') if trusted_ips.exclude?(request.remote_ip)
+  end
+
   def authenticate_with_password
     auth = Auth.new(params[:username], params[:password],
                     two_factor_method: params[:two_factor_method], two_factor_payload: params[:two_factor_payload])
@@ -360,5 +369,9 @@ class SessionsController < ApplicationController
     render json: { url: url }
   rescue => e
     Rails.logger.error "SAML SLO failed: #{e.message}"
+  end
+
+  def omniauth_redirect_path
+    request.env['omniauth.params']['redirect'] || ''
   end
 end

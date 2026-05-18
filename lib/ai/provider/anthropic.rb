@@ -7,7 +7,7 @@ class AI::Provider::Anthropic < AI::Provider
 
   # default model also in app/assets/javascripts/app/lib/app_post/ai_provider/anthropic.coffee
   DEFAULT_OPTIONS = {
-    model:       'claude-3-7-sonnet-latest',
+    model:       'claude-sonnet-4-6',
     max_tokens:  1024,
     temperature: 0.0,
   }.freeze
@@ -34,21 +34,24 @@ class AI::Provider::Anthropic < AI::Provider
                 prompt_user
               end
 
+    request_body = {
+      max_tokens: options[:max_tokens],
+      messages:   [
+        {
+          role:    'user',
+          content:,
+        },
+      ],
+      model:      model_for(prompt_image:),
+      stream:     false,
+      system:     prompt_system,
+    }
+
+    request_body[:temperature] = options[:temperature] if model_supports_temperature?
+
     response = UserAgent.post(
       "#{ANTHROPIC_API_BASE_URL}/messages",
-      {
-        max_tokens:  options[:max_tokens],
-        messages:    [
-          {
-            role:    'user',
-            content:,
-          },
-        ],
-        model:       model_for(prompt_image:),
-        stream:      false,
-        system:      prompt_system,
-        temperature: options[:temperature],
-      },
+      request_body,
       {
         open_timeout:  4,
         read_timeout:  60,

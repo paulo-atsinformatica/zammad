@@ -50,6 +50,7 @@ class User < ApplicationModel
   has_many                :created_recent_views,   class_name: 'RecentView', foreign_key: :created_by_id, dependent: :destroy, inverse_of: :created_by
   has_many                :recent_closes,          dependent: :delete_all
   has_many                :data_privacy_tasks,     as: :deletable
+  has_many                :ai_analytics_usages,    class_name: 'AI::Analytics::Usage', dependent: :destroy, inverse_of: :user
   belongs_to              :organization,           inverse_of: :members, optional: true
 
   before_validation :check_name, :check_email, :check_login, :ensure_password, :ensure_roles, :ensure_organizations, :ensure_different_organizations, :ensure_organizations_limit
@@ -92,7 +93,9 @@ class User < ApplicationModel
                                  :chat_agents,
                                  :data_privacy_tasks,
                                  :overviews,
-                                 :mentions
+                                 :mentions,
+                                 :recent_closes,
+                                 :ai_analytics_usages
 
   activity_stream_permission 'admin.user'
 
@@ -158,7 +161,7 @@ returns
 
     if name.blank? && email.present? && email_fallback
       return email
-    elsif recipient_line
+    elsif recipient_line && email.present?
       begin
         return Channel::EmailBuild.recipient_line(name, email)
       rescue

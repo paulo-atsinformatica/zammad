@@ -3494,18 +3494,6 @@
               "deprecationReason": null
             },
             {
-              "name": "password",
-              "description": null,
-              "args": [],
-              "type": {
-                "kind": "SCALAR",
-                "name": "String",
-                "ofType": null
-              },
-              "isDeprecated": false,
-              "deprecationReason": null
-            },
-            {
               "name": "port",
               "description": null,
               "args": [],
@@ -3761,18 +3749,6 @@
             {
               "name": "host",
               "description": "Hostname for the email service to connect to",
-              "args": [],
-              "type": {
-                "kind": "SCALAR",
-                "name": "String",
-                "ofType": null
-              },
-              "isDeprecated": false,
-              "deprecationReason": null
-            },
-            {
-              "name": "password",
-              "description": null,
               "args": [],
               "type": {
                 "kind": "SCALAR",
@@ -4977,6 +4953,12 @@
             {
               "name": "config_changed",
               "description": "The app configuration has changed.",
+              "isDeprecated": false,
+              "deprecationReason": null
+            },
+            {
+              "name": "force_refresh",
+              "description": "Force browsers to refresh.",
               "isDeprecated": false,
               "deprecationReason": null
             }
@@ -13676,7 +13658,7 @@
         {
           "kind": "INTERFACE",
           "name": "ObjectAttributeValuesInterface",
-          "description": "Custom object fields (only editable & active)",
+          "description": "Custom object fields (only non-internal & active)",
           "fields": [
             {
               "name": "objectAttributeValues",
@@ -25009,94 +24991,6 @@
           "fields": null,
           "inputFields": [
             {
-              "name": "objectAttributeValues",
-              "description": "Additional custom attributes (names + values)",
-              "type": {
-                "kind": "LIST",
-                "name": null,
-                "ofType": {
-                  "kind": "NON_NULL",
-                  "name": null,
-                  "ofType": {
-                    "kind": "INPUT_OBJECT",
-                    "name": "ObjectAttributeValueInput",
-                    "ofType": null
-                  }
-                }
-              },
-              "defaultValue": null
-            },
-            {
-              "name": "ownerId",
-              "description": "The owner of the ticket.",
-              "type": {
-                "kind": "SCALAR",
-                "name": "ID",
-                "ofType": null
-              },
-              "defaultValue": null
-            },
-            {
-              "name": "customer",
-              "description": "The customer of the ticket.",
-              "type": {
-                "kind": "INPUT_OBJECT",
-                "name": "TicketCustomerInput",
-                "ofType": null
-              },
-              "defaultValue": null
-            },
-            {
-              "name": "organizationId",
-              "description": "The organization of the ticket.",
-              "type": {
-                "kind": "SCALAR",
-                "name": "ID",
-                "ofType": null
-              },
-              "defaultValue": null
-            },
-            {
-              "name": "priorityId",
-              "description": "The priority of the ticket.",
-              "type": {
-                "kind": "SCALAR",
-                "name": "ID",
-                "ofType": null
-              },
-              "defaultValue": null
-            },
-            {
-              "name": "stateId",
-              "description": "The state of the ticket.",
-              "type": {
-                "kind": "SCALAR",
-                "name": "ID",
-                "ofType": null
-              },
-              "defaultValue": null
-            },
-            {
-              "name": "pendingTime",
-              "description": "The pending time of the ticket.",
-              "type": {
-                "kind": "SCALAR",
-                "name": "ISO8601DateTime",
-                "ofType": null
-              },
-              "defaultValue": null
-            },
-            {
-              "name": "article",
-              "description": "The article data.",
-              "type": {
-                "kind": "INPUT_OBJECT",
-                "name": "TicketArticleInput",
-                "ofType": null
-              },
-              "defaultValue": null
-            },
-            {
               "name": "github",
               "description": "Links for the github integration",
               "type": {
@@ -27490,94 +27384,6 @@
           "description": "Represents ticket update meta information to be used in ticket update.",
           "fields": null,
           "inputFields": [
-            {
-              "name": "objectAttributeValues",
-              "description": "Additional custom attributes (names + values)",
-              "type": {
-                "kind": "LIST",
-                "name": null,
-                "ofType": {
-                  "kind": "NON_NULL",
-                  "name": null,
-                  "ofType": {
-                    "kind": "INPUT_OBJECT",
-                    "name": "ObjectAttributeValueInput",
-                    "ofType": null
-                  }
-                }
-              },
-              "defaultValue": null
-            },
-            {
-              "name": "ownerId",
-              "description": "The owner of the ticket.",
-              "type": {
-                "kind": "SCALAR",
-                "name": "ID",
-                "ofType": null
-              },
-              "defaultValue": null
-            },
-            {
-              "name": "customer",
-              "description": "The customer of the ticket.",
-              "type": {
-                "kind": "INPUT_OBJECT",
-                "name": "TicketCustomerInput",
-                "ofType": null
-              },
-              "defaultValue": null
-            },
-            {
-              "name": "organizationId",
-              "description": "The organization of the ticket.",
-              "type": {
-                "kind": "SCALAR",
-                "name": "ID",
-                "ofType": null
-              },
-              "defaultValue": null
-            },
-            {
-              "name": "priorityId",
-              "description": "The priority of the ticket.",
-              "type": {
-                "kind": "SCALAR",
-                "name": "ID",
-                "ofType": null
-              },
-              "defaultValue": null
-            },
-            {
-              "name": "stateId",
-              "description": "The state of the ticket.",
-              "type": {
-                "kind": "SCALAR",
-                "name": "ID",
-                "ofType": null
-              },
-              "defaultValue": null
-            },
-            {
-              "name": "pendingTime",
-              "description": "The pending time of the ticket.",
-              "type": {
-                "kind": "SCALAR",
-                "name": "ISO8601DateTime",
-                "ofType": null
-              },
-              "defaultValue": null
-            },
-            {
-              "name": "article",
-              "description": "The article data.",
-              "type": {
-                "kind": "INPUT_OBJECT",
-                "name": "TicketArticleInput",
-                "ofType": null
-              },
-              "defaultValue": null
-            },
             {
               "name": "skipValidators",
               "description": "The ticket update validators to skip",
