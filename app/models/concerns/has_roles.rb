@@ -9,7 +9,7 @@ module HasRoles
     has_and_belongs_to_many :roles,
                             before_add:    %i[validate_agent_limit_by_role validate_roles],
                             after_add:     %i[cache_update role_check_preference_notifications_default],
-                            before_remove: :last_admin_check_by_role,
+                            before_remove: %i[last_admin_check_by_role check_active_time_tracking_by_role],
                             after_remove:  %i[cache_update]
   end
 
@@ -58,6 +58,21 @@ module HasRoles
     save if persisted?
 
     true
+  end
+
+  TIME_TRACKING_PERMISSIONS = %w[ticket.time_tracking user.ticket_time_tracking].freeze
+
+  def check_active_time_tracking_by_role(role)
+    return true unless role.with_permission?(TIME_TRACKING_PERMISSIONS)
+
+    # Check if user still has the permission via other roles after this removal
+    remaining_roles = roles.reject { |r| r.id == role.id }
+    return true if remaining_roles.any? { |r| r.with_permission?(TIME_TRACKING_PERMISSIONS) }
+
+    return true unless active_ticket_tracking
+
+    raise Exceptions::UnprocessableEntity,
+          __('Cannot remove role: user has an active ticket time tracking session. End the session first.')
   end
 
   # methods defined here are going to extend the class, not the instance of it

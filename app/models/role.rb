@@ -19,7 +19,7 @@ class Role < ApplicationModel
   has_and_belongs_to_many :permissions,
                           before_add:    %i[validate_agent_limit_by_permission validate_permissions],
                           after_add:     %i[cache_update cache_add_kb_permission],
-                          before_remove: :last_admin_check_by_permission,
+                          before_remove: %i[last_admin_check_by_permission check_active_time_tracking_by_permission],
                           after_remove:  %i[cache_update cache_remove_kb_permission]
   validates               :name, presence: true, uniqueness: { case_sensitive: false }
   store                   :preferences
@@ -199,6 +199,24 @@ returns
     raise Exceptions::UnprocessableEntity, __('At least one user needs to have admin permissions.') if !User.admin_user_exists?(except_role_id: [id])
 
     true
+  end
+
+  TIME_TRACKING_PERMISSIONS = %w[ticket.time_tracking user.ticket_time_tracking].freeze
+
+  def check_active_time_tracking_by_permission(permission)
+    return true unless TIME_TRACKING_PERMISSIONS.include?(permission.name)
+
+    user_ids = users.where(active: true).pluck(:id)
+    return true if user_ids.empty?
+
+    active_count = TicketTimeTracking.active.where(user_id: user_ids).count
+    return true if active_count.zero?
+
+    raise Exceptions::UnprocessableEntity,
+          format(
+            __('Cannot revoke ticket time tracking permission: %s user(s) have active tracking sessions. End those sessions first.'),
+            active_count
+          )
   end
 
   def validate_agent_limit_by_attributes
