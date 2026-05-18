@@ -25,8 +25,9 @@ jobs:
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Get Zammad version from VERSION file
-        run: echo "ZAMMAD_VERSION=$(cat VERSION)" >> $GITHUB_ENV
+      - name: Read version
+        id: version
+        run: echo "value=$(cat VERSION)" >> $GITHUB_OUTPUT
 
       - name: Build and push
         uses: docker/build-push-action@v6
@@ -37,6 +38,6 @@ jobs:
           push: true
           tags: |
             ghcr.io/${{ github.repository_owner }}/zammad:developer
-            ghcr.io/${{ github.repository_owner }}/zammad:${{ env.ZAMMAD_VERSION }}
+            ghcr.io/${{ github.repository_owner }}/zammad:${{ steps.version.outputs.value }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
