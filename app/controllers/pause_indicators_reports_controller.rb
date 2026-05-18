@@ -9,9 +9,11 @@ class PauseIndicatorsReportsController < ApplicationController
     if cached
       entries = cached[:entries] || []
       entries = filter_entries_by_user_ids(entries, params[:user_ids])
+      entries = filter_entries_by_equipe(entries, params[:equipes])
       response = {
         entries:     entries,
         agents:      cached[:agents] || [],
+        teams:       cached[:teams] || [],
         can_control: current_user&.permissions?('user.pause_control'),
         pause_types: cached[:pause_types] || [],
       }
@@ -28,6 +30,11 @@ class PauseIndicatorsReportsController < ApplicationController
     if params[:user_ids].present?
       ids = Array(params[:user_ids]).reject(&:blank?).map(&:to_i)
       users = users.where(id: ids) if ids.any?
+    end
+
+    if params[:equipes].present? && User.column_exists?(:equipe)
+      equipes = Array(params[:equipes]).reject(&:blank?)
+      users = users.where(equipe: equipes) if equipes.any?
     end
 
     user_list = users.to_a
@@ -77,13 +84,14 @@ class PauseIndicatorsReportsController < ApplicationController
     response = {
       entries:     entries,
       agents:      agents_list,
+      teams:       teams_list,
       can_control: can_control,
       pause_types: pause_types_list,
     }
 
     # Cache payload completo (sem filtro) para próximas requisições após invalidação
-    if params[:user_ids].blank?
-      PauseIndicatorsCache.report_set(response.slice(:entries, :agents, :pause_types))
+    if params[:user_ids].blank? && params[:equipes].blank?
+      PauseIndicatorsCache.report_set(response.slice(:entries, :agents, :teams, :pause_types))
     end
 
     render json: response, status: :ok
@@ -98,6 +106,27 @@ class PauseIndicatorsReportsController < ApplicationController
     return entries if ids.empty?
 
     entries.select { |e| ids.include?(e.dig(:user, :id).to_i) }
+  end
+
+  def filter_entries_by_equipe(entries, equipes_param)
+    return entries if equipes_param.blank? || !User.column_exists?(:equipe)
+
+    equipes = Array(equipes_param).reject(&:blank?)
+    return entries if equipes.empty?
+
+    entries.select { |e| equipes.include?(e.dig(:user, 'equipe')) }
+  end
+
+  def teams_list
+    return [] unless User.column_exists?(:equipe)
+
+    User.joins(:roles)
+        .where(roles: { id: eligible_role_ids })
+        .where(users: { active: true })
+        .where.not(equipe: [nil, ''])
+        .distinct
+        .order(:equipe)
+        .pluck(:equipe)
   end
 
   def eligible_role_ids

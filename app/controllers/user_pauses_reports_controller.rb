@@ -21,6 +21,7 @@ class UserPausesReportsController < ApplicationController
       end_date: end_date,
       entries: entries,
       agents: agents_list,
+      teams: teams_list,
       pagination: {
         page: page,
         per_page: per_page,
@@ -107,7 +108,12 @@ class UserPausesReportsController < ApplicationController
     agent_id = params[:agent_id].presence
     agent_query = params[:agent_query].presence
 
+    equipe_filter = params[:equipe].presence
+
     user_scope = User.all
+    if equipe_filter.present? && User.column_exists?(:equipe)
+      user_scope = user_scope.where(equipe: equipe_filter)
+    end
     if agent_id.present?
       user_scope = user_scope.where(id: agent_id)
     elsif agent_query.present?
@@ -123,8 +129,9 @@ class UserPausesReportsController < ApplicationController
                             .includes(:user, :pause_type)
     sessions_scope = UserPauseSession.where(started_at: start_date.beginning_of_day..end_date.end_of_day)
                                      .includes(:user)
-    pauses_scope = pauses_scope.where(user_id: user_ids) if agent_id.present? || agent_query.present?
-    sessions_scope = sessions_scope.where(user_id: user_ids) if agent_id.present? || agent_query.present?
+    filter_users = agent_id.present? || agent_query.present? || equipe_filter.present?
+    pauses_scope = pauses_scope.where(user_id: user_ids) if filter_users
+    sessions_scope = sessions_scope.where(user_id: user_ids) if filter_users
 
     if pause_type_id == 'login_logout'
       pauses_scope = pauses_scope.none
@@ -173,16 +180,34 @@ class UserPausesReportsController < ApplicationController
   end
 
   def agents_list
-    agent_role_ids = Role.joins(:permissions)
-                         .where(permissions: { name: 'ticket.agent', active: true }, roles: { active: true })
-                         .pluck(:id)
+    eligible_ids = Role.joins(:permissions)
+                       .where(permissions: { name: 'user.pause_control', active: true }, roles: { active: true })
+                       .where.not(roles: { name: %w[Admin Customer] })
+                       .pluck(:id)
 
     User.joins(:roles)
-        .where(roles: { id: agent_role_ids })
+        .where(roles: { id: eligible_ids })
         .where(users: { active: true })
         .distinct
         .order(:firstname, :lastname)
         .map { |u| { id: u.id, name: "#{u.firstname} #{u.lastname}".strip } }
+  end
+
+  def teams_list
+    return [] unless User.column_exists?(:equipe)
+
+    eligible_ids = Role.joins(:permissions)
+                       .where(permissions: { name: 'user.pause_control', active: true }, roles: { active: true })
+                       .where.not(roles: { name: %w[Admin Customer] })
+                       .pluck(:id)
+
+    User.joins(:roles)
+        .where(roles: { id: eligible_ids })
+        .where(users: { active: true })
+        .where.not(equipe: [nil, ''])
+        .distinct
+        .order(:equipe)
+        .pluck(:equipe)
   end
 end
 

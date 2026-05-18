@@ -42,7 +42,16 @@
             <% else: %>
               <td><%- @T('Não') %></td>
             <% end %>
-            <td><%= item.delay_reason || '-' %></td>
+            <% if item.delay_reason: %>
+              <td>
+                <span><%= item.delay_reason.length > 40 ? item.delay_reason.substring(0, 40) + '…' : item.delay_reason %></span>
+                <% if item.delay_reason.length > 40: %>
+                  <button class="btn btn-xs btn-link js-view-justificativa" data-reason="<%= item.delay_reason %>" title="<%- @T('Ver completo') %>">&#128269;</button>
+                <% end %>
+              </td>
+            <% else: %>
+              <td>-</td>
+            <% end %>
           </tr>
         <% end %>
       <% end %>

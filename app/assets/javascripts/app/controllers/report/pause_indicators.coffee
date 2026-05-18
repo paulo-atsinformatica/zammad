@@ -10,7 +10,9 @@ class App.ReportPauseIndicators extends App.ControllerAppContent
     @pollTimer = null
     @durationTimer = null
     @agents = []
+    @teams = []
     @selectedUserIds = []
+    @selectedEquipes = []
     @restoreSelectedFromStorage()
     # Atualização em tempo real: quando alguém alterar status (login/logout/pausa), o servidor envia este evento via WebSocket
     @controllerBind('pause_indicators:changed', => @loadReport())
@@ -24,10 +26,21 @@ class App.ReportPauseIndicators extends App.ControllerAppContent
         @selectedUserIds = parsed if Array.isArray(parsed)
     catch e
       @selectedUserIds = []
+    try
+      stored = sessionStorage.getItem('report/pause_indicators/equipes')
+      if stored
+        parsed = JSON.parse(stored)
+        @selectedEquipes = parsed if Array.isArray(parsed)
+    catch e
+      @selectedEquipes = []
 
   saveSelectedToStorage: ->
     try
       sessionStorage.setItem('report/pause_indicators/colaboradores', JSON.stringify(@selectedUserIds))
+    catch e
+      #
+    try
+      sessionStorage.setItem('report/pause_indicators/equipes', JSON.stringify(@selectedEquipes))
     catch e
       #
 
@@ -39,18 +52,22 @@ class App.ReportPauseIndicators extends App.ControllerAppContent
     @startDurationTimer()
 
   bindFilterEvents: ->
-    @el.find('.js-apply-colaboradores-filter').on('click', => @applyColaboradoresFilter())
-    @el.find('.js-clear-colaboradores-filter').on('click', => @clearColaboradoresFilter())
+    @el.find('.js-apply-colaboradores-filter').on('click', => @applyFilters())
+    @el.find('.js-clear-colaboradores-filter').on('click', => @clearFilters())
 
-  applyColaboradoresFilter: ->
+  applyFilters: ->
     values = @el.find('.js-colaboradores-select').val() or []
     @selectedUserIds = (parseInt(id, 10) for id in values)
+    equipeVals = @el.find('.js-equipe-select').val() or []
+    @selectedEquipes = (v for v in equipeVals when v)
     @saveSelectedToStorage()
     @loadReport()
 
-  clearColaboradoresFilter: ->
+  clearFilters: ->
     @selectedUserIds = []
+    @selectedEquipes = []
     @el.find('.js-colaboradores-select').val([])
+    @el.find('.js-equipe-select').val([])
     @saveSelectedToStorage()
     @loadReport()
 
@@ -63,17 +80,37 @@ class App.ReportPauseIndicators extends App.ControllerAppContent
       selected = @selectedUserIds.indexOf(agent.id) >= 0
       options += "<option value=\"#{agent.id}\" #{if selected then 'selected' else ''}>#{safeName}</option>"
     html = """
-      <select class="form-control js-colaboradores-select" multiple="multiple" size="10">
+      <select class="form-control js-colaboradores-select" multiple="multiple" size="6">
         #{options}
       </select>
     """
     @el.find('.js-colaboradores-filter').html(html)
+
+  renderEquipeFilter: (teams) ->
+    return if !teams
+    @teams = teams
+    if teams.length is 0
+      @el.find('.js-equipe-filter').html("<span class='text-muted'>#{__('Nenhuma equipe cadastrada')}</span>")
+      return
+    options = ''
+    for team in teams
+      safe = App.Utils.htmlEscape(team)
+      selected = @selectedEquipes.indexOf(team) >= 0
+      options += "<option value=\"#{safe}\" #{if selected then 'selected' else ''}>#{safe}</option>"
+    html = """
+      <select class="form-control js-equipe-select" multiple="multiple" size="6">
+        #{options}
+      </select>
+    """
+    @el.find('.js-equipe-filter').html(html)
 
   loadReport: ->
     return if window.location.hash isnt '#report/pause_indicators'
     params = {}
     if @selectedUserIds.length > 0
       params.user_ids = @selectedUserIds
+    if @selectedEquipes.length > 0
+      params.equipes = @selectedEquipes
     @ajax(
       id:          'pause_indicators_report'
       type:        'GET'
@@ -83,6 +120,7 @@ class App.ReportPauseIndicators extends App.ControllerAppContent
       success:     (data) =>
         return if window.location.hash isnt '#report/pause_indicators'
         @renderColaboradoresFilter(data.agents) if data.agents
+        @renderEquipeFilter(data.teams) if data.teams?
         @renderReport(data)
         @startDurationTimer()
       error: (xhr, statusText, error) =>

@@ -10,7 +10,9 @@ class App.ReportUserPauses extends App.ControllerAppContent
     @pause_type_id = 'all'
     @exceeded = 'all'
     @agent_id = ''
+    @equipe = ''
     @agents = []
+    @teams = []
     @pauseTypes = []
     @page = 1
     @per_page = 50
@@ -78,6 +80,10 @@ class App.ReportUserPauses extends App.ControllerAppContent
       @agent_id = $(e.currentTarget).val()
     )
 
+    @$('.js-equipe-select').on('change', (e) =>
+      @equipe = $(e.currentTarget).val()
+    )
+
   renderAgentOptions: ->
     $select = @$('.js-agent-select')
     return if !$select.length
@@ -85,6 +91,17 @@ class App.ReportUserPauses extends App.ControllerAppContent
     options = ["<option value=\"\">#{__('Todos')}</option>"]
     for agent in @agents
       options.push "<option value=\"#{agent.id}\">#{App.Utils.htmlEscape(agent.name)}</option>"
+    $select.html(options.join(''))
+    $select.val(currentVal) if currentVal
+
+  renderEquipeOptions: ->
+    $select = @$('.js-equipe-select')
+    return if !$select.length
+    currentVal = @equipe
+    options = ["<option value=\"\">#{__('Todas')}</option>"]
+    for team in @teams
+      safe = App.Utils.htmlEscape(team)
+      options.push "<option value=\"#{safe}\">#{safe}</option>"
     $select.html(options.join(''))
     $select.val(currentVal) if currentVal
 
@@ -188,6 +205,7 @@ class App.ReportUserPauses extends App.ControllerAppContent
       pause_type_id: @pause_type_id
       exceeded: @exceeded
       agent_id: @agent_id
+      equipe: @equipe
       page: @page
       per_page: @per_page
 
@@ -200,8 +218,11 @@ class App.ReportUserPauses extends App.ControllerAppContent
       success:     (data, status, xhr) =>
         @stopLoading()
         @agents = data.agents || []
+        @teams = data.teams || []
         @renderAgentOptions()
+        @renderEquipeOptions()
         @renderReport(data)
+        @bindJustificativaModal()
         @bindPagination(data.pagination)
       error: (xhr) =>
         @stopLoading()
@@ -233,7 +254,37 @@ class App.ReportUserPauses extends App.ControllerAppContent
       pause_type_id: @pause_type_id
       exceeded: @exceeded
       agent_id: @agent_id
+      equipe: @equipe
     "#{@apiPath}/reports/user_pauses/download?#{$.param(params)}"
+
+  bindJustificativaModal: ->
+    @el.find('.js-report-content').off('click.justificativa').on 'click.justificativa', '.js-view-justificativa', (e) =>
+      e.preventDefault()
+      text = $(e.currentTarget).data('reason') || ''
+      @showJustificativaModal(text)
+
+  showJustificativaModal: (text) ->
+    existing = $('#js-justificativa-modal')
+    existing.remove() if existing.length
+    modal = $("""
+      <div class="modal fade" id="js-justificativa-modal" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <button type="button" class="close" data-dismiss="modal">&times;</button>
+              <h4 class="modal-title">#{__('Justificativa')}</h4>
+            </div>
+            <div class="modal-body" style="white-space:pre-wrap;word-break:break-word;">#{App.Utils.htmlEscape(text)}</div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-default" data-dismiss="modal">#{__('Fechar')}</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    """)
+    modal.appendTo(document.body)
+    modal.modal('show')
+    modal.on('hidden.bs.modal', -> modal.remove())
 
   bindPagination: (pagination) ->
     return if !pagination
