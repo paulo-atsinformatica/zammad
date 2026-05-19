@@ -4,21 +4,20 @@ class PauseIndicatorsReportsController < ApplicationController
   prepend_before_action :authenticate_and_authorize!
 
   def index
-    cached = PauseIndicatorsCache.redis_available? ? PauseIndicatorsCache.report_get : nil
+    has_filters = params[:user_ids].present? || params[:equipes].present?
 
-    if cached
-      entries = cached[:entries] || []
-      entries = filter_entries_by_user_ids(entries, params[:user_ids])
-      entries = filter_entries_by_equipe(entries, params[:equipes])
-      response = {
-        entries:     entries,
-        agents:      cached[:agents] || [],
-        teams:       cached[:teams] || [],
-        can_control: current_user&.permissions?('user.pause_control'),
-        pause_types: cached[:pause_types] || [],
-      }
-      render json: response, status: :ok
-      return
+    if !has_filters
+      cached = PauseIndicatorsCache.redis_available? ? PauseIndicatorsCache.report_get : nil
+      if cached
+        render json: {
+          entries:     cached[:entries] || [],
+          agents:      cached[:agents] || [],
+          teams:       cached[:teams] || [],
+          can_control: current_user&.permissions?('user.pause_control'),
+          pause_types: cached[:pause_types] || [],
+        }, status: :ok
+        return
+      end
     end
 
     users = User.joins(:roles)
@@ -39,13 +38,11 @@ class PauseIndicatorsReportsController < ApplicationController
 
     user_list = users.to_a
 
-    # Carrega sessões ativas em lote (substitui N chamadas exists? por 1 query)
     logged_in_ids = UserPauseSession.active
                                     .where(user_id: user_list.map(&:id))
                                     .pluck(:user_id)
                                     .to_set
 
-    # Carrega pausas ativas com pause_type em lote (substitui N find_by + N eager load)
     active_pause_ids = user_list.map(&:current_pause_id).compact
     pauses_by_id     = UserPause.includes(:pause_type)
                                 .where(id: active_pause_ids, ended_at: nil)
@@ -89,33 +86,12 @@ class PauseIndicatorsReportsController < ApplicationController
       pause_types: pause_types_list,
     }
 
-    # Cache payload completo (sem filtro) para próximas requisições após invalidação
-    if params[:user_ids].blank? && params[:equipes].blank?
-      PauseIndicatorsCache.report_set(response.slice(:entries, :agents, :teams, :pause_types))
-    end
+    PauseIndicatorsCache.report_set(response.slice(:entries, :agents, :teams, :pause_types)) if !has_filters
 
     render json: response, status: :ok
   end
 
   private
-
-  def filter_entries_by_user_ids(entries, user_ids_param)
-    return entries if user_ids_param.blank?
-
-    ids = Array(user_ids_param).reject(&:blank?).map(&:to_i)
-    return entries if ids.empty?
-
-    entries.select { |e| ids.include?(e.dig(:user, :id).to_i) }
-  end
-
-  def filter_entries_by_equipe(entries, equipes_param)
-    return entries if equipes_param.blank? || !User.column_names.include?('equipe')
-
-    equipes = Array(equipes_param).reject(&:blank?)
-    return entries if equipes.empty?
-
-    entries.select { |e| equipes.include?(e.dig(:user, 'equipe')) }
-  end
 
   def teams_list
     return [] unless User.column_names.include?('equipe')
