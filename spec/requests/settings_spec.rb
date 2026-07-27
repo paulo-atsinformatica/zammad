@@ -320,6 +320,20 @@ RSpec.describe 'Settings', type: :request do
       expect(json_response.detect { |setting| setting['name'] == 'application_secret' }).to be_nil
     end
 
+    it 'responds with not found instead of server error for an unknown setting' do
+      authenticated_as(admin)
+      get '/api/v1/settings/999999999', params: {}, as: :json
+
+      expect(response).to have_http_status(:not_found)
+    end
+
+    it 'responds with not found instead of server error when updating an unknown setting' do
+      authenticated_as(admin)
+      put '/api/v1/settings/999999999', params: { state: 'Example' }, as: :json
+
+      expect(response).to have_http_status(:not_found)
+    end
+
     it 'can not show protected setting' do
       setting = Setting.find_by(name: 'application_secret')
       authenticated_as(admin)
