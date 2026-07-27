@@ -4,10 +4,11 @@ class Ticket::SummarizeController < ApplicationController
   prepend_before_action :authenticate_and_authorize!
 
   def summarize
-    Service::CheckFeatureEnabled.new(name: 'ai_assistance_ticket_summary', custom_exception_class: Exceptions::UnprocessableEntity).execute
-    Service::CheckFeatureEnabled.new(name: 'ai_provider', custom_error_message: __('AI provider is not configured.')).execute
+    Service::CheckFeatureEnabled.execute(name: 'ai_assistance_ticket_summary', custom_exception_class: Exceptions::UnprocessableContent)
+    Service::CheckFeatureEnabled.execute(name: 'ai_provider', custom_error_message: __('AI provider is not configured.'))
 
     authorize!(ticket, :agent_read_access?)
+    return render json: { result: nil } if !summary_enabled?
 
     if regeneration_of
       authorize!(regeneration_of, :show?)
@@ -16,11 +17,12 @@ class Ticket::SummarizeController < ApplicationController
     end
 
     ai_result = Service::Ticket::AIAssistance::Summarize
-      .new(
+      .with_current_user(current_user)
+      .execute(
         locale:               current_user.locale,
         ticket:,
         persistence_strategy: :stored_only,
-      ).execute
+      )
 
     if ai_result&.content.blank?
       # When AI analytics error ID is present, return this error message instead of enqueuing a new job.
@@ -57,9 +59,15 @@ class Ticket::SummarizeController < ApplicationController
   def enqueue_job
     # Trigger background job to generate summary...
     TicketAIAssistanceSummarizeJob
-      .perform_later(ticket, current_user.locale, regeneration_of:)
+      .perform_later(ticket, current_user.locale, current_user:, regeneration_of:)
 
     render json: { result: nil }
+  end
+
+  def summary_enabled?
+    Service::Ticket::AIAssistance::SummaryEnabled
+      .with_current_user(current_user)
+      .execute(ticket:)
   end
 
   def return_stored_result(ai_result)

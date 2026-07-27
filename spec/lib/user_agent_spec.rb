@@ -326,7 +326,7 @@ RSpec.describe UserAgent, :aggregate_failures do
               {
                 'method'                 => 'post',
                 'submitted'              => 'some value',
-                'body'                   => ['submitted=some+value'],
+                'body'                   => 'submitted=some+value',
                 'content_type_requested' => 'application/x-www-form-urlencoded',
               }
             end
@@ -343,7 +343,7 @@ RSpec.describe UserAgent, :aggregate_failures do
               {
                 'method'                 => 'post',
                 'submitted'              => nil,
-                'body'                   => ['raw body'],
+                'body'                   => 'raw body',
                 'content_type_requested' => nil,
               }
             end
@@ -906,6 +906,14 @@ RSpec.describe UserAgent, :aggregate_failures do
       let(:log_params) { { facility: 'AI::Provider', log_only_on_error: true } }
 
       context 'when request was successful' do
+        it 'does not create a log entry' do
+          expect(HttpLog).not_to have_received(:create)
+        end
+      end
+
+      context 'when request was a redirect' do
+        let(:response) { Net::HTTPFound.new('/', '302', 'Found') }
+
         it 'does not create a log entry' do
           expect(HttpLog).not_to have_received(:create)
         end

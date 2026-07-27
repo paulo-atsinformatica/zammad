@@ -59,6 +59,21 @@ RSpec.describe AI::Provider do
         expect(ai_provider.ask(prompt_system:, prompt_user:)).to eq({ 'key' => 'value' })
       end
 
+      it 'handles literal newlines inside JSON string values' do
+        allow(ai_provider).to receive(:chat).and_return("{\"title\": \"test\", \"body\": \"<p>Hello</p>\n<h3>World</h3>\"}")
+        expect(ai_provider.ask(prompt_system:, prompt_user:)).to eq({ 'title' => 'test', 'body' => "<p>Hello</p>\n<h3>World</h3>" })
+      end
+
+      it 'handles carriage return and tab inside JSON string values' do
+        allow(ai_provider).to receive(:chat).and_return("{\"body\": \"line1\r\nline2\tindented\"}")
+        expect(ai_provider.ask(prompt_system:, prompt_user:)).to eq({ 'body' => "line1\nline2\tindented" })
+      end
+
+      it 'does not break already escaped sequences' do
+        allow(ai_provider).to receive(:chat).and_return('{"body": "line1\\nline2"}')
+        expect(ai_provider.ask(prompt_system:, prompt_user:)).to eq({ 'body' => "line1\nline2" })
+      end
+
       it 'raises OutputFormatError for invalid JSON' do
         allow(ai_provider).to receive(:chat).and_return('invalid json')
         expect { ai_provider.ask(prompt_system:, prompt_user:) }
@@ -74,6 +89,44 @@ RSpec.describe AI::Provider do
           input: Faker::Lorem.sentence,
         )
       end.to raise_error(RuntimeError, 'not implemented')
+    end
+  end
+
+  describe '#embedding_input_limit' do
+    context 'when the embedding input limit option is present' do
+      subject(:ai_provider) do
+        described_class.new(
+          config: { provider: 'open_ai', token: '123', embedding_input_limit: 1024 },
+        )
+      end
+
+      it 'returns the configured input limit' do
+        expect(ai_provider.embedding_input_limit).to eq(1024)
+      end
+    end
+
+    context 'when the embedding model has a known input limit' do
+      subject(:ai_provider) do
+        AI::Provider::OpenAI.new(
+          config: { provider: 'open_ai', token: '123' },
+        )
+      end
+
+      it 'returns the input limit of the embedding model' do
+        expect(ai_provider.embedding_input_limit).to eq(8191)
+      end
+    end
+
+    context 'when the embedding model has no known input limit' do
+      subject(:ai_provider) do
+        described_class.new(
+          config: { provider: 'open_ai', token: '123', embedding_model: 'unknown-embedding-model' },
+        )
+      end
+
+      it 'returns the default input limit' do
+        expect(ai_provider.embedding_input_limit).to eq(described_class::DEFAULT_EMBEDDING_INPUT_LIMIT)
+      end
     end
   end
 
@@ -104,7 +157,7 @@ RSpec.describe AI::Provider do
   describe '.current' do
     before do
       Setting.set('ai_provider_config', config, validate: false)
-      Setting.set('ai_provider', flag)
+      Setting.set('ai_provider', flag, validate: false)
     end
 
     context 'when config is provided' do

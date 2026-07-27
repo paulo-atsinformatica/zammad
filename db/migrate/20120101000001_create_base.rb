@@ -133,6 +133,7 @@ class CreateBase < ActiveRecord::Migration[4.2]
       t.timestamps limit: 3, null: false
     end
     add_index :groups, [:name], unique: true
+    add_index :groups, :parent_id
     add_foreign_key :groups, :signatures
     add_foreign_key :groups, :email_addresses
     add_foreign_key :groups, :users, column: :created_by_id
@@ -534,6 +535,7 @@ class CreateBase < ActiveRecord::Migration[4.2]
       t.integer :type_lookup_id,                null: false
       t.integer :user_id,                       null: false
       t.boolean :seen,                          null: false, default: false
+      t.jsonb   :meta,                          null: false, default: {}
       t.integer :updated_by_id,                 null: false
       t.integer :created_by_id,                 null: false
       t.timestamps limit: 3, null: false
@@ -545,6 +547,12 @@ class CreateBase < ActiveRecord::Migration[4.2]
     add_foreign_key :online_notifications, :users
     add_foreign_key :online_notifications, :users, column: :created_by_id
     add_foreign_key :online_notifications, :users, column: :updated_by_id
+
+    create_table :online_notification_standalones do |t|
+      t.jsonb 'data', null: false, default: {}
+      t.string 'kind', null: false
+      t.timestamps limit: 3, null: false
+    end
 
     create_table :schedulers do |t|
       t.string :name,                     limit: 250,   null: false
@@ -646,10 +654,12 @@ class CreateBase < ActiveRecord::Migration[4.2]
       t.datetime :failed_at, limit: 3          # Set when all retries have failed (actually, by default, the record is deleted instead)
       t.string   :locked_by                    # Who is working on this object (if locked)
       t.string   :queue                        # The name of the queue this job is in
+      t.string   :active_job_id                # The ActiveJob job_id extracted from handler, used for lookups instead of `handler LIKE`
       t.timestamps limit: 3, null: false
     end
 
     add_index :delayed_jobs, %i[priority run_at], name: 'delayed_jobs_priority'
+    add_index :delayed_jobs, :active_job_id
 
     create_table :external_syncs do |t|
       t.string  :source,                 limit: 100,  null: false
@@ -943,6 +953,7 @@ class CreateBase < ActiveRecord::Migration[4.2]
 
       t.timestamps limit: 3
     end
+    add_index :ai_analytics_runs, %i[triggered_by_type triggered_by_id], name: 'index_ai_analytics_runs_on_triggered_by'
 
     create_table :ai_stored_results do |t|
       t.string :identifier, null: false
@@ -999,6 +1010,8 @@ class CreateBase < ActiveRecord::Migration[4.2]
 
       t.timestamps limit: 3, null: false
 
+      t.timestamp :analytics_stats_reset_at, limit: 3, null: true
+
       t.index :name, unique: true
       t.index :active
     end
@@ -1023,6 +1036,7 @@ class CreateBase < ActiveRecord::Migration[4.2]
       t.timestamps limit: 3
 
       t.index %i[ai_analytics_run_id user_id], unique: true
+      t.index %i[ai_analytics_run_id created_at], name: 'index_ai_analytics_usages_on_run_id_and_created_at'
     end
 
     create_table :recent_closes do |t|
@@ -1036,6 +1050,23 @@ class CreateBase < ActiveRecord::Migration[4.2]
               unique: true
 
       t.index :updated_at, order: { updated_at: :desc }
+    end
+
+    create_table :audit_logs do |t|
+      t.references :user, null: true, type: :integer
+      t.string :user_fullname, limit: 255, null: true
+      t.string :action_type, limit: 100, null: false
+      t.references :auditable, polymorphic: true, null: false, type: :integer
+      t.string :auditable_name, limit: 255, null: true
+      t.jsonb :value_from, null: false, default: {}
+      t.jsonb :value_to, null: false, default: {}
+      t.string :source_ip, limit: 50, null: true
+      t.jsonb :preferences, null: false, default: {}
+
+      t.timestamps limit: 3, null: false
+
+      t.index :action_type
+      t.index :created_at
     end
   end
 end

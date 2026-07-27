@@ -6,6 +6,7 @@ require 'models/concerns/can_be_imported_examples'
 require 'models/concerns/can_csv_import_examples'
 require 'models/concerns/has_history_examples'
 require 'models/concerns/has_object_manager_attributes_examples'
+require 'models/concerns/can_lookup_search_index_attributes_with_attachments_examples'
 require 'models/ticket/article/has_ticket_contact_attributes_impact_examples'
 
 RSpec.describe Ticket::Article, type: :model do
@@ -312,8 +313,8 @@ RSpec.describe Ticket::Article, type: :model do
         let(:body) { 'a' * 2_000_000 }
 
         context 'for "web" thread', application_handle: 'web' do
-          it 'raises an Unprocessable Entity error' do
-            expect { article }.to raise_error(Exceptions::UnprocessableEntity)
+          it 'raises an Unprocessable Content error' do
+            expect { article }.to raise_error(Exceptions::UnprocessableContent)
           end
         end
 
@@ -766,16 +767,110 @@ RSpec.describe Ticket::Article, type: :model do
     end
   end
 
+  describe 'attachments listing with inline images (#6254)' do
+    let(:article) do
+      create(:ticket_article,
+             type:         Ticket::Article::Type.find_by(name: 'email'),
+             content_type: 'text/html',
+             body:         '<img src="cid:15.274327094.140938@zammad.example.com"> some text',)
+    end
+
+    let!(:inline_attachment) do
+      create(:store,
+             object:      'Ticket::Article',
+             o_id:        article.id,
+             data:        'content_file1_normally_should_be_an_image',
+             filename:    'some_file1.jpg',
+             preferences: {
+               'Content-Type'        => 'image/jpeg',
+               'Mime-Type'           => 'image/jpeg',
+               'Content-ID'          => '15.274327094.140938@zammad.example.com',
+               'Content-Disposition' => 'inline',
+             })
+    end
+
+    let!(:regular_attachment) do
+      create(:store,
+             object:      'Ticket::Article',
+             o_id:        article.id,
+             data:        'content_file2',
+             filename:    'some_file2.pdf',
+             preferences: {
+               'Content-Type' => 'application/pdf',
+               'Mime-Type'    => 'application/pdf',
+             })
+    end
+
+    describe '#attributes_with_association_names' do
+      it 'keeps inline attachments in the attachments list' do
+        attributes = article.attributes_with_association_names
+
+        expect(attributes['attachments'].pluck('filename'))
+          .to contain_exactly('some_file1.jpg', 'some_file2.pdf')
+      end
+
+      it 'replaces cid references in the body' do
+        attributes = article.attributes_with_association_names
+
+        expect(attributes['body']).to include("/api/v1/ticket_attachment/#{article.ticket_id}/#{article.id}/#{inline_attachment.id}?view=inline")
+      end
+    end
+
+    describe '#attributes_with_association_ids' do
+      it 'excludes inline attachments from the attachments list' do
+        attributes = article.attributes_with_association_ids
+
+        expect(attributes['attachments'].pluck('filename'))
+          .to contain_exactly('some_file2.pdf')
+      end
+    end
+  end
+
   describe '.without_system_notifications' do
     let(:ticket)    { create(:ticket) }
     let(:article_1) { create(:ticket_article, :system_outbound_email, ticket:) }
     let(:article_2) { create(:ticket_article, :inbound_web, ticket:) }
     let(:article_3) { create(:ticket_article, :outbound_email, ticket:) }
+    let(:article_4) { create(:ticket_article, :internal_note, ticket:) }
+    let(:article_5) { create(:ticket_article, :system_note, ticket:) }
+    let(:article_6) { create(:ticket_article, :system_delivery_message, ticket:) }
 
-    before { article_1 && article_2 && article_3 }
+    before { article_1 && article_2 && article_3 && article_4 && article_5 && article_6 }
 
-    it 'filters out System articles' do
-      expect(ticket.articles.without_system_notifications).to contain_exactly(article_2, article_3)
+    it 'filters out certain system articles' do
+      expect(ticket.articles.without_system_notifications).to contain_exactly(article_2, article_3, article_4, article_5)
+    end
+  end
+
+  describe '#body_rendering_error' do
+    context 'when body_rendering_error preference is set' do
+      subject(:article) { create(:ticket_article, preferences: { 'body_rendering_error' => true }) }
+
+      it 'returns true' do
+        expect(article.body_rendering_error).to be(true)
+      end
+    end
+
+    context 'when body matches UNPROCESSABLE_HTML_MSG' do
+      subject(:article) { create(:ticket_article, body: HtmlSanitizer::UNPROCESSABLE_HTML_MSG) }
+
+      it 'returns true' do
+        expect(article.body_rendering_error).to be(true)
+      end
+    end
+
+    context 'when body matches EXCESSIVE_LINKS_MSG' do
+      subject(:article) { create(:ticket_article, body: Channel::EmailParser::EXCESSIVE_LINKS_MSG) }
+
+      it 'returns true' do
+        expect(article.body_rendering_error).to be(true)
+      end
+    end
+
+    context 'when body is normal content' do
+      it 'returns false' do
+        expect(article.body_rendering_error).to be(false)
+      end
     end
   end
 end

@@ -1,12 +1,11 @@
 // Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import { loadErrorMessages, loadDevMessages } from '@apollo/client/dev'
+import { setup as setupA11y, toBeAccessible } from '@sa11y/vitest'
 import * as domMatchers from '@testing-library/jest-dom/matchers'
 import { toBeDisabled } from '@testing-library/jest-dom/matchers'
 import { configure } from '@testing-library/vue'
 import { expect, vi } from 'vitest'
-import * as matchers from 'vitest-axe/matchers'
-import 'vitest-axe/extend-expect'
 
 import { ServiceWorkerHelper } from '#shared/utils/testSw.ts'
 
@@ -23,13 +22,22 @@ vi.hoisted(() => {
   globalThis.__ = (source) => {
     return source
   }
+
+  // Suppress Apollo's devtools-suggestion timer. The timer fires 10 s after
+  // ApolloClient construction; if the jsdom environment is torn down first,
+  // the callback throws "ReferenceError: window is not defined". Setting
+  // __DEV__ = false makes Apollo skip the timer entirely (see connectToDevTools
+  // in @apollo/client/core). loadDevMessages/loadErrorMessages are unaffected.
+  ;(globalThis as any).__DEV__ = false
 })
 
 window.sw = new ServiceWorkerHelper()
 
 configure({
   testIdAttribute: 'data-test-id',
-  asyncUtilTimeout: process.env.CI ? 30_000 : 1_000,
+  // Must stay below the outer `testTimeout` (vite.config.mjs) with real margin — see
+  // tests/support/vitest-wrapper.ts for why equal values cause misleading failures.
+  asyncUtilTimeout: process.env.CI ? 20_000 : 1_000,
 })
 
 Object.defineProperty(window, 'fetch', {
@@ -70,6 +78,7 @@ Object.defineProperty(Node.prototype, 'getClientRects', {
 Object.defineProperty(Element.prototype, 'scroll', { value: vi.fn() })
 Object.defineProperty(Element.prototype, 'scrollBy', { value: vi.fn() })
 Object.defineProperty(Element.prototype, 'scrollIntoView', { value: vi.fn() })
+Object.defineProperty(Element.prototype, 'scrollTo', { value: vi.fn() })
 
 const descriptor = Object.getOwnPropertyDescriptor(HTMLImageElement.prototype, 'src')!
 
@@ -124,10 +133,9 @@ globalThis.ClipboardItem = class {
 
 require.extensions['.css'] = () => ({})
 
-globalThis.requestAnimationFrame = (cb) => {
-  setTimeout(cb, 0)
-  return 0
-}
+globalThis.requestAnimationFrame = (cb) => setTimeout(cb, 0)
+
+globalThis.cancelAnimationFrame = (id) => clearTimeout(id)
 
 globalThis.scrollTo = vi.fn()
 globalThis.matchMedia = (media: string) => ({
@@ -262,8 +270,12 @@ afterEach((context) => {
   }
 })
 
-// Import the matchers for accessibility testing with aXe.
-expect.extend(matchers)
+setupA11y()
+// There is a problem that sa11y uses still vitest v3
+// https://github.com/salesforce/sa11y/blob/master/packages/vitest/package.json
+// In vitest v.4 we still need to manually provide the assertion api
+expect.extend({ toBeAccessible })
+
 expect.extend(assertions)
 expect.extend(domMatchers)
 
@@ -285,18 +297,25 @@ expect.extend({
   },
 })
 
-process.on('uncaughtException', (e) => console.log('Uncaught Exception', e))
-process.on('unhandledRejection', (e) => console.log('Unhandled Rejection', e))
-
 declare module 'vitest' {
   interface TestContext {
     skipConsole: boolean
   }
 
-  interface Assertion<T = any>
-    extends matchers.AxeMatchers, TestingLibraryMatchers<typeof expect.stringContaining, T> {}
-  interface AsymmetricMatchersContaining
-    extends matchers.AxeMatchers, TestingLibraryMatchers<any, any> {}
+  interface Assertion<T = any> extends TestingLibraryMatchers<typeof expect.stringContaining, T> {
+    /**
+     * @param options - Allow passing custom rulesets
+     * @sa11y/preset-rule base, extend, full
+     */
+    toBeAccessible(options?: Parameters<typeof toBeAccessible>[1]): Promise<void>
+  }
+  interface AsymmetricMatchersContaining extends TestingLibraryMatchers<any, any> {
+    /**
+     * @param options - Allow passing custom rulesets
+     * @sa11y/preset-rule base, extend, full
+     */
+    toBeAccessible(options?: Parameters<typeof toBeAccessible>[1]): Promise<void>
+  }
 }
 
 declare global {

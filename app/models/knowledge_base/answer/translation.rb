@@ -2,6 +2,7 @@
 
 class KnowledgeBase::Answer::Translation < ApplicationModel
   include HasDefaultModelUserRelations
+  include HasOnlineNotifications
 
   include HasAgentAllowedParams
   include HasLinks
@@ -19,8 +20,13 @@ class KnowledgeBase::Answer::Translation < ApplicationModel
   belongs_to                    :content, class_name: 'KnowledgeBase::Answer::Translation::Content', inverse_of: :translation, dependent: :destroy
   accepts_nested_attributes_for :content, update_only: true
 
+  # Embedding cache rows are cleaned up with the record they belong to.
+  has_many :ai_stored_results, class_name: 'AI::StoredResult', as: :related_object, dependent: :destroy
+
   validates :title,        presence: true, length: { maximum: 250 }
   validates :kb_locale_id, uniqueness: { case_sensitive: true, scope: :answer_id }
+
+  before_save :set_edited_at, if: :edited?
 
   scope :neighbours_of, ->(translation) { joins(:answer).where(knowledge_base_answers: { category_id: translation.answer&.category_id }) }
 
@@ -41,31 +47,76 @@ class KnowledgeBase::Answer::Translation < ApplicationModel
   def search_index_attribute_lookup(include_references: true)
     attrs = super
 
-    attrs.merge('title'      => ActionController::Base.helpers.strip_tags(attrs['title']),
-                'content'    => content&.search_index_attribute_lookup,
-                'scope_id'   => answer.category_id,
-                'attachment' => answer.attachments_for_search_index_attribute_lookup,
-                'tags'       => answer.tag_list)
+    attrs['title']             = ActionController::Base.helpers.strip_tags(title)
+    attrs['content']           = content&.search_index_attribute_lookup
+    attrs['scope_id']          = answer.category_id
+    attrs['tags']              = answer.tag_list
+    attrs['attachment']        = answer.search_index_attachments_lookup(attrs.to_json.bytesize)
+
+    # Index the answer's publication state for the `publication_state:`
+    # search syntax.
+    attrs['publication_state'] = answer_publication_state
+
+    attrs
   end
+
+  scope :vector_index_scope, lambda {
+    relevant_category_ids = Setting.get('vectordb_knowledge_base_category_ids')
+
+    # PoC: index drafts too (not only internally-visible answers), but still exclude archived ones.
+    answer_scope = KnowledgeBase::Answer.date_later_or_nil(:archived_at, Time.zone.now)
+
+    # For now only explicitly enabled categories are indexed.
+    return answer_scope.none if relevant_category_ids.blank?
+
+    answer_scope = answer_scope.where(category: relevant_category_ids)
+
+    joins(:answer).merge(answer_scope).includes(:content, :kb_locale)
+  }
 
   def vector_index_data
     {
-      content:  "#{title}\n#{content.body.html2text}",
-      metadata: {
-        locale:      kb_locale.system_locale.locale,
-        category_id: answer.category_id,
+      content:              ::Text::ContentCleanup.new(content: content.body).cleanup,
+      content_meta_headers: [title],
+      metadata:             {
+        answer_id:          answer_id,
+        locale:             kb_locale.system_locale.locale,
+        category_id:        answer.category_id,
+        visible_internally: answer.visible_internally?,
       },
     }
   end
 
   def vector_indexing_for_record?
-    return false if !answer.visible_internally?
+    # PoC: index drafts too (visible_internally? guard omitted for now), but not archived answers.
+    return false if answer.archived_at&.past?
 
-    # For now only explicitly enabled categories or all are indexed.
-    relevant_categorie_ids = ENV.fetch('VECTOR_INDEX_FOR_KNOWLEDGE_BASE_CATEGORY_IDS', nil)
-    return false if relevant_categorie_ids&.split(',')&.exclude?(answer.category_id.to_s)
+    # For now only explicitly enabled categories are indexed.
+    relevant_category_ids = Setting.get('vectordb_knowledge_base_category_ids')
+    return false if relevant_category_ids.blank? || relevant_category_ids.map(&:to_i).exclude?(answer.category_id)
 
     true
+  end
+
+  def vector_index_chunking_strategy
+    Setting.get('vectordb_knowledge_base_chunking_strategy')&.to_sym
+  end
+
+  # Answer attributes that feed this translation's vector document: category (indexing scope +
+  # metadata) and the state timestamps (drive visible_internally / archived indexing).
+  VECTOR_INDEX_ANSWER_ATTRIBUTES = %w[category_id internal_at published_at archived_at].freeze
+
+  # Did anything feeding the vector document change? Title/locale live here, the body on the content
+  # record, the rest on the answer — each is read off its own record's previous_changes. This works
+  # because Answer#touch_translations uses touch_later, which preserves previous_changes on a
+  # translation edited in the same transaction (an immediate touch would reset them). previous_changes
+  # can be stale on long-lived instances, which errs towards an extra (no-op) reindex, never a skip
+  # of a real change.
+  def vector_index_relevant_change?
+    return true if previous_changes.keys.intersect?(%w[title kb_locale_id])
+    return true if content&.previous_changes&.key?('body')
+
+    answer&.previous_changes&.keys&.intersect?(VECTOR_INDEX_ANSWER_ATTRIBUTES) || false
   end
 
   def inline_linked_objects
@@ -101,4 +152,20 @@ class KnowledgeBase::Answer::Translation < ApplicationModel
         .where(knowledge_base_answers: { category_id: scope })
     end
   }
+
+  private
+
+  def edited?
+    return true if new_record?
+
+    title_changed?
+  end
+
+  def set_edited_at
+    self.edited_at = Time.zone.now
+  end
+
+  def answer_publication_state
+    answer.can_be_published_aasm.calculated_state
+  end
 end

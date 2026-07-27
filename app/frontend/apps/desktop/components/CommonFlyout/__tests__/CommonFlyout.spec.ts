@@ -101,9 +101,7 @@ describe('CommonFlyout', () => {
           showBackdrop: false,
         },
         slots: {
-          default: html`
-            <input type="text" placeholder="test" name="test-input" />
-          `,
+          default: html` <input type="text" placeholder="test" name="test-input" /> `,
         },
       })
 
@@ -114,7 +112,7 @@ describe('CommonFlyout', () => {
 
     it('has a default container width of 500px', async () => {
       expect(flyout.getByRole('complementary')).toHaveStyle({
-        width: '500px',
+        '--flyout-container-width': '500px',
       })
     })
 

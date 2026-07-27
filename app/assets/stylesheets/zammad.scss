@@ -1,3 +1,6 @@
+@use 'sass:list';
+@use 'sass:string';
+
 $high-priority-color: hsl(360, 71%, 60%);
 $low-priority-color: hsl(200, 68%, 73%);
 $minWidth: 1024px;
@@ -114,7 +117,6 @@ $mobileNavigationWidthOpen: 220px;
   --table-border: hsl(0, 0%, 69%);
   --table-header-background: hsla(0, 0%, 0%, 0.1);
 }
-
 // dark mode
 [data-theme='dark'] {
   --button-action-color: hsl(0, 0%, 80%);
@@ -197,6 +199,12 @@ $mobileNavigationWidthOpen: 220px;
 
 @mixin dark {
   [data-theme='dark'] & {
+    @content;
+  }
+}
+
+@mixin light {
+  [data-theme='light'] & {
     @content;
   }
 }
@@ -1508,6 +1516,15 @@ pre code {
     background: var(--ai-assist-pink);
     color: var(--text-active);
   }
+
+  &.badge--new {
+    color: hsl(45, 98%, 17%);
+    background: var(--ok-color);
+  }
+
+  &.badge--closed {
+    background: var(--supergood-color);
+  }
 }
 
 .key-value {
@@ -1700,6 +1717,7 @@ td.align-right {
 }
 
 .table tr.is-inactive,
+.table tr.is-inactive td span.text-tools-feedback-output,
 .table tr td span.is-inactive {
   color: var(--text-muted);
   text-decoration: line-through;
@@ -2427,6 +2445,11 @@ fieldset > .form-group {
   margin-bottom: 0;
 }
 
+// Form channel spam protection: stacked fields with a medium control width.
+.js-spamProtection .controls {
+  max-width: 32rem;
+}
+
 .controls--select {
   position: relative;
 }
@@ -2784,6 +2807,7 @@ input.has-error {
 }
 
 .help-inline:not(:empty) {
+  display: block;
   color: var(--danger-color);
   padding: 2px;
   font-size: 13px;
@@ -2974,6 +2998,57 @@ input.has-error {
       fill: var(--text-muted);
       opacity: 0.5;
     }
+  }
+
+  .searchfield-shortcut {
+    position: absolute;
+
+    @include bidi-style(right, 0, left, auto);
+
+    top: 0;
+    height: 100%;
+    width: 50px;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    .btn {
+      width: 28px;
+      height: 28px;
+      padding: 4px;
+      display: flex !important;
+      align-items: center;
+      justify-content: center;
+      background: transparent !important;
+      border: 1px solid var(--border) !important;
+      border-radius: 50% !important;
+      box-shadow: none !important;
+
+      .icon {
+        width: 16px;
+        height: 16px;
+        fill: var(--text-muted);
+      }
+
+      &:hover {
+        border-color: var(--border-highlight) !important;
+        box-shadow: 0 0 4px 0 var(--shadow-highlight) !important;
+      }
+
+      &:focus-visible {
+        border-color: var(--border-highlight) !important;
+        box-shadow: 0 0 4px 0 var(--shadow-highlight) !important;
+      }
+    }
+  }
+
+  &.has-shortcut .empty-search {
+    @include bidi-style(right, 30px, left, auto);
+  }
+
+  &.has-shortcut input[type='search'] {
+    @include bidi-style(padding-right, 80px, padding-left, 0);
   }
 }
 
@@ -4899,6 +4974,8 @@ footer {
   padding: 0;
   margin-bottom: 9px;
   display: flex;
+  border-bottom: 1px solid var(--background-modifier-border);
+  padding-bottom: 4px;
 
   .icon-holder {
     &:first-child .icon-task-state {
@@ -5775,8 +5852,7 @@ li.add .dropdown-nose {
   }
 
   &--unique {
-    /* stylelint-disable-next-line declaration-property-value-no-unknown */
-    background-image: image_url('/assets/images/avatar-bg.png');
+    background-image: url('/assets/images/avatar-bg.png');
     background-size: 300px 226px;
     color: var(--text-inverted);
     line-height: 40px;
@@ -6793,6 +6869,61 @@ a.list-group-item.active > .badge,
   flex-shrink: 0;
 }
 
+.activity-ai-avatar {
+  &-outer {
+    position: relative;
+    padding: 2px;
+    border-radius: 100%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    flex-shrink: 0;
+    border: 1px solid transparent;
+    background-clip: border-box;
+    isolation: isolate;
+
+    &::before {
+      content: '';
+      position: absolute;
+      border-radius: 100%;
+      z-index: -1;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(to right, var(--ai-assist-blue), var(--ai-assist-pink));
+      animation: 2s rotate infinite linear;
+
+      @media (prefers-reduced-motion: reduce) {
+        animation: none;
+      }
+    }
+
+    @include phone {
+      width: 30px;
+      height: 30px;
+    }
+
+    .icon {
+      fill: var(--text-inverted);
+    }
+  }
+
+  &-inner {
+    border-radius: 100%;
+    background: var(--background-popover);
+    padding: 4px;
+
+    .icon-ai-agent {
+      width: 100%;
+      height: 100%;
+      fill: var(--ai-assist-blue);
+    }
+  }
+}
+
 .activity-body {
   padding: 16px 0 16px 2px;
 
@@ -7642,6 +7773,23 @@ a.list-group-item.active > .badge,
   margin: -5px;
 }
 
+.kb-ai-generate-wrapper {
+  position: relative;
+
+  &::after {
+    content: ' ';
+    position: absolute;
+    width: 88%; // Minus the plus
+    right: 0;
+    bottom: 0;
+    background-image: linear-gradient(to right, var(--ai-assist-blue), var(--ai-assist-pink));
+    background-size: 100% 2px;
+    background-position: 0 100%;
+    background-repeat: no-repeat;
+    padding-bottom: 2px;
+  }
+}
+
 .is-internal .internal-border {
   background: repeating-linear-gradient(
     45deg,
@@ -8209,6 +8357,11 @@ a.list-group-item.active > .badge,
     max-height: 40vh;
     overflow-y: auto;
   }
+}
+
+.text-tools-feedback-output {
+  display: inline-block;
+  min-width: 4em;
 }
 
 .bubble-wrapper {
@@ -9138,6 +9291,16 @@ a.list-group-item.active > .badge,
   padding: 4px 1px;
 }
 
+/* Fixes #6058 - Attachment delete icon disappears when filename is too long
+ * Fixes #6071 - Ticket > Zoom > Sidebar > Tag: Delete icon disappears when name is too long
+ * by adding ellipsis to long names and preventing it from overflowing its container
+ */
+.list-item-name-shrinkable {
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
 .list-item-delete {
   padding: 0 10px;
 
@@ -9159,6 +9322,17 @@ a.list-group-item.active > .badge,
 
 .list-item-delete:hover .icon {
   fill: hsl(1, 77%, 47%);
+}
+
+// Same icon-button style as .list-item-delete (geometry + muted default), but a positive green
+// hover colour instead of the destructive red — used to link an AI-suggested knowledge base answer.
+.list-item-add:hover .icon {
+  fill: var(--supergood-color);
+}
+
+// Separate the "Suggested by AI" section from the "+ Link" / "+ AI draft" controls above it.
+.kb-suggestions-title {
+  margin-top: 20px;
 }
 
 li.list-item-none {
@@ -9257,6 +9431,10 @@ li.list-item-none {
         height: 100%;
         background: linear-gradient(to right, var(--ai-assist-blue), var(--ai-assist-pink));
         animation: 2s rotate infinite linear;
+
+        @media (prefers-reduced-motion: reduce) {
+          animation: none;
+        }
       }
 
       @include phone {
@@ -11936,10 +12114,15 @@ output {
     box-shadow:
       0 0 0 1px rgba(0, 0, 0, 0.05),
       0 1px 3px rgba(0, 0, 0, 0.2);
+
     // Lighter knob color for better visibility in dark mode.
     //   https://github.com/zammad/zammad/issues/5983
     @include dark {
       background: var(--background-quaternary-alt);
+    }
+
+    @include light {
+      background: var(--background-secondary);
     }
 
     @include rtl(transform, translateX(70%));
@@ -12052,7 +12235,15 @@ output {
   padding: 10px 5px 6px;
   margin: 0;
 
-  label {
+  .day-time-separator {
+    color: var(--text-muted);
+    font-size: 13px;
+    margin-bottom: 6px;
+    cursor: default;
+  }
+
+  label,
+  .day-time-separator {
     text-align: center;
   }
 
@@ -12786,7 +12977,8 @@ output {
   color: var(--text-inverted);
   padding: 0 14px 11px;
   position: absolute;
-  min-width: 0;
+  min-width: 0; /* for unsupported browsers that don't support max-content below */
+  min-width: max-content;
   cursor: default;
 
   &.datepicker-rtl {
@@ -12818,6 +13010,7 @@ output {
   th,
   td {
     border: none;
+    background: transparent;
   }
 
   .next,
@@ -13448,8 +13641,8 @@ output {
     overflow: hidden;
 
     &.is-picking {
-      cursor: /* stylelint-disable-next-line declaration-property-value-no-unknown */
-        image_url('/assets/images/eyedropper.gif') 0 15,
+      cursor:
+        url('/assets/images/eyedropper.gif') 0 15,
         auto;
     }
 
@@ -13825,8 +14018,6 @@ output {
   table {
     table-layout: auto;
     width: 100%;
-    overflow: auto;
-    -webkit-overflow-scrolling: touch;
     word-break: keep-all;
 
     col {
@@ -13881,6 +14072,8 @@ output {
     border-radius: 6px;
     border: 0;
     background-color: var(--background-modifier-border);
+    white-space: pre-wrap;
+    word-break: break-all;
 
     code {
       padding: 0;
@@ -13889,9 +14082,11 @@ output {
   }
 
   code {
-    padding: 3px;
+    padding: 1px 3px;
     border-radius: 6px;
     background-color: var(--background-modifier-border);
+    white-space: pre-wrap;
+    overflow-wrap: break-word;
   }
 
   hr {
@@ -14097,6 +14292,35 @@ output {
 
   &.is-visible {
     display: block;
+  }
+
+  &.is-loading {
+    cursor: default;
+
+    .batch-overlay-circle,
+    .batch-overlay-cancel,
+    .batch-overlay-box {
+      visibility: hidden !important;
+    }
+  }
+
+  &-loading {
+    display: none;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    align-items: center;
+
+    .is-loading & {
+      display: flex;
+    }
+  }
+
+  &-loading-label {
+    @include bidi-style(margin-left, 10px, margin-right, 0);
+
+    margin-top: 1px;
   }
 
   &-backdrop {
@@ -14630,7 +14854,7 @@ output {
     $rainbow: ();
 
     @while $i <= 360 {
-      $rainbow: append($rainbow, unquote('hsl(#{$i},100%,50%)'), comma);
+      $rainbow: list.append($rainbow, string.unquote('hsl(#{$i},100%,50%)'), comma);
       $i: $i + 60;
     }
 
@@ -14638,8 +14862,8 @@ output {
     background: linear-gradient(to right, $rainbow);
     position: relative;
     overflow: hidden;
-    cursor: /* stylelint-disable-next-line declaration-property-value-no-unknown */
-      image_url('/assets/images/colorcircle.gif') 8 8,
+    cursor:
+      url('/assets/images/colorcircle.gif') 8 8,
       auto;
     user-select: none;
   }
@@ -14876,6 +15100,10 @@ body.fit {
 
 .margin-bottom-5 {
   margin-bottom: 5px;
+}
+
+.gap-16 {
+  gap: 16px;
 }
 
 /*
@@ -17208,4 +17436,69 @@ body.is-pause-blocked {
 /* Datepicker dropdown positioning fix for reports */
 .datepicker.datepicker-dropdown {
   z-index: 10000 !important;
+}
+.package {
+  &-table-heading {
+    margin-top: 30px;
+  }
+
+  &-action-header {
+    width: 100px;
+  }
+
+  &-action-cell {
+    overflow: visible !important;
+    text-align: right;
+    width: 50px;
+  }
+
+  &-action-toggle {
+    padding: 0;
+  }
+}
+
+.audit-log-diff {
+  --diff-removed-background: hsl(355, 100%, 97%);
+  --diff-removed-text: hsl(356, 73%, 41%);
+  --diff-added-background: hsl(137, 100%, 95%);
+  --diff-added-text: hsl(134, 60%, 33%);
+
+  @include dark {
+    --diff-removed-background: hsla(4, 70%, 60%, 0.15);
+    --diff-removed-text: hsl(4, 89%, 71%);
+    --diff-added-background: hsla(140, 60%, 50%, 0.15);
+    --diff-added-text: hsl(137, 55%, 62%);
+  }
+
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  font-family: monospace;
+  font-size: 12px;
+  line-height: 1.7;
+  overflow: auto;
+
+  &-line {
+    padding: 0 10px;
+    white-space: pre-wrap;
+
+    &--removed {
+      background: var(--diff-removed-background);
+      color: var(--diff-removed-text);
+    }
+
+    &--added {
+      background: var(--diff-added-background);
+      color: var(--diff-added-text);
+    }
+  }
+
+  &-sign {
+    display: inline-block;
+    width: 14px;
+  }
+
+  &-empty {
+    color: var(--text-muted);
+    padding: 10px;
+  }
 }

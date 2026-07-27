@@ -1,8 +1,12 @@
 # Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 require 'rails_helper'
+require 'models/concerns/has_audit_logs_examples'
+require 'models/checklist_template/has_audit_logs_examples'
 
 RSpec.describe ChecklistTemplate, :aggregate_failures, current_user_id: 1, type: :model do
+  it_behaves_like 'HasAuditLogs', update_attribute: 'name', update_value: 'Some updated name'
+  it_behaves_like 'ChecklistTemplate::HasAuditLogs'
   describe '#replace_items!' do
     let(:template) { create(:checklist_template, item_count: 0) }
 
@@ -20,7 +24,7 @@ RSpec.describe ChecklistTemplate, :aggregate_failures, current_user_id: 1, type:
 
       expect { template.replace_items!(huge_list) }
         .to raise_error(
-          Exceptions::UnprocessableEntity,
+          Exceptions::UnprocessableContent,
           'Checklist Template items are limited to 100 items per checklist.'
         )
     end

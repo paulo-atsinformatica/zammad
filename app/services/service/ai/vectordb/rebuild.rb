@@ -5,15 +5,14 @@ module Service::AI::VectorDB
     attr_reader :worker
 
     def initialize(worker: 0)
-      super()
-
       @worker = worker
     end
 
     def execute
-      Service::AI::VectorDB::DropTable.new.execute
-      Service::AI::VectorDB::CreateTable.new.execute
-      Service::AI::VectorDB::Reload.new(worker:).execute
+      Service::AI::VectorDB::DropTable.execute
+      Service::AI::VectorDB::CreateTable.execute
+      # The index was just (re)created empty, so the reload can skip the per-record membership search.
+      Service::AI::VectorDB::Reload.execute(worker:, fresh: true)
     end
   end
 end

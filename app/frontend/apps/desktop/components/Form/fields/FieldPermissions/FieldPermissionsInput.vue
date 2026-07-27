@@ -9,6 +9,7 @@ import { useDelegateFocus } from '#shared/composables/useDelegateFocus.ts'
 import { i18n } from '#shared/i18n.ts'
 
 import { useTransitionCollapse } from '#desktop/composables/useTransitionCollapse.ts'
+import { useTransitionConfig } from '#desktop/composables/useTransitionConfig.ts'
 
 import type { PermissionsChildOption, PermissionsProps } from './types.ts'
 
@@ -71,8 +72,8 @@ const { delegateFocus } = useDelegateFocus(
   `permissions_toggle_${props.context.id}_${props.context?.options && props.context?.options[0]?.value}`,
 )
 
-const { collapseDuration, collapseEnter, collapseAfterEnter, collapseLeave } =
-  useTransitionCollapse()
+const { transitions } = useTransitionConfig()
+const { collapseEnter, collapseAfterEnter, collapseLeave } = useTransitionCollapse()
 </script>
 
 <template>
@@ -152,7 +153,7 @@ const { collapseDuration, collapseEnter, collapseAfterEnter, collapseLeave } =
               ],
             },
           }"
-          @update:model-value="updateValue(option.value, $event)"
+          @update:model-value="updateValue(option.value, $event as boolean | undefined)"
           @blur="index === 0 ? context.handlers.blur : undefined"
         />
         <CommonIcon
@@ -169,8 +170,7 @@ const { collapseDuration, collapseEnter, collapseAfterEnter, collapseLeave } =
         />
       </div>
       <Transition
-        name="collapse"
-        :duration="collapseDuration"
+        :name="transitions.collapse"
         @enter="collapseEnter"
         @after-enter="collapseAfterEnter"
         @leave="collapseLeave"
@@ -240,7 +240,7 @@ const { collapseDuration, collapseEnter, collapseAfterEnter, collapseLeave } =
                   ],
                 },
               }"
-              @update:model-value="updateValue(childOption.value, $event)"
+              @update:model-value="updateValue(childOption.value, $event as boolean | undefined)"
             />
           </div>
         </div>

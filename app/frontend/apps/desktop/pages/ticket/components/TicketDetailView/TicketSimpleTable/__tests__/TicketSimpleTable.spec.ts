@@ -44,7 +44,7 @@ describe('TicketSimpleData', () => {
     expect(wrapper.getByText('1111')).toBeInTheDocument()
     expect(wrapper.getByText('1111')).toHaveAttribute('href', '/desktop/tickets/2')
     expect(wrapper.getByText('Dummy')).toBeInTheDocument()
-    expect(wrapper.getAllByRole('status', { name: 'check-circle-no' })).toHaveLength(2)
+    expect(wrapper.getAllByRole('status', { name: 'open' })).toHaveLength(2)
     expect(wrapper.getAllByText('Test Agents')).toHaveLength(2)
     expect(wrapper.getAllByText('2011-12-11')).toHaveLength(2)
   })
@@ -110,7 +110,7 @@ describe('TicketSimpleData', () => {
     })
 
     expect(wrapper.getByRole('row', { description: 'Select table row' })).toHaveClass(
-      'odd:bg-blue-200 odd:dark:bg-gray-700 group focus-visible:outline-transparent cursor-pointer active:bg-blue-800 active:dark:bg-blue-800 focus-visible:bg-blue-800 focus-visible:dark:bg-blue-900 focus-within:text-white hover:bg-blue-600 dark:hover:bg-blue-900',
+      'odd:bg-blue-200 odd:dark:bg-gray-700 bg-blue-800! group focus-visible:outline-transparent active:bg-blue-800 active:dark:bg-blue-800 focus-visible:bg-blue-800 focus-visible:dark:bg-blue-900 focus-within:text-white hover:bg-blue-600 dark:hover:bg-blue-900',
     )
   })
 })

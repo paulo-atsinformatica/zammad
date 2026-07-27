@@ -17,12 +17,19 @@ export interface Props {
   icon?: string
   suffixIcon?: string
   iconClass?: string
+  noTruncate?: boolean
+  /**
+   * Prop needs to be set when we use a non template style e.g formkit schema
+   * else prefer to use directive binding
+   */
+  tooltip?: string
 }
 
 const props = withDefaults(defineProps<Props>(), {
   variant: 'secondary',
   type: 'button',
   size: 'small',
+  noTruncate: false,
 })
 
 const variantClasses = computed(() => {
@@ -37,6 +44,18 @@ const variantClasses = computed(() => {
         'dark:hover:bg-gray-600',
         'text-gray-300',
         'dark:text-neutral-400',
+      ]
+    case 'tertiary-light':
+      return [
+        'border-1',
+        'dark:border-gray-900',
+        'border-neutral-100',
+        'bg-neutral-50',
+        'hover:bg-neutral-50',
+        'dark:bg-gray-500',
+        'dark:hover:bg-gray-500',
+        'text-stone-200',
+        'dark:text-neutral-500',
       ]
     case 'submit':
       return ['bg-yellow-300', 'hover:bg-yellow-300', 'text-black']
@@ -143,6 +162,7 @@ const iconSizeClass = computed(() => {
 
 <template>
   <button
+    v-tooltip="tooltip ? $t(tooltip) : null"
     class="inline-flex h-min min-h-min shrink-0 flex-nowrap items-center justify-center gap-x-1 border-0 font-normal shadow-none transition-transform duration-200 hover:outline-1 hover:outline-offset-1 hover:outline-blue-600 focus:outline-0 focus:hover:outline-1 focus-visible:outline-1 focus-visible:outline-offset-1 focus-visible:outline-blue-800 focus:active:scale-[95%] dark:hover:outline-blue-900"
     :class="[
       ...variantClasses,
@@ -164,6 +184,7 @@ const iconSizeClass = computed(() => {
       <CommonIcon
         v-if="prefixIcon"
         class="pointer-events-none shrink-0"
+        :class="iconClass"
         decorative
         :size="iconSizeClass"
         :name="prefixIcon"
@@ -177,6 +198,10 @@ const iconSizeClass = computed(() => {
         :size="iconSizeClass"
         :name="icon"
       />
+      <template v-else-if="noTruncate">
+        <slot>{{ $t(startCase(variant)) }}</slot>
+      </template>
+
       <span v-else class="truncate">
         <slot>{{ $t(startCase(variant)) }}</slot>
       </span>
@@ -184,6 +209,7 @@ const iconSizeClass = computed(() => {
       <CommonIcon
         v-if="suffixIcon"
         class="pointer-events-none shrink-0"
+        :class="iconClass"
         decorative
         :size="iconSizeClass"
         :name="suffixIcon"

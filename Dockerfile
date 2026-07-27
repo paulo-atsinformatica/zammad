@@ -1,8 +1,8 @@
 # syntax=docker/dockerfile:1
 # check=error=true
 
-ARG RUBY_VERSION=3.4.8
-ARG NODE_VERSION=22
+ARG RUBY_VERSION=3.4.9
+ARG NODE_VERSION=24
 
 FROM docker.io/library/ruby:$RUBY_VERSION-slim-trixie AS base
 
@@ -55,7 +55,7 @@ COPY --from=node /usr/local/lib/node_modules /usr/local/lib/node_modules
 COPY --from=node /usr/local/bin /usr/local/bin
 
 # Install node modules
-COPY package.json pnpm-lock.yaml ./
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY .eslint-plugin-zammad/package.json .eslint-plugin-zammad/pnpm-lock.yaml .eslint-plugin-zammad/lib/ .eslint-plugin-zammad/
 RUN pnpm install --frozen-lockfile
 
@@ -94,8 +94,11 @@ RUN apt-get update -qq && \
     apt-get upgrade -y && \
     rm -rf /var/lib/apt/lists /var/cache/apt/archives
 
+# ZAMMAD_DOCKER is used by Zammad to take decisions for containerized environments,
+#   e.g. hiding the package management interface because installed packages do not persist.
 # Application variables with defaults matching the Zammad docker stack.
-ENV POSTGRESQL_DB=zammad_production \
+ENV ZAMMAD_DOCKER=true \
+    POSTGRESQL_DB=zammad_production \
     POSTGRESQL_HOST=zammad-postgresql \
     POSTGRESQL_PORT=5432 \
     POSTGRESQL_USER=zammad \
@@ -118,6 +121,18 @@ RUN mkdir -p "/opt/zammad/storage" "/opt/zammad/tmp" && \
 # Copy built artifacts: gems, application
 COPY --chown=1000:1000 --from=build "${BUNDLE_PATH}" "${BUNDLE_PATH}"
 COPY --chown=1000:1000 --from=build /opt/zammad /opt/zammad
+
+# Remove Ruby default/bundled gems that are superseded by Bundler-managed versions from Gemfile.lock
+#   to avoid false positives in container vulnerability scanners.
+#   https://github.com/zammad/zammad/issues/6258
+RUN ruby script/build/remove_superseded_system_gems.rb
+
+# Expose the Bundler-managed gems to RubyGems via a stable path (the real directory name
+#   depends on the Ruby ABI version), so CLI tools like irb and rake also work outside of `bundle exec`.
+RUN ln -s "${BUNDLE_PATH}/ruby/$(ruby -e 'print RbConfig::CONFIG[%q(ruby_version)]')" "${BUNDLE_PATH}/ruby/current"
+ENV GEM_PATH="${BUNDLE_PATH}/ruby/current" \
+    PATH="${BUNDLE_PATH}/ruby/current/bin:${PATH}"
+
 # Backwards compatibility for older images that used /docker-entrypoint.sh
 RUN ln -s "/opt/zammad/bin/docker-entrypoint" /docker-entrypoint.sh
 

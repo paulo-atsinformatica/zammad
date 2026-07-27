@@ -7,7 +7,9 @@ class KnowledgeBase::Answer < ApplicationModel
   include CanBePublished
   include ChecksKbClientNotification
   include ChecksKbClientVisibility
+  include TriggersKnowledgeBaseContentUpdates
   include CanCloneAttachments
+  include CanLookupSearchIndexAttributesWithAttachments
 
   AGENT_ALLOWED_ATTRIBUTES       = %i[category_id promoted internal_note].freeze
   AGENT_ALLOWED_NESTED_RELATIONS = %i[translations].freeze
@@ -17,12 +19,15 @@ class KnowledgeBase::Answer < ApplicationModel
   scope :include_contents, -> { eager_load(translations: :content) }
   scope :sorted,           -> { order(position: :asc) }
 
-  scope :sorted_by_published, lambda {
-    reorder(Arel.sql('GREATEST(knowledge_base_answers.published_at, knowledge_base_answers.updated_at) DESC'))
+  scope :sorted_by_published, lambda { |system_locale_or_id|
+    localed(system_locale_or_id)
+      .reorder(Arel.sql('GREATEST(knowledge_base_answers.published_at, knowledge_base_answer_translations.edited_at) DESC'))
       .published
   }
-  scope :sorted_by_internally_published, lambda {
-    reorder(Arel.sql('GREATEST(LEAST(knowledge_base_answers.internal_at, knowledge_base_answers.published_at), knowledge_base_answers.updated_at) DESC')).internal
+  scope :sorted_by_internally_published, lambda { |system_locale_or_id|
+    localed(system_locale_or_id)
+      .reorder(Arel.sql('GREATEST(LEAST(knowledge_base_answers.internal_at, knowledge_base_answers.published_at), knowledge_base_answer_translations.edited_at) DESC'))
+      .internal
   }
 
   acts_as_list scope: :category, top_of_list: 0
@@ -102,11 +107,21 @@ class KnowledgeBase::Answer < ApplicationModel
 
   private
 
+  # Keep each translation's indexes fresh when the answer changes (tags, category, publication
+  # state, …). Both reindex hooks live on the translation's own after_commit — the search index via
+  # HasSearchIndexBackend and the vector index via HasVectorIndex (which also gates on vector store
+  # availability) — so the answer only has to nudge its translations; no vector-specific logic here.
+  #
+  # touch_later (the deferred touch belongs_to touch: uses) instead of touch: it still bumps
+  # updated_at and fires the translation's after_commit, but skips dirty tracking — so a translation
+  # edited in the same transaction keeps its previous_changes (e.g. the title change its reindex
+  # hook inspects) instead of having them reset by this touch-back.
   def touch_translations
     translations
       .reject(&:destroyed?)
-      .each(&:touch) # touch each translation separately to trigger after_commit callbacks
+      .each(&:touch_later)
   end
+  after_save  :touch_translations
   after_touch :touch_translations
 
   class << self

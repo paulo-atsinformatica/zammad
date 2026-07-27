@@ -39,7 +39,7 @@ RSpec.describe 'Ticket Article Attachments', authenticated_as: -> { agent }, typ
 
           get "/api/v1/ticket_attachment/#{ticket1.id}/#{article2.id}/#{store_file.id}", params: {}
           expect(response).to have_http_status(:forbidden)
-          expect(response.body).to match(%r{403: Forbidden})
+          expect(response.body).to include('403: Forbidden')
         end
       end
 
@@ -60,7 +60,7 @@ RSpec.describe 'Ticket Article Attachments', authenticated_as: -> { agent }, typ
 
           get "/api/v1/ticket_attachment/#{ticket2.id}/#{article2.id}/#{store_file.id}", params: {}
           expect(response).to have_http_status(:forbidden)
-          expect(response.body).to match(%r{403: Forbidden})
+          expect(response.body).to include('403: Forbidden')
 
           # allow access via merged ticket id also
           get "/api/v1/ticket_attachment/#{ticket1.id}/#{article1.id}/#{store_file.id}", params: {}
@@ -69,7 +69,7 @@ RSpec.describe 'Ticket Article Attachments', authenticated_as: -> { agent }, typ
 
           get "/api/v1/ticket_attachment/#{ticket1.id}/#{article2.id}/#{store_file.id}", params: {}
           expect(response).to have_http_status(:forbidden)
-          expect(response.body).to match(%r{403: Forbidden})
+          expect(response.body).to include('403: Forbidden')
         end
       end
 
@@ -149,6 +149,31 @@ RSpec.describe 'Ticket Article Attachments', authenticated_as: -> { agent }, typ
       end
     end
 
+    context 'with customer trying to access internal article attachment' do
+      let(:customer) { create(:customer) }
+      let(:ticket)   { create(:ticket, group: group, customer: customer) }
+      let(:article)  { create(:ticket_article, :internal_note, ticket: ticket) }
+      let(:secret_store_file) do
+        create(:store,
+               object:      'Ticket::Article',
+               o_id:        article.id,
+               data:        'secret file content',
+               filename:    'secret.txt',
+               preferences: { 'Content-Type' => 'text/plain' })
+      end
+
+      it 'returns forbidden for the ticket customer' do
+        authenticated_as(customer)
+        get "/api/v1/ticket_attachment/#{ticket.id}/#{article.id}/#{secret_store_file.id}"
+        expect(response).to have_http_status(:forbidden)
+      end
+
+      it 'returns ok for an agent' do
+        get "/api/v1/ticket_attachment/#{ticket.id}/#{article.id}/#{secret_store_file.id}"
+        expect(response).to have_http_status(:ok)
+      end
+    end
+
     context 'when attachment actions are used' do
       it 'does test attachments for split' do
         email_file_path  = Rails.root.join('test/data/mail/mail024.box')
@@ -170,7 +195,7 @@ RSpec.describe 'Ticket Article Attachments', authenticated_as: -> { agent }, typ
         _ticket_p, article_p, _user_p = Channel::EmailParser.new.process({}, email_raw_string)
 
         post "/api/v1/ticket_attachment_upload_clone_by_article/#{article_p.id}", params: {}, as: :json
-        expect(response).to have_http_status(:unprocessable_entity)
+        expect(response).to have_http_status(:unprocessable_content)
         expect(json_response).to be_a(Hash)
         expect(json_response['error']).to eq("Need 'form_id' to add attachments to new form.")
 

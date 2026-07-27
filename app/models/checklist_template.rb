@@ -3,6 +3,7 @@
 class ChecklistTemplate < ApplicationModel
   include HasDefaultModelUserRelations
   include ChecksClientNotification
+  include ChecklistTemplate::HasAuditLogs
   include ChecklistTemplate::TriggersSubscriptions
   include ChecklistTemplate::Assets
   include CanChecklistSortedItems
@@ -13,10 +14,12 @@ class ChecklistTemplate < ApplicationModel
 
   def replace_items!(new_items)
     if new_items.count > 100
-      raise Exceptions::UnprocessableEntity, __('Checklist Template items are limited to 100 items per checklist.')
+      raise Exceptions::UnprocessableContent, __('Checklist Template items are limited to 100 items per checklist.')
     end
 
     ActiveRecord::Base.transaction do
+      audit_log_remember_item_texts
+
       items.destroy_all
 
       self.sorted_item_ids = new_items

@@ -7,6 +7,9 @@ import gql from 'graphql-tag'
 import { computed, h, onMounted, reactive, ref, watch, type Ref, useTemplateRef, toRef } from 'vue'
 
 import CommonAlert from '#shared/components/CommonAlert/CommonAlert.vue'
+import { NotificationTypes } from '#shared/components/CommonNotifications/types.ts'
+import { useNotifications } from '#shared/components/CommonNotifications/useNotifications.ts'
+import CommonProgressBar from '#shared/components/CommonProgressBar/CommonProgressBar.vue'
 import CommonTranslateRenderer from '#shared/components/CommonTranslateRenderer/CommonTranslateRenderer.vue'
 import CommonUserAvatar from '#shared/components/CommonUserAvatar/CommonUserAvatar.vue'
 import Form from '#shared/components/Form/Form.vue'
@@ -37,14 +40,13 @@ import type { Orientation, Placement } from '#desktop/components/CommonPopover/t
 import { usePopover } from '#desktop/components/CommonPopover/usePopover.ts'
 import CommonPopoverMenu from '#desktop/components/CommonPopoverMenu/CommonPopoverMenu.vue'
 import type { MenuItem } from '#desktop/components/CommonPopoverMenu/types.ts'
-import CommonProgressBar from '#desktop/components/CommonProgressBar/CommonProgressBar.vue'
 import CommonSkeleton from '#desktop/components/CommonSkeleton/CommonSkeleton.vue'
-import CommonTabGroup from '#desktop/components/CommonTabGroup/CommonTabGroup.vue'
-import { useTabGroup } from '#desktop/components/CommonTabGroup/useTabGroup.ts'
 import CommonAdvancedTable from '#desktop/components/CommonTable/CommonAdvancedTable.vue'
 import CommonSimpleTable from '#desktop/components/CommonTable/CommonSimpleTable.vue'
 import CommonTableSkeleton from '#desktop/components/CommonTable/Skeleton/CommonTableSkeleton.vue'
 import type { TableAdvancedItem } from '#desktop/components/CommonTable/types.ts'
+import CommonNavigationTabs from '#desktop/components/CommonTabs/CommonNavigationTabs/CommonNavigationTabs.vue'
+import CommonTabGroup from '#desktop/components/CommonTabs/CommonTabGroup/CommonTabGroup.vue'
 import LayoutContent from '#desktop/components/layout/LayoutContent.vue'
 import SplitButton from '#desktop/components/SplitButton/SplitButton.vue'
 import ThemeSwitch from '#desktop/components/ThemeSwitch/ThemeSwitch.vue'
@@ -881,6 +883,48 @@ const formInitialValues: FormValues = {
   // date_0: [new Date(), new Date(new Date().setDate(new Date().getDate() + 7))],
 }
 
+const progressBarNotificationValue = ref(0)
+
+const increaseProgressBarNotificationValue = () => {
+  if (progressBarNotificationValue.value < 1) {
+    progressBarNotificationValue.value += 0.01
+  }
+}
+
+const { notify } = useNotifications()
+
+let progressBarNotificationIntervalId: number | null = null
+
+const notifyWithProgress = (progress: number) => {
+  notify({
+    id: 'playground-notification-progress',
+    type: NotificationTypes.Info,
+    message: `${(progress * 100).toFixed(0)}% progress bar notification`,
+    persistent: true,
+    currentProgress: progress,
+    closeCallback: () => {
+      clearInterval(progressBarNotificationIntervalId!)
+      progressBarNotificationIntervalId = null
+    },
+  })
+}
+
+const rampUpProgressBarNotificationValue = () => {
+  // reset if already done
+  if (progressBarNotificationValue.value > 0) progressBarNotificationValue.value = 0
+
+  // show 0 progress toast
+  notifyWithProgress(0)
+
+  // wait before increasing
+  setTimeout(() => {
+    progressBarNotificationIntervalId = setInterval(
+      increaseProgressBarNotificationValue,
+      500,
+    ) as unknown as number
+  }, 2000)
+}
+
 const progressBarValue = ref(0)
 
 const increaseProgressBar = () => {
@@ -897,6 +941,16 @@ watch(progressBarValue, (newValue) => {
   setTimeout(() => {
     progressBarValue.value = 0
   }, 1000)
+})
+
+watch(progressBarNotificationValue, (newValue) => {
+  if (newValue < 1) notifyWithProgress(progressBarNotificationValue.value)
+  else
+    notify({
+      id: 'playground-notification-progress',
+      type: NotificationTypes.Success,
+      message: 'Progress bar notification completed successfully.',
+    })
 })
 
 const user = toRef(useSessionStore(), 'user')
@@ -1118,6 +1172,7 @@ const tableItemsAdvanced = reactive<TableAdvancedItem[]>([
     name: 'Tom Cook',
     title: 'Director of Product',
     email: 'tom.cook@example.com',
+    disabled: true,
     role: 'Member',
   },
   {
@@ -1125,6 +1180,7 @@ const tableItemsAdvanced = reactive<TableAdvancedItem[]>([
     name: 'Whitney Francis',
     title: 'Copywriter',
     email: 'whitney.francis@example.com',
+    disabled: true,
     role: 'Admin',
   },
   {
@@ -1202,9 +1258,29 @@ const changeRowSimple = () => {
   tableItems[0].role = tableItems[0].role ? '' : 'Member'
 }
 
-const { activeTab } = useTabGroup<string>()
+const activeTab = ref()
 
-const { activeTab: activeFilters } = useTabGroup<string[]>()
+const activeFilters = ref()
+
+const activeTabOverflow = ref<string>()
+const activeFiltersOverflow = ref<string[]>()
+
+const activeNavTabScroll = ref<string>()
+const activeNavTabOverflow = ref<string>()
+
+const playgroundNavTabs = [
+  { label: 'Overview', key: 'overview', link: '/' },
+  { label: 'My Tickets', key: 'my-tickets', link: '/' },
+  { label: 'Unassigned', key: 'unassigned', link: '/' },
+  { label: 'Open', key: 'open', link: '/' },
+  { label: 'Pending', key: 'pending', link: '/' },
+  { label: 'Escalated', key: 'escalated', link: '/' },
+  { label: 'Closed', key: 'closed', link: '/' },
+  { label: 'Spam', key: 'spam', link: '/' },
+  { label: 'All Tickets', key: 'all-tickets', link: '/' },
+]
+
+const playgroundTabItems = playgroundNavTabs.map(({ label, key }) => ({ label, key }))
 
 const popoverOrientation: Ref<Orientation> = ref('autoVertical')
 const popoverOrientationOptions = [
@@ -1341,11 +1417,67 @@ const { openFeedbackDialog } = useFeedbackDialog()
 <template>
   <LayoutContent>
     <div>
+      <h3>Notifications / Alerts</h3>
+      <div class="mb-4 space-x-2">
+        <CommonButton
+          variant="submit"
+          @click="
+            notify({
+              id: 'playground-notification-success',
+              type: NotificationTypes.Success,
+              message: 'The notification was triggered successfully.',
+            })
+          "
+        >
+          Show success notification
+        </CommonButton>
+
+        <CommonButton
+          variant="primary"
+          @click="
+            notify({
+              id: 'playground-notification-persistent',
+              type: NotificationTypes.Info,
+              message: 'The persistent notification was triggered successfully.',
+              persistent: true,
+            })
+          "
+        >
+          Show persistent notification
+        </CommonButton>
+
+        <CommonButton
+          variant="secondary"
+          @click="
+            notify({
+              id: 'playground-notification-persistent-action',
+              type: NotificationTypes.Warn,
+              message: 'The persistent notification was triggered successfully.',
+              persistent: true,
+              actionLabel: 'Action',
+              actionCallback: () => {
+                notify({
+                  id: 'playground-notification-persistent-action-callback',
+                  type: NotificationTypes.Success,
+                  message: 'The action callback was triggered successfully.',
+                })
+              },
+            })
+          "
+        >
+          Show persistent notification (with action)
+        </CommonButton>
+
+        <CommonButton variant="subtle" @click="rampUpProgressBarNotificationValue">
+          Show persistent notification (with progress bar)
+        </CommonButton>
+      </div>
+
       <h3>Feedback Dialog</h3>
       <div class="mb-4 space-x-2">
         <CommonButton variant="primary" @click="openFeedbackDialog({ milestone: '5h' })"
-          >Open Timed Feedback Dialog</CommonButton
-        >
+          >Open Timed Feedback Dialog
+        </CommonButton>
 
         <CommonButton variant="primary" @click="openFeedbackDialog()"
           >Open Manual Feedback Dialog</CommonButton
@@ -1598,7 +1730,10 @@ const { openFeedbackDialog } = useFeedbackDialog()
         <div class="flex flex-col gap-3">
           <div class="flex flex-col gap-2">
             <CommonLabel size="small">What is the meaning of life?</CommonLabel>
+            <CommonLabel size="small"> Variant:Primary</CommonLabel>
             <CommonProgressBar />
+            <CommonLabel size="small"> Variant:Inverted</CommonLabel>
+            <CommonProgressBar variant="inverted" />
           </div>
 
           <div class="flex items-end gap-2">
@@ -1610,7 +1745,15 @@ const { openFeedbackDialog } = useFeedbackDialog()
                 </CommonLabel>
               </div>
 
-              <CommonProgressBar :value="progressBarValue.toString()" max="100" />
+              <CommonLabel size="small">Size: Normal</CommonLabel>
+              <CommonProgressBar class="mb-4" :value="progressBarValue.toString()" max="100" />
+              <CommonLabel size="small">Size: Small</CommonLabel>
+              <CommonProgressBar
+                :value="progressBarValue.toString()"
+                size="small"
+                variant="inverted"
+                max="100"
+              />
             </div>
 
             <CommonIcon
@@ -1632,7 +1775,8 @@ const { openFeedbackDialog } = useFeedbackDialog()
           :headers="tableHeaders"
           :items="tableItems"
           :actions="tableActions"
-        ></CommonSimpleTable>
+        >
+        </CommonSimpleTable>
       </div>
 
       <h2 class="mt-8 mb-2">Table (Advanced)</h2>
@@ -1643,8 +1787,8 @@ const { openFeedbackDialog } = useFeedbackDialog()
           :items="tableItemsAdvanced"
           :actions="tableActions"
           :max-items="8"
-          :total-items="10"
-          has-checkbox-column
+          :total-items-count="10"
+          has-bulk-action
           caption="test advanced table"
           table-id="2"
           :attributes="[
@@ -1668,10 +1812,10 @@ const { openFeedbackDialog } = useFeedbackDialog()
                 noResize: false,
                 hideLabel: false,
                 displayWidth: 200,
-                truncate: true,
               },
               columnPreferences: {
                 alignContent: 'center',
+                tooltip: (item) => item.title as string,
               },
               dataType: 'integer',
             },
@@ -1712,7 +1856,7 @@ const { openFeedbackDialog } = useFeedbackDialog()
 
         <div class="my-4 flex items-center gap-4">
           <CommonUserAvatar
-            class="cursor-pointer border border-neutral-100 outline outline-2 outline-transparent hover:outline-blue-600 focus:outline-blue-800 dark:border-gray-900 dark:hover:outline-blue-900 dark:hover:focus:outline-blue-800"
+            class="cursor-pointer border border-neutral-100 outline-2 outline-transparent hover:outline-blue-600 focus:outline-blue-800 dark:border-gray-900 dark:hover:outline-blue-900 dark:hover:focus:outline-blue-800"
             tabindex="0"
             :entity="{
               id: 'gid://zammad/User/1',
@@ -1745,7 +1889,7 @@ const { openFeedbackDialog } = useFeedbackDialog()
             size="xs"
           />
           <CommonUserAvatar
-            class="cursor-pointer border border-neutral-100 outline outline-2 outline-transparent hover:outline-blue-600 focus:outline-blue-800 dark:border-gray-900 dark:hover:outline-blue-900 dark:hover:focus:outline-blue-800"
+            class="cursor-pointer border border-neutral-100 outline-2 outline-transparent hover:outline-blue-600 focus:outline-blue-800 dark:border-gray-900 dark:hover:outline-blue-900 dark:hover:focus:outline-blue-800"
             tabindex="0"
             :entity="{
               id: 'gid://zammad/User/3',
@@ -1990,44 +2134,103 @@ const { openFeedbackDialog } = useFeedbackDialog()
         </Form>
         <pre
           class="flex flex-wrap gap-5 rounded-lg bg-blue-200 p-5 font-mono text-sm text-wrap text-gray-100 dark:bg-gray-700 dark:text-neutral-400"
-          >{{ formValues }}</pre
         >
+          {{ formValues }}</pre>
       </div>
 
-      <h3>Tabs Groups</h3>
-      <CommonTabGroup
-        v-model="activeTab"
-        class="mb-4"
-        :tabs="[
-          { label: 'Tab 1', key: 'tab-1' },
-          { label: 'Tab 2', default: true, key: 'tab-2' },
-          { label: 'Tab 3', key: 'tab-3' },
-        ]"
-      />
+      <section class="mb-6">
+        <h2>Tab Rendering Modes</h2>
 
-      <h3>Search Entities</h3>
-      <CommonTabGroup
-        v-model="activeTab"
-        class="mb-4"
-        size="medium"
-        :tabs="[
-          { label: 'Organization', count: 5, key: 'organization' },
-          { label: 'Ticket', default: true, count: 5, key: 'ticket' },
-          { label: 'User', key: 'user', count: 2 },
-        ]"
-      />
+        <h3 class="mb-2">1. Tab Group — Single Select (scroll + marker pill)</h3>
+        <p class="mb-2 text-sm text-gray-500">
+          <code>CommonTabGroup</code> — single selection, animated marker pill, scrollable with
+          arrow buttons when overflowing.
+        </p>
+        <div class="mb-4 w-96">
+          <CommonTabGroup v-model="activeTab" :tabs="playgroundTabItems" select-first-by-default />
+        </div>
+        <pre class="mb-6 rounded bg-blue-100 px-3 py-1 font-mono text-xs dark:bg-gray-700">
+active: {{ activeTab }}</pre>
 
-      <h3>Filter Selector</h3>
-      <CommonTabGroup
-        v-model="activeFilters"
-        label="Roles"
-        :tabs="[
-          { label: 'Admin', key: 'admin' },
-          { label: 'Agent', key: 'agent' },
-          { label: 'Customer', key: 'customer' },
-        ]"
-        multiple
-      />
+        <h3 class="mb-2">2. Tab Group — Multi Select (scroll, no marker)</h3>
+        <p class="mb-2 text-sm text-gray-500">
+          <code>CommonTabGroup multiple</code> — multi-selection filter style, no marker pill,
+          scrollable when overflowing.
+        </p>
+        <div class="mb-4 w-96">
+          <CommonTabGroup
+            v-model="activeFilters"
+            label="Filters"
+            :tabs="playgroundTabItems"
+            multiple
+          />
+        </div>
+        <pre class="mb-6 rounded bg-blue-100 px-3 py-1 font-mono text-xs dark:bg-gray-700">
+active: {{ activeFilters }}</pre>
+
+        <h3 class="mb-2">3. Tab Group — Single Select (overflow menu)</h3>
+        <p class="mb-2 text-sm text-gray-500">
+          <code>CommonTabGroup mode="overflow"</code> — visible tabs fill the container; any that
+          don't fit collapse into a popover menu.
+        </p>
+        <div class="mb-4 w-96">
+          <CommonTabGroup
+            v-model="activeTabOverflow"
+            :tabs="playgroundTabItems"
+            mode="overflow"
+            select-first-by-default
+          />
+        </div>
+        <pre class="mb-6 rounded bg-blue-100 px-3 py-1 font-mono text-xs dark:bg-gray-700">
+active: {{ activeTabOverflow }}</pre>
+
+        <h3 class="mb-2">4. Tab Group — Multi Select (overflow menu)</h3>
+        <p class="mb-2 text-sm text-gray-500">
+          <code>CommonTabGroup multiple mode="overflow"</code> — multi-selection filter style; any
+          tabs that don't fit collapse into a popover menu.
+        </p>
+        <div class="mb-4 w-96">
+          <CommonTabGroup
+            v-model="activeFiltersOverflow"
+            label="Filters"
+            :tabs="playgroundTabItems"
+            multiple
+            mode="overflow"
+          />
+        </div>
+        <pre class="mb-6 rounded bg-blue-100 px-3 py-1 font-mono text-xs dark:bg-gray-700">
+active: {{ activeFiltersOverflow }}</pre>
+
+        <h3 class="mb-2">5. Navigation Tabs — Scroll Mode</h3>
+        <p class="mb-2 text-sm text-gray-500">
+          <code>CommonNavigationTabs mode="scroll"</code> — tabs scroll horizontally; left/right
+          arrow buttons appear when the list overflows.
+        </p>
+        <div class="mb-4 w-96">
+          <CommonNavigationTabs
+            v-model="activeNavTabScroll"
+            :tabs="playgroundNavTabs"
+            mode="scroll"
+          />
+        </div>
+        <pre class="mb-6 rounded bg-blue-100 px-3 py-1 font-mono text-xs dark:bg-gray-700">
+active: {{ activeNavTabScroll }}</pre>
+
+        <h3 class="mb-2">6. Navigation Tabs — Overflow Menu</h3>
+        <p class="mb-2 text-sm text-gray-500">
+          <code>CommonNavigationTabs mode="overflow"</code> — visible tabs fill the container; any
+          that don't fit collapse into a popover menu.
+        </p>
+        <div class="mb-4 w-96">
+          <CommonNavigationTabs
+            v-model="activeNavTabOverflow"
+            :tabs="playgroundNavTabs"
+            mode="overflow"
+          />
+        </div>
+        <pre class="mb-6 rounded bg-blue-100 px-3 py-1 font-mono text-xs dark:bg-gray-700">
+active: {{ activeNavTabOverflow }}</pre>
+      </section>
 
       <h3>Split Button</h3>
       <div class="mb-3 flex justify-end gap-3">
@@ -2035,15 +2238,15 @@ const { openFeedbackDialog } = useFeedbackDialog()
           >Disabled</SplitButton
         >
         <SplitButton variant="submit" size="large" addon-disabled @click="onSplitButtonClick"
-          >Addon disabled</SplitButton
-        >
+          >Addon disabled
+        </SplitButton>
         <SplitButton
           variant="submit"
           size="large"
           :items="splitButtonMenuItems"
           @click="onSplitButtonClick"
-          >Update</SplitButton
-        >
+          >Update
+        </SplitButton>
       </div>
     </div>
   </LayoutContent>

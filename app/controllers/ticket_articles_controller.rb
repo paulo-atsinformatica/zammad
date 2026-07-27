@@ -176,6 +176,8 @@ class TicketArticlesController < ApplicationController
       authorize!(ticket, :show?)
     end
 
+    authorize!(article, :show?)
+
     list = article.attachments || []
     access = false
     list.each do |item|
@@ -255,7 +257,7 @@ class TicketArticlesController < ApplicationController
     if string.blank? && params[:file].present?
       string = params[:file].read.force_encoding('utf-8')
     end
-    raise Exceptions::UnprocessableEntity, __('No source data submitted!') if string.blank?
+    raise Exceptions::UnprocessableContent, __('No source data submitted!') if string.blank?
 
     result = Ticket::Article.csv_import(
       string:       string,
@@ -286,15 +288,15 @@ class TicketArticlesController < ApplicationController
     render json: {}, status: :ok
   rescue => e
     logger.error e
-    render json: { error: __('The retried attachment download failed.') }, status: :unprocessable_entity
+    render json: { error: __('The retried attachment download failed.') }, status: :unprocessable_content
   end
 
   private
 
   def render_calendar_preview
-    render json: Service::Calendar::IcsFile::Parse.new(current_user:).execute(file: download_file), status: :ok
+    render json: Service::Calendar::IcsFile::Parse.with_current_user(current_user).execute(file: download_file), status: :ok
   rescue => e
     logger.error e
-    render json: { error: __('The preview cannot be generated. The format is corrupted or not supported.') }, status: :unprocessable_entity
+    render json: { error: __('The preview cannot be generated. The format is corrupted or not supported.') }, status: :unprocessable_content
   end
 end

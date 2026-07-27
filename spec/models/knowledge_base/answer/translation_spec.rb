@@ -14,6 +14,37 @@ RSpec.describe KnowledgeBase::Answer::Translation, current_user_id: 1, type: :mo
   it { is_expected.to belong_to(:answer) }
   it { is_expected.to belong_to(:kb_locale) }
 
+  describe '#edited_at' do
+    let(:translation) { subject }
+
+    before { translation } # create eagerly, before travel, so timestamps have a real gap to move across
+
+    it 'is set on creation' do
+      expect(translation.edited_at).to be_present
+    end
+
+    it 'updates when the title changes' do
+      travel(1.hour) # time is frozen: if we don't travel forward, pre- and post-update values will be the same
+
+      expect { translation.update!(title: 'Updated title') }
+        .to change(translation, :edited_at)
+    end
+
+    it 'updates when the associated content body changes' do
+      travel(1.hour) # time is frozen: if we don't travel forward, pre- and post-update values will be the same
+
+      expect { translation.content.update!(body: 'Updated body') }
+        .to change { translation.reload.edited_at }
+    end
+
+    it 'does not change when the translation is merely touched (e.g. via an unrelated answer change)' do
+      travel(1.hour) # time is frozen: if we don't travel forward, pre- and post-update values will be the same
+
+      expect { translation.answer.touch }
+        .not_to change { translation.reload.edited_at }
+    end
+  end
+
   def handle_elasticsearch(enabled)
     if enabled
       searchindex_model_reload([KnowledgeBase::Translation, KnowledgeBase::Category::Translation, KnowledgeBase::Answer::Translation])
@@ -85,6 +116,88 @@ RSpec.describe KnowledgeBase::Answer::Translation, current_user_id: 1, type: :mo
           end
         end
       end
+    end
+  end
+
+  describe '#search_index_attribute_lookup' do
+    include_context 'basic Knowledge Base'
+
+    it 'sets search index attributes from translation and answer' do
+      answer = create(:knowledge_base_answer, :published, :with_tag, tag_names: ['example-tag'], category: category)
+      attrs  = answer.translations.first.search_index_attribute_lookup
+
+      expect(attrs).to include(
+        'title'             => answer.translations.first.title,
+        'scope_id'          => category.id,
+        'tags'              => include('example-tag'),
+        'created_at'        => answer.translations.first.created_at,
+        'updated_at'        => answer.translations.first.updated_at,
+        'publication_state' => :published,
+      )
+    end
+
+    describe 'answer state reflected in search index' do
+      %i[draft internal published archived].each do |state|
+        it "returns '#{state}' for #{state} answer" do
+          answer = create(:knowledge_base_answer, state, category: category)
+          attrs  = answer.translations.first.search_index_attribute_lookup
+
+          expect(attrs['publication_state']).to eq(state)
+        end
+      end
+
+      it 'is consistent with CanBePublished::StateMachine#calculated_state' do
+        answer = create(:knowledge_base_answer, :published, category: category)
+        attrs  = answer.translations.first.search_index_attribute_lookup
+
+        expect(attrs['publication_state'])
+          .to eq(answer.can_be_published_aasm.calculated_state)
+      end
+    end
+  end
+
+  describe '#vector_index_data' do
+    subject(:translation) { create(:knowledge_base_answer_translation) }
+
+    it 'returns a hash with content, content_meta_headers, and metadata' do
+      data = translation.vector_index_data
+
+      expect(data).to be_a(Hash)
+        .and have_key(:content)
+        .and have_key(:content_meta_headers)
+        .and have_key(:metadata)
+    end
+
+    it 'includes cleaned up content body' do
+      translation.content.update(body: '<p>Test <b>content</b></p>')
+
+      data = translation.vector_index_data
+
+      expect(data[:content]).to eq('Test content')
+    end
+
+    it 'includes title in content_meta_headers' do
+      data = translation.vector_index_data
+
+      expect(data[:content_meta_headers]).to include(translation.title)
+    end
+
+    it 'includes locale in metadata' do
+      data = translation.vector_index_data
+
+      expect(data[:metadata][:locale]).to eq(translation.kb_locale.system_locale.locale)
+    end
+
+    it 'includes category_id in metadata' do
+      data = translation.vector_index_data
+
+      expect(data[:metadata][:category_id]).to eq(translation.answer.category_id)
+    end
+
+    it 'includes answer_id in metadata' do
+      data = translation.vector_index_data
+
+      expect(data[:metadata][:answer_id]).to eq(translation.answer_id)
     end
   end
 end

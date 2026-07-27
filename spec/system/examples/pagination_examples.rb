@@ -28,8 +28,19 @@ RSpec.shared_examples 'pagination', authenticated_as: :authenticate do |model:, 
 
   def search(search_query)
     search_field = page.find('.js-search')
-    search_field.fill_in with: search_query, fill_options: { clear: :backspace }
+
+    # A prior programmatic blur (below) can leave the cursor position such
+    # that fill_in's clear: :backspace clears nothing and the new value gets
+    # inserted at the start instead of replacing the field - explicitly
+    # select-all before typing, regardless of where the cursor ended up.
+    search_field.click
+    search_field.send_keys([magic_key, 'a'], :backspace)
+    search_field.send_keys(search_query)
     search_field.execute_script('this.blur()')
+
+    wait.until { page.current_url.end_with?("1/#{ERB::Util.url_encode(search_query.to_s)}") }
+
+    await_empty_ajax_queue
   end
 
   before do
@@ -47,6 +58,7 @@ RSpec.shared_examples 'pagination', authenticated_as: :authenticate do |model:, 
     last_row  = current_last_row
     page.first('.js-page', text: '2').click
 
+    await_empty_ajax_queue
     expect(page).to have_css('.js-page.btn--active', text: '2')
     expect(page).to have_no_css('.js-tableBody table-draggable')
     wait_until_first_and_last_changed(first_row, last_row)
@@ -55,6 +67,7 @@ RSpec.shared_examples 'pagination', authenticated_as: :authenticate do |model:, 
     last_row  = current_last_row
     page.first('.js-page', text: '3').click
 
+    await_empty_ajax_queue
     expect(page).to have_css('.js-page.btn--active', text: '3')
     expect(page).to have_no_css('.js-tableBody table-draggable')
     wait_until_first_and_last_changed(first_row, last_row)
@@ -63,6 +76,7 @@ RSpec.shared_examples 'pagination', authenticated_as: :authenticate do |model:, 
     last_row  = current_last_row
     page.first('.js-page', text: '4').click
 
+    await_empty_ajax_queue
     expect(page).to have_css('.js-page.btn--active', text: '4')
     expect(page).to have_no_css('.js-tableBody table-draggable')
     wait_until_first_and_last_changed(first_row, last_row)
@@ -113,7 +127,14 @@ RSpec.shared_examples 'pagination', authenticated_as: :authenticate do |model:, 
         search(search_query)
         wait.until { page.first('.js-pager').all('.js-page').count == 4 }
 
+        # Drain any in-flight AJAX (e.g. the first-page data load triggered by
+        # the search) before navigating to page 2, otherwise that response can
+        # race the click and reset the pager back to page 1.
+        await_empty_ajax_queue
+
         page.first('.js-page', text: '2').click
+
+        await_empty_ajax_queue
         expect(page).to have_css('.js-page.btn--active', text: '2')
         expect(page).to have_no_css('.js-tableBody table-draggable')
 

@@ -26,6 +26,7 @@ module Gql::Types::Ticket
     field :content_type, String, null: false
     field :body, String, null: false, description: 'Raw body as saved in the database.'
     field :body_with_urls, String, null: false, description: 'Body with cid: URLs replaced for inline images in HTML articles.'
+    field :body_rendering_error, Boolean, null: false, description: 'True when the body could not be rendered due to HTML processing issues and contains an untranslated error message.'
     field :internal, Boolean, null: false
     field :detected_language, String
 
@@ -36,21 +37,23 @@ module Gql::Types::Ticket
     field :attachments, [Gql::Types::StoredFileType, { null: false }], null: false, description: 'All attached files as stored in the database.'
     field :attachments_without_inline, [Gql::Types::StoredFileType, { null: false }], null: false, description: 'Attachments for display, with inline images filtered out.'
 
+    internal_fields do
+      field :highlighted_texts, [Gql::Types::Ticket::Article::HighlightedTextType]
+    end
+
     belongs_to :ticket, Gql::Types::TicketType, null: false
     # belongs_to :origin_by, Gql::Types::UserType # see :author instead
 
     def body_with_urls
-      display_article['body']
+      display_article[:body]
+    end
+
+    def body_rendering_error
+      @object.body_rendering_error
     end
 
     def attachments_without_inline
-      # TODO: This uses asset handling related code which does more than what we need here.
-      #   On the long run it might be better to store the display flag directly with the attachments,
-      #   rather than always calculating it on-the-fly.
-      select_ids = display_article['attachments'].pluck('id')
-      @object.attachments.select do |attachment|
-        select_ids.include?(attachment.id)
-      end
+      display_article[:attachments]
     end
 
     def security_state
@@ -61,11 +64,18 @@ module Gql::Types::Ticket
       @object.preferences&.dig('whatsapp')
     end
 
+    def highlighted_texts
+      @object.preferences&.dig('highlight')&.split('|')&.drop(1) || []
+    end
+
     private
 
     def display_article
-      # TODO: This uses asset handling related code which does more than what we need here.
-      @display_article ||= @object.class.insert_urls(@object.attributes_with_association_ids)
+      @display_article ||= begin
+        body, attachments = @object.class.insert_urls(@object)
+
+        { body:, attachments: }
+      end
     end
   end
 end

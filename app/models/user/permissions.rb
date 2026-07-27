@@ -62,7 +62,12 @@ returns
   end
 
   def permissions?(query)
-    Auth::Permissions.authorized?(self, query)
+    # The current token only narrows the permissions of its own user. When asking
+    # about another user's intrinsic permissions (e.g. a ticket owner), the token
+    # is irrelevant and must not influence the result.
+    return Auth::Permissions.authorized?(self, query) if UserInfo.current_token.nil? || id != UserInfo.current_token.user_id
+
+    Auth::Permissions.authorized?(self, query) && Auth::Permissions.authorized?(UserInfo.current_token, query)
   end
 
   def permissions!(query)

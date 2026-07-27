@@ -3,11 +3,11 @@
 require 'rails_helper'
 
 RSpec.describe 'Ticket Summarize API endpoints', authenticated_as: :user, performs_jobs: true, type: :request do
-  let(:user)                         { create(:agent) }
-  let(:ticket)                       { article.ticket }
-  let(:article)                      { create(:ticket_article) }
-  let(:ai_assistance_ticket_summary) { true }
-  let(:params)                       { {} }
+  let(:user)                                           { create(:agent) }
+  let(:ticket)                                         { article.ticket }
+  let(:article)                                        { create(:ticket_article) }
+  let(:ai_assistance_ticket_summary)                   { true }
+  let(:params)                                         { {} }
 
   before do
     allow(AI::Provider::ZammadAI).to receive(:ping!).and_return(true)
@@ -27,7 +27,7 @@ RSpec.describe 'Ticket Summarize API endpoints', authenticated_as: :user, perfor
       it 'raises error', :aggregate_failures do
         make_request
 
-        expect(response).to have_http_status(:unprocessable_entity)
+        expect(response).to have_http_status(:unprocessable_content)
         expect(json_response['error']).to eq('This feature is not enabled.')
       end
     end
@@ -41,6 +41,26 @@ RSpec.describe 'Ticket Summarize API endpoints', authenticated_as: :user, perfor
 
     context 'when user has agent access' do
       before { user.groups << ticket.group }
+
+      context 'when the ticket summary selector does not match' do
+        before do
+          Setting.set('ai_assistance_ticket_summary_selector', {
+                        'condition' => {
+                          'ticket.priority_id' => {
+                            'operator' => 'is',
+                            'value'    => [Ticket::Priority.find_by(name: '3 high').id.to_s],
+                          },
+                        },
+                      })
+        end
+
+        it 'does not enqueue summary generation job', :aggregate_failures do
+          make_request
+
+          expect(json_response).to eq({ 'result' => nil })
+          expect(TicketAIAssistanceSummarizeJob).not_to have_been_enqueued
+        end
+      end
 
       context 'when cache is present' do
         let(:result) do
@@ -97,7 +117,7 @@ RSpec.describe 'Ticket Summarize API endpoints', authenticated_as: :user, perfor
             make_request
 
             expect(TicketAIAssistanceSummarizeJob)
-              .to have_been_enqueued.with(ticket, user.locale, regeneration_of: ai_analytics_run)
+              .to have_been_enqueued.with(ticket, user.locale, current_user: user, regeneration_of: ai_analytics_run)
           end
 
         end
@@ -168,7 +188,7 @@ RSpec.describe 'Ticket Summarize API endpoints', authenticated_as: :user, perfor
           make_request
 
           expect(TicketAIAssistanceSummarizeJob)
-            .to have_been_enqueued.with(ticket, user.locale, regeneration_of: nil)
+            .to have_been_enqueued.with(ticket, user.locale, current_user: user, regeneration_of: nil)
         end
 
         it 'returns empty result' do

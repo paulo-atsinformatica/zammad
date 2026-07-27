@@ -3,10 +3,12 @@ export interface ConfigList {
   'active_storage.content_types_allowed_inline': string[]
   'auth_saml_credentials.display_name'?: string
   'auth_openid_connect_credentials.display_name'?: string
+  ai_assistance_kb_answer_from_ticket_generation: boolean
   ai_assistance_text_tools: boolean
   ai_assistance_text_tools_fixed_instructions: string
   ai_assistance_ticket_summary: boolean
   ai_assistance_ticket_summary_config: unknown
+  ai_assistance_ticket_summary_selector: unknown
   ai_provider: boolean
   api_password_access?: boolean | null
   api_token_access?: boolean | null
@@ -43,6 +45,7 @@ export interface ConfigList {
   kb_active: boolean
   kb_active_publicly: boolean
   kb_multi_lingual_support: boolean
+  kb_self_hosted_video_servers: unknown
   ldap_integration?: boolean | null
   locale_default: string
   maintenance_login: boolean
@@ -228,6 +231,7 @@ export interface ConfigList {
   ui_user_organization_selector_with_email?: boolean | null
   user_create_account?: boolean | null
   user_lost_password?: boolean | null
+  user_name_format: 'first_last' | 'last_first' | 'last_first_comma'
   user_show_password_login?: boolean | null
   websocket_backend: string
   websocket_port: string

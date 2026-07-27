@@ -91,7 +91,9 @@ class String
   options:
     string_only - if true, returns simplified text without link references
     strict - if true, preserves some formatting
-    link_style - :numbered (default) uses [1] references, :markdown uses [text](url) format
+    link_style - :numbered (default) uses [1] references
+                 :markdown uses [text](url) format
+                 :plain leaves link text in place if present, otherwise only the link itself
 
   returns
 
@@ -149,8 +151,7 @@ class String
         end
       end
     elsif string.scan(%r{<a[[:space:]]}i).count < 5_000
-      if link_style == :markdown
-        # Markdown style: [text](url) - always consistent format
+      if %i[plain markdown].include?(link_style)
         string.gsub!(%r{<a[[:space:]]+(|\S+[[:space:]]+)href=("|')(.+?)("|')([[:space:]]*|[[:space:]]+[^>]*)>(.+?)<[[:space:]]*/a[[:space:]]*>}mxi) do |_placeholder|
           link = $3
           text = $6
@@ -158,7 +159,11 @@ class String
           link.presence&.strip!
           text.presence&.strip!
 
-          if link.present? && text.present?
+          # Plain style: just text or link - simple format
+          if link_style == :plain
+            text.presence || link.presence || ''
+          # Markdown style: [text](url) - always consistent format
+          elsif link.present? && text.present?
             "[#{text}](#{link})"
           elsif link.present? && text.blank?
             link
@@ -548,6 +553,10 @@ class String
     else
       raise EncodingError, 'could not find a valid input encoding'
     end
+  end
+
+  def json_escape
+    to_json[1..-2] # convert to JSON string, and remove surrounding quotes
   end
 
   private

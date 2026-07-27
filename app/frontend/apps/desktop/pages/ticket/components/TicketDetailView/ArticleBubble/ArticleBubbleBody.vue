@@ -8,8 +8,14 @@ import { useHtmlInlineImages } from '#shared/composables/useHtmlInlineImages.ts'
 import { useHtmlLinks } from '#shared/composables/useHtmlLinks.ts'
 import { type ImageViewerFile } from '#shared/composables/useImageViewer.ts'
 import type { TicketArticle } from '#shared/entities/ticket/types.ts'
-import emitter from '#shared/utils/emitter.ts'
-import { textToHtml } from '#shared/utils/helpers.ts'
+import { i18n } from '#shared/i18n.ts'
+import { textToHtml, ensureImagesKeepAspectRatio } from '#shared/utils/helpers.ts'
+
+import { useAnnouncer } from '#desktop/composables/accessibility/useAnnouncer.ts'
+
+import { useArticleHighlights } from './useArticleHighlights/useArticleHighlights.ts'
+import { useArticleHighlightsA11y } from './useArticleHighlights/useArticleHighlightsA11y.ts'
+import { useArticleHighlightsSelection } from './useArticleHighlights/useArticleHighlightsSelection.ts'
 
 interface Props {
   article: TicketArticle
@@ -33,10 +39,13 @@ const bodyClasses = computed(() =>
 )
 
 const body = computed(() => {
+  if (props.article.bodyRenderingError) {
+    return i18n.t(props.article.bodyWithUrls)
+  }
   if (props.article.contentType !== 'text/html') {
     return textToHtml(props.article.bodyWithUrls)
   }
-  return props.article.bodyWithUrls
+  return ensureImagesKeepAspectRatio(props.article.bodyWithUrls)
 })
 
 const showAuthorInformation = computed(() => {
@@ -50,9 +59,30 @@ const { populateInlineImages } = useHtmlInlineImages(toRef(props, 'inlineImages'
   emit('preview', props.inlineImages[index]),
 )
 
+useArticleHighlights(
+  bubbleElement,
+  computed(() => props.article.highlightedTexts ?? undefined),
+  body,
+)
+
+const { descriptionId, description } = useArticleHighlightsA11y(
+  bubbleElement,
+  computed(() => props.article.highlightedTexts ?? undefined),
+  body,
+  computed(() => props.article.internalId),
+)
+
+const { announce } = useAnnouncer()
+
+useArticleHighlightsSelection(
+  bubbleElement,
+  computed(() => props.article.highlightedTexts ?? undefined),
+  computed(() => props.article.id),
+  announce,
+)
+
 const toggleShowMoreAndEmit = () => {
   toggleShowMore()
-  emitter.emit('recompute-has-reached-article-bottom')
 }
 
 watch(
@@ -75,8 +105,8 @@ onMounted(() => {
 </script>
 
 <template>
-  <div
-    class="Content relative overflow-hidden p-3 transition-[padding]"
+  <article
+    class="Content relative overflow-hidden p-3 pb-4 transition-[padding] print:pt-3!"
     :class="[
       bodyClasses,
       {
@@ -87,8 +117,7 @@ onMounted(() => {
   >
     <div
       v-if="showAuthorInformation"
-      class="absolute top-3 flex w-full px-3 ltr:left-0 rtl:right-0"
-      role="group"
+      class="absolute top-3 flex w-full px-3 ltr:left-0 rtl:right-0 print:hidden"
       aria-describedby="author-name-and-creation-date"
     >
       <p id="author-name-and-creation-date" class="sr-only">
@@ -108,21 +137,26 @@ onMounted(() => {
     <div
       ref="bubbleElement"
       data-test-id="article-content"
-      class="overflow-hidden text-sm transition-[height] duration-200"
+      class="overflow-hidden text-sm transition-[height] duration-200 print:h-auto! print:overflow-visible"
     >
+      <!--    Never drop this inner-article-body class used for Highlight feature-->
       <!--    eslint-disable vue/no-v-html-->
-      <div class="inner-article-body" v-html="body" />
+      <section class="inner-article-body" :aria-details="descriptionId" v-html="body" />
+
+      <div v-if="descriptionId" :id="descriptionId" class="sr-only">
+        {{ description }}
+      </div>
     </div>
     <div
       v-if="hasShowMore"
-      class="relative"
+      class="relative print:hidden"
       :class="{
-        BubbleGradient: hasShowMore && !shownMore,
+        BubbleGradient: !shownMore,
       }"
     />
     <CommonLink
       v-if="hasShowMore"
-      class="mb-1 inline-block! outline-transparent! focus-visible:outline-blue-800!"
+      class="mb-1 inline-block! outline-transparent! hover:underline! focus-visible:outline-blue-800! print:hidden!"
       role="button"
       link="#"
       size="medium"
@@ -131,7 +165,7 @@ onMounted(() => {
     >
       {{ shownMore ? $t('See less') : $t('See more') }}
     </CommonLink>
-  </div>
+  </article>
 </template>
 
 <style scoped>

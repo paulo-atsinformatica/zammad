@@ -88,7 +88,7 @@ RSpec.describe 'User', performs_jobs: true, type: :request do
       # token based on form
       params = { email: 'some_new_customer@example.com', signup: true, authenticity_token: token }
       post '/api/v1/users', params: params, as: :json
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
       expect(json_response['error']).to be_truthy
       expect(json_response['error']).to eq('This feature is not enabled.')
 
@@ -96,7 +96,7 @@ RSpec.describe 'User', performs_jobs: true, type: :request do
       headers = { 'X-CSRF-Token' => token }
       params = { email: 'some_new_customer@example.com', signup: true }
       post '/api/v1/users', params: params, headers: headers, as: :json
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
       expect(json_response['error']).to be_truthy
       expect(json_response['error']).to eq('This feature is not enabled.')
 
@@ -105,7 +105,7 @@ RSpec.describe 'User', performs_jobs: true, type: :request do
       # no signup param without password
       params = { email: 'some_new_customer@example.com', signup: true }
       post '/api/v1/users', params: params, headers: headers, as: :json
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
       expect(json_response['message']).to eq('failed')
 
       # already existing user with enabled feature, pretend signup is successful
@@ -117,14 +117,14 @@ RSpec.describe 'User', performs_jobs: true, type: :request do
       # email missing with enabled feature
       params = { firstname: 'some firstname', signup: true }
       post '/api/v1/users', params: params, headers: headers, as: :json
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
       expect(json_response['error']).to be_truthy
       expect(json_response['error']).to eq("The required attribute 'email' is missing.")
 
       # email missing with enabled feature
       params = { firstname: 'some firstname', signup: true }
       post '/api/v1/users', params: params, headers: headers, as: :json
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
       expect(json_response['error']).to be_truthy
       expect(json_response['error']).to eq("The required attribute 'email' is missing.")
 
@@ -211,7 +211,7 @@ RSpec.describe 'User', performs_jobs: true, type: :request do
       it 'verified with no current user' do
         params = { email: 'some_new_customer@example.com', password: 'asdasdasdasd', signup: true }
         post '/api/v1/users', params: params, headers: headers, as: :json
-        expect(response).to have_http_status(:unprocessable_entity)
+        expect(response).to have_http_status(:unprocessable_content)
         expect(json_response['notice']).to include(include('Invalid password'))
       end
 
@@ -336,21 +336,21 @@ RSpec.describe 'User', performs_jobs: true, type: :request do
       role = Role.lookup(name: 'Agent')
       params = { firstname: 'Agent First', email: 'new_agent_by_admin2@example.com', role_ids: [ role.id ] }
       post '/api/v1/users', params: params, as: :json
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
       expect(json_response).to be_truthy
       expect(json_response['error']).to eq("Email address 'new_agent_by_admin2@example.com' is already used for another user.")
 
       # missing required attributes
       params = { note: 'some note' }
       post '/api/v1/users', params: params, as: :json
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
       expect(json_response).to be_truthy
       expect(json_response['error']).to eq('At least one identifier (firstname, lastname, phone, mobile or email) for user is required.')
 
       # invalid email
       params = { firstname: 'newfirstname123', email: 'some_what', note: 'some note' }
       post '/api/v1/users', params: params, as: :json
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
       expect(json_response).to be_truthy
       expect(json_response['error']).to eq("Invalid email 'some_what'")
 
@@ -1103,7 +1103,7 @@ RSpec.describe 'User', performs_jobs: true, type: :request do
         it 'raise 422' do
           post '/api/v1/users/password_reset', params: { username: user.login }, as: :json
 
-          expect(response).to have_http_status(:unprocessable_entity)
+          expect(response).to have_http_status(:unprocessable_content)
           expect(json_response['error']).to be_truthy
           expect(json_response['error']).to eq('This feature is not enabled.')
         end
@@ -1142,7 +1142,7 @@ RSpec.describe 'User', performs_jobs: true, type: :request do
         it 'raise 422' do
           post '/api/v1/users/password_reset_verify', params: { username: user.login, token: token.token, password: 'Test1234#.' }, as: :json
 
-          expect(response).to have_http_status(:unprocessable_entity)
+          expect(response).to have_http_status(:unprocessable_content)
           expect(json_response['error']).to be_truthy
           expect(json_response['error']).to eq('This feature is not enabled.')
         end
@@ -1187,7 +1187,7 @@ RSpec.describe 'User', performs_jobs: true, type: :request do
         post '/api/v1/users/password_change', params: { password_old: long_string, password_new: long_string }, as: :json
 
         expect(PasswordHash).not_to have_received(:verified?).with(any_args, long_string)
-        expect(response).to have_http_status(:unprocessable_entity)
+        expect(response).to have_http_status(:unprocessable_content)
         expect(json_response['message']).to eq('failed')
       end
 
@@ -1197,7 +1197,7 @@ RSpec.describe 'User', performs_jobs: true, type: :request do
         post '/api/v1/users/password_change', params: { password_old: user.password_plain, password_new: long_string }, as: :json
 
         expect(PasswordHash).not_to have_received(:crypt)
-        expect(response).to have_http_status(:unprocessable_entity)
+        expect(response).to have_http_status(:unprocessable_content)
         expect(json_response['message']).to eq('failed')
       end
     end
@@ -1227,7 +1227,7 @@ RSpec.describe 'User', performs_jobs: true, type: :request do
     it 'no session treated as signup', authenticated_as: false do
       make_request successful_params
 
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
     end
 
     it 'does not accept requests from customers', authenticated_as: -> { create(:customer) } do
@@ -1244,6 +1244,60 @@ RSpec.describe 'User', performs_jobs: true, type: :request do
     it 'agents can not give roles', authenticated_as: -> { create(:agent) } do
       make_request params_with_role
       expect(User.last).not_to be_role 'Admin'
+    end
+
+    context 'with API token authentication' do
+      let(:admin) { create(:admin) }
+      let(:token) { create(:token, user_id: admin.id, preferences: { permission: }) }
+
+      context 'when token has only ticket.agent permission' do
+        let(:permission) { ['ticket.agent'] }
+
+        before { authenticated_as(admin, token:) }
+
+        it 'can create users' do
+          make_request successful_params
+          expect(response).to have_http_status(:created)
+        end
+
+        it 'cannot assign admin role' do
+          make_request params_with_role
+          expect(User.last).not_to be_role 'Admin'
+        end
+      end
+
+      context 'when token has no relevant permissions' do
+        let(:permission) { ['ticket.customer'] }
+
+        before { authenticated_as(admin, token:) }
+
+        it 'cannot create users' do
+          make_request successful_params
+          expect(response).to have_http_status(:forbidden)
+        end
+
+        it 'cannot assign admin role' do
+          make_request params_with_role
+          expect(response).to have_http_status(:forbidden)
+        end
+      end
+
+      context 'when using token authentication' do
+        it 'does not leak token between requests' do
+          admin = create(:admin)
+          token = create(:token, user_id: admin.id, preferences: { permission: %w[ticket.agent] })
+
+          authenticated_as(admin, token:)
+          get '/api/v1/users/me'
+          expect(UserInfo.current_token).to be_nil
+
+          allow(UserInfo).to receive(:current_token=).and_call_original
+
+          authenticated_as(admin)
+          get '/api/v1/users/me'
+          expect(UserInfo).not_to have_received(:current_token=).with(token)
+        end
+      end
     end
 
     it 'does not send email verification notifications' do
@@ -1286,7 +1340,7 @@ RSpec.describe 'User', performs_jobs: true, type: :request do
 
     it 'requires valid email if present' do
       make_request({ email: 'not_valid_email' })
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
     end
   end
 
@@ -1319,22 +1373,22 @@ RSpec.describe 'User', performs_jobs: true, type: :request do
     it 'does not allow to create 2nd administrator account' do
       create(:admin)
       make_request successful_params
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
     end
 
     it 'requires email' do
       make_request successful_params.merge(email: nil)
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
     end
 
     it 'requires valid email' do
       make_request successful_params.merge(email: 'invalid_email')
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
     end
 
     it 'checks password policy' do
       make_request successful_params.merge(password: '1234')
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
     end
 
     it 'loads calendar' do
@@ -1386,23 +1440,23 @@ RSpec.describe 'User', performs_jobs: true, type: :request do
       params.delete :signup
 
       make_request params
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
     end
 
     it 'requires signup to be enabled' do
       Setting.set('user_create_account', false)
       make_request successful_params
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
     end
 
     it 'requires email' do
       make_request successful_params.merge(email: nil)
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
     end
 
     it 'requires valid email' do
       make_request successful_params.merge(email: 'not_valid_email')
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
     end
 
     it 'returns false positive when email already used' do
@@ -1436,7 +1490,7 @@ RSpec.describe 'User', performs_jobs: true, type: :request do
   end
 
   describe 'POST /api/v1/users/search group ids and generic model_search_render tests' do
-    let(:group1) { create(:group) }
+    let(:group1)         { create(:group) }
     let(:group2)         { create(:group) }
     let!(:agent1)        { create(:agent, firstname: '9U7Z-agent1', groups: [group1]) }
     let!(:agent2)        { create(:agent, firstname: '9U7Z-agent2', groups: [group2]) }
@@ -1671,14 +1725,12 @@ RSpec.describe 'User', performs_jobs: true, type: :request do
     let(:user) { create(:user) }
     let(:avatar_mime_type) { 'image/png' }
     let(:avatar) do
-      file = File.open('test/data/image/1000x1000.png', 'rb')
-      contents = file.read
       Avatar.add(
         object:        'User',
         o_id:          user.id,
         default:       true,
         resize:        {
-          content:   contents,
+          content:   File.binread('test/data/image/1000x1000.png'),
           mime_type: avatar_mime_type,
         },
         source:        'web',
@@ -1807,7 +1859,7 @@ RSpec.describe 'User', performs_jobs: true, type: :request do
         let(:params) { { organization_ids: [secondary_org.id] } }
 
         it 'fails with validation error' do
-          expect(response).to have_http_status(:unprocessable_entity)
+          expect(response).to have_http_status(:unprocessable_content)
         end
       end
     end
@@ -1879,7 +1931,7 @@ RSpec.describe 'User', performs_jobs: true, type: :request do
       let(:password) { nil }
 
       it 'raises an error' do
-        expect(response).to have_http_status(:unprocessable_entity)
+        expect(response).to have_http_status(:unprocessable_content)
       end
     end
 

@@ -74,6 +74,22 @@ const redirectAfterCreate = (internalId?: number) => {
 
 const { createTicket, isTicketCustomer } = useTicketCreate(form, redirectAfterCreate)
 
+const submitTicket = async (formData: FormSubmitData<TicketFormData>) => {
+  const result = await createTicket(formData)
+
+  // After a failed mutation with field errors, navigate to the first step that
+  // contains an error so the user sees it without having to go back manually.
+  await nextTick()
+  const stepWithErrors = stepNames.value.find(
+    (stepName) => (allSteps.value[stepName]?.errorCount ?? 0) > 0,
+  )
+  if (stepWithErrors && stepWithErrors !== activeStep.value) {
+    setMultiStep(stepWithErrors)
+  }
+
+  return result
+}
+
 const getFormSchemaGroupSection = (
   stepName: string,
   sectionTitle: string,
@@ -153,11 +169,22 @@ const ticketArticleTypeSection = getFormSchemaGroupSection(
     {
       if: '$existingAdditionalCreateNotes() && $getAdditionalCreateNote($values.articleSenderType) !== undefined',
       isLayout: true,
-      element: 'p',
-      attrs: {
-        class: 'my-10 text-base text-center text-yellow',
+      component: 'CommonAlert',
+      props: {
+        variant: 'warning',
       },
-      children: '$getAdditionalCreateNote($values.articleSenderType)',
+      children: [
+        {
+          isLayout: true,
+          element: 'div',
+          attrs: {
+            // We convert light weight markup
+            // The input is not sanitized and relies on the administrator to provide safe content
+            innerHTML: '$markup($t($getAdditionalCreateNote($values.articleSenderType)))',
+          },
+          children: '',
+        },
+      ],
     },
   ],
   true,
@@ -352,10 +379,10 @@ const schemaData = reactive({
   allSteps,
   securityIntegration,
   existingAdditionalCreateNotes: () => {
-    return Object.keys(additionalCreateNotes).length > 0
+    return Object.keys(additionalCreateNotes.value).length > 0
   },
   getAdditionalCreateNote: (value: string) => {
-    return i18n.t(additionalCreateNotes.value[value])
+    return additionalCreateNotes.value[value]
   },
 })
 
@@ -502,7 +529,7 @@ export default {
       :form-updater-id="EnumFormUpdaterId.FormUpdaterUpdaterTicketCreate"
       should-autofocus
       use-object-attributes
-      @submit="createTicket($event as FormSubmitData<TicketFormData>)"
+      @submit="submitTicket($event as FormSubmitData<TicketFormData>)"
     />
   </div>
   <footer

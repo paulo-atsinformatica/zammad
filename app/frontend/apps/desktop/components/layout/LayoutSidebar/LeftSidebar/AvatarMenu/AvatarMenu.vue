@@ -10,13 +10,14 @@ import CommonPopover from '#desktop/components/CommonPopover/CommonPopover.vue'
 import { usePopover } from '#desktop/components/CommonPopover/usePopover.ts'
 import CommonPopoverMenu from '#desktop/components/CommonPopoverMenu/CommonPopoverMenu.vue'
 import { avatarMenuItems } from '#desktop/components/layout/LayoutSidebar/LeftSidebar/AvatarMenu/plugins/index.ts'
-import { useCollapsedState } from '#desktop/components/layout/LayoutSidebar/LeftSidebar/useCollapsedState.ts'
+import { SidebarName } from '#desktop/components/layout/types.ts'
+import { useSidebarDisplay } from '#desktop/components/layout/useSidebarDisplay.ts'
 
 const user = toRef(useSessionStore(), 'user')
 
-const { collapsedState } = useCollapsedState()
+const { isSidebarCollapsed } = useSidebarDisplay(SidebarName.Primary)
 
-const avatarSize = computed(() => (collapsedState?.value ? 'small' : 'normal'))
+const avatarSize = computed(() => (isSidebarCollapsed?.value ? 'small' : 'normal'))
 
 const { popover, popoverTarget, toggle, isOpen: popoverIsOpen } = usePopover()
 </script>
@@ -26,9 +27,10 @@ const { popover, popoverTarget, toggle, isOpen: popoverIsOpen } = usePopover()
     id="user-menu-popover"
     ref="popover"
     :owner="popoverTarget"
-    :hide-arrow="collapsedState"
+    :hide-arrow="isSidebarCollapsed"
+    z-index="52"
     orientation="autoVertical"
-    :placement="collapsedState ? 'start' : 'arrowStart'"
+    :placement="isSidebarCollapsed ? 'start' : 'arrowStart'"
   >
     <CommonPopoverMenu
       :popover="popover"
@@ -50,6 +52,13 @@ const { popover, popoverTarget, toggle, isOpen: popoverIsOpen } = usePopover()
     aria-expanded="false"
     @click="toggle(true)"
   >
-    <CommonUserAvatar v-if="user" :entity="user" class="!flex" :size="avatarSize" personal />
+    <CommonUserAvatar
+      v-if="user"
+      aria-hidden="true"
+      :entity="user"
+      class="flex!"
+      :size="avatarSize"
+      personal
+    />
   </button>
 </template>

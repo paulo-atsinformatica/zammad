@@ -28,6 +28,7 @@ type TableColumnPreference = {
    * @default 'left'
    * */
   alignContent?: 'center' | 'right' | 'left'
+  noPadding?: boolean
 }
 
 export interface TableSimpleHeader<K = string>
@@ -87,6 +88,7 @@ export interface TableAttribute {
     link?: Pick<CommonLinkProps, 'internal' | 'openInNewTab'> & {
       getLink: (item: TableAdvancedItem, tableAttribute: TableAttribute) => string
     }
+    tooltip?: (item: TableAdvancedItem) => string | undefined
   }
   dataType: ObjectAttribute['dataType']
   dataOption?: ObjectAttribute['dataOption']
@@ -95,6 +97,11 @@ export interface TableAttribute {
 export interface AdvancedTableProps extends BaseTableProps {
   items: TableAdvancedItem[]
   headers: string[]
+  /**
+   * Used to determine the total number of items for pagination and infinite scroll
+   */
+  totalItemsCount: number
+
   attributes?: TableAttribute[]
   attributeExtensions?: Record<string, Partial<TableAttribute>>
   object?: EnumObjectManagerObjects
@@ -103,9 +110,16 @@ export interface AdvancedTableProps extends BaseTableProps {
    * Is not used for checkbox
    * */
   selectedRowId?: string
-  hasCheckboxColumn?: boolean // TODO: rename this prop, related to bulk???
+  /**.
+   * Indicates if the table has a checkbox column for bulk actions
+   */
+  hasBulkAction?: boolean
 
-  totalItems: number
+  /**
+   * Disable all checkbox cells, requires hasBulkAction to be true
+   */
+  disableBulkAction?: boolean
+
   maxItems?: number
 
   onClickRow?: (tableItem: TableAdvancedItem) => void

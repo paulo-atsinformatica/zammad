@@ -18,7 +18,7 @@ import { i18n } from '#shared/i18n.ts'
 import { useSessionStore } from '#shared/stores/session.ts'
 import type { ConfidentTake } from '#shared/types/utils.ts'
 import stopEvent from '#shared/utils/events.ts'
-import { textToHtml } from '#shared/utils/helpers.ts'
+import { textToHtml, ensureImagesKeepAspectRatio } from '#shared/utils/helpers.ts'
 
 import { useArticleSeen } from '../../composable/useArticleSeen.ts'
 
@@ -39,6 +39,7 @@ interface Props {
   attachments: Attachment[]
   remoteContentWarning?: string
   mediaError?: boolean | null
+  bodyRenderingError?: boolean | null
   reaction?: string
 }
 
@@ -83,10 +84,14 @@ const username = computed(() => {
 })
 
 const body = computed(() => {
+  if (props.bodyRenderingError) {
+    return i18n.t(props.content)
+  }
   if (props.contentType !== 'text/html') {
     return textToHtml(props.content)
   }
-  return props.content
+
+  return ensureImagesKeepAspectRatio(props.content)
 })
 
 const colorsClasses = computed(() => {
@@ -222,7 +227,6 @@ const onContextClick = () => {
             :file="attachment"
             :download-url="attachment.downloadUrl"
             :preview-url="attachment.preview"
-            :no-preview="!$c.ui_ticket_zoom_attachments_preview"
             :wrapper-class="colorsClasses.file"
             :icon-class="colorsClasses.icon"
             :size-class="colorsClasses.amount"

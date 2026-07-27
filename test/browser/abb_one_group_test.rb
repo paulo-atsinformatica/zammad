@@ -59,6 +59,13 @@ class AgentTicketActionLevel0Test < TestCase
       value: "#{agent}@example.com",
     )
     check(css: '.modal [data-attribute-name="role_ids"] input[value="2"]')
+
+    # Checking the role checkbox above can grow the modal enough to push this input
+    #   out of view, which intermittently makes Selenium refuse to click it.
+    scroll_to(
+      css:      '.modal .js-groupListNewItemRow .js-groupListItemAddNew .js-input',
+      position: 'top',
+    )
     click(
       css: '.modal .js-groupListNewItemRow .js-groupListItemAddNew .js-input'
     )
@@ -202,17 +209,19 @@ class AgentTicketActionLevel0Test < TestCase
       },
     )
 
-    # wait to push new group dependencies to browser (to show group selection)
-    sleep 12
+    # Reload to fetch the new group membership fresh from the server, rather
+    # than relying on the real-time push having reached the browser by now.
+    reload
 
     # create new ticket
     ticket_create(
-      data: {
+      data:                {
         customer: 'nico',
         group:    'Users',
         title:    'some subject 123äöü - one group 2',
         body:     'some body 123äöü - one group 2',
       },
+      disable_group_check: true,
     )
     sleep 1
 

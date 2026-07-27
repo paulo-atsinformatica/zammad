@@ -4,7 +4,6 @@ import { waitFor } from '@testing-library/vue'
 import { stringifyQuery } from 'vue-router'
 
 import { visitView } from '#tests/support/components/visitView.ts'
-import { mockApplicationConfig } from '#tests/support/mock-applicationConfig.ts'
 import { mockPermissions } from '#tests/support/mock-permissions.ts'
 import { mockTicketOverviews } from '#tests/support/mocks/ticket-overviews.ts'
 import { waitForNextTick } from '#tests/support/utils.ts'
@@ -139,7 +138,7 @@ it('takes filter from query', async () => {
 })
 
 // TODO 2023-05-08 Sheremet V.A. rewrite test to run in Vitest browser mode
-describe.skip('paginating ticket list', () => {
+describe.todo('paginating ticket list', () => {
   const emulateScroll = async (scroll: number) => {
     document.documentElement.scrollTop = scroll
     document.dispatchEvent(new Event('scroll', { bubbles: true, cancelable: true }))
@@ -151,10 +150,6 @@ describe.skip('paginating ticket list', () => {
     const ticketOverviewsApi = mockTicketsByOverview([ticketDefault()], {
       hasNextPage: false,
       endCursor: 'cursor',
-    })
-
-    mockApplicationConfig({
-      ui_ticket_overview_ticket_limit: 2000,
     })
 
     const view = await visitView(`/tickets/view`)
@@ -176,10 +171,6 @@ describe.skip('paginating ticket list', () => {
     const ticketOverviewsApi = mockTicketsByOverview([ticketDefault()], {
       hasNextPage: true,
       endCursor: 'cursor',
-    })
-
-    mockApplicationConfig({
-      ui_ticket_overview_ticket_limit: 2000,
     })
 
     const view = await visitView(`/tickets/view`)
@@ -206,10 +197,6 @@ describe.skip('paginating ticket list', () => {
     const ticketOverviewsApi = mockTicketsByOverview([ticketDefault()], {
       hasNextPage: true,
       endCursor: 'cursor',
-    })
-
-    mockApplicationConfig({
-      ui_ticket_overview_ticket_limit: 2000,
     })
 
     const view = await visitView(`/tickets/view`)

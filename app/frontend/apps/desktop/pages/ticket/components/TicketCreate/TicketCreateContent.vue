@@ -126,7 +126,9 @@ const formSchema = defineFormSchema([
       {
         if: '$isTicketCustomer === false',
         ...ticketArticleSenderTypeField,
-        outerClass: 'flex justify-center',
+        outerClass: 'flex justify-center max-w-full overflow-x-hidden',
+        blockClass: 'w-full',
+        innerClass: 'flex justify-stretch @md:justify-center',
       },
       {
         isLayout: true,
@@ -145,7 +147,18 @@ const formSchema = defineFormSchema([
             props: {
               variant: 'warning',
             },
-            children: '$t($getAdditionalCreateNote($values.articleSenderType))',
+            children: [
+              {
+                isLayout: true,
+                element: 'div',
+                attrs: {
+                  // We convert light weight markup
+                  // The input is not sanitized and relies on the administrator to provide safe links
+                  innerHTML: '$markup($t($getAdditionalCreateNote($values.articleSenderType)))',
+                },
+                children: '',
+              },
+            ],
           },
           {
             if: '$values.ticket_duplicate_detection.count > 0',
@@ -245,7 +258,7 @@ const formSchema = defineFormSchema([
         isLayout: true,
         element: 'div',
         attrs: {
-          class: 'grid grid-cols-2-uneven gap-2.5',
+          class: 'grid @md:grid-cols-2-uneven gap-2.5',
         },
         children: [
           {
@@ -277,7 +290,7 @@ const schemaData = reactive({
   getTabLabel: (value: string) => `tab-label-${value}`,
   getTabPanelId: (value: string) => `tab-panel-${value}`,
   existingAdditionalCreateNotes: () => {
-    return Object.keys(additionalCreateNotes).length > 0
+    return Object.keys(additionalCreateNotes.value).length > 0
   },
   getAdditionalCreateNote: (value: string) => {
     return additionalCreateNotes.value[value]
@@ -305,6 +318,9 @@ const changedFields = reactive({
           onSuccess: applyNewlyCreatedCustomer,
         })
       },
+      // Ticket create accepts unknown customers — the typed-in email
+      // becomes a new customer user on submit.
+      allowUnknownEmail: true,
     },
   },
 })
@@ -400,16 +416,12 @@ const submitCreateTicket = async (event: FormSubmitData<TicketFormData>) => {
         :change-fields="changedFields"
         :form-updater-additional-params="formAdditionalRouteQueryParams"
         use-object-attributes
-        form-class="flex flex-col gap-3"
+        form-class="flex flex-col gap-3 min-w-xs"
         @submit="submitCreateTicket($event as FormSubmitData<TicketFormData>)"
       />
     </div>
-    <template #sideBar="{ isCollapsed, toggleCollapse }">
-      <TicketSidebar
-        :context="sidebarContext"
-        :is-collapsed="isCollapsed"
-        :toggle-collapse="toggleCollapse"
-      />
+    <template #sideBar>
+      <TicketSidebar :context="sidebarContext" />
     </template>
     <template #bottomBar>
       <template v-if="isInitialSettled">

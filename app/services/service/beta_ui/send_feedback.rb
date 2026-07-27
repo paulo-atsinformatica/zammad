@@ -4,15 +4,10 @@ class Service::BetaUi::SendFeedback < Service::Base
   BETA_UI_FEEDBACK_API_HOST = 'https://beta-ui-feedback.zammad.com'.freeze
   BETA_UI_FEEDBACK_NAME = 'beta-ui-feedback.zammad.com'.freeze
   BETA_UI_FEEDBACK_EMAIL_ADDRESS = 'noreply@beta-ui-feedback.zammad.com'.freeze
-  OPEN_TIMEOUT  = 4
-  READ_TIMEOUT  = 6
-  TOTAL_TIMEOUT = 6
 
   attr_reader :type, :comment, :time_spent, :rating
 
   def initialize(type:, comment:, time_spent:, rating: nil)
-    super()
-
     @type = type
     @comment = comment
     @time_spent = time_spent
@@ -20,7 +15,7 @@ class Service::BetaUi::SendFeedback < Service::Base
   end
 
   def execute
-    Service::CheckFeatureEnabled.new(name: 'ui_desktop_beta_switch').execute
+    Service::CheckFeatureEnabled.execute(name: 'ui_desktop_beta_switch')
 
     token = fetch_form_token
 
@@ -48,11 +43,8 @@ class Service::BetaUi::SendFeedback < Service::Base
         fingerprint:,
       },
       {
-        open_timeout:  OPEN_TIMEOUT,
-        read_timeout:  READ_TIMEOUT,
-        total_timeout: TOTAL_TIMEOUT,
-        verify_ssl:    true,
-        json:          true,
+        verify_ssl: true,
+        json:       true,
       },
     )
 
@@ -79,11 +71,8 @@ class Service::BetaUi::SendFeedback < Service::Base
         email:         BETA_UI_FEEDBACK_EMAIL_ADDRESS,
       },
       {
-        open_timeout:  OPEN_TIMEOUT,
-        read_timeout:  READ_TIMEOUT,
-        total_timeout: TOTAL_TIMEOUT,
-        verify_ssl:    true,
-        json:          true,
+        verify_ssl: true,
+        json:       true,
       },
     )
 

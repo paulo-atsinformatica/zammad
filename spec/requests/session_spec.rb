@@ -4,6 +4,89 @@ require 'rails_helper'
 
 RSpec.describe 'Sessions endpoints', type: :request do
 
+  describe 'GET /api/v1/sessions/switch/:id' do
+    let(:admin) { create(:admin) }
+    let(:agent) { create(:agent) }
+
+    before do
+      authenticated_as(admin)
+      get "/api/v1/sessions/switch/#{agent.id}", as: :json
+    end
+
+    it 'creates an audit log entry with both user names' do
+      audit_log = AuditLog.find_by(auditable_type: 'User', auditable_id: agent.id, action_type: 'switch_to')
+      expect(audit_log).to have_attributes(
+        user_id:        admin.id,
+        auditable_name: "#{admin.fullname} → #{agent.fullname}",
+        source_ip:      '127.0.0.1'
+      )
+    end
+  end
+
+  describe 'GET /api/v1/sessions/switch_back' do
+    let(:admin) { create(:admin) }
+    let(:agent) { create(:agent) }
+
+    before do
+      authenticated_as(admin, via: :browser)
+      get "/api/v1/sessions/switch/#{agent.id}", as: :json
+      get '/api/v1/sessions/switch_back', as: :json
+    end
+
+    it 'creates an audit log entry with both user names' do
+      audit_log = AuditLog.find_by(auditable_type: 'User', auditable_id: agent.id, action_type: 'switch_back_to')
+      expect(audit_log).to have_attributes(
+        user_id:        admin.id,
+        auditable_name: "#{agent.fullname} → #{admin.fullname}",
+        source_ip:      '127.0.0.1'
+      )
+    end
+  end
+
+  describe 'multiple consecutive switches' do
+    let(:admin)       { create(:admin) }
+    let(:other_admin) { create(:admin) }
+    let(:third_admin) { create(:admin) }
+    let(:agent)       { create(:agent) }
+
+    before do
+      authenticated_as(admin, via: :browser)
+      get "/api/v1/sessions/switch/#{other_admin.id}", as: :json
+      get "/api/v1/sessions/switch/#{third_admin.id}", as: :json
+      put "/api/v1/users/#{agent.id}", params: { active: false }, as: :json
+    end
+
+    it 'keeps the original user in the audit log entry' do
+      audit_log = AuditLog.find_by(auditable_type: 'User', auditable_id: agent.id, action_type: 'update')
+      expect(audit_log).to have_attributes(
+        user_id:       third_admin.id,
+        user_fullname: "#{admin.fullname} → #{third_admin.fullname}",
+        preferences:   include('switched_from_user_id' => admin.id, 'switched_from_user_fullname' => admin.fullname)
+      )
+    end
+  end
+
+  describe 'audit logging of actions performed while switched' do
+    let(:admin)       { create(:admin) }
+    let(:other_admin) { create(:admin) }
+    let(:agent)       { create(:agent) }
+
+    before do
+      authenticated_as(admin, via: :browser)
+      get "/api/v1/sessions/switch/#{other_admin.id}", as: :json
+      put "/api/v1/users/#{agent.id}", params: { active: false }, as: :json
+    end
+
+    it 'includes the original user in the audit log entry' do
+      audit_log = AuditLog.find_by(auditable_type: 'User', auditable_id: agent.id, action_type: 'update')
+      expect(audit_log).to have_attributes(
+        user_id:       other_admin.id,
+        user_fullname: "#{admin.fullname} → #{other_admin.fullname}",
+        preferences:   include('switched_from_user_id' => admin.id, 'switched_from_user_fullname' => admin.fullname)
+      )
+    end
+  end
+
   describe 'GET /' do
 
     let(:headers)     { {} }
@@ -312,6 +395,139 @@ RSpec.describe 'Sessions endpoints', type: :request do
     end
   end
 
+  describe 'POST /api/v1/signin - Doorkeeper OAuth resume via AfterAuth' do
+    let(:user)        { create(:agent, password: password) }
+    let(:password)    { SecureRandom.urlsafe_base64(20) }
+    let(:fingerprint) { SecureRandom.urlsafe_base64(40) }
+    let!(:oauth_app)  { Doorkeeper::Application.create!(name: 'Test', redirect_uri: 'https://localhost', scopes: '') }
+    let(:oauth_path)  { "/oauth/authorize?client_id=#{oauth_app.uid}&redirect_uri=https%3A%2F%2Flocalhost&response_type=code" }
+
+    context 'when session has a pending doorkeeper OAuth URL' do
+      before do
+        # Hit OAuth authorize endpoint to set doorkeeper_return_to in the session.
+        get oauth_path
+        # Now sign in - the session still has doorkeeper_return_to set.
+        post '/api/v1/signin', params: { fingerprint: fingerprint, username: user.login, password: password }, as: :json
+      end
+
+      it 'returns DoorkeeperReturnTo after_auth with the OAuth URL' do
+        expect(json_response['after_auth']).to eq({
+                                                    'type' => 'DoorkeeperReturnTo',
+                                                    'data' => { 'url' => oauth_path },
+                                                  })
+      end
+    end
+
+    context 'when session has a pending doorkeeper OAuth URL and 2FA setup is required' do
+      before do
+        Setting.set('two_factor_authentication_enforce_role_ids', [Role.find_by(name: 'Agent').id])
+        Setting.set('two_factor_authentication_method_authenticator_app', true)
+
+        # Hit OAuth authorize endpoint to set doorkeeper_return_to in the session.
+        get oauth_path
+        # Now sign in - the session still has doorkeeper_return_to set.
+        post '/api/v1/signin', params: { fingerprint: fingerprint, username: user.login, password: password }, as: :json
+      end
+
+      it 'returns TwoFactorConfiguration after_auth instead of DoorkeeperReturnTo' do
+        expect(json_response['after_auth']).to include('type' => 'TwoFactorConfiguration')
+      end
+
+      it 'preserves doorkeeper_return_to in the session for later' do
+        # Simulate completing 2FA setup: disabling enforcement makes two_factor_setup_required? false.
+        Setting.set('two_factor_authentication_enforce_role_ids', [])
+
+        # After 2FA setup, the next session show should trigger DoorkeeperReturnTo
+        get '/api/v1/signshow', as: :json
+        expect(json_response['after_auth']).to eq({
+                                                    'type' => 'DoorkeeperReturnTo',
+                                                    'data' => { 'url' => oauth_path },
+                                                  })
+      end
+    end
+
+    context 'when session has no pending doorkeeper OAuth URL' do
+      before do
+        post '/api/v1/signin', params: { fingerprint: fingerprint, username: user.login, password: password }, as: :json
+      end
+
+      it 'does not return DoorkeeperReturnTo after_auth' do
+        expect(json_response['after_auth']).to be_nil
+      end
+    end
+  end
+
+  describe 'GET /auth/sso - Doorkeeper OAuth resume' do
+    let(:user)       { create(:agent) }
+    let(:login)      { user.login }
+    let(:env)        { { 'REMOTE_USER' => login } }
+    let!(:oauth_app) { Doorkeeper::Application.create!(name: 'Test', redirect_uri: 'https://localhost', scopes: '') }
+    let(:oauth_path) { "/oauth/authorize?client_id=#{oauth_app.uid}&redirect_uri=https%3A%2F%2Flocalhost&response_type=code" }
+
+    before do
+      Setting.set('auth_sso', true)
+    end
+
+    context 'when session has a pending doorkeeper OAuth URL' do
+      it 'redirects to the OAuth authorize URL' do
+        # Hit OAuth authorize endpoint to set doorkeeper_return_to in the session.
+        get oauth_path
+        # Now SSO login - the session still has doorkeeper_return_to set.
+        get '/auth/sso', as: :json, env: env
+        expect(response).to redirect_to(oauth_path)
+      end
+    end
+
+    context 'when session has no pending doorkeeper OAuth URL' do
+      it 'redirects to the default app route' do
+        get '/auth/sso', as: :json, env: env
+        expect(response).to redirect_to('/#')
+      end
+    end
+  end
+
+  describe 'GET /auth/:provider/callback (omniauth)' do
+    let(:user)           { create(:agent) }
+    let!(:authorization) { create(:authorization, user: user, provider: 'github', uid: '123456') }
+
+    # The provider name is arbitrary here: OmniAuth test mode injects the mock
+    # for the requested path and bypasses the registered strategy entirely, so
+    # this exercises the controller's session handling regardless of provider.
+    around do |example|
+      OmniAuth.config.test_mode = true
+      OmniAuth.config.mock_auth[:github] = OmniAuth::AuthHash.new(
+        provider:    authorization.provider,
+        uid:         authorization.uid,
+        info:        {},
+        credentials: {},
+      )
+
+      example.run
+    ensure
+      OmniAuth.config.mock_auth.delete(:github)
+      OmniAuth.config.test_mode = false
+    end
+
+    it 'redirects to the app' do
+      get '/auth/github/callback'
+
+      expect(response).to redirect_to('/#')
+    end
+
+    it 'sets the :user_id session parameter' do
+      expect { get '/auth/github/callback' }
+        .to change { request&.session&.fetch(:user_id) }.to(user.id)
+    end
+
+    # Ensures the session survives SessionHelper.cleanup_expired (2h temp-session purge)
+    # and is instead governed by the configured Session Timeout, like password/SSO logins.
+    # See https://github.com/zammad/zammad/issues/6244
+    it 'marks the session as persistent' do
+      expect { get '/auth/github/callback' }
+        .to change { request&.session&.fetch(:persistent) }.to(true)
+    end
+  end
+
   describe 'POST /auth/two_factor_itwo_factor_method_enablednitiate_authentication/:method' do
     let(:user)                       { create(:user, password: 'dummy') }
     let(:params)                     { {} }
@@ -332,7 +548,7 @@ RSpec.describe 'Sessions endpoints', type: :request do
 
     context 'with missing params' do
       it 'returns an error' do
-        expect(response).to have_http_status(:unprocessable_entity)
+        expect(response).to have_http_status(:unprocessable_content)
       end
     end
 
@@ -344,7 +560,7 @@ RSpec.describe 'Sessions endpoints', type: :request do
         let(:password) { 'invalid' }
 
         it 'returns an error' do
-          expect(response).to have_http_status(:unprocessable_entity)
+          expect(response).to have_http_status(:unprocessable_content)
         end
       end
 
@@ -360,7 +576,7 @@ RSpec.describe 'Sessions endpoints', type: :request do
           let(:two_factor_method_enabled) { false }
 
           it 'returns an error' do
-            expect(response).to have_http_status(:unprocessable_entity)
+            expect(response).to have_http_status(:unprocessable_content)
           end
         end
       end

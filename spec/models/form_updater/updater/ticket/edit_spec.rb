@@ -59,6 +59,28 @@ RSpec.describe(FormUpdater::Updater::Ticket::Edit) do
     }
   end
 
+  describe '#authorized?' do
+    it 'is authorized for agents' do
+      expect(resolved_result.authorized?).to be true
+    end
+
+    context 'with customer user' do
+      let(:user) { create(:customer) }
+
+      it 'is authorized for customers' do
+        expect(resolved_result.authorized?).to be true
+      end
+    end
+
+    context 'with admin-only user' do
+      let(:user) { create(:user, roles: [Role.find_by(name: 'Admin')]) }
+
+      it 'is not authorized' do
+        expect(resolved_result.authorized?).to be false
+      end
+    end
+  end
+
   context 'when resolving' do
     it 'returns all resolved relation fields with correct value + label' do
       expect(resolved_result.resolve[:fields]).to include(
@@ -376,6 +398,43 @@ RSpec.describe(FormUpdater::Updater::Ticket::Edit) do
   end
 
   include_examples 'FormUpdater::ChecksCoreWorkflow', object_name: 'Ticket'
+
+  context 'when handling default follow-up state' do
+    let(:closed_state)    { Ticket::State.find_by(name: 'closed') }
+    let(:follow_up_state) { Ticket::State.find_by(default_follow_up: true) }
+    let(:meta)            { { initial: false, dirty_fields: [] } }
+    let(:data)            { { 'state_id' => closed_state.id, 'article' => { 'body' => 'Some article body' } } }
+
+    before { resolved_result.authorized? }
+
+    context 'when user is a customer viewing their own ticket' do
+      let(:user) { create(:customer) }
+      let(:id)   { Gql::ZammadSchema.id_from_object(create(:ticket, group: group, state: closed_state, customer: user)) }
+
+      it 'sets state_id to the default follow-up state' do
+        expect(resolved_result.resolve[:fields]['state_id'][:value]).to eq(follow_up_state.id)
+      end
+    end
+
+    context 'when user is an agent with direct group access' do
+      let(:id) { Gql::ZammadSchema.id_from_object(create(:ticket, group: group, state: closed_state)) }
+
+      it 'does not change state_id' do
+        expect(resolved_result.resolve[:fields]['state_id'][:value]).to be_nil
+      end
+    end
+
+    context 'when user is an agent_and_customer with role-based group access' do
+      let(:agent_role_with_group) { create(:role, :agent, groups: [group]) }
+      let(:user)                  { create(:user, roles: [Role.find_by(name: 'Customer'), agent_role_with_group]) }
+      let(:id)                    { Gql::ZammadSchema.id_from_object(create(:ticket, group: group, state: closed_state)) }
+
+      it 'does not change state_id' do
+        expect(resolved_result.resolve[:fields]['state_id'][:value]).to be_nil
+      end
+    end
+  end
+
   include_examples 'FormUpdater::HasSecurityOptions', type: 'edit'
   include_examples 'FormUpdater::AppliesTicketSharedDraft', draft_type: 'detail-view'
 

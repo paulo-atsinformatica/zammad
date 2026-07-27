@@ -177,7 +177,7 @@ RSpec.describe 'Api Auth From', type: :request do
       }
       authenticated_as(admin, from: customer.email)
       post '/api/v1/tickets', params: params, as: :json
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
       expect(response.header).not_to be_key('Access-Control-Allow-Origin')
       expect(json_response).to be_a(Hash)
       expect(json_response['error']).to eq('No lookup value found for \'group\': "secret1234"')
@@ -209,6 +209,42 @@ RSpec.describe 'Api Auth From', type: :request do
         expect(response).to have_http_status(:created)
         expect(json_response).to be_a(Hash)
         expect(customer.id).to eq(json_response['created_by_id'])
+      end
+    end
+
+    context 'when API token plus From (impersonation)' do
+      let(:agent)  { create(:agent, groups: [create(:group)]) }
+      let(:admin)  { create(:user, firstname: 'Requester', roles: [admin_user_role]) }
+      let(:token)  { create(:token, user: admin, permissions: %w[admin.user]) }
+
+      let(:admin_user_role) do
+        create(:role).tap { |role| role.permission_grant('admin.user') }
+      end
+
+      it 'does not set UserInfo.current_token for impersonated request' do
+        allow(UserInfo).to receive(:current_token=).and_call_original
+
+        authenticated_as(admin, token: token, from: agent.email)
+        get '/api/v1/users/me'
+
+        expect(UserInfo).not_to have_received(:current_token=).with(token)
+      end
+
+      it 'sets UserInfo.current_token for non-impersonated request' do
+        allow(UserInfo).to receive(:current_token=).and_call_original
+
+        authenticated_as(admin, token: token)
+        get '/api/v1/users/me'
+
+        expect(UserInfo).to have_received(:current_token=).with(token).at_least(:once)
+      end
+
+      it 'resets the user context after the request', :aggregate_failures do
+        authenticated_as(admin, token: token)
+        get '/api/v1/users/me'
+
+        expect(UserInfo.current_token).to be_nil
+        expect(UserInfo.current_user_id).to be_nil
       end
     end
 

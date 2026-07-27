@@ -1,9 +1,9 @@
 # Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 module TestFlags
-  def wait_for_test_flag(flag, skip_clearing: false)
+  def wait_for_test_flag(flag, skip_clearing: false, timeout: Capybara.default_max_wait_time)
     begin
-      wait.until { page.evaluate_script("window.testFlags && window.testFlags.get('#{flag.gsub("'", "\\'")}', #{skip_clearing})") }
+      wait(timeout).until { page.evaluate_script("window.testFlags && window.testFlags.get('#{flag.gsub("'", "\\'")}', #{skip_clearing})") }
     rescue Selenium::WebDriver::Error::TimeoutError
       raise "Test flag #{flag} not set"
     end
@@ -41,6 +41,16 @@ module TestFlags
 
   def wait_for_form_autofocus(form)
     wait_for_test_flag("#{form}.focused")
+  end
+
+  def wait_for_editor_ready(editor)
+    wait_for_test_flag(editor_test_flag(editor, 'ready'))
+  end
+
+  def editor_test_flag(editor, state)
+    input = editor.respond_to?(:input_element) ? editor.input_element : editor
+
+    "#{input['data-form-id']}.#{input['name']}.editor.#{state}"
   end
 end
 

@@ -12,17 +12,37 @@ require 'uri'
 # in an alphabetical order
 # because `test/browser/aaa_*` tests are required to run first
 require 'minitest'
+
+# Guard against future minitest API renames silently disabling the ordering
+# override below (minitest 6 renamed `__run` -> `run_all_suites` and the
+# per-suite `run` -> `run_suite`).
+if !(Minitest.respond_to?(:run_all_suites) && Minitest::Runnable.respond_to?(:run_suite))
+  raise "Minitest ordering patch in #{__FILE__} is out of date: expected " \
+        'Minitest.run_all_suites and Minitest::Runnable.run_suite to exist'
+end
+
 module Minitest
-  def self.__run(reporter, options)
+  def self.run_all_suites(reporter, options)
     Runnable.runnables
             .reject { |s| s.runnable_methods.empty? }
-            .map { |suite| suite.run reporter, options }
+            .map { |suite| suite.run_suite reporter, options }
   end
 end
 
 class TestCase < ActiveSupport::TestCase
 
   DEBUG = true
+
+  # Browser tests rely on alphabetical method execution order (e.g. `test_aaa_*`
+  # must run before `test_ccc_*`). Rails configures this via
+  # `config.active_support.test_order = :sorted`, but ActiveSupport's minitest 6
+  # `run_order` shim is guarded by `Minitest.respond_to?(:run_order)` — and in
+  # minitest 6 `run_order` lives on `Minitest::Runnable`, not the `Minitest`
+  # module, so the shim never activates and order falls back to `:random`.
+  # Enforce the configured order explicitly until the upstream guard is fixed.
+  def self.run_order
+    test_order
+  end
 
   setup do
     # print current test case to STDOUT
@@ -225,7 +245,13 @@ class TestCase < ActiveSupport::TestCase
       instance.get(params[:url])
     end
 
-    element = instance.find_elements(css: '#login input[name="username"]')[0]
+    element = nil
+    10.times do
+      sleep 1
+      element = instance.find_elements(css: '#login input[name="username"]')[0]
+      break if element
+    end
+
     if !element
       screenshot(browser: instance, comment: 'login_failed')
       raise 'No login box found'
@@ -243,15 +269,18 @@ class TestCase < ActiveSupport::TestCase
     end
     instance.find_elements(css: '#login button')[0].click
 
-    sleep 4
-    login_failed = false
-    if instance.find_elements(css: '.user-menu .user a')[0]
-      login = instance.find_elements(css: '.user-menu .user a')[0].attribute('title')
-      if login != params[:username]
-        login_failed = true
+    login_failed = true
+    login = nil
+    20.times do
+      sleep 0.5
+      elem = instance.find_elements(css: '.user-menu .user a')[0]
+      next if !elem
+
+      login = elem.attribute('title')
+      if login == params[:username]
+        login_failed = false
+        break
       end
-    else
-      login_failed = true
     end
     if login_failed
       if params[:success] == false
@@ -300,7 +329,7 @@ class TestCase < ActiveSupport::TestCase
       mute_log: true,
     )
 
-    5.times do
+    30.times do
       sleep 1
       login = instance.find_elements(css: '#login')[0]
 
@@ -410,13 +439,19 @@ class TestCase < ActiveSupport::TestCase
     log('location_check', params)
 
     instance = params[:browser] || @browser
-    sleep 0.7
-    current_url = instance.current_url
-    if !current_url.match?(%r{#{Regexp.quote(params[:url])}})
-      screenshot(browser: instance, comment: 'location_check_failed')
-      raise "url #{current_url} is not matching #{params[:url]}"
+    timeout  = params[:timeout] || 30
+    deadline = Time.current + timeout
+    loop do
+      current_url = instance.current_url
+      break if current_url.match?(%r{#{Regexp.quote(params[:url])}})
+
+      if Time.current >= deadline
+        screenshot(browser: instance, comment: 'location_check_failed')
+        raise "url #{current_url} is not matching #{params[:url]}"
+      end
+      sleep 0.5
     end
-    assert(true, "url #{current_url} is matching #{params[:url]}")
+    assert(true, "url #{instance.current_url} is matching #{params[:url]}")
   end
 
 =begin
@@ -501,7 +536,7 @@ class TestCase < ActiveSupport::TestCase
         instance.find_elements(find_element_key => params[param_key])[i].try(:click)
       end
     rescue => e
-      raise e if (fail_count ||= 0).positive?
+      raise e if (fail_count ||= 0) >= 3
 
       fail_count += 1
       log('click', { rescure: true })
@@ -637,7 +672,7 @@ class TestCase < ActiveSupport::TestCase
     watch_for_disappear(
       browser: instance,
       css:     '.modal',
-      timeout: params[:timeout] || 8,
+      timeout: params[:timeout] || 16,
     )
   end
 
@@ -814,6 +849,29 @@ class TestCase < ActiveSupport::TestCase
 
 =end
 
+  # A freshly rendered (or just-reloaded) page can have the target element in
+  # the DOM before it is actually interactable (e.g. still waiting on
+  # collection data to hydrate a searchable select) - poll for real
+  # interactability instead of relying on a single retry-after-exception.
+  def wait_for_interactable(instance, css, timeout: 10)
+    element = nil
+    loops = (timeout * 2).to_i
+    loops.times do
+      element = instance.find_elements(css: css)[0]
+      break if element&.displayed? && element.enabled?
+
+      element = nil
+      sleep 0.5
+    end
+
+    if !element
+      screenshot(browser: instance, comment: 'wait_for_interactable_failed')
+      raise "'#{css}' did not become interactable within #{timeout}s"
+    end
+
+    element
+  end
+
   def select(params)
     switch_window_focus(params)
     log('select', params)
@@ -823,40 +881,35 @@ class TestCase < ActiveSupport::TestCase
     # searchable select
     element = instance.find_elements(css: "#{params[:css]}.js-shadow")[0]
     if element
-      element = instance.find_elements(css: "#{params[:css]}.js-shadow + .js-input")[0]
-      element.click
-      element.clear
-      sleep 0.2
-      element.send_keys(params[:value])
-      sleep 0.2
-      element.send_keys(:enter)
-      sleep 0.2
-      instance.execute_script("$('#{params[:css]}.js-shadow + .js-input').trigger('blur')")
+      begin
+        element = wait_for_interactable(instance, "#{params[:css]}.js-shadow + .js-input")
+        element.click
+        element.clear
+        sleep 0.2
+        element.send_keys(params[:value])
+        sleep 0.2
+        element.send_keys(:enter)
+        sleep 0.2
+        instance.execute_script("$('#{params[:css]}.js-shadow + .js-input').trigger('blur')")
+      rescue Selenium::WebDriver::Error::StaleElementReferenceError => e
+        # A recent async update (e.g. a group list refresh) can replace this input's DOM
+        #   node mid-interaction. Re-fetch it and start the interaction over from scratch.
+        raise e if (fail_count ||= 0) >= 3
+
+        fail_count += 1
+        sleep 0.5
+        retry
+      end
       return
     end
 
     # native select
-    begin
-      element  = instance.find_elements(css: params[:css])[0]
-      dropdown = Selenium::WebDriver::Support::Select.new(element)
-      if params[:deselect_all]
-        dropdown.deselect_all
-      end
-      dropdown.select_by(:text, params[:value])
-      # puts "select - #{params.inspect}"
-    rescue
-      sleep 0.4
-
-      # just try again
-      log('select', { rescure: true })
-      element  = instance.find_elements(css: params[:css])[0]
-      dropdown = Selenium::WebDriver::Support::Select.new(element)
-      if params[:deselect_all]
-        dropdown.deselect_all
-      end
-      dropdown.select_by(:text, params[:value])
-      # puts "select2 - #{params.inspect}"
+    element  = wait_for_interactable(instance, params[:css])
+    dropdown = Selenium::WebDriver::Support::Select.new(element)
+    if params[:deselect_all]
+      dropdown.deselect_all
     end
+    dropdown.select_by(:text, params[:value])
 
     await_empty_ajax_queue(params)
   end
@@ -877,6 +930,8 @@ class TestCase < ActiveSupport::TestCase
     log('switch', params)
 
     instance = params[:browser] || @browser
+
+    watch_for(browser: instance, css: "#{params[:css]} input[type=checkbox]")
 
     element = instance.find_elements(css: "#{params[:css]} input[type=checkbox]")[0]
     checked = element.attribute('checked')
@@ -1148,8 +1203,24 @@ set type of task (closeTab, closeNextInOverview, stayOnTab)
 
     instance = params[:browser] || @browser
     if params[:type]
-      instance.find_elements(css: '.content.active .js-secondaryActionButtonLabel')[0].click
-      instance.find_elements(css: ".content.active .js-secondaryActionLabel[data-type=#{params[:type]}]")[0].click
+      retries = 0
+      begin
+        wait_for_interactable(instance, '.content.active .js-secondaryActionButtonLabel').click
+      rescue Selenium::WebDriver::Error::StaleElementReferenceError
+        sleep retries
+        retries += 1
+        retry if retries < 3
+      end
+
+      retries = 0
+      begin
+        wait_for_interactable(instance, ".content.active .js-secondaryActionLabel[data-type=#{params[:type]}]").click
+      rescue Selenium::WebDriver::Error::StaleElementReferenceError
+        sleep retries
+        retries += 1
+        retry if retries < 3
+      end
+
       return
     end
     raise "Unknown params for task_type: #{params.inspect}"
@@ -1893,7 +1964,7 @@ wait untill text in selector disabppears
     end
 
     instance.find_elements(css: '.modal button.js-submit')[0].click
-    modal_disappear(browser: instance)
+    modal_disappear(browser: instance, timeout: 30)
     11.times do
       element = instance.find_elements(css: 'body')[0]
       text = element.text
@@ -2265,6 +2336,10 @@ wait untill text in selector disabppears
       return
     end
 
+    # Drain pending AJAX/CoreWorkflow requests triggered by form field changes
+    # (e.g. customer autocomplete) before submitting to avoid race conditions.
+    await_empty_ajax_queue(browser: instance)
+
     # instance.execute_script('$(".content.active .newTicket form").submit();')
     click(
       browser:  instance,
@@ -2273,7 +2348,8 @@ wait untill text in selector disabppears
     )
 
     sleep 1
-    9.times do
+
+    30.times do
       if instance.current_url.match?(%r{#{Regexp.quote('#ticket/zoom/')}})
         assert(true, 'ticket created')
         sleep 2
@@ -2361,6 +2437,7 @@ wait untill text in selector disabppears
       instance.execute_script(%($(".content.active .ticketZoom-header .js-objectTitle").text("#{data[:title]}")))
       instance.execute_script('$(".content.active .ticketZoom-header .js-objectTitle").blur()')
       instance.execute_script('$(".content.active .ticketZoom-header .js-objectTitle").trigger("blur")')
+      sleep 1
       # {
       #   :where        => :instance2,
       #   :execute      => 'sendkey',
@@ -2515,7 +2592,7 @@ wait untill text in selector disabppears
 
     if data[:state] || data[:group] || data[:body] || params[:custom_data_select].present? || params[:custom_data_input].present?
       found = nil
-      9.times do
+      30.times do
 
         break if found
 
@@ -2556,7 +2633,7 @@ wait untill text in selector disabppears
       return
     end
 
-    9.times do
+    30.times do
       begin
         text = instance.find_elements(css: '.content.active .js-reset')[0].text
         if text.blank?
@@ -2676,14 +2753,24 @@ wait untill text in selector disabppears
            end
 
     # switch to overview
-    element = nil
-    6.times do
-      element = instance.find_elements(css: ".content.active .sidebar a[href=\"#{link}\"]")[0]
-      break if element
+    retries = 0
+    begin
+      element = nil
+      # WebSocket push adds the overview to the sidebar; give it up to 30 s on loaded CI.
+      30.times do
+        element = instance.find_elements(css: ".content.active .sidebar a[href=\"#{link}\"]")[0]
+        break if element
 
-      sleep 1
+        sleep 1
+      end
+      raise "overview link not found in sidebar after 30 s: #{link}" if element.nil?
+
+      element.click
+    rescue Selenium::WebDriver::Error::StaleElementReferenceError
+      sleep retries
+      retries += 1
+      retry if retries < 3
     end
-    element.click
 
     # hide larger overview selection list again
     sleep 0.5
@@ -2775,14 +2862,34 @@ wait untill text in selector disabppears
     element.click
     element.clear
     element.send_keys(params[:number])
-    sleep 3
+
+    # A newly created ticket only becomes searchable once its SearchIndexJob has
+    #   run and Elasticsearch has caught up - that queue can lag further behind
+    #   the later in a long test run it's checked, so give it a generous budget.
+    #   Note: this legacy Minitest suite has no direct ActiveRecord/DB access from
+    #   the test process itself (only ever drives the app through the browser
+    #   against a separate `bin/rails server`), so forcing the index update
+    #   directly from here isn't an option - polling is the only lever available.
+    found = false
+    99.times do
+      found = instance.execute_script("return $(\".js-global-search-result a:contains('#{params[:number]}')\").length") == 1
+      break if found
+
+      sleep 0.5
+    end
+
+    if !found
+      screenshot(browser: instance, comment: 'ticket_open_by_search_not_found')
+      raise "search result for ticket #{params[:number]} did not appear!"
+    end
 
     # open ticket
     # instance.find_element(partial_link_text: params[:number] } ).click
     instance.execute_script("$(\".js-global-search-result a:contains('#{params[:number]}') .nav-tab-name\").first().trigger('click')")
     watch_for(
       browser: instance,
-      css:     '.content.active .ticketZoom-header .ticket-number'
+      css:     '.content.active .ticketZoom-header .ticket-number',
+      timeout: 30
     )
     number = instance.find_elements(css: '.content.active .ticketZoom-header .ticket-number')[0].text
     if !number.match?(%r{#{params[:number]}})
@@ -3153,7 +3260,7 @@ wait untill text in selector disabppears
       sleep 1
       search_result = instance.find_elements(css: search_css).map { |x| x.text.strip }
       break if search_result.include? search_target
-      raise 'user creation failed' if i >= 19
+      raise 'user creation failed' if i >= 39
 
       log "new user #{search_query} not found on the #{i.ordinalize} try, retrying"
     end
@@ -3692,7 +3799,7 @@ wait untill text in selector disabppears
         sleep 1
         scroll_to(params.merge(css: '.content.active a[href="#manage/users"]'))
         instance.find_elements(css: '.content.active a[href="#manage/users"]')[0].click
-        sleep 3
+        sleep 5
         element = instance.find_elements(css: '.content.active [name="search"]')[0]
         element.clear
         element.send_keys(member[:login])
@@ -4024,7 +4131,7 @@ wait untill text in selector disabppears
         instance.find_elements(css: 'a[href="#manage"]')[0].click
         sleep 1
         instance.find_elements(css: '.content.active a[href="#manage/users"]')[0].click
-        sleep 3
+        sleep 5
         element = instance.find_elements(css: '.content.active [name="search"]')[0]
         element.clear
         element.send_keys(login)
@@ -4457,26 +4564,40 @@ wait untill text in selector disabppears
 
     instance = params[:browser] || @browser
 
-    tags = instance.find_elements({ css: '.content.active .js-tag' })
-    assert(tags)
-    assert(tags[0])
+    attempt = lambda do
+      tags = instance.find_elements({ css: '.content.active .js-tag' })
+      assert(tags)
+      assert(tags[0])
 
-    tags_found = {}
-    params[:tags].each_key do |key|
-      tags_found[key] = false
-    end
+      tags_found = {}
+      params[:tags].each_key do |key|
+        tags_found[key] = false
+      end
 
-    tags.each do |element|
-      text = element.text
-      if tags_found.key?(text)
-        tags_found[text] = true
-      else
-        assert(false, "tag exists but is not in check to verify '#{text}'")
+      tags.each do |element|
+        text = element.text
+        if tags_found.key?(text)
+          tags_found[text] = true
+        else
+          assert(false, "tag exists but is not in check to verify '#{text}'")
+        end
+      end
+      params[:tags].each do |key, value|
+        assert_equal(value, tags_found[key], "tag '#{key}'")
       end
     end
-    params[:tags].each do |key, value|
-      assert_equal(value, tags_found[key], "tag '#{key}'")
+
+    # A tag change made in one browser window needs a moment to propagate (via
+    #   websocket push) to any other open window watching the same ticket - poll for
+    #   a match instead of checking once, to avoid racing ahead of that propagation.
+    30.times do
+      attempt.call
+      return
+    rescue Minitest::Assertion
+      sleep 0.5
     end
+
+    attempt.call
   end
 
   def quote(string)

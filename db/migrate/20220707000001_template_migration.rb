@@ -1,4 +1,4 @@
-﻿# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 class TemplateMigration < ActiveRecord::Migration[6.0]
   def change
@@ -17,7 +17,7 @@ class TemplateMigration < ActiveRecord::Migration[6.0]
         new_options[new_key] = value
       end
       template.options = new_options
-      template.save!
+      template.save!(validate: false)
     end
 
   end

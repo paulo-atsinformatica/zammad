@@ -143,7 +143,7 @@ describe('TicketDetailBottomBar', () => {
 
       const wrapper = renderTicketDetailBottomBar()
 
-      const actionMenu = await wrapper.findByLabelText('Additional ticket edit actions')
+      const actionMenu = await wrapper.findByLabelText('Drafts & macros')
 
       await wrapper.events.click(actionMenu)
 
@@ -166,7 +166,7 @@ describe('TicketDetailBottomBar', () => {
         wrapper.queryByRole('button', { name: 'Discard your unsaved changes' }),
       ).not.toBeInTheDocument()
 
-      expect(wrapper.queryByLabelText('Additional ticket edit actions')).not.toBeInTheDocument()
+      expect(wrapper.queryByLabelText('Drafts & macros')).not.toBeInTheDocument()
     })
 
     it('reloads macro query if subscription is triggered', async () => {
@@ -179,7 +179,9 @@ describe('TicketDetailBottomBar', () => {
       const calls = await waitForMacrosQueryCalls()
 
       expect(calls?.at(-1)?.variables).toEqual({
-        groupIds: [convertToGraphQLId('Group', 2)],
+        selector: {
+          entityIds: [convertToGraphQLId('Group', 2)],
+        },
       })
 
       await waitForNextTick()
@@ -238,7 +240,7 @@ describe('TicketDetailBottomBar', () => {
 
       const wrapper = renderTicketDetailBottomBar()
 
-      const actionMenu = await wrapper.findByLabelText('Additional ticket edit actions')
+      const actionMenu = await wrapper.findByLabelText('Drafts & macros')
 
       await wrapper.events.click(actionMenu)
 
@@ -253,6 +255,7 @@ describe('TicketDetailBottomBar', () => {
           {
             __typename: 'Macro',
             id: convertToGraphQLId('Macro', 1),
+            internalId: 1,
             active: true,
             name: 'Macro 1',
             uxFlowNextUp: 'next_task',
@@ -267,7 +270,7 @@ describe('TicketDetailBottomBar', () => {
       })
 
       const addonButton = wrapper.getByRole('button', {
-        name: 'Additional ticket edit actions',
+        name: 'Drafts & macros',
       })
 
       await wrapper.events.click(addonButton)

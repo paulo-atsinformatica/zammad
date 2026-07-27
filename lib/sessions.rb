@@ -20,6 +20,8 @@ returns
 =end
 
   def self.create(client_id, session, meta)
+    return if !valid_client_id?(client_id)
+
     # collect session data
     meta[:last_ping] = Time.now.utc.to_i
     data = {
@@ -71,7 +73,13 @@ returns
 =end
 
   def self.session_exists?(client_id)
+    return false if !valid_client_id?(client_id)
+
     @store.session_exists?(client_id)
+  end
+
+  def self.valid_client_id?(client_id)
+    client_id.present? && client_id.match?(%r{\A[a-f0-9-]+\z})
   end
 
 =begin
@@ -130,6 +138,8 @@ returns
 =end
 
   def self.destroy(client_id)
+    return if !valid_client_id?(client_id)
+
     @store.destroy(client_id)
   end
 
@@ -170,6 +180,8 @@ returns
 =end
 
   def self.touch(client_id)
+    return false if !valid_client_id?(client_id)
+
     data = get(client_id)
     return false if !data
 
@@ -199,6 +211,8 @@ returns
 =end
 
   def self.get(client_id)
+    return if !valid_client_id?(client_id)
+
     @store.get client_id
   end
 
@@ -215,6 +229,8 @@ returns
 =end
 
   def self.send(client_id, data) # rubocop:disable Zammad/ForbidDefSend
+    return false if !valid_client_id?(client_id)
+
     @store.send_data(client_id, data)
   end
 
@@ -319,6 +335,8 @@ returns
 =end
 
   def self.queue(client_id)
+    return [] if !valid_client_id?(client_id)
+
     @store.queue(client_id)
   end
 
@@ -352,7 +370,7 @@ itself was removed in the meantime.
 
 start client for browser
 
-  Sessions.thread_client(client_id)
+  Sessions.thread_client(client_id, node_id)
 
 returns
 
@@ -360,7 +378,7 @@ returns
 
 =end
 
-  def self.thread_client(client_id, try_count = 0, try_run_time = Time.now.utc, node_id)
+  def self.thread_client(client_id, node_id, try_count = 0, try_run_time = Time.now.utc)
     log('debug', "LOOP #{node_id}.#{client_id} - #{try_count}")
     begin
       Sessions::Client.new(client_id, node_id)
@@ -380,7 +398,7 @@ returns
 
       # restart job again
       if try_run_max > try_count
-        thread_client(client_id, try_count, try_run_time, node_id)
+        thread_client(client_id, node_id, try_count, try_run_time)
       end
       raise "STOP thread_client for client #{node_id}.#{client_id} after #{try_run_max} tries"
     end

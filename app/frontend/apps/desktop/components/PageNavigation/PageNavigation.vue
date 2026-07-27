@@ -11,30 +11,36 @@ import CommonSectionCollapse from '#desktop/components/CommonSectionCollapse/Com
 import { sortedFirstLevelRoutes } from '#desktop/components/PageNavigation/firstLevelRoutes.ts'
 
 import CommonButton from '../CommonButton/CommonButton.vue'
+import { SidebarName } from '../layout/types.ts'
+import { useSidebarDisplay } from '../layout/useSidebarDisplay.ts'
 
 interface Props {
   collapsed?: boolean
 }
 
-//*
-// IMPORTANT: This is just a temporary implementation please replace and adapt it later
-// *//
 defineProps<Props>()
 
 const router = useRouter()
 
-const { userId, hasPermission } = useSessionStore()
+const { hasPermission } = useSessionStore()
+
+const { toggleSidebar } = useSidebarDisplay(SidebarName.Primary)
 
 const openSearch = () => {
-  emitter.emit('expand-collapsed-content', `${userId}-left`)
+  toggleSidebar(false)
   nextTick(() => emitter.emit('focus-quick-search-field'))
 }
 
-const permittedRoutes = computed(() => {
-  return sortedFirstLevelRoutes.filter((route) => {
-    return hasPermission(route.meta.requiredPermission)
-  })
-})
+const permittedRoutes = computed(() =>
+  sortedFirstLevelRoutes.filter(
+    (route) => hasPermission(route.meta.requiredPermission) && (route.meta.canAccess?.() ?? true),
+  ),
+)
+
+// A first-level entry is active whenever the current route lives in its
+//   subtree, not only on an exact name match — nested pages
+const isRouteActive = (name: string) =>
+  router.currentRoute.value.matched.some((record) => record.name === name)
 </script>
 
 <template>
@@ -46,10 +52,10 @@ const permittedRoutes = computed(() => {
             <li class="flex justify-center">
               <CommonButton
                 v-if="collapsed"
+                v-tooltip="$t('Open quick search')"
                 class="shrink-0 text-neutral-400 hover:outline-blue-900"
                 size="large"
                 variant="neutral"
-                :aria-label="$t('Open quick search')"
                 icon="search"
                 @click="openSearch"
               />
@@ -72,7 +78,7 @@ const permittedRoutes = computed(() => {
                 v-else
                 class="flex grow gap-2 rounded-lg px-2 py-3 text-neutral-400 focus-visible-app-default hover:bg-blue-900 hover:text-white! hover:no-underline! focus-visible:rounded-lg!"
                 :class="{
-                  'bg-blue-800! text-white!': router.currentRoute.value.name === route.name, // $route.name is not detected by ts
+                  'bg-blue-800! text-white!': isRouteActive(route.name),
                 }"
                 :link="route.path.replace(/\/:\w+/, '')"
                 exact-active-class="bg-blue-800! w-full text-white!"

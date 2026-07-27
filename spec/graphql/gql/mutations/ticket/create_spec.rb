@@ -537,12 +537,54 @@ RSpec.describe Gql::Mutations::Ticket::Create, :aggregate_failures, type: :graph
         end
 
         it 'passed to ticket create service' do
-          expect_any_instance_of(Service::Ticket::Create)
-            .to receive(:execute)
-            .with(ticket_data: include(shared_draft:))
-            .and_call_original
+          allow(Service::Ticket::Create).to receive(:execute)
 
           gql.execute(query, variables: variables)
+
+          expect(Service::Ticket::Create)
+            .to have_received(:execute)
+            .with(current_user: agent, ticket_data: include(shared_draft:))
+        end
+      end
+    end
+
+    context 'with an agent-customer', authenticated_as: :agent_customer do
+      let(:agent_customer) { create(:agent_and_customer, groups: [agent_customer_group]) }
+      let(:agent_customer_group) { create(:group) }
+
+      before do
+        agent.groups << agent_customer_group
+      end
+
+      context 'when creating in an agent access group' do
+        let(:input_payload) do
+          input_base_payload.merge(
+            groupId: gql.id(agent_customer_group),
+          )
+        end
+        let(:expected_response) do
+          expected_base_response.merge(
+            'group' => { 'name' => agent_customer_group.name },
+          )
+        end
+
+        it 'creates Ticket record' do
+          it_creates_ticket
+          expect(gql.result.data[:ticket]).to eq(expected_response)
+        end
+      end
+
+      context 'when creating in a group where the agent_customer has no access' do
+        let(:input_payload) do
+          input_base_payload
+            .tap { |h| h.delete(:ownerId) }
+            .tap { |h| h.delete(:customer) }
+        end
+
+        it 'creates a ticket record with filtered values' do
+          it_fails_to_create_ticket
+          expect(gql.result.error_type).to eq(Exceptions::ApplicationModel)
+          expect(gql.result.error_message).to eq("Invalid value '1' for field 'group_id'!")
         end
       end
     end

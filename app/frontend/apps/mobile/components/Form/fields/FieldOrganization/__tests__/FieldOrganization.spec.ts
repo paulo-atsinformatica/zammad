@@ -1,6 +1,5 @@
 // Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
-import { getNode } from '@formkit/core'
 import { FormKit } from '@formkit/vue'
 import { waitFor } from '@testing-library/vue'
 import { escapeRegExp } from 'lodash-es'
@@ -19,13 +18,20 @@ import type {
 
 import testOptions from './test-options.json'
 
+import type { FormKitNode } from '@formkit/core'
+
 const mockQueryResult = (input: {
   query: string
   limit: number
 }): AutocompleteSearchOrganizationQuery => {
   const options = testOptions.map((option) =>
-    nullableMock({
+    nullableMock<AutocompleteSearchOrganizationEntry>({
       ...option,
+      organization: {
+        ...option.organization,
+        __typename: 'Organization',
+        id: String(option.organization.id),
+      },
       labelPlaceholder: null,
       headingPlaceholder: null,
       disabled: null,
@@ -43,17 +49,16 @@ const mockQueryResult = (input: {
   // Search across options via their de-accented labels.
   const filteredOptions = options.filter(
     (option) =>
-      filterRegex.test(deaccent(option.label)) || filterRegex.test(deaccent(option.heading)),
+      filterRegex.test(deaccent(option.label)) || filterRegex.test(deaccent(option.heading || '')),
   ) as unknown as AutocompleteSearchOrganizationEntry[]
 
-  return {
+  return nullableMock<AutocompleteSearchOrganizationQuery>({
     autocompleteSearchOrganization: filteredOptions.slice(0, input.limit ?? 25),
-  }
+  })
 }
 
 const wrapperParameters = {
   form: true,
-  formField: true,
   router: true,
   dialog: true,
 }
@@ -78,16 +83,20 @@ describe('Form - Field - Organization - Features', () => {
         name: 'organization_id',
         value: 123,
         belongsToObjectField: 'organization',
+        // Add manually the "initialEntityObject" which is normally coming
+        // from the root node (for a single field root node === own node).
+        plugins: [
+          (node: FormKitNode) => {
+            node.context!.initialEntityObject = {
+              organization: {
+                name: 'Zammad Organization',
+                internalId: 123,
+              },
+            }
+          },
+        ],
       },
     })
-
-    const node = getNode('organization_id')
-    node!.context!.initialEntityObject = {
-      organization: {
-        name: 'Zammad Organization',
-        internalId: 123,
-      },
-    }
 
     await waitForNextTick(true)
 

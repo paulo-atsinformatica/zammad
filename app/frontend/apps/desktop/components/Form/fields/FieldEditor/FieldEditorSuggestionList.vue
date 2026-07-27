@@ -5,6 +5,7 @@ import { computed, toRef } from 'vue'
 
 import CommonUserAvatar from '#shared/components/CommonUserAvatar/CommonUserAvatar.vue'
 import useNavigateOptions from '#shared/components/Form/fields/FieldEditor/composables/useNavigateOptions.ts'
+import { useSuggestionTyping } from '#shared/components/Form/fields/FieldEditor/composables/useSuggestionTyping.ts'
 import type {
   MentionKnowledgeBaseItem,
   MentionTextItem,
@@ -23,24 +24,19 @@ interface Props {
   items: PossibleItem[]
   type: MentionType
   command: (item: PossibleItem) => void
+  label: string
+  placeholder: string
+  listboxId: string
 }
 
 const props = defineProps<Props>()
 
-const isKnowledgeBaseItem = (item: unknown): item is MentionKnowledgeBaseItem => {
-  return props.type === 'knowledge-base'
-}
+const optionId = (index: number) => `${props.listboxId}-option-${index}`
 
-const isUserItem = (item: unknown): item is MentionUserItem => {
-  return props.type === 'user'
-}
-
-const isTextItem = (item: unknown): item is MentionTextItem => {
-  return props.type === 'text'
-}
-
-const { selectItem, selectedIndex, onKeyDown } = useNavigateOptions(toRef(props, 'items'), (item) =>
-  props.command(item as MentionUserItem),
+const { selectItem, selectedIndex, onKeyDown } = useNavigateOptions(
+  toRef(props, 'items'),
+  (item) => props.command(item as MentionUserItem),
+  optionId,
 )
 
 const getKnowledgeBaseItemBreadcrumb = (item: MentionKnowledgeBaseItem) =>
@@ -59,72 +55,84 @@ defineExpose({
   onKeyDown: (props: SuggestionKeyDownProps) => {
     return onKeyDown(props.event)
   },
+  get selectedIndex() {
+    return selectedIndex.value
+  },
 })
 
-const emptyMessage = computed(() => {
-  if (props.loading) return i18n.t('Loading…')
-  if (props.query) return i18n.t('No results found')
-  if (props.type === 'knowledge-base') return i18n.t('Start typing to search in Knowledge Base…')
-  if (props.type === 'text') return i18n.t('Start typing to search for text modules…')
-  if (props.type === 'user') return i18n.t('Start typing to search for users…')
+// While the user is still typing (and the query debounce hasn't settled), treat
+// it as loading so a stale empty result can't flash "No results found" before
+// the new query's results arrive.
+const isTyping = useSuggestionTyping(toRef(props, 'query'))
 
-  return i18n.t('Start typing to search…')
+const emptyMessage = computed(() => {
+  if (props.loading || isTyping.value) return i18n.t('Loading…')
+  if (props.query) return i18n.t('No results found')
+  return i18n.t(props.placeholder)
 })
 </script>
 
 <template>
   <ul
+    :id="listboxId"
     class="z-50 max-h-79 max-w-154 overflow-y-auto rounded-xl border border-neutral-100 bg-neutral-50 dark:border-gray-900 dark:bg-gray-500"
     :data-test-id="`mention-${type}`"
     role="listbox"
+    :aria-label="$t(label)"
   >
+    <!-- Options are intentionally not focusable and have no key handler: the editor keeps -->
+    <!-- focus and drives selection via aria-activedescendant (ARIA combobox pattern). -->
+    <!-- eslint-disable-next-line vuejs-accessibility/interactive-supports-focus, vuejs-accessibility/click-events-have-key-events -->
     <li
-      v-for="(item, index) in items"
-      :id="`mention-${index}`"
+      v-for="(item, index) in items as
+        MentionKnowledgeBaseItem[] | MentionTextItem[] | MentionUserItem[]"
+      :id="optionId(index)"
       :key="item.id"
       class="group cursor-pointer px-4 py-2 hover:bg-blue-600 dark:hover:bg-blue-900"
       :class="{ 'bg-blue-600 dark:bg-blue-900': selectedIndex === index }"
       role="option"
       :aria-selected="selectedIndex === index"
-      tabindex="0"
       @click="selectItem(index)"
-      @keydown.space.prevent="selectItem(index)"
     >
-      <div v-if="isKnowledgeBaseItem(item)" class="flex flex-col gap-px">
+      <div v-if="type === 'knowledge-base'" class="flex flex-col gap-px">
         <CommonLabel
           class="inline! truncate text-stone-200 group-hover:text-black dark:text-neutral-500 dark:group-hover:text-white"
           :class="{ 'text-black! dark:text-white!': selectedIndex === index }"
           size="small"
         >
-          {{ getKnowledgeBaseItemBreadcrumb(item) }}
+          {{ getKnowledgeBaseItemBreadcrumb(item as MentionKnowledgeBaseItem) }}
         </CommonLabel>
         <CommonLabel
           class="inline! truncate group-hover:text-black dark:group-hover:text-white"
           :class="{ 'text-black! dark:text-white!': selectedIndex === index }"
         >
-          {{ item.title }}
-          {{ item.maybeLocale ? `(${item.maybeLocale})` : '' }}
+          {{ (item as MentionKnowledgeBaseItem).title }}
+          {{
+            (item as MentionKnowledgeBaseItem).maybeLocale
+              ? `(${(item as MentionKnowledgeBaseItem).maybeLocale})`
+              : ''
+          }}
         </CommonLabel>
       </div>
-      <div v-else-if="isTextItem(item)" class="flex items-center gap-2">
+      <div v-else-if="type === 'text'" class="flex items-center gap-2">
         <CommonLabel
           class="inline! truncate group-hover:text-black dark:group-hover:text-white"
           :class="{ 'text-black! dark:text-white!': selectedIndex === index }"
-          >{{ item.name }}</CommonLabel
+          >{{ (item as MentionTextItem).name }}</CommonLabel
         >
         <span
-          v-if="item.keywords"
+          v-if="(item as MentionTextItem).keywords"
           class="truncate rounded-sm bg-white p-1 font-mono text-xs text-stone-200 group-hover:text-black dark:bg-black dark:text-neutral-500 dark:group-hover:text-white"
           :class="{ 'text-black! dark:text-white!': selectedIndex === index }"
         >
-          {{ item.keywords }}
+          {{ (item as MentionTextItem).keywords }}
         </span>
       </div>
-      <div v-else-if="isUserItem(item)" class="flex items-center gap-2">
+      <div v-else-if="type === 'user'" class="flex items-center gap-2">
         <CommonUserAvatar
           :entity="item"
           :class="{
-            'opacity-30': !item.active,
+            'opacity-30': !(item as MentionUserItem).active,
           }"
           size="xs"
         />
@@ -132,14 +140,14 @@ const emptyMessage = computed(() => {
           class="inline! truncate group-hover:text-black dark:group-hover:text-white"
           :class="{ 'text-black! dark:text-white!': selectedIndex === index }"
         >
-          {{ item.fullname }}
+          {{ (item as MentionUserItem).fullname }}
         </CommonLabel>
         <CommonLabel
-          v-if="item.email"
+          v-if="(item as MentionUserItem).email"
           class="truncate text-stone-200 group-hover:text-black dark:text-neutral-500 dark:group-hover:text-white"
           :class="{ 'text-black! dark:text-white!': selectedIndex === index }"
         >
-          – {{ item.email }}
+          – {{ (item as MentionUserItem).email }}
         </CommonLabel>
       </div>
     </li>

@@ -342,7 +342,7 @@ const afterSubmitHandling = (
       afterSubmitReset(values)
     }
 
-    // oxlint-disable-next-line eslint-plugin-promise(valid-params)
+    // oxlint-disable-next-line promise/valid-params
     submitReturn.finally?.()
 
     return
@@ -606,7 +606,8 @@ const resetForm = (data: FormResetData = {}, options: FormResetOptions = {}) => 
     formNodeGroups.value.forEach((groupName: string) => {
       if (
         (!props.flattenFormGroups ||
-          (props.flattenFormGroups.includes(groupName) && nonGroupKeys.length === 0)) &&
+          !props.flattenFormGroups.includes(groupName) ||
+          nonGroupKeys.length === 0) &&
         !(groupName in valuesForReset)
       ) {
         valuesForReset[groupName] = rootNode.props._init?.[groupName] || {}
@@ -946,7 +947,7 @@ const handlesFormUpdater = (
   options?: FormUpdaterOptions,
 ) => {
   if (!props.formUpdaterId || !formUpdaterQueryHandler) return
-  // When formUpdaterInitial is set, trigger only on initial rendering and when the form was reseted.
+  // When formUpdaterInitialOnly is set, trigger only on initial rendering and when the form was reseted.
   if (
     trigger !== 'manual' &&
     trigger !== 'form-reset' &&
@@ -1365,25 +1366,24 @@ const initializeFormSchema = () => {
 
     formUpdaterScope.run(() => {
       formUpdaterQueryHandler = new QueryHandler(
-        useFormUpdaterQuery(formUpdaterVariables as Ref<FormUpdaterQueryVariables>, {
+        useFormUpdaterQuery(formUpdaterVariables as Ref<FormUpdaterQueryVariables>, () => ({
           context: {
             batch: {
               active: false,
             },
             websocket: {
-              active: true,
+              // Send the initial form load over HTTP — the WebSocket connection
+              // is busy with many other messages during the initial render and
+              // becomes a bottleneck. Subsequent refetches stay on ActionCable.
+              active: !formUpdaterVariables.value?.meta.initial,
             },
             skipSubscription: 'userCurrentTaskbarItemStateUpdates',
             skipSubscriptionAddCallback: (variables: FormUpdaterQueryVariables) => {
-              return (
-                !variables.meta.initial &&
-                !variables.meta.reset &&
-                !variables.meta.additionalData.applyTaskbarState
-              )
+              return !variables.meta.initial && !variables.meta.additionalData?.applyTaskbarState
             },
           },
           fetchPolicy: 'no-cache',
-        }),
+        })),
       )
     })
 

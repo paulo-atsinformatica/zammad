@@ -1,5 +1,7 @@
 # Third Party Icons (`desktop`)
 
+- `assets/arrow-left.svg`
+- `assets/arrow-right.svg`
 - `assets/arrow-bar-left.svg`
 - `assets/arrow-bar-right.svg`
 - `assets/arrow-repeat.svg`
@@ -35,6 +37,7 @@
 - `assets/crown-right.svg`
 - `assets/crown-silver.svg`
 - `assets/dash-circle.svg`
+- `assets/dash-square.svg`
 - `assets/download.svg`
 - `assets/envelope.svg`
 - `assets/exclamation-triangle.svg`
@@ -56,14 +59,18 @@
 - `assets/key.svg`
 - `assets/keyboard.svg`
 - `assets/lock.svg`
+- `assets/lock-fill.svg`
 - `assets/paperclip.svg`
 - `assets/patch-check.svg`
 - `assets/pencil-square.svg`
 - `assets/pencil.svg`
+- `assets/person-x.svg`
 - `assets/phone.svg`
 - `assets/pin-angle.svg`
 - `assets/pin.svg`
+- `assets/plus.svg`
 - `assets/plus-circle.svg`
+- `assets/plus-square.svg`
 - `assets/printer.svg`
 - `assets/question-circle.svg`
 - `assets/quote.svg`

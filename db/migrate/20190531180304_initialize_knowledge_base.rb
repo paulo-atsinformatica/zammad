@@ -1,6 +1,6 @@
-﻿# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
-# Using older 5.0 migration to stick to Integer primary keys. Otherwise migration fails in MySQL.
+# Using older 5.0 migration to stick to Integer primary keys
 class InitializeKnowledgeBase < ActiveRecord::Migration[5.0]
   def change
     return if ActiveRecord::Base.connection.table_exists? 'knowledge_bases'
@@ -98,6 +98,8 @@ class InitializeKnowledgeBase < ActiveRecord::Migration[5.0]
 
       t.references :created_by, null: false, foreign_key: { to_table: :users }
       t.references :updated_by, null: false, foreign_key: { to_table: :users }
+
+      t.timestamp :edited_at, limit: 3, null: false
 
       t.timestamps limit: 3, null: false
     end

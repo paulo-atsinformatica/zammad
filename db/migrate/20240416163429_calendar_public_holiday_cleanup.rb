@@ -1,4 +1,4 @@
-﻿# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 class CalendarPublicHolidayCleanup < ActiveRecord::Migration[7.0]
   def change
@@ -16,7 +16,7 @@ class CalendarPublicHolidayCleanup < ActiveRecord::Migration[7.0]
       public_holidays_to_keep = calendar.public_holidays.reject { |_, info| info['feed'] == checksum }
 
       calendar.update!(public_holidays: public_holidays_to_keep)
-      calendar.sync
+      calendar.sync_ical
     end
   end
 end

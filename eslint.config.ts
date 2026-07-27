@@ -6,7 +6,7 @@ import path from 'path'
 import { defineConfigWithVueTs, vueTsConfigs } from '@vue/eslint-config-typescript'
 import { globalIgnores } from 'eslint/config'
 // @ts-ignore
-import importPlugin from 'eslint-plugin-import'
+import importPlugin from 'eslint-plugin-import-x'
 import eslintConfigPrettier from 'eslint-config-prettier'
 import oxlint from 'eslint-plugin-oxlint'
 import pluginSecurity from 'eslint-plugin-security'
@@ -28,6 +28,7 @@ export default defineConfigWithVueTs(
   globalIgnores([
     'app/frontend/**/graphql/**/*.ts',
     '!app/frontend/tests/graphql/**/*.ts',
+    'app/frontend/shared/graphql/schema-types.ts',
     'app/frontend/shared/graphql/types.ts',
     'app/frontend/shared/types/config.ts',
     'tmp/**/*',
@@ -36,7 +37,7 @@ export default defineConfigWithVueTs(
     'app/frontend/build/mocksGraphqlPlugin.js',
     '.eslint-plugin-zammad/lib/index.js',
     '.eslint-plugin-zammad/tests/**/*.js',
-    'public/assets/tests/*.js',
+    'public/assets/tests/**/*.js',
   ]),
 
   // Base Vue and TypeScript configs - these handle parsing automatically
@@ -77,7 +78,7 @@ export default defineConfigWithVueTs(
       'vue/v-bind-style': ['error', 'shorthand'],
       'vue/v-on-style': ['error', 'shorthand'],
       'vue/v-slot-style': ['error', 'shorthand'],
-      'vue/custom-event-name-casing': ['error', 'kebab-case'],
+      'vue/custom-event-name-casing': ['error', 'kebab-case', { ignores: ['/^update:/'] }],
       'vue/attribute-hyphenation': 'error',
     },
   },
@@ -140,6 +141,11 @@ export default defineConfigWithVueTs(
           pathGroups: [
             {
               pattern: '#tests/**',
+              group: 'internal',
+              position: 'before',
+            },
+            {
+              pattern: '#cy/**',
               group: 'internal',
               position: 'before',
             },

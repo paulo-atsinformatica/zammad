@@ -1,6 +1,11 @@
 # Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 class PGPKey < ApplicationModel
+  include CanSensitiveAssets
+  include HasAuditLogs
+
+  SENSITIVE_FIELDS = %i[key passphrase].freeze
+
   default_scope { order(created_at: :desc, id: :desc) }
 
   before_validation :ensure_ascii_key, :prepare_key_info, on: :create
@@ -21,15 +26,11 @@ class PGPKey < ApplicationModel
   def self.find_all_by_uid(uid, only_valid: true, secret: false)
     uid = uid.downcase
 
-    email_addresses_query = SqlHelper.new(object: PGPKey).array_contains_one(:email_addresses, uid)
-
-    query = if domain_alias_configuration_active?
-              ["#{email_addresses_query} OR (? LIKE domain_alias)", SqlHelper.quote_like(uid)]
-            else
-              email_addresses_query
-            end
-
-    keys_selector = PGPKey.where(query)
+    keys_selector = PGPKey.where(SqlHelper.new(object: PGPKey).array_contains_one(:email_addresses, uid), uid)
+    if domain_alias_configuration_active?
+      domain_alias_where = PGPKey.where('(? LIKE domain_alias)', SqlHelper.quote_like(uid))
+      keys_selector = keys_selector.or(domain_alias_where)
+    end
 
     keys_selector = keys_selector.where(secret: true) if secret
 

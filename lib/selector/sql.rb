@@ -21,6 +21,7 @@ class Selector::Sql < Selector::Base
     'has changed',
     'has reached warning',
     'has reached',
+    'in range',
     'is any of',
     'is in working time',
     'is less than',
@@ -32,6 +33,7 @@ class Selector::Sql < Selector::Base
     'is not',
     'is set',
     'is',
+    'matches',
     'matches regex',
     'not set',
     'starts with one of',
@@ -484,6 +486,13 @@ class Selector::Sql < Selector::Base
       # https://github.com/zammad/zammad/issues/4948
       query << "#{attribute} NOT ILIKE (?) OR #{attribute} IS NULL"
       bind_params.push "%#{SqlHelper.quote_like(block_condition[:value])}%"
+    elsif block_condition[:operator] == 'matches'
+      query << "#{attribute} ILIKE (?)"
+      if wildcard_value?(block_condition[:value])
+        bind_params.push SqlHelper.quote_like(block_condition[:value]).gsub(MATCH_WILDCARD_REGEX, '%')
+      else
+        bind_params.push "%#{SqlHelper.quote_like(block_condition[:value])}%"
+      end
     elsif block_condition[:operator] == 'matches regex'
       query << sql_helper.regex_match(attribute, negated: false)
       bind_params.push block_condition[:value]
@@ -512,6 +521,7 @@ class Selector::Sql < Selector::Base
         bind_params.push block_condition[:value].count
       elsif sql_helper.containable?(attribute_name)
         query << sql_helper.array_contains_all(attribute_name, block_condition[:value])
+        bind_params += Array.wrap(block_condition[:value])
       end
     elsif block_condition[:operator] == 'contains one'
       if attribute_name == 'tags' && attribute_table == 'ticket'
@@ -521,6 +531,7 @@ class Selector::Sql < Selector::Base
         bind_params.push block_condition[:value]
       elsif sql_helper.containable?(attribute_name)
         query << sql_helper.array_contains_one(attribute_name, block_condition[:value])
+        bind_params += Array.wrap(block_condition[:value])
       end
     elsif block_condition[:operator] == 'contains all not'
       if attribute_name == 'tags' && attribute_table == 'ticket'
@@ -543,6 +554,7 @@ class Selector::Sql < Selector::Base
         bind_params.push block_condition[:value].count
       elsif sql_helper.containable?(attribute_name)
         query << sql_helper.array_contains_all(attribute_name, block_condition[:value], negated: true)
+        bind_params += Array.wrap(block_condition[:value])
       end
     elsif block_condition[:operator] == 'contains one not'
       if attribute_name == 'tags' && attribute_table == 'ticket'
@@ -560,6 +572,7 @@ class Selector::Sql < Selector::Base
         bind_params.push block_condition[:value]
       elsif sql_helper.containable?(attribute_name)
         query << sql_helper.array_contains_one(attribute_name, block_condition[:value], negated: true)
+        bind_params += Array.wrap(block_condition[:value])
       end
     elsif block_condition[:operator] == 'today'
       Time.use_zone(Setting.get('timezone_default')) do
@@ -569,6 +582,20 @@ class Selector::Sql < Selector::Base
         query << "#{attribute} BETWEEN ? AND ?"
         bind_params.push day_start
         bind_params.push day_end
+      end
+    elsif block_condition[:operator] == 'in range'
+      if (!block_condition[:value].is_a?(Array) || block_condition[:value].size != 2) || (block_condition[:value][0].blank? && block_condition[:value][1].blank?)
+        raise "Invalid value in range: '#{block_condition[:value].inspect}'"
+      elsif block_condition[:value][0].present? && block_condition[:value][1].present?
+        query << "#{attribute} BETWEEN ? AND ?"
+        bind_params.push block_condition[:value][0]
+        bind_params.push block_condition[:value][1]
+      elsif block_condition[:value][0].present?
+        query << "#{attribute} >= ?"
+        bind_params.push block_condition[:value][0]
+      elsif block_condition[:value][1].present?
+        query << "#{attribute} <= ?"
+        bind_params.push block_condition[:value][1]
       end
     elsif block_condition[:operator] == 'before (absolute)'
       query << "#{attribute} <= ?"

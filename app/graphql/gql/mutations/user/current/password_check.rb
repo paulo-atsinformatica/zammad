@@ -9,7 +9,7 @@ module Gql::Mutations
     argument :password, String, required: true, description: 'Password to check'
 
     field :success, Boolean, description: 'This indicates if given password matches current user password'
-    field :token, String, description: 'One-time token which should be included in a subsequent request (where applicable)'
+    field :token, String, description: 'One-time token which should be included in a subsequent request (where applicable)' # rubocop:disable Zammad/GraphqlForbidSensitiveFields -- Single-use confirmation token returned to the calling user; not a long-lived secret.
 
     requires_permission 'user_preferences.password'
 
@@ -19,8 +19,8 @@ module Gql::Mutations
 
     def resolve(password:)
       password_check = Service::User::PasswordCheck
-        .new(user: context.current_user, password:)
-        .execute
+        .with_current_user(context.current_user)
+        .execute(password:)
 
       if !password_check[:success]
         return error_response({ field: :password, message: __('The provided password is incorrect.') })

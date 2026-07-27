@@ -51,7 +51,8 @@ const { getCellContentComponent } = useCellContent()
 
 const checkedRows = defineModel<Array<TableItem>>('checkedRows', {
   required: false,
-  default: (props: SimpleTableProps) => props.items.filter((item) => item.checked), // is not reactive by default and making it reactive causes other issues.
+  // is not reactive by default and making it reactive causes other issues.
+  default: (props) => (props.items as Array<TableItem>).filter((item) => item.checked),
 })
 
 const { hasCheckboxId, allCheckboxRowsSelected, selectAllRowCheckboxes, handleCheckboxUpdate } =
@@ -77,7 +78,7 @@ const { hasCheckboxId, allCheckboxRowsSelected, selectAllRowCheckboxes, handleCh
             "
             type="checkbox"
             :model-value="allCheckboxRowsSelected"
-            @update:model-value="selectAllRowCheckboxes"
+            @update:model-value="selectAllRowCheckboxes($event as boolean)"
           />
 
           <slot v-else :name="`column-header-${header.key}`" :header="header">
@@ -121,6 +122,7 @@ const { hasCheckboxId, allCheckboxRowsSelected, selectAllRowCheckboxes, handleCh
               cellAlignmentClasses[header.alignContent || 'left'],
               {
                 'max-w-32 truncate text-black dark:text-white': header.truncate,
+                'size-10': hasCheckboxColumn && header.key === 'checkbox',
               },
             ]"
           >

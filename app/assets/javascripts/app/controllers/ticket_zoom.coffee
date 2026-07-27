@@ -164,6 +164,7 @@ class App.TicketZoom extends App.Controller
 
     attributes_to_ignore_for_notify = [
       'ai_agent_running',
+      'ai_summary_enabled',
       'updated_by_id',
       'updated_at',
     ]
@@ -866,6 +867,8 @@ class App.TicketZoom extends App.Controller
     if _.isEmpty(contentKeys)
       delete articleDiff.type
       delete articleDiff.internal
+    else
+      articleDiff.internal = currentParams.article.internal
 
     {
       ticket:  @forRemoveMeta(App.Utils.formDiff(currentParams.ticket, currentStore.ticket))

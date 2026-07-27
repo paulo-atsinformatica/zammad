@@ -57,10 +57,24 @@ class Channel::Filter::IdentifySender < Channel::Filter::BaseIdentifyUser
       )
     end
 
+    # Apply explicit name overrides if provided, no matter how customer_user was
+    # resolved above. IdentifySessionUser runs earlier and may have already
+    # created/matched this user from the FROM address with a different name
+    # than what the x-zammad headers intend, and the lookups/user_create calls
+    # above only fill in a name for users that don't have one yet.
+    apply_name_headers!(customer_user, mail)
+
     create_recipients(mail)
     mail[ :'x-zammad-ticket-customer_id' ] = customer_user.id
 
     true
+  end
+
+  def self.apply_name_headers!(customer_user, mail)
+    name_attrs = {}
+    name_attrs[:firstname] = sanitize_name(mail[:'x-zammad-customer-firstname']) if mail[:'x-zammad-customer-firstname'].present?
+    name_attrs[:lastname]  = sanitize_name(mail[:'x-zammad-customer-lastname']) if mail[:'x-zammad-customer-lastname'].present?
+    customer_user.update!(name_attrs) if name_attrs.present?
   end
 
   # create to and cc user

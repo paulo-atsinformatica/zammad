@@ -10,6 +10,7 @@ export const UserCurrentTaskbarItemAttributesFragmentDoc = gql`
   formId
   formNewArticlePresent
   entity {
+    __typename
     ... on Ticket {
       ...ticketTaskbarTabAttributes
     }
@@ -21,6 +22,8 @@ export const UserCurrentTaskbarItemAttributesFragmentDoc = gql`
     ... on UserTaskbarItemEntitySearch {
       query
       model
+      filters
+      filterCount
     }
     ... on User {
       id

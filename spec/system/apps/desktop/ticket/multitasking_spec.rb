@@ -64,7 +64,7 @@ RSpec.describe 'Desktop > Ticket > Multitasking', app: :desktop_view, authentica
     visit "/tickets/#{ticket.id}"
     visit "/tickets/#{other_ticket.id}"
 
-    click_on('Add phone call')
+    find('button', text: 'Add internal note').click
     within_form do
       find_editor('Text').type('Call content here')
     end
@@ -75,7 +75,7 @@ RSpec.describe 'Desktop > Ticket > Multitasking', app: :desktop_view, authentica
     article = ticket.articles.third
     elem = find('.Content', text: article.body)
     scroll_into_view(elem)
-    preserved_scroll_offset = find('div[data-test-id="layout-wrapper"] .h-full').evaluate_script('this.scrollTop')
+    preserved_scroll_offset = find('div[data-test-id="ticket-detail-content-container"]').evaluate_script('this.scrollTop')
 
     click_on other_ticket.title
 
@@ -88,7 +88,7 @@ RSpec.describe 'Desktop > Ticket > Multitasking', app: :desktop_view, authentica
 
     click_on(ticket.title)
 
-    current_scroll_offset = find('div[data-test-id="layout-wrapper"] .h-full').evaluate_script('this.scrollTop')
+    current_scroll_offset = find('div[data-test-id="ticket-detail-content-container"]').evaluate_script('this.scrollTop')
 
     expect(preserved_scroll_offset).to eq(current_scroll_offset).and(be_positive)
   end

@@ -1,12 +1,10 @@
 # Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 require 'rails_helper'
+require_relative 'using_bcc_examples'
 
-RSpec.describe Channel::Driver::Smtp, integration: true, required_envs: %w[MAIL_SERVER MAIL_ADDRESS MAIL_PASS] do
-  let(:server_host)     { ENV['MAIL_SERVER'] }
-  let(:server_login)    { ENV['MAIL_ADDRESS'] }
-  let(:server_password) { ENV['MAIL_PASS'] }
-  let(:email_address)   { create(:email_address, name: 'me Helpdesk', email: "some-zammad-#{server_login}") }
+RSpec.describe Channel::Driver::Smtp do
+  let(:email_address)   { create(:email_address, name: 'me Helpdesk', email: 'some-zammad@example.org') }
   let(:group)           { create(:group, name: 'DeliverTest', email_address: email_address) }
   let(:channel) do
     create(:email_channel,
@@ -32,8 +30,12 @@ RSpec.describe Channel::Driver::Smtp, integration: true, required_envs: %w[MAIL_
     ticket && article
   end
 
-  context 'when modifying channel options', :aggregate_failures do
-    let(:outbound) { { adapter: 'sendmail' } }
+  context 'when modifying channel options', :aggregate_failures, integration: true, required_envs: %w[MAIL_SERVER MAIL_ADDRESS MAIL_PASS] do
+    let(:server_host)     { ENV['MAIL_SERVER'] }
+    let(:server_login)    { ENV['MAIL_ADDRESS'] }
+    let(:server_password) { ENV['MAIL_PASS'] }
+    let(:email_address)   { create(:email_address, name: 'me Helpdesk', email: "some-zammad-#{server_login}") }
+    let(:outbound)        { { adapter: 'sendmail' } }
 
     it 'updates article delivery preferences' do
       expect(article.preferences).not_to include(:delivery_retry,
@@ -214,8 +216,50 @@ RSpec.describe Channel::Driver::Smtp, integration: true, required_envs: %w[MAIL_
     end
   end
 
+  describe '#build_smtp_params', :aggregate_failures do
+    let(:instance) { described_class.new }
+    let(:outbound) { { adapter: 'smtp', options: {} } }
+
+    context 'when ssl is set (SMTPS, e.g. port 465) and enable_starttls_auto is also stored' do
+      let(:options) do
+        {
+          host:                 'smtp.example.com',
+          port:                 '465',
+          domain:               'example.com',
+          ssl:                  true,
+          ssl_verify:           true,
+          enable_starttls_auto: true,
+        }
+      end
+
+      it 'does not pass enable_starttls_auto to avoid ArgumentError from mail gem 2.9+' do
+        result = instance.build_smtp_params(options)
+        expect(result).to include(ssl: true)
+        expect(result).not_to have_key(:enable_starttls_auto)
+      end
+    end
+
+    context 'when ssl is not set (STARTTLS, e.g. port 587)' do
+      let(:options) do
+        {
+          host:                 'smtp.example.com',
+          port:                 '587',
+          enable_starttls_auto: true
+        }
+      end
+
+      it 'passes enable_starttls_auto' do
+        result = instance.build_smtp_params(options)
+        expect(result).to include(enable_starttls_auto: true)
+        expect(result).not_to have_key(:ssl)
+      end
+    end
+  end
+
   describe '#deliver' do
-    let(:channel) { create(:email_channel, :smtp) }
+    let(:channel)   { create(:email_channel, :smtp, mail_server_user: 'user@example.com') }
+
+    it_behaves_like 'using BCC'
 
     context 'when an error is raised', aggregate_failures: true do
       before do
@@ -229,7 +273,7 @@ RSpec.describe Channel::Driver::Smtp, integration: true, required_envs: %w[MAIL_
           expect { channel.deliver({}) }
             .to raise_error(Channel::DeliveryError) { |error|
               expect(error.original_error.message)
-                .to eq("Network connection to 'smtp.example.com' (port 465) timed out: Could not reach server")
+                .to eq('Network connection to user@example.com/smtp.example.com timed out: Could not reach server')
             }
         end
       end
@@ -240,13 +284,13 @@ RSpec.describe Channel::Driver::Smtp, integration: true, required_envs: %w[MAIL_
         it 'forwards the error' do
           expect { channel.deliver({}) }
             .to raise_error(Channel::DeliveryError) { |error|
-              expect(error.original_error.message).to eq("'smtp.example.com' (port 465): custom error message")
+              expect(error.original_error.message).to eq('user@example.com/smtp.example.com: custom error message')
             }
         end
       end
 
       context 'when it was sending a notification' do
-        let(:error) { Net::SMTPUnknownError.new(error_response, message: 'smtp error') }
+        let(:error)          { Net::SMTPUnknownError.new(error_response, message: 'smtp error') }
         let(:error_response) { Net::SMTP::Response.parse("#{error_code} dummy error") }
 
         context 'when the error is silenceable' do
@@ -264,7 +308,7 @@ RSpec.describe Channel::Driver::Smtp, integration: true, required_envs: %w[MAIL_
           it 'raises an error' do
             expect { channel.deliver({}, true) }
               .to raise_error(Channel::DeliveryError) { |error|
-                expect(error.original_error.message).to eq("'smtp.example.com' (port 465): smtp error")
+                expect(error.original_error.message).to eq('user@example.com/smtp.example.com: smtp error')
               }
           end
         end

@@ -7,6 +7,8 @@ import CommonUserAvatar from '#shared/components/CommonUserAvatar/CommonUserAvat
 import { useActivityMessage } from '#shared/composables/activity-message/useActivityMessage.ts'
 import type { OnlineNotification } from '#shared/graphql/types.ts'
 
+import AiAgentAvatar from '#desktop/components/AiAgent/AiAgentAvatar.vue'
+import { initializeBetaUi } from '#desktop/components/BetaUi/composables/useBetaUi.ts'
 import CommonButton from '#desktop/components/CommonButton/CommonButton.vue'
 
 interface Props {
@@ -16,36 +18,57 @@ interface Props {
 const props = defineProps<Props>()
 
 const emit = defineEmits<{
+  visited: [OnlineNotification]
   seen: [OnlineNotification]
   remove: [OnlineNotification]
 }>()
 
 const { link, builder, highlightedMessage } = useActivityMessage(toRef(props, 'notification'))
+const { clearSwitchAndRedirect } = initializeBetaUi()
 
-const handleLinkClick = (notification: OnlineNotification) => {
-  if (link) emit('seen', notification)
+const handleLinkClick = (event: Event, notification: OnlineNotification) => {
+  if (link && link.startsWith('#') && link.length > 1) {
+    event.preventDefault()
+    emit('visited', notification)
+    clearSwitchAndRedirect(`/${link}`)
+    return
+  }
+
+  if (link) {
+    emit('visited', notification)
+    return
+  }
+
+  if (notification.seen) return
+
+  emit('seen', notification)
 }
 </script>
 
 <template>
   <li>
-    <div class="group flex items-center justify-between gap-3">
+    <div class="group isolate flex items-center justify-between gap-3">
       <component
         :is="link ? 'CommonLink' : 'div'"
         v-if="builder"
-        class="group/link grid grid-cols-[1fr_auto] grid-rows-[auto_auto] gap-x-2 hover:no-underline!"
+        v-tooltip="!link ? $t('Mark as read') : undefined"
+        class="grid cursor-default grid-cols-[1fr_auto] grid-rows-[auto_auto] gap-x-2 hover:no-underline!"
         :class="{
+          'group/link': link,
           'opacity-30': notification.seen,
+          'cursor-pointer': !notification.seen,
         }"
-        :link="`/${link}`"
-        @click="handleLinkClick(notification)"
+        :link="link ? `/${link}` : undefined"
+        @click="handleLinkClick($event, notification)"
       >
+        <AiAgentAvatar v-if="notification?.meta?.createdByAi" class="col-start-1 row-span-2" />
         <CommonUserAvatar
-          v-if="notification.createdBy"
+          v-else-if="notification.createdBy"
           :entity="notification.createdBy"
           size="small"
           class="col-start-1 row-span-2"
           no-indicator
+          no-muted
         />
         <CommonIcon
           v-else

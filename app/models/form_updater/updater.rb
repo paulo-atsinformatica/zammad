@@ -19,8 +19,8 @@ class FormUpdater::Updater
     @flags  = {}
 
     # Build lookup for relation fields for better usage.
-    @relation_fields = relation_fields.each_with_object({}) do |relation_field, lookup|
-      lookup[relation_field[:name]] = relation_field.to_h
+    @relation_fields = relation_fields.to_h do |relation_field|
+      [relation_field[:name], relation_field.to_h]
     end
   end
 
@@ -36,7 +36,15 @@ class FormUpdater::Updater
     true
   end
 
+  def self.required_permissions
+    []
+  end
+
   def authorized?
+    if self.class.required_permissions.present? && !current_user.permissions?(self.class.required_permissions)
+      return false
+    end
+
     # The authorized function needs to be implemented for any updaters which have a `id`.
     if id
       @object = Gql::ZammadSchema.authorized_object_from_id id, type: object_type, user: current_user

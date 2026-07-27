@@ -3,7 +3,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 
-import { useTouchDevice } from '#shared/composables/useTouchDevice.ts'
 import { useTicketArticleReplyAction } from '#shared/entities/ticket/composables/useTicketArticleReplyAction.ts'
 import type { TicketArticle } from '#shared/entities/ticket/types.ts'
 import { createArticleActions } from '#shared/entities/ticket-article/action/plugins/index.ts'
@@ -22,14 +21,14 @@ const props = defineProps<{
 
 const { ticket, isTicketEditable, showTicketArticleReplyForm, form } = useTicketInformation()
 
-const { isTouchDevice } = useTouchDevice()
+const buttonVariantBaseClasses =
+  'border! border-neutral-100! outline-transparent! hover:border-blue-700! text-gray-100! dark:border-gray-900! dark:text-neutral-400!'
 
 const buttonVariantClassExtension = computed(() => {
-  // TODO maybe general classes string for same classes
   if (props.position === 'left')
-    return 'border! border-neutral-100! outline-transparent! hover:border-blue-700! hover:border-blue-800! bg-neutral-50! hover:dark:bg-gray-500! hover:bg-white!  text-gray-100! dark:border-gray-900! dark:bg-gray-500! dark:text-neutral-400!'
+    return `${buttonVariantBaseClasses} hover:border-blue-800! bg-neutral-50! hover:dark:bg-gray-500! hover:bg-white! dark:bg-gray-500!`
 
-  return 'border! border-neutral-100! outline-transparent! hover:border-blue-700! dark:hover:border-blue-700! bg-blue-100! bg-blue-100!  text-gray-100! dark:border-gray-900! dark:bg-stone-500! dark:text-neutral-400!'
+  return `${buttonVariantBaseClasses} dark:hover:border-blue-700! bg-blue-100! dark:bg-stone-500!`
 })
 
 const { getNewArticleBody, openReplyForm } = useTicketArticleReplyAction(
@@ -88,13 +87,13 @@ const actions = computed(() => {
       label: action.label,
       icon: action.icon,
       link: action.link,
-      ...(action?.perform
+      ...(action.perform
         ? {
             onClick: () => {
-              if (!action?.perform || !ticket.value) return
+              if (!ticket.value) return
 
-              action.perform(ticket.value, props.article, {
-                formId: form.value?.formId || '',
+              action.perform!(ticket.value, props.article, {
+                formId: form.value?.formId ?? '',
                 selection: articleSelection(props.article.internalId),
                 openReplyForm,
                 getNewArticleBody,
@@ -121,7 +120,7 @@ const actions = computed(() => {
 <template>
   <div
     v-if="isTicketEditable"
-    class="absolute bottom-0 flex w-fit translate-y-1/2 items-center gap-1 ltr:right-3 rtl:left-3"
+    class="absolute bottom-0 flex w-fit translate-y-1/2 items-center gap-1 ltr:right-3 rtl:left-3 print:hidden"
     :class="{ 'ltr:left-3 rtl:right-3': position === 'left' }"
   >
     <div
@@ -129,11 +128,7 @@ const actions = computed(() => {
       :key="action.key"
       data-test-id="top-level-article-action-container"
       class="order-1 flex items-center"
-      :class="{
-        '-order-1!': position === 'right',
-        'opacity-0 transition-opacity group-hover/article:opacity-100 focus-within:opacity-100':
-          !isTouchDevice,
-      }"
+      :class="position === 'right' ? 'order-first' : 'order-last'"
     >
       <CommonButton
         class="px-1 py-0.5! text-xs! focus-visible:outline-offset-0! focus-visible:outline-blue-800!"

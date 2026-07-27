@@ -6,22 +6,24 @@
 # For example when editing title or customer of an old ticket that did not have a required custom object attribute at that time.
 # https://github.com/zammad/zammad/issues/4417
 class Service::Ticket::ForcedUpdate < Service::Base
+  requires_current_user!
+
   attr_reader :ticket, :update_data
 
   def initialize(ticket, update_data)
-    super()
-
     @ticket      = ticket
     @update_data = update_data
   end
 
   def execute
-    ApplicationHandleInfo.in_context(:forced_update) do
-      ticket.with_lock do
-        ticket.update!(update_data)
+    Transaction.execute do
+      ApplicationHandleInfo.in_context(:forced_update) do
+        ticket.with_lock do
+          ticket.update!(update_data)
+        end
       end
     end
 
-    ticket
+    ticket.reload
   end
 end

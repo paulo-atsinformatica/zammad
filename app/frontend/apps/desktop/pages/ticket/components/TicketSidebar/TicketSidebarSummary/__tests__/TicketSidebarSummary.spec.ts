@@ -233,9 +233,11 @@ describe('TicketSidebarSummary', () => {
   it('hides sidebar when ticket got merged', async () => {
     const wrapper = renderRenderTicketSidebarSummary({
       state: {
+        __typename: 'TicketState',
         name: 'merged',
         id: convertToGraphQLId('State', 5),
         stateType: {
+          __typename: 'TicketStateType',
           id: convertToGraphQLId('StateType', 6),
           name: 'merged',
         },
@@ -275,6 +277,7 @@ describe('TicketSidebarSummary', () => {
   })
 
   it('shows skeleton loader when summary is not ready', async () => {
+    vi.useFakeTimers()
     mockTicketAiAssistanceSummarizeMutation({
       ticketAIAssistanceSummarize: {
         summary: null,
@@ -283,10 +286,16 @@ describe('TicketSidebarSummary', () => {
 
     const wrapper = renderRenderTicketSidebarSummary()
 
+    // CommonLoader uses useDebouncedLoading which even in test mode (delay=0) — goes
+    // through useTimeoutFn and schedules a setTimeout(fn, 0). With vi.useFakeTimers() active, this timer
+    // never fires automatically, so debouncedLoading stays false and the loading component is never rendered
+    // in the DOM.
+    await vi.advanceTimersByTimeAsync(0)
     expect(wrapper.getByText('Summary is being generated…')).toBeInTheDocument()
     expect(wrapper.getAllByLabelText('Placeholder for AI generated heading')).toHaveLength(4)
 
     expect(wrapper.getAllByLabelText('Placeholder for AI generated text')).toHaveLength(16)
+    vi.useRealTimers()
   })
 
   it('shows message that user has provided already feedback', async () => {

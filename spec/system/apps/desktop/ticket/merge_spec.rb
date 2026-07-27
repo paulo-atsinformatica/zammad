@@ -61,10 +61,14 @@ RSpec.describe 'Desktop > Ticket > Merge', app: :desktop_view, authenticated_as:
         click_on(duplicate_ticket.title)
       end
 
-      expect(find('div.inner-article-body')).to have_text('merged')
+      expect(find('.inner-article-body')).to have_text('merged')
 
-      click_on('Additional ticket edit actions')
-      click_on(macro.name)
+      wait_for_form_to_settle("form-ticket-edit-#{duplicate_ticket.id}")
+
+      click_on('Drafts & macros')
+      within '[role="menu"]' do
+        click_on(macro.name)
+      end
 
       within '#ticketSidebar' do
         expect(page).to have_text('duplicate')

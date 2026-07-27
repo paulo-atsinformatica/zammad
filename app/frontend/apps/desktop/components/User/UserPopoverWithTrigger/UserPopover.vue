@@ -6,12 +6,12 @@ import { useRouter } from 'vue-router'
 
 import type { AvatarUser } from '#shared/components/CommonUserAvatar/types.ts'
 import ObjectAttributes from '#shared/components/ObjectAttributes/ObjectAttributes.vue'
-import { useDebouncedLoading } from '#shared/composables/useDebouncedLoading.ts'
 import { useUserObjectAttributesStore } from '#shared/entities/user/stores/objectAttributes.ts'
 import type { User } from '#shared/graphql/types.ts'
 import QueryHandler from '#shared/server/apollo/handler/QueryHandler.ts'
 import { normalizeEdges } from '#shared/utils/helpers.ts'
 
+import CommonLoader from '#desktop/components/CommonLoader/CommonLoader.vue'
 import CommonSimpleEntityList from '#desktop/components/CommonSimpleEntityList/CommonSimpleEntityList.vue'
 import { EntityType } from '#desktop/components/CommonSimpleEntityList/types.ts'
 import UserInfo from '#desktop/components/User/UserInfo.vue'
@@ -37,11 +37,7 @@ const userResult = userInfoForPopoverQuery.result()
 
 const user = computed(() => userResult.value?.user as Partial<User> | null)
 
-const loading = userInfoForPopoverQuery.loading()
-
-const { debouncedLoading } = useDebouncedLoading({
-  isLoading: loading,
-})
+const loading = userInfoForPopoverQuery.loadingWithoutCachedResult()
 
 const secondaryOrganizations = computed(() => normalizeEdges(user.value?.secondaryOrganizations))
 
@@ -58,29 +54,34 @@ const goToUserProfile = () => {
 
 <template>
   <section ref="popover-section" data-type="popover" class="space-y-2 p-3">
-    <UserPopoverSkeleton v-if="debouncedLoading && !user" />
-    <template v-else-if="user">
-      <UserInfo :user="user" :no-link="noProfileLink" />
+    <CommonLoader no-transition :loading="loading">
+      <template #skeleton>
+        <UserPopoverSkeleton />
+      </template>
 
-      <ObjectAttributes
-        :class="{
-          'border-b border-neutral-100 pb-2.5 dark:border-gray-900':
-            secondaryOrganizations?.totalCount,
-        }"
-        :object="user!"
-        :attributes="viewScreenAttributes"
-        :skip-attributes="['firstname', 'lastname', 'organization_id', 'organization_ids']"
-      />
+      <div v-if="user" class="space-y-2">
+        <UserInfo :user="user" :no-link="noProfileLink" />
 
-      <CommonSimpleEntityList
-        v-if="secondaryOrganizations.totalCount"
-        id="customer-secondary-organizations-popover"
-        no-collapse
-        :type="EntityType.Organization"
-        :label="__('Secondary organizations')"
-        :entity="secondaryOrganizations"
-        @load-more="goToUserProfile"
-      />
-    </template>
+        <ObjectAttributes
+          :class="{
+            'border-b border-neutral-100 pb-2.5 dark:border-gray-900':
+              secondaryOrganizations?.totalCount,
+          }"
+          :object="user!"
+          :attributes="viewScreenAttributes"
+          :skip-attributes="['firstname', 'lastname', 'organization_id', 'organization_ids']"
+        />
+
+        <CommonSimpleEntityList
+          v-if="secondaryOrganizations.totalCount"
+          id="customer-secondary-organizations-popover"
+          no-collapse
+          :type="EntityType.Organization"
+          :label="__('Secondary organizations')"
+          :entity="secondaryOrganizations"
+          @load-more="goToUserProfile"
+        />
+      </div>
+    </CommonLoader>
   </section>
 </template>

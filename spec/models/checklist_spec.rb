@@ -147,6 +147,16 @@ RSpec.describe Checklist, :aggregate_failures, current_user_id: 1, type: :model 
       expect(checklist_from_template.sorted_items.map(&:text)).to eq(template.items.map(&:text))
     end
 
+    it 'copies custom-ordered entries in order' do
+      sorted_items = template.items.shuffle
+
+      template.update!(sorted_item_ids: sorted_items.map(&:id))
+
+      checklist_from_template = described_class.create_from_template!(ticket, template)
+
+      expect(checklist_from_template.sorted_items.map(&:text)).to eq(sorted_items.map(&:text))
+    end
+
     it 'copies entries with initial_clone flag' do
       checklist_from_template = described_class.create_from_template!(ticket, template)
 
@@ -158,7 +168,7 @@ RSpec.describe Checklist, :aggregate_failures, current_user_id: 1, type: :model 
 
       expect { described_class.create_from_template!(ticket, template) }
         .to raise_error(
-          Exceptions::UnprocessableEntity,
+          Exceptions::UnprocessableContent,
           'Checklist template must be active to use as a checklist starting point.'
         )
     end

@@ -1,9 +1,11 @@
 <!-- Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/ -->
 
 <script setup lang="ts">
-import { computed, useTemplateRef } from 'vue'
+import { computed, toRef, useTemplateRef } from 'vue'
 
 import { useTicketView } from '#shared/entities/ticket/composables/useTicketView.ts'
+import { useApplicationStore } from '#shared/stores/application.ts'
+import { useSessionStore } from '#shared/stores/session.ts'
 import type { ObjectLike } from '#shared/types/utils.ts'
 
 import { useFlyout } from '#desktop/components/CommonFlyout/useFlyout.ts'
@@ -18,8 +20,11 @@ import {
 } from '../../TicketDetailView/actions/useTicketHistory.ts'
 import TicketSidebarContent from '../TicketSidebarContent.vue'
 
+import { useKnowledgeBaseAiSuggestedAnswers } from './TicketSidebarInformationContent/composables/useKnowledgeBaseAiSuggestedAnswers.ts'
+import { useKnowledgeBaseLinkList } from './TicketSidebarInformationContent/composables/useKnowledgeBaseLinkList.ts'
 import TicketAccountedTime from './TicketSidebarInformationContent/TicketAccountedTime.vue'
 import TicketLinks from './TicketSidebarInformationContent/TicketLinks.vue'
+import TicketRelatedKnowledge from './TicketSidebarInformationContent/TicketRelatedKnowledge.vue'
 import TicketSubscribers from './TicketSidebarInformationContent/TicketSubscribers.vue'
 import TicketTags from './TicketSidebarInformationContent/TicketTags.vue'
 
@@ -27,11 +32,14 @@ const props = defineProps<TicketSidebarContentProps>()
 
 const persistentStates = defineModel<ObjectLike>({ required: true })
 
-const { ticket } = useTicketInformation()
+const { ticket, ticketId } = useTicketInformation()
+
+const config = toRef(useApplicationStore(), 'config')
 
 const ticketLinksInstance = useTemplateRef('ticket-links')
 
 const { isTicketAgent, isTicketEditable } = useTicketView(ticket)
+const { hasPermission } = useSessionStore()
 
 const ticketMergeFlyoutName = 'ticket-merge'
 const ticketChangeCustomerFlyoutName = 'ticket-change-customer'
@@ -81,6 +89,35 @@ const actions = computed<MenuItem[]>(() => [
       }),
   },
 ])
+
+const isKbActive = computed(() => config.value.kb_active && hasPermission('ticket.agent'))
+
+const {
+  linkedAnswerIds,
+  linkedAnswers,
+  targetType,
+  isLoading: isKnowledgeBaseLinkListLoading,
+} = useKnowledgeBaseLinkList(ticketId, {
+  enabled: isKbActive,
+})
+
+const showAiSuggestedAnswers = computed(
+  () =>
+    hasPermission('knowledge_base.*') &&
+    hasPermission('ticket.agent') &&
+    Boolean(config.value.ai_provider),
+)
+
+const {
+  answers: aiSuggestedAnswers,
+  loading: isAiSuggestedAnswersLoading,
+  pending: isAiSuggestedAnswersPending,
+  hasError: hasAiSuggestedAnswersError,
+  errorDetail: aiSuggestedAnswersErrorDetail,
+  retrySearch: retryAiSuggestedAnswersSearch,
+} = useKnowledgeBaseAiSuggestedAnswers(ticketId, {
+  enabled: showAiSuggestedAnswers,
+})
 </script>
 
 <template>
@@ -112,9 +149,34 @@ const actions = computed<MenuItem[]>(() => [
       v-show="isTicketEditable || ticketLinksInstance?.hasLinks"
       id="ticket-links"
       v-model="persistentStates.collapseLinks"
-      :title="__('Links')"
+      :title="__('Related tickets')"
     >
       <TicketLinks ref="ticket-links" :ticket="ticket" :is-ticket-editable="isTicketEditable" />
+    </CommonSectionCollapse>
+
+    <CommonSectionCollapse
+      v-if="
+        isKbActive &&
+        isTicketAgent &&
+        (isTicketEditable || linkedAnswers.length || aiSuggestedAnswers.length)
+      "
+      id="ticket-ai-knowledge-base-answers"
+      v-model="persistentStates.collapseKnowledgeBase"
+      :title="__('Related knowledge')"
+    >
+      <TicketRelatedKnowledge
+        :linked-answers="linkedAnswers"
+        :linked-answer-ids="linkedAnswerIds"
+        :target-type="targetType"
+        :is-link-list-loading="isKnowledgeBaseLinkListLoading"
+        :show-ai-suggested-answers="showAiSuggestedAnswers"
+        :ai-suggested-answers="aiSuggestedAnswers"
+        :is-ai-suggested-answers-loading="isAiSuggestedAnswersLoading"
+        :is-ai-suggested-answers-pending="isAiSuggestedAnswersPending"
+        :has-ai-suggested-answers-error="hasAiSuggestedAnswersError"
+        :ai-suggested-answers-error-detail="aiSuggestedAnswersErrorDetail"
+        @retry-ai-suggested-answers-search="retryAiSuggestedAnswersSearch"
+      />
     </CommonSectionCollapse>
 
     <CommonSectionCollapse

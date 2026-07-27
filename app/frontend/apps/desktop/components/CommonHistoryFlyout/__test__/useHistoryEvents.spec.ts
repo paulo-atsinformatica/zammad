@@ -445,6 +445,7 @@ describe('useHistoryEvents', () => {
         expect(getEventOutput(event)).toEqual({
           actionName: 'notification',
           component: undefined,
+          sentenceDescription: 'Notification sent to',
           details: 'dummy@example.com',
           additionalDetails: 'update:online,email',
         })
@@ -802,7 +803,7 @@ describe('useHistoryEvents', () => {
           const { getEventOutput } = useHistoryEvents()
 
           expect(getEventOutput(event)).toEqual({
-            actionName: 'reacted',
+            actionName: 'reacted-with',
             component: HistoryEventDetailsReaction,
             description: '',
             details: textTruncate(article.body),

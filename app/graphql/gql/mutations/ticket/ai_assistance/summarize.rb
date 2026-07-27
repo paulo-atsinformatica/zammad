@@ -11,19 +11,22 @@ module Gql::Mutations
     field :analytics, Gql::Types::AI::Analytics::MetadataType, description: 'Analytics metadata', null: true
 
     def resolve(ticket:, regeneration_of: nil)
-      Service::CheckFeatureEnabled.new(name: 'ai_assistance_ticket_summary').execute
-      Service::CheckFeatureEnabled.new(name: 'ai_provider', custom_error_message: __('AI provider is not configured.')).execute
+      Service::CheckFeatureEnabled.execute(name: 'ai_assistance_ticket_summary')
+      Service::CheckFeatureEnabled.execute(name: 'ai_provider', custom_error_message: __('AI provider is not configured.'))
+
+      return empty_result if !summary_enabled?(ticket)
 
       if regeneration_of
         return enqueue_job(ticket, regeneration_of:)
       end
 
       ai_result = Service::Ticket::AIAssistance::Summarize
-        .new(
+        .with_current_user(context.current_user)
+        .execute(
           locale:               context.current_user.locale,
           ticket:,
           persistence_strategy: :stored_only,
-        ).execute
+        )
 
       if ai_result&.content.blank?
         return enqueue_job(ticket)
@@ -34,13 +37,31 @@ module Gql::Mutations
 
     private
 
+    def summary_enabled?(ticket)
+      Service::Ticket::AIAssistance::SummaryEnabled
+        .with_current_user(context.current_user)
+        .execute(ticket:)
+    end
+
     def enqueue_job(ticket, regeneration_of: nil)
       # Trigger background job to generate the summary.
-      TicketAIAssistanceSummarizeJob.perform_later(ticket, context.current_user.locale, regeneration_of:)
+      TicketAIAssistanceSummarizeJob.perform_later(
+        ticket,
+        context.current_user.locale,
+        current_user:    context.current_user,
+        regeneration_of:,
+      )
 
       {
         summary: nil,
         reason:  nil,
+      }
+    end
+
+    def empty_result
+      {
+        summary:   nil,
+        analytics: nil,
       }
     end
 

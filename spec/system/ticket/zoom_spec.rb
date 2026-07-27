@@ -1947,7 +1947,8 @@ RSpec.describe 'Ticket zoom', type: :system do
     it 'does show up the new state and pending time' do
       pending_state = Ticket::State.find_by(name: 'pending reminder')
       ticket.update(state: pending_state, pending_time: 1.day.from_now)
-      wait.until { page.find("select[name='state_id']").value == pending_state.id.to_s }
+
+      wait(30).until { page.find("select[name='state_id']").value == pending_state.id.to_s }
       expect(page.find("select[name='state_id']").value).to eq(pending_state.id.to_s)
       expect(page).to have_css("div[data-name='pending_time']")
     end
@@ -2112,6 +2113,33 @@ RSpec.describe 'Ticket zoom', type: :system do
       page.select 'pending reminder', from: 'state_id'
       page.select '3 high', from: 'priority_id'
       expect(page).to have_select('state_id', selected: 'new')
+    end
+  end
+
+  describe 'Changing ticket status resets state to the first dropdown option when the cached object is stale #3880', authenticated_as: :authenticate do
+    let(:ticket) { create(:ticket, group: Group.find_by(name: 'Users')) }
+
+    def authenticate
+      ticket
+      true
+    end
+
+    before do
+      visit "#ticket/zoom/#{ticket.id}"
+    end
+
+    it 'keeps the real ticket state instead of resetting to the first option' do
+      expect(page).to have_select('state_id', selected: 'new')
+
+      # Simulate a concurrent update whose websocket push has not yet reached
+      # the client (e.g. behind a reverse proxy), so the cached ticket object
+      # stays stale while the backend already sees the new state.
+      Ticket.where(id: ticket.id).update_all(state_id: Ticket::State.find_by(name: 'open').id, updated_at: Time.current)
+
+      # Trigger a Core Workflow run without touching the state field.
+      page.select '3 high', from: 'priority_id'
+
+      expect(page).to have_select('state_id', selected: 'open')
     end
   end
 

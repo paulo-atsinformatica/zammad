@@ -1,6 +1,5 @@
 // Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
-import { getNode } from '@formkit/core'
 import { FormKit } from '@formkit/vue'
 import { getByTestId, waitFor } from '@testing-library/vue'
 import { escapeRegExp } from 'lodash-es'
@@ -17,10 +16,24 @@ import type {
 
 import testOptions from './test-options.json'
 
+import type { FormKitNode } from '@formkit/core'
+
 const mockQueryResult = (input: { query: string; limit: number }): AutocompleteSearchUserQuery => {
   const options = testOptions.map((option) =>
-    nullableMock({
+    nullableMock<AutocompleteSearchUserEntry>({
       ...option,
+      user: {
+        ...option.user,
+        __typename: 'User',
+        id: String(option.user.id),
+        organization: option.user.organization
+          ? {
+              ...option.user.organization,
+              __typename: 'Organization',
+              id: String(option.user.organization.id),
+            }
+          : null,
+      },
       labelPlaceholder: null,
       headingPlaceholder: null,
       disabled: null,
@@ -38,17 +51,16 @@ const mockQueryResult = (input: { query: string; limit: number }): AutocompleteS
   // Search across options via their de-accented labels.
   const filteredOptions = options.filter(
     (option) =>
-      filterRegex.test(deaccent(option.label)) || filterRegex.test(deaccent(option.heading)),
+      filterRegex.test(deaccent(option.label)) || filterRegex.test(deaccent(option.heading || '')),
   ) as unknown as AutocompleteSearchUserEntry[]
 
-  return {
+  return nullableMock<AutocompleteSearchUserQuery>({
     autocompleteSearchUser: filteredOptions.slice(0, input.limit ?? 25),
-  }
+  })
 }
 
 const wrapperParameters = {
   form: true,
-  formField: true,
   router: true,
   dialog: true,
   store: true,
@@ -74,16 +86,18 @@ describe('Form - Field - Customer - Features', () => {
         name: 'customer_id',
         value: 123,
         belongsToObjectField: 'customer',
+        plugins: [
+          (node: FormKitNode) => {
+            node.context!.initialEntityObject = {
+              customer: {
+                internalId: 123,
+                fullname: 'John Doe',
+              },
+            }
+          },
+        ],
       },
     })
-
-    const node = getNode('customer')
-    node!.context!.initialEntityObject = {
-      customer: {
-        internalId: 123,
-        fullname: 'John Doe',
-      },
-    }
 
     await waitForNextTick(true)
 

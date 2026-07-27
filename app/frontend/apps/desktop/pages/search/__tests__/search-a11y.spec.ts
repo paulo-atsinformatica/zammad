@@ -1,7 +1,5 @@
 // Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
-import { axe } from 'vitest-axe'
-
 import { visitView } from '#tests/support/components/visitView.ts'
 import { mockPermissions } from '#tests/support/mock-permissions.ts'
 
@@ -11,10 +9,8 @@ import { convertToGraphQLId } from '#shared/graphql/utils.ts'
 import { mockDetailSearchQuery } from '#desktop/components/Search/graphql/queries/detailSearch.mocks.ts'
 import { mockSearchCountsQuery } from '#desktop/components/Search/graphql/queries/searchCounts.mocks.ts'
 
-// FIXME: All vitest-axe tests are currently skipped due to being incompatible with latest version of jsdom package.
-
 describe('search view', () => {
-  it.skip('has no accessibility violations in main content', async () => {
+  it('has no accessibility violations in main content', async () => {
     mockPermissions(['ticket.agent'])
 
     mockSearchCountsQuery({
@@ -63,10 +59,8 @@ describe('search view', () => {
       },
     })
 
-    const view = await visitView('/search')
+    const view = await visitView('/search/Nicole')
 
-    const results = await axe(view.html())
-
-    expect(results).toHaveNoViolations()
+    await expect(view.container).toBeAccessible()
   })
 })

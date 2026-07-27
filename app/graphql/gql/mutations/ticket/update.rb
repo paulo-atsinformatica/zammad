@@ -6,7 +6,7 @@ module Gql::Mutations
 
     description 'Update a ticket.'
 
-    argument :ticket_id, GraphQL::Types::ID, loads: Gql::Types::TicketType, description: 'The ticket to be updated'
+    argument :ticket_id, GraphQL::Types::ID, loads: Gql::Types::TicketType, loads_pundit_method: :follow_up?, description: 'The ticket to be updated'
     argument :input, Gql::Types::Input::Ticket::UpdateInputType, description: 'The ticket data'
     argument :meta, Gql::Types::Input::Ticket::UpdateMetaInputType, required: false, description: 'The ticket metadata'
 
@@ -25,7 +25,7 @@ module Gql::Mutations
 
       {
         ticket: Service::Ticket::Update
-          .new(current_user: context.current_user)
+          .with_current_user(context.current_user)
           .execute(ticket: ticket, ticket_data: input, skip_validators: meta&.dig(:skip_validators), macro: meta&.dig(:macro))
       }
     rescue Exceptions::InvalidAttribute => e
