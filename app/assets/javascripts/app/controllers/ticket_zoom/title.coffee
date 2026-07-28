@@ -9,6 +9,11 @@ class App.TicketZoomTitle extends App.ControllerObserver
     'blur .js-objectTitle': 'update'
 
   renderPost: (object) =>
+    # Customização ATS: o título era sempre editável, independente de permissão.
+    # Sem isto, um cliente com acesso somente leitura (ou um agente com apenas
+    # 'read' no grupo) consegue digitar no título e só toma erro ao salvar.
+    return if !object.editable()
+
     @$('.js-objectTitle').ce({
       mode:      'textonly'
       multiline: false
@@ -16,12 +21,14 @@ class App.TicketZoomTitle extends App.ControllerObserver
     })
 
   update: (e) =>
+    ticket = App.Ticket.find(@object_id)
+    return if !ticket.editable()
+
     title = $(e.target).ceg() || ''
 
     # update title
     return if title is @lastAttributes.title
 
-    ticket = App.Ticket.find(@object_id)
     ticket.title = title
 
     # reset article - should not be resubmitted on next ticket update

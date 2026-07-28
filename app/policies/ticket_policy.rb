@@ -92,6 +92,11 @@ class TicketPolicy < ApplicationPolicy
     return true if agent_update_access?
     return false if agent_read_access?
 
+    # Customização ATS: permite dar acesso somente leitura ao cliente.
+    # Restrito a quem tem a permissão de cliente para não devolver essa
+    # mensagem a quem não tem acesso nenhum ao ticket.
+    return read_only_for_customer if user.permissions?('ticket.customer') && !customer_update_allowed?
+
     customer_access?
   end
 
@@ -123,5 +128,32 @@ class TicketPolicy < ApplicationPolicy
 
   def customer_field_scope
     @customer_field_scope ||= ApplicationPolicy::FieldScope.new(deny: %i[ai_agent_running ai_summary_enabled time_unit time_units_per_type checklist referencing_checklist_tickets ai_stored_results])
+  end
+
+  # Customização ATS: acesso somente leitura ao ticket para o cliente,
+  # opcionalmente restrito a grupos.
+  #
+  # Só é consultado a partir de change_access?, então leitura permanece
+  # liberada. Como update_title e a criação de artigo (via follow_up?) também
+  # passam por update?, isto cobre renomear e comentar além dos atributos.
+  def customer_update_allowed?
+    setting = Setting.get('customer_ticket_update')
+
+    # Ausência do setting (instalação em que a migration ainda não rodou)
+    # mantém o comportamento anterior, em que o cliente altera o próprio
+    # ticket. Só bloqueia quando explicitamente configurado.
+    return true if setting.nil?
+    return false if !setting
+
+    # Mesma semântica de customer_ticket_create_group_ids: a lista estreita a
+    # permissão, e nenhuma seleção significa todos os grupos.
+    group_ids = Setting.get('customer_ticket_update_group_ids')
+    return true if group_ids.blank?
+
+    Array.wrap(group_ids).map(&:to_s).include?(record.group_id.to_s)
+  end
+
+  def read_only_for_customer
+    not_authorized Exceptions::Forbidden.new __('You only have read access to this ticket and cannot change it.')
   end
 end

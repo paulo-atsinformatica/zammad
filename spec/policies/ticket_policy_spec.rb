@@ -387,4 +387,71 @@ describe TicketPolicy do
       end
     end
   end
+
+  # Customização ATS: acesso somente leitura ao ticket para o cliente.
+  describe 'read-only access for customers' do
+    let(:record) { create(:ticket, customer: user) }
+    let(:user)   { create(:customer) }
+
+    context 'with the default settings' do
+      it 'lets the customer change their own ticket' do
+        expect(policy).to permit_actions(%i[show update])
+      end
+    end
+
+    context 'when customer_ticket_update is disabled' do
+      before { Setting.set('customer_ticket_update', false) }
+
+      it 'forbids changing the ticket' do
+        expect(policy).to forbid_actions(%i[update])
+      end
+
+      # Bloquear a alteração não pode esconder o ticket do cliente.
+      it 'still lets the customer read the ticket' do
+        expect(policy).to permit_actions(%i[show])
+      end
+
+      # update_title e a criação de artigo passam por update?/follow_up?, então
+      # renomear e comentar têm de cair junto.
+      it 'forbids following up, which covers adding articles' do
+        expect(policy.follow_up?).to be_falsey
+      end
+
+      it 'explains the reason instead of a bare authorization failure' do
+        policy.update?
+
+        expect(policy.custom_exception.message).to include('read access')
+      end
+
+      it 'does not restrict an agent with group access' do
+        agent = create(:agent, groups: [record.group])
+
+        expect(described_class.new(agent, record)).to permit_actions(%i[show update])
+      end
+    end
+
+    context 'when customer_ticket_update is restricted to specific groups' do
+      let(:other_group) { create(:group) }
+
+      before { Setting.set('customer_ticket_update_group_ids', [other_group.id]) }
+
+      it "forbids changing a ticket outside of the selected groups" do
+        expect(policy).to forbid_actions(%i[update])
+      end
+
+      it 'permits changing a ticket inside the selected groups' do
+        record.update!(group: other_group)
+
+        expect(policy).to permit_actions(%i[update])
+      end
+
+      # A lista de grupos só estreita a permissão, não a devolve.
+      it 'stays blocked when customer_ticket_update is disabled altogether' do
+        record.update!(group: other_group)
+        Setting.set('customer_ticket_update', false)
+
+        expect(policy).to forbid_actions(%i[update])
+      end
+    end
+  end
 end
