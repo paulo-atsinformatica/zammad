@@ -1,8 +1,8 @@
 # Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
 
-class TicketTimeTrackingService < Service::BaseWithCurrentUser
+class TicketTimeTrackingService < Service::Base
   def initialize(current_user:, ticket:)
-    super(current_user: current_user)
+    @current_user = current_user
     @ticket = ticket
   end
 

@@ -1,8 +1,8 @@
 # Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
 
-class UserPauseService < Service::BaseWithCurrentUser
+class UserPauseService < Service::Base
   def initialize(current_user:, pause_type_id: nil, started_at: nil)
-    super(current_user: current_user)
+    @current_user = current_user
     @pause_type_id = pause_type_id
     @started_at = started_at
   end
