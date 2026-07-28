@@ -200,6 +200,10 @@ class App.TicketZoomTimeTracking extends App.Controller
       url:         "#{@apiPath}/tickets/#{@ticket_id}/time_tracking/start"
       dataType:    'json'
       processData: true
+      # A 409 (outro ticket já em atendimento) é tratada aqui com o diálogo de
+      # troca. Sem isso o handler global de ajax mostra um modal de erro técnico
+      # por cima, já que ele só ignora 401/403/404/422/502.
+      failResponseNoTrigger: true
       success:     (data) =>
         @tracking = data
         @totalSeconds = data.total_seconds || 0
@@ -221,11 +225,8 @@ class App.TicketZoomTimeTracking extends App.Controller
           catch e
             responseData = {}
         
-        console.log('Time tracking start error:', xhr.status, responseData)
-        
         # Check for existing ticket - show dialog only, no error toast
         if responseData?.existing_ticket_id
-          console.log('Showing switch dialog for ticket:', responseData.existing_ticket_id)
           @showSwitchDialog(responseData)
           return
         
@@ -274,6 +275,8 @@ class App.TicketZoomTimeTracking extends App.Controller
       url:         "#{@apiPath}/tickets/#{@ticket_id}/time_tracking/resume"
       dataType:    'json'
       processData: true
+      # Ver comentário em startTracking: 409 é tratada localmente.
+      failResponseNoTrigger: true
       success:     (data) =>
         @tracking = data
         @totalSeconds = data.total_seconds || @totalSeconds
@@ -295,11 +298,8 @@ class App.TicketZoomTimeTracking extends App.Controller
           catch e
             responseData = {}
         
-        console.log('Time tracking resume error:', xhr.status, responseData)
-        
         # Check for existing ticket - show switch dialog instead of error
         if responseData?.existing_ticket_id
-          console.log('Showing switch dialog for ticket:', responseData.existing_ticket_id)
           @showSwitchDialog(responseData)
           return
 
