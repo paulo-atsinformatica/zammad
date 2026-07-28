@@ -3042,6 +3042,28 @@ Setting.create_if_not_exists(
 )
 
 Setting.create_if_not_exists(
+  title:       __('Custom report row limit'),
+  name:        'custom_report_max_rows',
+  area:        'CustomReport::Base',
+  description: __('Maximum number of rows a single custom report may generate. Protects the server from an unfiltered report scanning the whole database.'),
+  options:     {
+    form: [
+      {
+        display: '',
+        null:    false,
+        name:    'custom_report_max_rows',
+        tag:     'input',
+      },
+    ],
+  },
+  state:       500_000,
+  preferences: {
+    permission: ['admin.report'],
+  },
+  frontend:    true
+)
+
+Setting.create_if_not_exists(
   title:       __('Ticket modification by customers'),
   name:        'customer_ticket_update',
   area:        'CustomerWeb::Base',

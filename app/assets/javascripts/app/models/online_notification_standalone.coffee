@@ -13,8 +13,17 @@ class App.OnlineNotificationStandalone extends App.Model
       when 'kb_answer_generation_failed'
         { error_message, ticket_title } = item.objectNative?.data
         return App.i18n.translateContent('Failed to generate knowledge base draft for "%s": %s', ticket_title, error_message)
+      # Customização ATS: relatório personalizado.
+      when 'custom_report'
+        { status } = item.objectNative?.data
+        if status is 'failed'
+          return App.i18n.translateContent('Custom report generation failed.')
+        return App.i18n.translateContent('Your custom report is ready to download.')
       else
         return "Unknown action for (#{@objectDisplayName()}/#{item.type}), extend activityMessage() of model."
 
   uiUrl: (item) ->
+    # Customização ATS: leva direto ao relatório para o usuário baixar.
+    return '#report/custom' if item?.type is 'custom_report'
+
     undefined
