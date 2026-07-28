@@ -93,6 +93,12 @@ module TranslationOverridesPtBr
     'Cannot follow-up on a closed ticket. Please create a new ticket.' => 'Não é possível dar continuidade a um ticket fechado. Abra um ticket novo.',
     'You have insufficient permissions to mention other users.' => 'Você não tem permissão para mencionar outros usuários.',
 
+    # Core Workflow (ver checks_core_workflow.rb). Estas são traduzidas no
+    # servidor, porque o rótulo do campo é interpolado antes de a mensagem
+    # chegar ao frontend — não sobraria msgid para casar aqui.
+    'The value selected for "%s" is not allowed by the current workflow rules.' => 'O valor escolhido para "%s" não é permitido pelas regras do fluxo de trabalho atual.',
+    'The field "%s" is required.' => 'O campo "%s" é obrigatório.',
+
     # Macro cujas ações o usuário não pode aplicar (ver can_perform_changes.rb).
     'None of the actions could be applied. You may not have permission to change the affected fields.' => 'Nenhuma das ações pôde ser aplicada. Você pode não ter permissão para alterar os campos envolvidos.',
 

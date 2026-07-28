@@ -584,7 +584,7 @@ RSpec.describe Gql::Mutations::Ticket::Create, :aggregate_failures, type: :graph
         it 'creates a ticket record with filtered values' do
           it_fails_to_create_ticket
           expect(gql.result.error_type).to eq(Exceptions::ApplicationModel)
-          expect(gql.result.error_message).to eq("Invalid value '1' for field 'group_id'!")
+          expect(gql.result.error_message).to eq('The value selected for "Group" is not allowed by the current workflow rules.')
         end
       end
     end
@@ -625,7 +625,7 @@ RSpec.describe Gql::Mutations::Ticket::Create, :aggregate_failures, type: :graph
         it 'creates a ticket record with filtered values' do
           it_fails_to_create_ticket
           expect(gql.result.error_type).to eq(Exceptions::ApplicationModel)
-          expect(gql.result.error_message).to eq("Invalid value '1' for field 'group_id'!")
+          expect(gql.result.error_message).to eq('The value selected for "Group" is not allowed by the current workflow rules.')
         end
       end
     end
