@@ -440,10 +440,25 @@ atributos, não renomeia, não adiciona artigo. Configurável por grupo.
   (500 não está na whitelist do handler global de ajax). Agora é 422, que vira
   um toast legível. **Reaplicar se o upstream mexer nesse arquivo.**
 
-Ainda em inglês e não resolvido: as mensagens de Core Workflow em
-`app/models/concerns/checks_core_workflow.rb` (`"Invalid value '%s' for field
-'%s'!"`). Interpolam valores no meio da string, então override por msgid exato
-não funciona — exigiriam mudança de código para usar placeholders.
+- **`app/models/concerns/checks_core_workflow.rb`** (arquivo do upstream) — as
+  duas mensagens de rejeição do Core Workflow. Estas **não** dão para resolver
+  pelo arquivo de override: o nome do campo é interpolado antes de a mensagem
+  chegar ao frontend, então não sobra msgid para o `App.i18n` casar. Por isso
+  são traduzidas **no servidor**, via `Translation.translate(locale, ...)` com
+  a cadeia de fallback usual (`user.locale || locale_default || 'en-us'`), no
+  mesmo padrão de `cti/driver/base.rb` e `checks_human_changes.rb`.
+  Também passaram a mostrar o **rótulo do campo** em vez do nome cru da coluna
+  (era `"Invalid value '3' for field 'state_id'!"`). A busca do rótulo é
+  cosmética e cai no nome da coluna se falhar — transformar um erro de
+  validação legível em 500 seria pior que um rótulo feio.
+  **Reaplicar se o upstream mexer nesse arquivo.** Expectativas ajustadas em
+  `spec/models/concerns/checks_core_workflow_examples.rb` e
+  `spec/graphql/gql/mutations/ticket/create_spec.rb`.
+
+Regra geral para traduzir mensagem de backend: se a string chega **inteira** ao
+frontend, basta adicionar o msgid em `lib/translation_overrides_pt_br.rb` (ATS
+puro, sem conflito em sync). Se a string tem **valor interpolado**, tem de ser
+traduzida no servidor com `Translation.translate`.
 
 ## Referências
 
