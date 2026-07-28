@@ -320,6 +320,13 @@ export type UserCurrentTicketOverviewsCountQueryVariables = Exact<{
 
 export type UserCurrentTicketOverviewsCountQuery = { userCurrentTicketOverviews: Array<{ __typename: 'Overview', id: string, cachedTicketCount: number }> };
 
+export type CustomerTicketsByFilterUpdatesSubscriptionVariables = Exact<{
+  customerId: string | number;
+}>;
+
+
+export type CustomerTicketsByFilterUpdatesSubscription = { ticketCustomerTicketsByFilterUpdates: { __typename: 'TicketCustomerTicketsByFilterUpdatesPayload', listChanged: boolean | null | undefined } };
+
 export type UserCurrentTicketBulkUpdateStatusUpdatesSubscriptionVariables = Exact<{ [key: string]: never; }>;
 
 
@@ -1963,6 +1970,14 @@ export type SessionQueryVariables = Exact<{ [key: string]: never; }>;
 
 
 export type SessionQuery = { session: { __typename: 'Session', id: string, afterAuth: { __typename: 'SessionAfterAuth', type: Types.EnumAfterAuthType, data: any } | null | undefined } };
+
+export type TicketSignatureQueryVariables = Exact<{
+  groupId: string | number;
+  ticketId?: string | number | null | undefined;
+}>;
+
+
+export type TicketSignatureQuery = { ticketSignature: { __typename: 'Signature', id: string, renderedBody: string | null | undefined } | null | undefined };
 
 export type TranslationsQueryVariables = Exact<{
   locale: string;
