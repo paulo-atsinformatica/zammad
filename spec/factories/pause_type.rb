@@ -2,7 +2,9 @@
 
 FactoryBot.define do
   factory :pause_type do
-    name { 'Almoço' }
+    # PauseType valida unicidade do nome, então um nome fixo impede que um
+    # mesmo exemplo crie mais de um registro.
+    sequence(:name) { |n| "Pausa #{n}" }
     time_limit { 60 }
     color { '#FFA500' }
     active { true }

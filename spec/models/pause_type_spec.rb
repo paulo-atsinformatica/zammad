@@ -12,8 +12,22 @@ RSpec.describe PauseType, type: :model do
       expect(pause_type.errors[:name]).to be_present
     end
 
-    it 'requires time_limit greater than 0' do
+    it 'requires time_limit' do
+      pause_type = described_class.new(name: 'Test', created_by_id: user.id, updated_by_id: user.id)
+      expect(pause_type).not_to be_valid
+      expect(pause_type.errors[:time_limit]).to be_present
+    end
+
+    # 0 é o default do campo e significa "sem limite": a UI mostra a nota
+    # "Set to 0 for unlimited" e os relatórios só consideram estouro quando
+    # time_limit é positivo (user_pauses_reports_controller.rb).
+    it 'accepts a time_limit of 0, meaning unlimited' do
       pause_type = described_class.new(name: 'Test', time_limit: 0, created_by_id: user.id, updated_by_id: user.id)
+      expect(pause_type).to be_valid
+    end
+
+    it 'rejects a negative time_limit' do
+      pause_type = described_class.new(name: 'Test', time_limit: -1, created_by_id: user.id, updated_by_id: user.id)
       expect(pause_type).not_to be_valid
       expect(pause_type.errors[:time_limit]).to be_present
     end
