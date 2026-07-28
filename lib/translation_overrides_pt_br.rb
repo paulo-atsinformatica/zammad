@@ -70,6 +70,38 @@ module TranslationOverridesPtBr
     'Failed to load report' => 'Falha ao carregar relatório',
     'You do not have permission to use pause control.' => 'Você não tem permissão para usar o controle de pausas.',
     'Nenhuma equipe cadastrada. Preencha o campo Equipe nos usuários.' => 'Nenhuma equipe cadastrada. Preencha o campo Equipe nos usuários.',
+
+    # Mensagens de bloqueio / permissão.
+    #
+    # As mensagens do backend passam por App.i18n.translateContent no frontend
+    # (app/controllers/_plugin/notify.coffee), então dá para traduzi-las aqui
+    # sem alterar arquivos do upstream — inclusive as que o Zammad não marca
+    # com __() e que por isso nunca chegariam ao catálogo.
+    #
+    # PunditPolicy#not_authorized monta a string como "Not authorized (motivo)!",
+    # por isso os msgid abaixo incluem esse formato literal.
+    'Not authorized' => 'Sem autorização',
+    'Authorization failed' => 'Falha na autorização',
+    'Not authorized (admin permission required)!' => 'Sem autorização: esta ação exige permissão de administrador.',
+    'Not authorized (agent permission required)!' => 'Sem autorização: esta ação exige permissão de agente.',
+    'Not authorized (you can only delete your own notes)!' => 'Sem autorização: você só pode excluir as suas próprias anotações.',
+    'Not authorized (communication articles cannot be deleted)!' => 'Sem autorização: artigos de comunicação (e-mail, chat) não podem ser excluídos.',
+    'Not authorized (note is too old to be deleted)!' => 'Sem autorização: esta anotação é antiga demais para ser excluída.',
+    'Not authorized (service disabled)!' => 'Sem autorização: este recurso está desativado nas configurações.',
+    'Authentication required' => 'É necessário estar autenticado.',
+    'Saving failed.' => 'Não foi possível salvar.',
+    'Cannot follow-up on a closed ticket. Please create a new ticket.' => 'Não é possível dar continuidade a um ticket fechado. Abra um ticket novo.',
+    'You have insufficient permissions to mention other users.' => 'Você não tem permissão para mencionar outros usuários.',
+
+    # Macro cujas ações o usuário não pode aplicar (ver can_perform_changes.rb).
+    'None of the actions could be applied. You may not have permission to change the affected fields.' => 'Nenhuma das ações pôde ser aplicada. Você pode não ter permissão para alterar os campos envolvidos.',
+
+    # Acesso somente leitura do cliente (ver TicketPolicy#customer_update_allowed?).
+    'You only have read access to this ticket and cannot change it.' => 'Você tem acesso somente leitura a este ticket e não pode alterá-lo.',
+    'Ticket modification by customers' => 'Alteração de tickets por clientes',
+    'Group selection for Ticket modification' => 'Seleção de grupos para alteração de tickets',
+    'Defines if a customer can modify their tickets (change attributes, rename them or add articles). If disabled, customers get read-only access to tickets.' => 'Define se o cliente pode alterar os próprios tickets (mudar atributos, renomear ou adicionar artigos). Se desativado, o cliente passa a ter acesso somente leitura.',
+    'Defines groups in which a customer can modify their tickets. No selection means all groups are available.' => 'Define os grupos nos quais o cliente pode alterar os próprios tickets. Nenhuma seleção significa todos os grupos.',
   }.freeze
 
   class << self
