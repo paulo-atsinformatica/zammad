@@ -397,14 +397,23 @@ de novo pra confirmar zero falhas nesse grupo.
   corretamente quando de fato acionada (testei isolado), só o teste não
   aciona mais o gatilho no valor atual.
 
-**Reais, pré-existentes na feature ATS (não deste merge) (2):**
-- `spec/models/pause_type_spec.rb` — `app/models/pause_type.rb:11` valida
-  `greater_than_or_equal_to: 0` mas o teste espera `time_limit: 0` inválido
-  (`greater_than: 0`). E a factory (`spec/factories/pause_type.rb`) usa nome
-  fixo `'Almoço'`, colidindo com a validação de unicidade quando 2 registros
-  são criados no mesmo teste. `git blame` confirma: commit único
-  `85b938939b8` de 2026-01-21, nunca tocado pelo merge — bug de autoria
-  original, não regressão do sync.
+**Reais, pré-existentes na feature ATS (não deste merge) (2) — ✅ CORRIGIDAS
+em 28/07 (commit `f964ac12b6`):**
+- `spec/models/pause_type_spec.rb` — o teste esperava `time_limit: 0` inválido,
+  mas 0 é o **default do campo e significa "sem limite"**: o formulário admin
+  traz a nota `'Set to 0 for unlimited'`
+  (`app/assets/javascripts/app/models/pause_type.coffee`) e
+  `user_pauses_reports_controller.rb:146` só considera estouro quando
+  `time_limit.to_i.positive?`. Ou seja, o modelo
+  (`greater_than_or_equal_to: 0`) estava certo e o **teste** estava errado.
+  Reescrito para cobrir o que a validação realmente garante: obrigatório, 0
+  aceito como ilimitado, negativo rejeitado.
+- `spec/factories/pause_type.rb` usava nome fixo `'Almoço'` enquanto
+  `PauseType` valida unicidade de nome, então nenhum exemplo conseguia criar
+  dois registros — e o teste do scope `active` precisava exatamente disso.
+  Trocado por `sequence(:name)`.
+- `git blame` confirma origem: commit único `85b938939b8` de 2026-01-21, nunca
+  tocado pelo merge — eram bugs de autoria original, não regressão do sync.
 
 **Não é bug — teste desatualizado (1):**
 - `spec/models/ticket_spec.rb:1406` "destroys all related dependencies":
