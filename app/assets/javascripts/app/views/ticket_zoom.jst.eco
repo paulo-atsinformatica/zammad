@@ -13,7 +13,6 @@
     <div class="ticketZoom">
       <div class="ticketZoom-controls">
         <div class="js-settingContainer"></div>
-        <div class="js-timeTrackingContainer"></div>
         <div class="spacer"></div>
         <div class="js-highlighterContainer highlighter"></div>
         <div class="js-overviewNavigatorContainer overview-navigator"></div>
@@ -36,6 +35,11 @@
   <div class="tabsSidebar tabsSidebar--attributeBarSpacer vertical"></div>
 
   <div class="attributeBar">
+    <%# Deliberately a sibling of .js-attributeBar, not a child: %>
+    <%# App.TicketZoomAttributeBar#render replaces that node wholesale on macro, %>
+    <%# shared draft, group and language changes, which would detach the player %>
+    <%# DOM and silently freeze the running timer. %>
+    <div class="attributeBar-timeTracking js-timeTrackingContainer"></div>
     <div class="attributeBar-inner js-attributeBar"></div>
   </div>
 </div>

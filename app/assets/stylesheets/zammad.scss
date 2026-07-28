@@ -9372,9 +9372,21 @@ li.list-item-none {
   border-top: 1px solid var(--border);
   position: relative;
   z-index: 1000; // Ensure it's above other content but below modals
+  display: flex;
+  align-items: center;
 
   &.is-closed {
     margin-bottom: -60px;
+  }
+
+  // Customização ATS: player de tempo de atendimento, ancorado à esquerda da
+  // barra (zona de status, junto dos avatares) e afastado do cluster
+  // Descartar/Ficar na aba/Atualizar à direita, para evitar clique acidental.
+  &-timeTracking {
+    flex-shrink: 0;
+    padding-inline-start: 10px;
+    display: flex;
+    align-items: center;
   }
 
   @include phone {
@@ -9398,6 +9410,8 @@ li.list-item-none {
     align-items: center;
     justify-content: flex-end;
     padding: 10px;
+    flex: 1;
+    min-width: 0;
   }
 
   &-avatars {
@@ -17323,10 +17337,6 @@ body.is-pause-blocked {
   padding: 8px 12px;
   gap: 8px;
 
-  .js-timeTrackingContainer {
-    order: -1; /* Move to the left */
-  }
-
   .js-settingContainer {
     order: 0;
   }
@@ -17339,6 +17349,47 @@ body.is-pause-blocked {
   .js-highlighterContainer,
   .js-overviewNavigatorContainer {
     order: 2;
+  }
+}
+
+/* Indicador de tempo de atendimento na aba lateral do ticket.
+   Aplicado por App.TaskbarTimeTrackingIndicator, para o agente saber qual
+   ticket está contando enquanto navega em outra aba. */
+.nav-tab.is-time-tracking {
+  .nav-tab-icon {
+    position: relative;
+
+    &::after {
+      content: '';
+      position: absolute;
+      inset-inline-end: -3px;
+      bottom: -1px;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #16a34a;
+      animation: tt-tab-pulse 2s ease-in-out infinite;
+
+      @media (prefers-reduced-motion: reduce) {
+        animation: none;
+      }
+    }
+  }
+
+  &.is-time-tracking-paused .nav-tab-icon::after {
+    background: #d97706;
+    animation: none;
+  }
+}
+
+@keyframes tt-tab-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.35;
   }
 }
 
