@@ -345,6 +345,106 @@ Isso mostra o que o arquivo realmente contém no ambiente. Se aparecer, confira 
 - **Verificação no build:** no `Dockerfile` foi adicionado um `RUN` que falha se `config/locales.yml` tiver menos de 500 bytes. Se o build passar, a imagem tem o arquivo completo; se falhar, o contexto ou o cache está com o arquivo errado (usar `--no-cache` e rebuild).
 - **Diagnóstico no container (Coolify):** dentro do container em execução, rodar `wc -c /opt/zammad/config/locales.yml` e `head -5 /opt/zammad/config/locales.yml`. Se o tamanho for &lt; 500 bytes ou o conteúdo só "---", a imagem usada pelo Coolify está com o arquivo truncado (rebuild sem cache ou conferir qual imagem/digest o Coolify está puxando).
 
+## Alterações de 28/07/2026 (pós-sync 7.2.x)
+
+Feitas na branch `sync-upstream-20260727`, depois do merge com `upstream/develop`.
+**Todas precisam ser reconferidas em syncs futuros** — as que tocam arquivo do
+upstream são as que correm risco de serem perdidas num merge.
+
+### Armadilhas herdadas do sync 7.2.x (ler antes de sincronizar de novo)
+
+| O que aconteceu | Por que importa |
+|---|---|
+| Upstream removeu `Service::BaseWithCurrentUser` (commit `1e20dc5e1e`) e moveu `current_user` para `Service::Base`. `TicketTimeTrackingService` e `UserPauseService` herdavam da classe apagada. | **Derrubava o boot inteiro em produção** (`NameError` no eager_load). Invisível para rspec/rubocop/lint, porque nenhum deles faz eager_load. Corrigido em `6e77067b36`. **Sempre rodar `rails zeitwerk:check` depois de um sync.** |
+| Upstream trocou a query GraphQL `TicketSignature` por um mecanismo de FormUpdater (commit `6822609aca`). O merge adotou o novo, mas deixou os arquivos antigos órfãos. | Sobraram `app/frontend/shared/composables/useTicketSignature.ts` (com bug inatingível), `app/frontend/shared/graphql/queries/ticketSignature.*`, `app/graphql/gql/queries/ticket/signature.rb`, `app/graphql/gql/types/signature_type.rb`. **Recomendado remover.** |
+| `app/frontend/apps/desktop/entities/ticket/graphql/queries/customerTicketsByFilter.{api,mocks}.ts` | WIP abandonado: sem `.graphql` fonte, sem resolver no backend, não importado por ninguém. Só quebra o `pnpm lint:ts`. **Recomendado remover.** |
+| `app/frontend/shared/graphql/types.ts` não foi regenerado no merge | 71 erros de tipo no `vue-tsc`. **Rodar `pnpm generate-graphql-api` depois de todo sync.** |
+| 385 arquivos sob `public/assets/` estavam apagados do disco mas ainda versionados | Quebrava o boot (`icons.svg` ausente → 500 na tela inicial). Restaurados com `git checkout -- public/assets/`. Conferir com `git status --short \| grep '^ D'`. |
+
+### Tempo de atendimento (player do ticket)
+
+- **`app/assets/javascripts/app/controllers/ticket_zoom/time_tracking.coffee`** —
+  adicionado `failResponseNoTrigger: true` nas chamadas de `start` e `resume`.
+  O controller responde **409** quando já existe contagem em outro ticket, e o
+  handler global de ajax (`app/assets/javascripts/app/lib/app_post/ajax.coffee`)
+  só suprime o modal de erro técnico para 401/403/404/422/502 — sem esse flag,
+  o modal "StatusCode: 409" aparecia por cima do diálogo de troca de ticket.
+  **Se o upstream mexer nesse arquivo, reaplicar.**
+- **`app/models/ticket_time_tracking.rb`** — em `notify_clients_data_attributes`
+  e no broadcast de ticket, `total_seconds` passou a ser o **acumulado
+  persistido** (igual à coluna e às respostas REST, que serializam atributos
+  crus), e o total já calculado saiu em `total_time_seconds`. Antes o WebSocket
+  mandava o total calculado sob a chave `total_seconds`, e como o frontend soma
+  o tempo corrente por conta própria, o cronômetro contava o trecho em execução
+  **duas vezes**. Coberto por specs em `spec/models/ticket_time_tracking_spec.rb`.
+- **`app/assets/javascripts/app/views/ticket_zoom.jst.eco`** — o player saiu de
+  `.ticketZoom-controls` (que rola junto com os artigos e desaparecia de vista)
+  para a `.attributeBar` fixa. Fica como **irmão** de `.js-attributeBar`, nunca
+  como filho: `App.TicketZoomAttributeBar#render` faz `@html` e substitui aquele
+  nó inteiro em mudanças de macro, rascunho, grupo e idioma — dentro dele, o DOM
+  do player seria destruído e o cronômetro congelaria em silêncio.
+- **`app/assets/stylesheets/zammad.scss`** — `.attributeBar` virou flex,
+  `.attributeBar-inner` ganhou `flex: 1`, e foi criado
+  `.attributeBar-timeTracking`. Também as regras de `.nav-tab.is-time-tracking`
+  (indicador na aba) e o keyframe `tt-tab-pulse`.
+- **`app/assets/javascripts/app/controllers/taskbar_time_tracking_indicator.coffee`**
+  (novo, ATS puro) — plugin global que marca a aba lateral do ticket em
+  contagem. Tem de ser global porque o player só existe no ticket aberto.
+  Reaplica a classe em `taskInit`/`taskUpdate`, já que a taskbar recria o DOM
+  das abas.
+
+### Acesso somente leitura para clientes
+
+Objetivo: cliente entra no perfil dele e **apenas visualiza** — não muda
+atributos, não renomeia, não adiciona artigo. Configurável por grupo.
+
+- **`db/seeds/settings.rb`** e **`db/migrate/20260728000000_add_customer_ticket_update_settings.rb`**
+  — settings `customer_ticket_update` (booleano) e
+  `customer_ticket_update_group_ids` (seleção de grupos, vazio = todos),
+  espelhando `customer_ticket_create`. Default `true`, para não travar ninguém
+  ao atualizar.
+- **`app/policies/ticket_policy.rb`** — `change_access?` consulta
+  `customer_update_allowed?`. **Este é o bloqueio de verdade**, e cobre também
+  renomear (`update_title` chama `authorize!(:update?)`) e criar artigo
+  (`follow_up?` cai em `update?`). Bloqueio só no frontend seria burlado por
+  API. Ausência do setting mantém o comportamento antigo (não bloqueia).
+- **`app/assets/javascripts/app/models/ticket.coffee`** — `editableByCustomer`
+  passou a consultar `updatableByCustomer()`. Como `editable()` é o gate central
+  do zoom, isso cascateia para caixa de resposta, atributos da lateral e
+  attribute bar de uma vez.
+- **`app/assets/javascripts/app/controllers/ticket_zoom/title.coffee`** — passou
+  a checar `editable()` no `renderPost` e no `update`. **Antes não checava
+  nada**, então até um agente com acesso só de leitura no grupo conseguia
+  digitar no título e só tomava erro ao salvar.
+- Specs em `spec/policies/ticket_policy_spec.rb` (bloco "read-only access for
+  customers"), incluindo o caso de que bloquear alteração **não** pode esconder
+  o ticket do cliente.
+
+### Mensagens de bloqueio em português
+
+- **`lib/translation_overrides_pt_br.rb`** — traduções das mensagens de
+  permissão. Este é o caminho preferido: as mensagens do backend passam por
+  `App.i18n.translateContent` no frontend
+  (`app/assets/javascripts/app/controllers/_plugin/notify.coffee`), então dá
+  para traduzir **sem alterar arquivo do upstream** — inclusive as que o Zammad
+  não marca com `__()` e que por isso nunca chegariam ao catálogo. Os msgid
+  incluem o formato literal `"Not authorized (motivo)!"` que
+  `PunditPolicy#not_authorized` monta.
+  Este arquivo é ATS puro e roda pelo `bin/docker-entrypoint`, então **não
+  conflita em sync**. Preferir sempre este caminho a editar `.po` (que o
+  upstream/Weblate sobrescreve).
+- **`app/models/concerns/can_perform_changes.rb`** (arquivo do upstream) — o
+  `raise` de string crua virou `Exceptions::UnprocessableContent` com mensagem
+  traduzível. Antes, rodar uma macro cujas ações o usuário não pode aplicar
+  gerava **HTTP 500** e, por consequência, modal de erro técnico em inglês
+  (500 não está na whitelist do handler global de ajax). Agora é 422, que vira
+  um toast legível. **Reaplicar se o upstream mexer nesse arquivo.**
+
+Ainda em inglês e não resolvido: as mensagens de Core Workflow em
+`app/models/concerns/checks_core_workflow.rb` (`"Invalid value '%s' for field
+'%s'!"`). Interpolam valores no meio da string, então override por msgid exato
+não funciona — exigiriam mudança de código para usar placeholders.
+
 ## Referências
 
 - Repositório original: https://github.com/zammad/zammad
