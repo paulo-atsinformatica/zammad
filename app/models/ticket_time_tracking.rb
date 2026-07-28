@@ -117,20 +117,28 @@ class TicketTimeTracking < ApplicationModel
   end
 
   # Override notify_clients_data_attributes to include more info
+  #
+  # `total_seconds` is deliberately the persisted accumulator (same meaning as
+  # the DB column and as the REST responses, which serialize raw attributes).
+  # Clients add the live segment themselves from resumed_at/started_at, so
+  # sending the computed total here would make them count it twice.
+  # `total_time_seconds` carries the computed live total for consumers that
+  # want a ready-to-display value.
   def notify_clients_data_attributes
     {
-      id:              id,
-      ticket_id:       ticket_id,
-      ticket_number:   ticket&.number,
-      user_id:         user_id,
-      is_active:       is_active,
-      started_at:      started_at,
-      paused_at:       paused_at,
-      resumed_at:      resumed_at,
-      ended_at:        ended_at,
-      total_seconds:   total_time_seconds,
-      current_state:   current_state,
-      updated_at:      updated_at
+      id:                 id,
+      ticket_id:          ticket_id,
+      ticket_number:      ticket&.number,
+      user_id:            user_id,
+      is_active:          is_active,
+      started_at:         started_at,
+      paused_at:          paused_at,
+      resumed_at:         resumed_at,
+      ended_at:           ended_at,
+      total_seconds:      total_seconds || 0,
+      total_time_seconds: total_time_seconds,
+      current_state:      current_state,
+      updated_at:         updated_at
     }
   end
 
@@ -147,14 +155,17 @@ class TicketTimeTracking < ApplicationModel
     PushMessages.send_to(user_id, message)
 
     # Also broadcast a ticket-specific event for other users viewing the ticket
+    # See notify_clients_data_attributes for the total_seconds/total_time_seconds
+    # distinction.
     ticket_message = {
       event: 'Ticket:timeTrackingChange',
       data:  {
-        ticket_id:     ticket_id,
-        user_id:       user_id,
-        current_state: current_state,
-        total_seconds: total_time_seconds,
-        updated_at:    updated_at
+        ticket_id:          ticket_id,
+        user_id:            user_id,
+        current_state:      current_state,
+        total_seconds:      total_seconds || 0,
+        total_time_seconds: total_time_seconds,
+        updated_at:         updated_at
       }
     }
     PushMessages.send(message: ticket_message, type: 'authenticated')
