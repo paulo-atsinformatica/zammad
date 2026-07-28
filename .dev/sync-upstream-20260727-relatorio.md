@@ -293,6 +293,51 @@ mais alta da linha é 7.1.1).
 
 ## 6. VALIDAÇÃO — resultado (27/07/2026)
 
+### 6.0 🔴 CRÍTICO — boot quebrava em produção (achado no smoke test com a imagem `:7.2.0`, corrigido)
+
+Nenhuma das etapas abaixo (rspec, rubocop, assets, lint) pegou isso —
+todas rodam sem `RAILS_ENV=production` fazer `eager_load` de tudo. Só apareceu
+ao efetivamente subir a imagem `:7.2.0` publicada (via
+`docker-compose.coolify.test-7.2.0.yml`) e o `zammad-railsserver` crashar em
+loop:
+
+```
+/opt/zammad/app/services/ticket_time_tracking_service.rb:3: uninitialized
+constant Service::BaseWithCurrentUser (NameError)
+```
+
+**Causa:** o upstream (`7.2.0-alpha`, commit `1e20dc5e1e`, "Ensure services
+have a single entry point and an easy way to pass current user") **apagou**
+`Service::BaseWithCurrentUser` e moveu o `current_user` pra dentro do próprio
+`Service::Base`, refatorando todos os `Service::*` que herdavam dela. Os 2
+services ATS (`app/services/ticket_time_tracking_service.rb`,
+`app/services/user_pause_service.rb`) continuavam herdando da classe apagada
+— nunca dava conflito de merge (git não via isso como conflito), só ficava
+uma referência morta que só explode quando algo faz `eager_load` de verdade
+(produção sempre faz; rspec e `bin/rails runner` avulso, não).
+
+**Corrigido** (commit `6e77067b36`): troquei `Service::BaseWithCurrentUser`
+por `Service::Base` e, no `initialize`, `@current_user = current_user`
+direto em vez de `super(current_user: current_user)` (a classe nova não tem
+esse `initialize`). `Service::Base#current_user` já faz
+`@current_user ||= UserInfo.current_user`, então setar a ivar direto
+preserva o comportamento 100% idêntico ao antigo — os controllers que chamam
+`TicketTimeTrackingService.new(...).start_tracking` etc continuam
+funcionando sem nenhuma mudança neles (não adotei o padrão novo de
+`.execute` porque esses 2 services são multi-método, não fazem sentido no
+formato single-entry-point do resto do upstream).
+
+**Verificação:** `bin/rails zeitwerk:check` → `All is good!` antes só
+depois do fix (antes, crashava igual ao boot real). Testado manualmente via
+`rails runner` instanciando os dois services e chamando `current_user` —
+funciona. Não achei nenhum outro `Service::BaseWithCurrentUser` referenciado
+em lugar nenhum do código (`grep` confirma, só esses 2 arquivos).
+
+**⚠️ Ação pendente:** a imagem `ghcr.io/paulo-atsinformatica/zammad:7.2.0`
+já publicada (buildada antes desse fix) **ainda tem o bug**. Precisa
+disparar um novo build depois deste commit antes de testar/promover de
+verdade.
+
 ### 6.1 Backend — `db:migrate` — ✅ OK
 
 Ambiente: Docker (postgres 17.5, redis 7.0, memcached 1.6.38, ruby 3.4.9 —
