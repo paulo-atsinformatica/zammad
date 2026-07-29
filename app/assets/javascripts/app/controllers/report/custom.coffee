@@ -182,14 +182,14 @@ class App.ReportCustom extends App.ControllerAppContent
 
 App.Config.set('report/custom', App.ReportCustom, 'Routes')
 
-# Item no menu de Relatórios. target: '_blank' abre numa guia nova, de forma
-# que o usuário continue usando o Zammad na guia original enquanto o relatório
-# é montado e gerado.
+# Item no menu de Relatórios. `external: true` é o mecanismo do próprio Zammad
+# para renderizar target="_blank" (ver navigation/personal.jst.eco), abrindo o
+# relatório em guia nova para o usuário seguir usando o Zammad na guia original.
 App.Config.set('CustomReport', {
   prio: 100,
   name: __('Custom Report'),
   parent: '#report',
   target: '#report/custom',
-  targetAttribute: '_blank',
+  external: true,
   permission: ['report.custom']
 }, 'NavBarRight')
