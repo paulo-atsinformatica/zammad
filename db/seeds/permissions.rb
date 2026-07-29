@@ -102,6 +102,13 @@ Permission.create_if_not_exists(
   description: __('Manage report profiles of your system.'),
   preferences: { prio: 1160 }
 )
+# Customização ATS: configuração dos modelos de relatório personalizado.
+Permission.create_if_not_exists(
+  name:        'admin.custom_report',
+  label:       __('Custom Reports'),
+  description: __('Manage custom reports of your system.'),
+  preferences: { prio: 1161 }
+)
 Permission.create_if_not_exists(
   name:        'admin.time_accounting',
   label:       __('Time Accounting'),

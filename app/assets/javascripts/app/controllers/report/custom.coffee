@@ -8,10 +8,9 @@ class App.ReportCustom extends App.ControllerAppContent
     '.js-reports': 'reportsList'
     '.js-runs': 'runsList'
 
+  # Esta tela só visualiza e exporta. Criar e editar modelos fica em
+  # Gerenciar > Relatórios Personalizados (App.CustomReportManage).
   events:
-    'click .js-new':           'new'
-    'click .js-edit':          'edit'
-    'click .js-delete':        'delete'
     'click .js-generate':      'generate'
     'click .js-visibility':    'changeVisibility'
 
@@ -90,50 +89,6 @@ class App.ReportCustom extends App.ControllerAppContent
     @$('.js-visibility').removeClass('is-selected')
     $(e.currentTarget).addClass('is-selected')
     @loadReports()
-
-  new: (e) =>
-    e.preventDefault()
-    new App.ControllerGenericNew(
-      pageData:
-        title:   __('Custom Report')
-        object:  __('Custom Report')
-        objects: __('Custom Reports')
-      genericObject: 'CustomReport'
-      container:     @el.closest('.content')
-      large:         true
-      callback:      @loadReports
-    )
-
-  edit: (e) =>
-    e.preventDefault()
-    new App.ControllerGenericEdit(
-      id: $(e.currentTarget).closest('[data-id]').data('id')
-      pageData:
-        title:   __('Custom Report')
-        object:  __('Custom Report')
-        objects: __('Custom Reports')
-      genericObject: 'CustomReport'
-      container:     @el.closest('.content')
-      large:         true
-      callback:      @loadReports
-    )
-
-  delete: (e) =>
-    e.preventDefault()
-    id = $(e.currentTarget).closest('[data-id]').data('id')
-
-    new App.ControllerConfirm(
-      message:      __('Are you sure?')
-      container:    @el.closest('.content')
-      callback:     =>
-        @ajax(
-          id:          "custom_report_destroy_#{id}"
-          type:        'DELETE'
-          url:         "#{@apiPath}/custom_reports/#{id}"
-          processData: true
-          success:     @loadReports
-        )
-    )
 
   generate: (e) =>
     e.preventDefault()

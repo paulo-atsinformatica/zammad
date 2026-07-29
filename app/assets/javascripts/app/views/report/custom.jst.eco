@@ -3,9 +3,6 @@
     <div class="page-header-title">
       <h1><%- @T('Custom Report') %> <small></small></h1>
     </div>
-    <div class="page-header-meta">
-      <a class="btn btn--primary js-new"><%- @T('New Report') %></a>
-    </div>
   </div>
 
   <div class="page-body">

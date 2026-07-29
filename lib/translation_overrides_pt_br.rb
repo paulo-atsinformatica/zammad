@@ -103,6 +103,8 @@ module TranslationOverridesPtBr
     'Custom Report' => 'Relatório Personalizado',
     'Custom Reports' => 'Relatórios Personalizados',
     'New Report' => 'Novo Relatório',
+    'Manage custom reports of your system.' => 'Gerenciar os relatórios personalizados do sistema.',
+    'Search for custom reports' => 'Buscar relatórios personalizados',
     'Report about' => 'Relatório sobre',
     'Visible for' => 'Visível para',
     'Only me' => 'Somente eu',

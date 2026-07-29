@@ -26,13 +26,10 @@
               <%= Object.keys(report.condition).length %> <%- @T('condition(s)') %>
             <% end %>
           </td>
+          <%# Sem editar/remover aqui: esta tela só visualiza e exporta. %>
+          <%# Modelos são configurados em Gerenciar > Relatórios Personalizados. %>
           <td class="align-right">
             <a class="btn btn--primary js-generate" data-format="csv"><%- @T('Generate CSV') %></a>
-            <%# Só o autor edita ou remove: compartilhar dá acesso de leitura. %>
-            <% if report.editable: %>
-              <a class="btn js-edit"><%- @T('Edit') %></a>
-              <a class="btn btn--danger js-delete"><%- @T('Delete') %></a>
-            <% end %>
           </td>
         </tr>
       <% end %>
