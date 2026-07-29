@@ -460,6 +460,55 @@ frontend, basta adicionar o msgid em `lib/translation_overrides_pt_br.rb` (ATS
 puro, sem conflito em sync). Se a string tem **valor interpolado**, tem de ser
 traduzida no servidor com `Translation.translate`.
 
+### Relatório personalizado (feature ATS, fase 1)
+
+Menu Relatórios → "Relatório Personalizado", abrindo em guia nova. Modelos
+salvos com filtros por qualquer campo, geração em fila com progresso e export
+CSV de tamanho arbitrário.
+
+Arquivos ATS puros (sem risco em sync): `app/models/custom_report.rb`,
+`app/models/custom_report_run.rb`, `app/models/custom_report/{query,columns}.rb`,
+`app/models/custom_report/exporter/csv.rb`,
+`app/jobs/custom_report_generate_job.rb`,
+`app/controllers/custom_reports_controller.rb`,
+`config/routes/custom_report.rb`, as 4 migrations `20260728120000..3`,
+`app/assets/javascripts/app/models/custom_report.coffee`,
+`app/assets/javascripts/app/controllers/report/custom.coffee`,
+`app/assets/javascripts/app/views/report/custom*.jst.eco`.
+
+**Arquivos do upstream tocados — reaplicar se o upstream mexer neles:**
+
+| Arquivo | Mudança e motivo |
+|---|---|
+| `app/models/online_notification_standalone.rb` | `kind` é validado contra lista fixa; sem acrescentar `custom_report` a notificação de "pronto" levanta exceção. |
+| `app/assets/javascripts/app/models/online_notification_standalone.coffee` | `activityMessage` cai num `else` que devolve string de debug em inglês para `kind` desconhecido. Também define `uiUrl` para a notificação levar ao relatório. |
+| `app/assets/javascripts/app/views/navigation/menu.jst.eco` | Passou a honrar `item.targetAttribute`, para o item abrir em guia nova. Antes não havia como definir `target` num item de submenu. |
+| `db/seeds/settings.rb` | Setting `custom_report_max_rows` (instalação nova não roda a migration). |
+
+**Decisões que não são óbvias pelo código:**
+
+- **Segurança:** o modelo salvo é uma consulta, nunca uma concessão.
+  `CustomReport::Query` parte sempre do scope de permissão de **quem gera**
+  (`TicketPolicy::ReadScope` e equivalentes) e só então aplica as condições.
+  Isso é obrigatório porque **`Selector::Sql` não filtra por permissão** — ele
+  só resolve pré-condições tipo "meus tickets". Os 3 níveis de visibilidade
+  controlam quem vê o **modelo**, não o escopo dos dados. Coberto por spec
+  explícito de vazamento.
+- **Arquivo fora do `Store`:** `Store::File.add` recebe o conteúdo inteiro como
+  String e o provider default pode ser `DB` — inviável para export grande.
+  Os arquivos vão para `storage/custom_report_runs/`, que em Docker é o volume
+  `zammad-storage`. Isso é **necessário**, não preferência: o job roda no
+  container do scheduler e o download é servido pelo railsserver.
+- **`store` só em `condition`:** a macro `store` do Zammad serve para Hash e
+  converte um Array silenciosamente em `{}`. `columns`/`group_by`/`aggregations`
+  são arrays e usam jsonb.
+- **Progresso pelo WebSocket legado:** as subscriptions GraphQL usadas pelo bulk
+  update do 7.2 só existem na Desktop View.
+- **xlsx ficou para a fase 2**, com teto de linhas, porque `ExcelSheet` monta a
+  planilha inteira em memória. CSV é streaming e não tem esse limite.
+- **Migrations com `up`/`down` explícitos:** a reversão automática do Rails
+  falhava tentando remover índices que o `drop_table` já leva.
+
 ## Referências
 
 - Repositório original: https://github.com/zammad/zammad
