@@ -427,6 +427,31 @@ Permission.create_if_not_exists(
   description: __('Access to the Ticket Time Trackings report.'),
   preferences: { prio: 1543 }
 )
+# Customização ATS: relatório personalizado.
+#
+# Estas (e as de user.* / ticket.time_tracking abaixo) também são criadas por
+# migration, mas a migration tem guard `return if !Setting.exists?(name:
+# 'system_init_done')` e portanto NÃO roda em instalação nova. Sem estarem aqui,
+# uma instância recém-criada fica sem as permissões e as funcionalidades ATS
+# simplesmente não aparecem na interface.
+Permission.create_if_not_exists(
+  name:        'report.custom',
+  label:       __('Custom Report'),
+  description: __('Create and generate custom reports. Results always respect the group and object permissions of the user generating them.'),
+  preferences: { prio: 1544 }
+)
+Permission.create_if_not_exists(
+  name:        'report.custom.group',
+  label:       __('Share Custom Report With Group'),
+  description: __('Save custom reports visible to the members of a group.'),
+  preferences: { prio: 1545 }
+)
+Permission.create_if_not_exists(
+  name:        'report.custom.global',
+  label:       __('Share Custom Report Globally'),
+  description: __('Save custom reports visible to every user who may use custom reports.'),
+  preferences: { prio: 1546 }
+)
 Permission.create_if_not_exists(
   name:        'ticket',
   label:       __('Ticket'),
@@ -451,6 +476,33 @@ Permission.create_if_not_exists(
   description:  __('Access tickets as customer.'),
   allow_signup: true,
   preferences:  { prio: 1570 }
+)
+# Customização ATS: controle de tempo de atendimento no ticket. Sem esta
+# permissão o player não é renderizado no ticket zoom.
+Permission.create_if_not_exists(
+  name:        'ticket.time_tracking',
+  label:       __('Ticket Time Tracking'),
+  description: __('Track time spent on tickets.'),
+  preferences: { prio: 1565 }
+)
+# Customização ATS: controle de pausas e time tracking automático.
+Permission.create_if_not_exists(
+  name:        'user',
+  label:       __('User features'),
+  description: __('User-specific features and controls.'),
+  preferences: { prio: 3000 }
+)
+Permission.create_if_not_exists(
+  name:        'user.pause_control',
+  label:       __('Pause Control'),
+  description: __('Allow user to manage pause states (online, offline, pause).'),
+  preferences: { prio: 3010 }
+)
+Permission.create_if_not_exists(
+  name:        'user.ticket_time_tracking',
+  label:       __('Ticket Time Tracking'),
+  description: __('Allow automatic time tracking on tickets.'),
+  preferences: { prio: 3020 }
 )
 Permission.create_if_not_exists(
   name:         'user_preferences',
@@ -575,6 +627,14 @@ admin.permission_grant('user_preferences')
 admin.permission_grant('admin')
 admin.permission_grant('report')
 admin.permission_grant('knowledge_base.editor')
+# Customização ATS: mesmas concessões que as migrations fazem, replicadas aqui
+# porque em instalação nova as migrations saem pelo guard de system_init_done.
+# Compartilhar relatório em nível de grupo ou global fica só com Admin por
+# padrão, para ninguém expor relatório de todo mundo sem querer.
+admin.permission_grant('ticket.time_tracking')
+admin.permission_grant('report.custom')
+admin.permission_grant('report.custom.group')
+admin.permission_grant('report.custom.global')
 
 agent = Role.find_by(name: 'Agent')
 agent.permission_grant('user_preferences')
@@ -582,6 +642,11 @@ agent.permission_grant('ticket.agent')
 agent.permission_grant('chat.agent')
 agent.permission_grant('cti.agent')
 agent.permission_grant('knowledge_base.reader')
+# Customização ATS
+agent.permission_grant('ticket.time_tracking')
+agent.permission_grant('user.pause_control')
+agent.permission_grant('user.ticket_time_tracking')
+agent.permission_grant('report.custom')
 
 customer = Role.find_by(name: 'Customer')
 customer.permission_grant('user_preferences.password')

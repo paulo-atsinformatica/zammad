@@ -94,6 +94,12 @@ module TranslationOverridesPtBr
     'You have insufficient permissions to mention other users.' => 'Você não tem permissão para mencionar outros usuários.',
 
     # Relatório personalizado (feature ATS).
+    'All' => 'Todos',
+    'Global' => 'Global',
+    'Status' => 'Situação',
+    'Format' => 'Formato',
+    'Failed' => 'Falhou',
+    'Download' => 'Baixar',
     'Custom Report' => 'Relatório Personalizado',
     'Custom Reports' => 'Relatórios Personalizados',
     'New Report' => 'Novo Relatório',
