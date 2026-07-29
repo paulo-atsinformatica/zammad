@@ -23,11 +23,17 @@ class CustomReport::Query
   # base inteira. Configurável via setting.
   DEFAULT_MAX_ROWS = 500_000
 
-  attr_reader :report, :user
+  DEFAULT_PER_PAGE = 50
+  MAX_PER_PAGE     = 200
 
-  def initialize(report:, user:)
-    @report = report
-    @user   = user
+  attr_reader :report, :user, :filters
+
+  # filters: condições informadas por quem está visualizando, no mesmo formato
+  # de selector. São restritas aos atributos que o modelo habilitou.
+  def initialize(report:, user:, filters: nil)
+    @report  = report
+    @user    = user
+    @filters = filters
   end
 
   def relation
@@ -35,13 +41,40 @@ class CustomReport::Query
       scope = permitted_scope
 
       query, bind_params, tables = target_class.selector2sql(
-        report.condition,
+        effective_condition,
         current_user: user,
       )
 
       scope = scope.where(query, *bind_params).joins(tables) if query.present?
       scope.distinct
     end
+  end
+
+  # Condição salva no modelo somada aos filtros preenchidos na hora.
+  #
+  # Filtros de runtime só entram se o modelo os habilitou: sem isso, quem
+  # visualiza poderia filtrar por atributos que o autor não quis expor.
+  def effective_condition
+    saved = (report.condition || {}).to_h
+    return saved if runtime_filters.blank?
+
+    saved.merge(runtime_filters)
+  end
+
+  def runtime_filters
+    return @runtime_filters if defined?(@runtime_filters)
+
+    @runtime_filters = allowed_runtime_filters
+  end
+
+  # Página de resultados para exibição em grid.
+  def page(page: 1, per_page: DEFAULT_PER_PAGE, order_by: nil, order_direction: 'asc')
+    per_page = per_page.to_i.clamp(1, MAX_PER_PAGE)
+    page     = [page.to_i, 1].max
+
+    ordered(order_by, order_direction)
+      .offset((page - 1) * per_page)
+      .limit(per_page)
   end
 
   def count
@@ -67,6 +100,43 @@ class CustomReport::Query
   end
 
   private
+
+  # enabled_filters guarda o nome da coluna ("title"), que é o que dá para
+  # validar contra o objeto. O Selector::Sql, porém, espera a chave prefixada
+  # pelo objeto ("ticket.title"), então a conversão acontece aqui.
+  #
+  # Aceita as duas formas na entrada: a tela pode mandar o nome simples ou já
+  # a chave de selector.
+  def allowed_runtime_filters
+    given = (filters || {}).to_h
+    return {} if given.blank?
+
+    # Normaliza os dois lados (state -> state_id), já que a interface salva o
+    # nome sem o sufixo de relação.
+    allowed = report.normalize_attributes(report.enabled_filters)
+    return {} if allowed.blank?
+
+    given.each_with_object({}) do |(key, value), result|
+      attribute = CustomReport.normalize_attribute(key.to_s.split('.').last, target_class)
+      next if attribute.blank?
+      next if !allowed.include?(attribute)
+
+      result["#{selector_prefix}.#{attribute}"] = value
+    end
+  end
+
+  def selector_prefix
+    report.object.underscore
+  end
+
+  # Só ordena por coluna real da tabela: o valor vem da requisição e iria direto
+  # para o ORDER BY.
+  def ordered(order_by, order_direction)
+    column    = target_class.column_names.include?(order_by.to_s) ? order_by.to_s : 'id'
+    direction = order_direction.to_s.casecmp('desc').zero? ? :desc : :asc
+
+    relation.reorder(column => direction)
+  end
 
   def permitted_scope
     scope_name = POLICY_SCOPES[report.object]

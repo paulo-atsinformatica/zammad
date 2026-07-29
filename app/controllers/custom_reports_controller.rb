@@ -4,7 +4,7 @@
 class CustomReportsController < ApplicationController
   prepend_before_action :authentication_check
   before_action :check_permission
-  before_action :set_report, only: %i[show update destroy generate]
+  before_action :set_report, only: %i[show update destroy generate results]
   before_action :set_run, only: %i[run_show download]
 
   # GET /api/v1/custom_reports?visibility=all|global|group|personal
@@ -45,6 +45,25 @@ class CustomReportsController < ApplicationController
 
     @report.destroy!
     render json: {}, status: :ok
+  end
+
+  # GET /api/v1/custom_reports/:id/results
+  #
+  # Página de resultados para o grid. Distinto de #generate: aqui nada é
+  # enfileirado nem escrito em disco, é só uma leitura paginada — por isso
+  # responde na hora, sem passar pela fila.
+  def results
+    result = CustomReport::Result.new(
+      report:          @report,
+      user:            current_user,
+      filters:         runtime_filters,
+      page:            params[:page],
+      per_page:        params[:per_page],
+      order_by:        params[:order_by],
+      order_direction: params[:order_direction],
+    ).call
+
+    render json: result, status: :ok
   end
 
   # POST /api/v1/custom_reports/:id/generate
@@ -116,7 +135,15 @@ class CustomReportsController < ApplicationController
   end
 
   def report_params
-    params.permit(:name, :object, :visibility, :active, group_ids: [], columns: [], group_by: [], aggregations: [], condition: {})
+    params.permit(:name, :object, :visibility, :active, group_ids: [], columns: [], group_by: [], aggregations: [], enabled_filters: [], condition: {})
+  end
+
+  # Filtros preenchidos por quem visualiza. O que pode ou não ser filtrado é
+  # decidido em CustomReport::Query, contra os filtros habilitados no modelo.
+  def runtime_filters
+    return if params[:filters].blank?
+
+    params.require(:filters).permit!.to_h
   end
 
   def filter_by_visibility(reports)

@@ -11,6 +11,9 @@ Zammad::Application.routes.draw do
   match api_path + '/custom_reports/:id',          to: 'custom_reports#update',   via: %i[put patch]
   match api_path + '/custom_reports/:id',          to: 'custom_reports#destroy',  via: :delete
 
+  # Página de resultados para o grid (leitura direta, sem fila)
+  match api_path + '/custom_reports/:id/results',  to: 'custom_reports#results',  via: %i[get post]
+
   # Enfileira uma geração
   match api_path + '/custom_reports/:id/generate', to: 'custom_reports#generate', via: :post
 

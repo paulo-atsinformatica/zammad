@@ -41,7 +41,14 @@ class App.CustomReport extends App.Model
     # tag: 'ticket_selector' reaproveita o mesmo editor de condições usado por
     # Overviews, Triggers e Agendamentos, com todos os campos de ticket,
     # organização, usuário e grupo.
-    { name: 'condition',  display: __('Filter'), tag: 'ticket_selector', null: true },
+    { name: 'condition',  display: __('Filter'), tag: 'ticket_selector', null: true, note: __('Fixed scope of the report. Whoever opens it cannot widen this.') },
+    # checkboxTicketAttributes é o mesmo componente que a Visão Geral usa para
+    # escolher colunas, então a lista acompanha os atributos do ticket,
+    # inclusive os customizados. Ele entrega o nome sem o sufixo _id
+    # (state, não state_id); o backend normaliza.
+    { name: 'columns', display: __('Columns'), tag: 'checkboxTicketAttributes', null: true, translate: true, note: __('Columns shown in the grid and in the exported file.') },
+    # Atributos que a tela de visualização deixa o usuário filtrar na hora.
+    { name: 'enabled_filters', display: __('Filters available when viewing'), tag: 'checkboxTicketAttributes', null: true, translate: true, note: __('Attributes the viewer may filter by. Leave empty to offer no filters.') },
     { name: 'active',     display: __('Active'), tag: 'active', default: true },
   ]
 

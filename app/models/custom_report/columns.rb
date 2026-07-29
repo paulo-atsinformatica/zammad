@@ -14,13 +14,12 @@ class CustomReport::Columns
 
   def names
     @names ||= begin
-      # Aceita apenas nomes de coluna que existem de fato. Sem isso, um valor
-      # inesperado em report.columns viraria uma coluna literal na planilha.
-      valid    = report.target_class.column_names
+      # Normaliza (state -> state_id) e descarta o que não corresponde a coluna
+      # nenhuma. Sem isso, um valor inesperado em report.columns viraria uma
+      # coluna literal na planilha.
       selected = Array.wrap(report.columns)
         .select { |name| name.is_a?(String) || name.is_a?(Symbol) }
-        .map(&:to_s)
-        .select { |name| valid.include?(name) }
+        .then { |names| report.normalize_attributes(names) }
 
       selected.presence || default_names
     end
@@ -45,6 +44,12 @@ class CustomReport::Columns
 
   def row(record)
     names.map { |name| value(record, name) }
+  end
+
+  # Rótulo traduzido de um atributo qualquer, não só das colunas exibidas.
+  # Usado para os filtros oferecidos na tela.
+  def display_for(name)
+    Translation.translate(locale, display_name(name.to_s))
   end
 
   private
