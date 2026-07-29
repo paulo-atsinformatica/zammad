@@ -110,7 +110,21 @@ class App.TicketZoomAttributeBar extends App.Controller
         el:      localeEl.filter('.js-avatars')
       )
 
+    # Customização ATS: o player de tempo de atendimento fica dentro desta barra
+    # (ver App.TicketZoom#placeTimeTrackingPlayer). O @html abaixo recria todo o
+    # conteúdo, então o nó é estacionado fora antes e devolvido depois: detach
+    # preserva handlers e o controller, enquanto deixá-lo ser recriado zeraria o
+    # cronômetro em execução no meio de um atendimento.
+    timeTrackingPlayer = @el.find('.js-timeTrackingContainer').detach()
+
     @html localeEl
+
+    if timeTrackingPlayer.length
+      resetButton = @el.find('.attributeBar-reset')
+      if resetButton.length
+        timeTrackingPlayer.insertBefore(resetButton)
+      else
+        timeTrackingPlayer.appendTo(@el)
 
     @el.find('.js-draft').popover(
       trigger:   'hover'

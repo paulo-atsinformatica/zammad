@@ -615,6 +615,7 @@ class App.TicketZoom extends App.Controller
             ticket:    @ticket
             ticket_id: @ticket_id
           )
+          @placeTimeTrackingPlayer(elLocal)
 
         # Check if the alert should be shown.
         #   Normally, this is a concern of the associated channel, so we only render it if it's known.
@@ -733,6 +734,20 @@ class App.TicketZoom extends App.Controller
       @delay(@markForm, 250, 'ticket-zoom-form-update')
     )
     @delay(@markForm, 800, 'ticket-zoom-form-update')
+
+  # Customização ATS: leva o player de tempo de atendimento para dentro da barra
+  # de atributos, imediatamente antes do cluster Descartar/Ficar na aba/Atualizar.
+  # Ele nasce fora daquela barra porque App.TicketZoomAttributeBar#render recria
+  # todo o conteúdo dela; o nó é MOVIDO (nunca recriado), o que preserva o
+  # controller e o cronômetro em execução.
+  placeTimeTrackingPlayer: (scope = @el) =>
+    player = scope.find('.js-timeTrackingContainer')
+    return if !player.length
+
+    target = scope.find('.js-attributeBar .attributeBar-reset')
+    return if !target.length
+
+    player.insertBefore(target)
 
   markForm: (force) =>
     if !@autosaveLast

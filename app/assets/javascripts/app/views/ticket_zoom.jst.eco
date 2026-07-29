@@ -35,10 +35,9 @@
   <div class="tabsSidebar tabsSidebar--attributeBarSpacer vertical"></div>
 
   <div class="attributeBar">
-    <%# Deliberately a sibling of .js-attributeBar, not a child: %>
-    <%# App.TicketZoomAttributeBar#render replaces that node wholesale on macro, %>
-    <%# shared draft, group and language changes, which would detach the player %>
-    <%# DOM and silently freeze the running timer. %>
+    <%# Ponto de partida do player de tempo de atendimento. Ele é movido para %>
+    <%# dentro de .js-attributeBar (ver App.TicketZoom#placeTimeTrackingPlayer) %>
+    <%# e estacionado de volta aqui a cada re-render daquela barra. %>
     <div class="attributeBar-timeTracking js-timeTrackingContainer"></div>
     <div class="attributeBar-inner js-attributeBar"></div>
   </div>

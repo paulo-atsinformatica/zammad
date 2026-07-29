@@ -9379,14 +9379,15 @@ li.list-item-none {
     margin-bottom: -60px;
   }
 
-  // Customização ATS: player de tempo de atendimento, ancorado à esquerda da
-  // barra (zona de status, junto dos avatares) e afastado do cluster
-  // Descartar/Ficar na aba/Atualizar à direita, para evitar clique acidental.
+  // Customização ATS: player de tempo de atendimento. Fica no lado direito da
+  // barra, logo antes do cluster Descartar/Ficar na aba/Atualizar — a zona
+  // esquerda é dos avatares de quem está vendo o ticket. A margem separa do
+  // botão de commit para não convidar a clique acidental em Atualizar.
   &-timeTracking {
     flex-shrink: 0;
-    padding-inline-start: 10px;
     display: flex;
     align-items: center;
+    margin-inline-end: 14px;
   }
 
   @include phone {
@@ -17352,45 +17353,34 @@ body.is-pause-blocked {
   }
 }
 
-/* Indicador de tempo de atendimento na aba lateral do ticket.
-   Aplicado por App.TaskbarTimeTrackingIndicator, para o agente saber qual
-   ticket está contando enquanto navega em outra aba. */
-.nav-tab.is-time-tracking {
-  .nav-tab-icon {
-    position: relative;
-
-    &::after {
-      content: '';
-      position: absolute;
-      inset-inline-end: -3px;
-      bottom: -1px;
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: #16a34a;
-      animation: tt-tab-pulse 2s ease-in-out infinite;
-
-      @media (prefers-reduced-motion: reduce) {
-        animation: none;
-      }
-    }
-  }
-
-  &.is-time-tracking-paused .nav-tab-icon::after {
-    background: #d97706;
-    animation: none;
-  }
+/* Cronômetro de tempo de atendimento na aba lateral do ticket.
+   O nó é inserido por App.TaskbarTimeTrackingIndicator, para o agente ver o
+   tempo correndo enquanto navega em outra aba. Mostra o tempo em vez de apenas
+   um sinal: a informação útil é quanto já foi contado. */
+.nav-tab-timeTracking {
+  flex-shrink: 0;
+  margin-inline-start: 6px;
+  padding: 1px 5px;
+  border-radius: 3px;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums; // largura estável, não "pula" a cada segundo
+  line-height: 1.5;
+  white-space: nowrap;
+  background: rgba(22, 163, 74, 0.18);
+  color: #16a34a;
 }
 
-@keyframes tt-tab-pulse {
-  0%,
-  100% {
-    opacity: 1;
-  }
+/* Pausado usa âmbar e sem contagem, para diferenciar de "correndo" sem depender
+   só de cor (o valor congelado já sinaliza). */
+.nav-tab.is-time-tracking-paused .nav-tab-timeTracking {
+  background: rgba(217, 119, 6, 0.18);
+  color: #d97706;
+}
 
-  50% {
-    opacity: 0.35;
-  }
+/* O botão de fechar da aba aparece no hover e ocupa o mesmo canto; esconder o
+   cronômetro nesse momento evita os dois disputando o espaço. */
+.nav-tab.is-time-tracking:hover .nav-tab-timeTracking {
+  display: none;
 }
 
 /* Reports - filters layout */
