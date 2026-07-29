@@ -16,7 +16,8 @@
         <% if item.navheader: %>
           <li class="dropdown-header"><%- @T(item.navheader) %></li>
         <% end %>
-        <li><a href="<%= item.target %>"><%- @T( item.name ) %><% if item['count'] isnt undefined: %><span class="badge badge--text count"><%= item['count'] %></span><% end %></a></li>
+        <%# Customização ATS: targetAttribute abre o item em guia nova (Relatório personalizado). %>
+        <li><a href="<%= item.target %>"<% if item.targetAttribute: %> target="<%= item.targetAttribute %>"<% end %>><%- @T( item.name ) %><% if item['count'] isnt undefined: %><span class="badge badge--text count"><%= item['count'] %></span><% end %></a></li>
       <% end %>
     </ul>
   </div>

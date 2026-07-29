@@ -1,0 +1,41 @@
+<% if _.isEmpty(@reports): %>
+  <p class="help-block"><%- @T('No report found. Create one to get started.') %></p>
+<% else: %>
+  <table class="table table--light">
+    <thead>
+      <tr>
+        <th><%- @T('Name') %></th>
+        <th><%- @T('Visible for') %></th>
+        <th><%- @T('Filter') %></th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      <% for report in @reports: %>
+        <tr data-id="<%= report.id %>">
+          <td><%= report.name %></td>
+          <td>
+            <% if report.visibility is 'global': %><%- @T('Everyone') %><% end %>
+            <% if report.visibility is 'group': %><%- @T('Groups') %><% end %>
+            <% if report.visibility is 'personal': %><%- @T('Only me') %><% end %>
+          </td>
+          <td>
+            <% if _.isEmpty(report.condition): %>
+              <span class="text-muted"><%- @T('No filter') %></span>
+            <% else: %>
+              <%= Object.keys(report.condition).length %> <%- @T('condition(s)') %>
+            <% end %>
+          </td>
+          <td class="align-right">
+            <a class="btn btn--primary js-generate" data-format="csv"><%- @T('Generate CSV') %></a>
+            <%# Só o autor edita ou remove: compartilhar dá acesso de leitura. %>
+            <% if report.editable: %>
+              <a class="btn js-edit"><%- @T('Edit') %></a>
+              <a class="btn btn--danger js-delete"><%- @T('Delete') %></a>
+            <% end %>
+          </td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+<% end %>

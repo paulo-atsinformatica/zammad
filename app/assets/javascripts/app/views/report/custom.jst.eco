@@ -1,0 +1,25 @@
+<div class="page-header">
+  <div class="page-header-title">
+    <h1><%- @T('Custom Report') %></h1>
+  </div>
+  <div class="page-header-meta">
+    <a class="btn btn--success js-new"><%- @T('New Report') %></a>
+  </div>
+</div>
+
+<div class="page-content">
+  <div class="tabs tabs--big">
+    <a class="tab js-visibility <%= 'is-selected' if @visibility is 'all' %>" data-visibility="all"><%- @T('All') %></a>
+    <a class="tab js-visibility <%= 'is-selected' if @visibility is 'global' %>" data-visibility="global"><%- @T('Global') %></a>
+    <a class="tab js-visibility <%= 'is-selected' if @visibility is 'group' %>" data-visibility="group"><%- @T('Group') %></a>
+    <a class="tab js-visibility <%= 'is-selected' if @visibility is 'personal' %>" data-visibility="personal"><%- @T('Personal view') %></a>
+  </div>
+
+  <div class="js-reports"></div>
+
+  <h2><%- @T('Generations') %></h2>
+  <p class="help-block">
+    <%- @T('Reports are generated in the background so that a large export does not affect the system. You can keep working while it runs.') %>
+  </p>
+  <div class="js-runs"></div>
+</div>
