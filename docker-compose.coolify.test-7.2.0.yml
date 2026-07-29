@@ -183,9 +183,28 @@ services:
       - zammad-memcached
       - zammad-postgresql
       - zammad-redis
+  # O init é one-shot: roda migrations/seed/configuração e termina. Ao sair, o
+  # Coolify vê um container "exited" e marca a aplicação como degradada, mesmo
+  # tendo saído com sucesso.
+  #
+  # Por isso ele passa a ficar ocioso depois de concluir, para o orquestrador ver
+  # um container em execução. `sleep infinity` não consome CPU, e mem_limit é
+  # teto, não reserva.
+  #
+  # A alternativa correta em compose puro seria os outros serviços usarem
+  # `depends_on: { zammad-init: { condition: service_completed_successfully } }`,
+  # mas isso não resolve o sintoma: o container continuaria "exited" e o Coolify
+  # continuaria acusando degradado.
+  #
+  # Se o init falhar, o `&&` corta a cadeia, o container sai com erro e o restart
+  # o tenta de novo — a falha continua visível em vez de ser mascarada.
   zammad-init:
     image: 'ghcr.io/paulo-atsinformatica/zammad:7.2.0'
-    restart: on-failure
+    restart: '${RESTART:-always}'
+    entrypoint:
+      - /usr/bin/env
+      - bash
+      - -c
     mem_limit: '${INIT_MEM_LIMIT:-1g}'
     memswap_limit: '${INIT_MEM_LIMIT:-1g}'
     environment:
@@ -211,7 +230,7 @@ services:
     volumes:
       - 'zammad-storage-test720:/opt/zammad/storage'
     command:
-      - zammad-init
+      - '/opt/zammad/bin/docker-entrypoint zammad-init && echo "zammad-init concluido; ocioso para o orquestrador ver um container em execucao" && exec sleep infinity'
     user: '0:0'
     depends_on:
       - zammad-postgresql
