@@ -747,6 +747,55 @@ export type ConfigUpdatesPayload = {
   setting?: Maybe<KeyComplexValue>;
 };
 
+/** A saved custom report definition */
+export type CustomReport = {
+  __typename?: 'CustomReport';
+  active: Scalars['Boolean']['output'];
+  id: Scalars['ID']['output'];
+  name: Scalars['String']['output'];
+  /** Object the rows represent */
+  object: Scalars['String']['output'];
+  /** Who the saved definition is shared with */
+  visibility: Scalars['String']['output'];
+};
+
+/** A column of a custom report result */
+export type CustomReportColumn = {
+  __typename?: 'CustomReportColumn';
+  /** Translated label for the column header */
+  display: Scalars['String']['output'];
+  /** Attribute name, used as the key inside a row */
+  name: Scalars['String']['output'];
+};
+
+/** A page of results of a custom report */
+export type CustomReportResult = {
+  __typename?: 'CustomReportResult';
+  /** Columns to render, in order */
+  columns: Array<CustomReportColumn>;
+  /** Attributes the viewer may filter by */
+  enabledFilters: Array<CustomReportColumn>;
+  /** Current page number */
+  page: Scalars['Int']['output'];
+  /** Page size actually applied, after the server side cap */
+  perPage: Scalars['Int']['output'];
+  /** Rows of the requested page */
+  rows: Array<CustomReportRow>;
+  /** Total number of matching records */
+  totalCount: Scalars['Int']['output'];
+  /** Number of pages available */
+  totalPages: Scalars['Int']['output'];
+};
+
+/** A row of a custom report result */
+export type CustomReportRow = {
+  __typename?: 'CustomReportRow';
+  /** ID of the underlying record, so the grid can link to it */
+  id: Scalars['ID']['output'];
+  /** Formatted values keyed by attribute name */
+  values: Scalars['JSON']['output'];
+};
+
 /** Data privacy task type */
 export type DataPrivacyTask = {
   __typename?: 'DataPrivacyTask';
@@ -3183,6 +3232,10 @@ export type Queries = {
   checklistTemplates: Array<ChecklistTemplate>;
   /** Information about the authenticated user */
   currentUser: User;
+  /** Saved custom reports the current user may open */
+  customReportList: Array<CustomReport>;
+  /** A page of results of a custom report */
+  customReportResults: CustomReportResult;
   /** EmailAddresses available in the system */
   emailAddresses: Array<EmailAddress>;
   /** Return updated form information for a frontend form (e.g. core workflow information or resolved relations). */
@@ -3383,6 +3436,23 @@ export type QueriesCalendarIcsFileEventsArgs = {
 /** All available queries */
 export type QueriesChecklistTemplatesArgs = {
   onlyActive?: InputMaybe<Scalars['Boolean']['input']>;
+};
+
+
+/** All available queries */
+export type QueriesCustomReportListArgs = {
+  visibility?: InputMaybe<Scalars['String']['input']>;
+};
+
+
+/** All available queries */
+export type QueriesCustomReportResultsArgs = {
+  customReportId: Scalars['ID']['input'];
+  filters?: InputMaybe<Scalars['JSON']['input']>;
+  orderBy?: InputMaybe<Scalars['String']['input']>;
+  orderDirection?: InputMaybe<Scalars['String']['input']>;
+  page?: InputMaybe<Scalars['Int']['input']>;
+  perPage?: InputMaybe<Scalars['Int']['input']>;
 };
 
 

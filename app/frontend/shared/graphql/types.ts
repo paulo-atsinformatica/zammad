@@ -149,6 +149,25 @@ export type ChannelEmailValidateConfigurationRoundtripMutationVariables = Exact<
 
 export type ChannelEmailValidateConfigurationRoundtripMutation = { channelEmailValidateConfigurationRoundtrip: { __typename: 'ChannelEmailValidateConfigurationRoundtripPayload', success: boolean, errors: Array<{ __typename: 'UserError', message: string, messagePlaceholder: Array<string> | null | undefined, field: string | null | undefined, exception: Types.EnumUserErrorException | null | undefined }> | null | undefined } | null | undefined };
 
+export type CustomReportListQueryVariables = Exact<{
+  visibility?: string | null | undefined;
+}>;
+
+
+export type CustomReportListQuery = { customReportList: Array<{ __typename: 'CustomReport', id: string, name: string, object: string, visibility: string, active: boolean }> };
+
+export type CustomReportResultsQueryVariables = Exact<{
+  customReportId: string | number;
+  filters?: any;
+  page?: number | null | undefined;
+  perPage?: number | null | undefined;
+  orderBy?: string | null | undefined;
+  orderDirection?: string | null | undefined;
+}>;
+
+
+export type CustomReportResultsQuery = { customReportResults: { __typename: 'CustomReportResult', totalCount: number, page: number, perPage: number, totalPages: number, columns: Array<{ __typename: 'CustomReportColumn', name: string, display: string }>, enabledFilters: Array<{ __typename: 'CustomReportColumn', name: string, display: string }>, rows: Array<{ __typename: 'CustomReportRow', id: string, values: any }> } };
+
 export type EmailAddressesQueryVariables = Exact<{
   onlyActive?: boolean | null | undefined;
 }>;

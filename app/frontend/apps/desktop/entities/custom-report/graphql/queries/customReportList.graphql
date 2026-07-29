@@ -1,0 +1,9 @@
+query customReportList($visibility: String) {
+  customReportList(visibility: $visibility) {
+    id
+    name
+    object
+    visibility
+    active
+  }
+}
