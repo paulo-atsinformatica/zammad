@@ -1,150 +1,38 @@
 # Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 # Customização ATS: relatório personalizado.
 
+# A tela de visualização do relatório vive na Desktop View (Vue), em
+# app/frontend/apps/desktop/pages/custom-report. Aqui ficam apenas o item de
+# menu e um redirecionamento para os links antigos.
+DESKTOP_URL = '/desktop/custom-reports'
+
+# Rota legada mantida só para links já existentes (notificação de relatório
+# pronto, favoritos). Redireciona em vez de renderizar: a tela antiga foi
+# substituída pela da Desktop View.
 class App.ReportCustom extends App.ControllerAppContent
   @requiredPermission: ['report.custom']
 
-  elements:
-    '.js-reports': 'reportsList'
-    '.js-runs': 'runsList'
-
-  # Esta tela só visualiza e exporta. Criar e editar modelos fica em
-  # Gerenciar > Relatórios Personalizados (App.CustomReportManage).
-  events:
-    'click .js-generate':      'generate'
-    'click .js-visibility':    'changeVisibility'
-
   constructor: ->
     super
-    @title __('Custom Report'), true
-    @navupdate '#report/custom'
-
-    @visibility = 'all'
-    @reports = []
-    @runs = []
-
-    # Progresso e conclusão chegam pelo WebSocket. O polling abaixo é só
-    # salvaguarda para quando o WebSocket não estiver disponível.
-    @controllerBind('CustomReportRun:progress', @onRunProgress)
-    @controllerBind('CustomReportRun:finished', @onRunFinished)
-
-    @render()
-    @loadReports()
-    @loadRuns()
-
-  render: ->
-    @html App.view('report/custom')(
-      visibility: @visibility
-    )
-
-  loadReports: =>
-    @ajax(
-      id:          'custom_reports_index'
-      type:        'GET'
-      url:         "#{@apiPath}/custom_reports"
-      data:        { visibility: @visibility }
-      processData: true
-      success: (data) =>
-        @reports   = data.custom_reports or []
-        @canShare  = data.can_share or ['personal']
-        @renderReports()
-    )
-
-  renderReports: =>
-    return if !@reportsList
-    @reportsList.html App.view('report/custom_reports')(
-      reports: @reports
-    )
-
-  loadRuns: =>
-    @ajax(
-      id:          'custom_report_runs_index'
-      type:        'GET'
-      url:         "#{@apiPath}/custom_report_runs"
-      processData: true
-      success: (data) =>
-        @runs = data.custom_report_runs or []
-        @renderRuns()
-        @scheduleRunPolling()
-    )
-
-  renderRuns: =>
-    return if !@runsList
-    @runsList.html App.view('report/custom_runs')(
-      runs:    @runs
-      apiPath: @apiPath
-    )
-
-  # Só faz polling enquanto houver geração em andamento, e só como reserva
-  # caso o evento de WebSocket não chegue.
-  scheduleRunPolling: =>
-    pending = _.filter(@runs, (run) -> run.status in ['pending', 'running'])
-    return if _.isEmpty(pending)
-
-    @delay(@loadRuns, 5000, 'custom-report-runs-poll')
-
-  changeVisibility: (e) =>
-    e.preventDefault()
-    @visibility = $(e.currentTarget).data('visibility')
-    @$('.js-visibility').removeClass('is-selected')
-    $(e.currentTarget).addClass('is-selected')
-    @loadReports()
-
-  generate: (e) =>
-    e.preventDefault()
-    target = $(e.currentTarget)
-    id     = target.closest('[data-id]').data('id')
-    format = target.data('format') or 'csv'
-
-    @ajax(
-      id:          "custom_report_generate_#{id}"
-      type:        'POST'
-      url:         "#{@apiPath}/custom_reports/#{id}/generate"
-      data:        JSON.stringify(format: format)
-      contentType: 'application/json'
-      processData: false
-      success: =>
-        @notify(
-          type:    'success'
-          msg:     App.i18n.translateContent('Report queued. You will be notified when it is ready to download.')
-          timeout: 4000
-        )
-        @loadRuns()
-      error: (xhr) =>
-        @notify(
-          type:    'error'
-          msg:     xhr.responseJSON?.error || App.i18n.translateContent('Could not queue the report.')
-          timeout: 5000
-        )
-    )
-
-  onRunProgress: (data) =>
-    return if !data
-    run = _.find(@runs, (item) -> item.id is data.id)
-
-    # Uma geração recém-enfileirada por outra aba ainda não está na lista.
-    return @loadRuns() if !run
-
-    run.status         = data.status
-    run.processed_rows = data.processed_rows
-    run.total_rows     = data.total_rows
-    @renderRuns()
-
-  onRunFinished: (data) =>
-    return if !data
-    # Recarrega para obter tamanho do arquivo e o link de download.
-    @loadRuns()
+    window.location.href = DESKTOP_URL
 
 App.Config.set('report/custom', App.ReportCustom, 'Routes')
 
-# Item no menu de Relatórios. `external: true` é o mecanismo do próprio Zammad
-# para renderizar target="_blank" (ver navigation/personal.jst.eco), abrindo o
-# relatório em guia nova para o usuário seguir usando o Zammad na guia original.
+# Item no menu de Relatórios.
+#
+# O target é a URL da Desktop View, não uma rota hash do SPA legado. Abrir uma
+# segunda instância do SPA legado dispara o evento `session_takeover`
+# (app/assets/javascripts/app/controllers/_plugin/session_taken_over.coffee),
+# que derruba a aba original. A Desktop View não participa desse mecanismo,
+# então o usuário segue trabalhando na aba de origem.
+#
+# `external: true` é o mecanismo do próprio Zammad para renderizar
+# target="_blank" (ver views/navigation/personal.jst.eco).
 App.Config.set('CustomReport', {
   prio: 100,
   name: __('Custom Report'),
   parent: '#report',
-  target: '#report/custom',
+  target: DESKTOP_URL,
   external: true,
   permission: ['report.custom']
 }, 'NavBarRight')

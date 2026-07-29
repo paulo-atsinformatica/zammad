@@ -462,19 +462,39 @@ traduzida no servidor com `Translation.translate`.
 
 ### Relatório personalizado (feature ATS, fase 1)
 
-Menu Relatórios → "Relatório Personalizado", abrindo em guia nova. Modelos
-salvos com filtros por qualquer campo, geração em fila com progresso e export
-CSV de tamanho arbitrário.
+Duas telas, de propósito em interfaces diferentes:
+
+- **Configurar** — Gerenciar → Relatórios Personalizados, no SPA legado
+  (`admin.custom_report`). Define objeto, visibilidade, colunas exibidas e quais
+  filtros ficam disponíveis para quem visualiza.
+- **Visualizar** — `/desktop/custom-reports`, na **Desktop View (Vue)**. Grid
+  paginado, botão de filtros, exportação em fila e download.
+
+O item do menu Relatórios aponta para a URL da Desktop View, e não para uma rota
+hash do SPA legado. **Isso é obrigatório, não estético:** abrir uma segunda
+instância do SPA legado faz `_plugin/session_taken_over.coffee` mandar
+`session_takeover` no `ws:login`, e o backend (`Sessions.send_to`) derruba a aba
+original com "Uma nova sessão foi criada com a sua conta". A Desktop View não
+participa desse mecanismo. A rota legada `#report/custom` continua registrada
+apenas para redirecionar links antigos (notificação de "relatório pronto").
 
 Arquivos ATS puros (sem risco em sync): `app/models/custom_report.rb`,
-`app/models/custom_report_run.rb`, `app/models/custom_report/{query,columns}.rb`,
+`app/models/custom_report_run.rb`, `app/models/custom_report/{query,columns,result}.rb`,
 `app/models/custom_report/exporter/csv.rb`,
 `app/jobs/custom_report_generate_job.rb`,
 `app/controllers/custom_reports_controller.rb`,
-`config/routes/custom_report.rb`, as 4 migrations `20260728120000..3`,
+`config/routes/custom_report.rb`, as migrations `20260728120000..3`,
+`20260729000000`, `20260729010000`, `20260729020000`,
+`app/graphql/gql/types/custom_report_type.rb`,
+`app/graphql/gql/types/custom_report_run_type.rb`,
+`app/graphql/gql/types/custom_report/*.rb`,
+`app/graphql/gql/queries/custom_report/{list,results,runs}.rb`,
+`app/graphql/gql/mutations/custom_report/generate.rb`,
+`app/frontend/apps/desktop/pages/custom-report/**`,
+`app/frontend/apps/desktop/entities/custom-report/**`,
 `app/assets/javascripts/app/models/custom_report.coffee`,
-`app/assets/javascripts/app/controllers/report/custom.coffee`,
-`app/assets/javascripts/app/views/report/custom*.jst.eco`.
+`app/assets/javascripts/app/controllers/custom_report.coffee`,
+`app/assets/javascripts/app/controllers/report/custom.coffee`.
 
 **Arquivos do upstream tocados — reaplicar se o upstream mexer neles:**
 
@@ -482,8 +502,12 @@ Arquivos ATS puros (sem risco em sync): `app/models/custom_report.rb`,
 |---|---|
 | `app/models/online_notification_standalone.rb` | `kind` é validado contra lista fixa; sem acrescentar `custom_report` a notificação de "pronto" levanta exceção. |
 | `app/assets/javascripts/app/models/online_notification_standalone.coffee` | `activityMessage` cai num `else` que devolve string de debug em inglês para `kind` desconhecido. Também define `uiUrl` para a notificação levar ao relatório. |
-| `app/assets/javascripts/app/views/navigation/menu.jst.eco` | Passou a honrar `item.targetAttribute`, para o item abrir em guia nova. Antes não havia como definir `target` num item de submenu. |
 | `db/seeds/settings.rb` | Setting `custom_report_max_rows` (instalação nova não roda a migration). |
+| `db/seeds/permissions.rb` | Todas as permissões ATS. Instalação nova não roda as migrations que as criavam, então o menu e o player simplesmente não apareciam. |
+
+Nada em `app/assets/javascripts/app/views/navigation/*.jst.eco` foi alterado:
+`navigation/personal.jst.eco` (que é quem renderiza `NavBarRight`, e não
+`menu.jst.eco`) já honra `item.external` para gerar `target="_blank"`.
 
 **Decisões que não são óbvias pelo código:**
 
@@ -508,6 +532,61 @@ Arquivos ATS puros (sem risco em sync): `app/models/custom_report.rb`,
   planilha inteira em memória. CSV é streaming e não tem esse limite.
 - **Migrations com `up`/`down` explícitos:** a reversão automática do Rails
   falhava tentando remover índices que o `drop_table` já leva.
+- **`global_id_field :id` nos tipos GraphQL:** `CustomReportType` e
+  `CustomReportRunType` **não podem** declarar `field :id, GraphQL::Types::ID`.
+  As consultas e a mutation resolvem o objeto com
+  `Gql::ZammadSchema.verified_object_from_id`, que só entende o ID global
+  (`gid://zammad/CustomReport/7`). Com o id cru a tela devolvia `"7"` e nada era
+  encontrado — a tela de visualização não carregava dado nenhum. Há spec de
+  regressão em `spec/graphql/gql/queries/custom_report/list_spec.rb` que faz o
+  round-trip.
+- **`CustomReport` inclui `CanSearch` + `CanSelector`:** a tela de configuração
+  usa `App.ControllerGenericIndex` com `pagerAjax`, que pagina pelo endpoint
+  `/api/v1/custom_reports/search`. Sem esses concerns o modelo não responde a
+  `.search` e a tela devolve 404 e nunca carrega. `CanSelector` entra porque
+  `CanSearch#search_sql_base` chama `selector2sql`. `HasSearchIndexBackend` fica
+  **de fora** de propósito, para a busca sempre rodar no banco e não depender do
+  Elasticsearch. A rota de `search` precisa vir **antes** de
+  `/custom_reports/:id`, senão `'search'` é lido como id.
+- **`#search` é restrito a `admin.custom_report`:** devolve todos os modelos,
+  inclusive inativos e de outros usuários. Quem só tem `report.custom` usa
+  `#index`, que aplica a visibilidade.
+- **`CustomReportRun.enqueue!` é o ponto único de enfileiramento**, usado pela
+  API REST e pela mutation GraphQL, para as duas rotas concordarem sobre formato
+  padrão e nome de arquivo.
+- **Download fora do GraphQL:** `download_path` devolve o caminho **relativo ao
+  `api_path`**, consumido por `<CommonLink rest-api>`. O arquivo é servido por
+  `send_file` num GET autenticado por cookie de sessão, porque pode ser grande.
+- **Progresso na tela Vue por polling:** um `setInterval` de 4s que só roda
+  enquanto existe execução `pending`/`running`. Não há subscription GraphQL para
+  esta feature.
+
+### Traduções pt-BR das customizações (`i18n/ats.pt-br.po`)
+
+As strings customizadas ficam num arquivo **separado**, nunca em
+`i18n/zammad.pt-br.po`.
+
+`Translation.po_files_for_locale` faz `Dir.glob 'i18n/*.pt-br.po'` e devolve
+`zammad.pt-br.po` primeiro, depois os demais em ordem alfabética. Como
+`strings_for_locale` monta um Hash na ordem de leitura, o arquivo lido depois
+sobrescreve entradas repetidas. Resultado: `i18n/ats.pt-br.po` vence, e um sync
+com o upstream pode substituir `zammad.pt-br.po` por completo sem perder nada.
+
+Armadilhas do formato:
+
+- O parser (`simple_po_parser`) **não aceita comentário solto** seguido de linha
+  em branco — ele espera um `msgid` depois do comentário. Comentários de seção
+  precisam ficar colados no `msgid` seguinte, como `#.`.
+- `"` dentro de `msgid`/`msgstr` precisa ser escapado (`\"`).
+
+Para aplicar: `db/seeds.rb` já roda `Translation.sync` em instalação nova. Para
+instalação existente, a migration `20260729020000_sync_ats_translations.rb` roda
+`Translation.sync_locale_from_po('pt-br')` (só pt-br: sincronizar todos os
+locales levaria minutos sem benefício). Manualmente:
+`rails zammad:translations:sync`.
+
+Ao adicionar uma string traduzível em código customizado, acrescente o `msgid` ao
+`i18n/ats.pt-br.po` também.
 
 ## Referências
 

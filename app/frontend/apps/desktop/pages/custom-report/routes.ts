@@ -12,7 +12,7 @@ const route: RouteRecordRaw[] = [
     meta: {
       title: __('Custom Report'),
       requiresAuth: true,
-      icon: 'graph-up',
+      icon: 'table',
       // Os dados são sempre recortados pelas permissões de quem abre
       // (ver CustomReport::Query), então esta permissão só controla o acesso
       // à tela.

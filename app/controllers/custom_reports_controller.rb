@@ -1,9 +1,11 @@
 # Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
+
 # Customização ATS: relatório personalizado.
 
 class CustomReportsController < ApplicationController
   prepend_before_action :authentication_check
   before_action :check_permission
+  before_action :check_admin_permission, only: %i[search]
   before_action :set_report, only: %i[show update destroy generate results]
   before_action :set_run, only: %i[run_show download]
 
@@ -17,6 +19,16 @@ class CustomReportsController < ApplicationController
       objects:        CustomReport::OBJECTS,
       can_share:      shareable_visibilities,
     }, status: :ok
+  end
+
+  # GET|POST /api/v1/custom_reports/search
+  #
+  # Alimenta o grid paginado de Gerenciar > Relatórios Personalizados. Devolve
+  # todos os modelos, inclusive inativos e de outros usuários, por isso é
+  # restrito a admin.custom_report — quem só tem report.custom usa #index, que
+  # aplica a visibilidade.
+  def search
+    model_search_render(CustomReport, params)
   end
 
   def show
@@ -67,18 +79,8 @@ class CustomReportsController < ApplicationController
   end
 
   # POST /api/v1/custom_reports/:id/generate
-  #
-  # Enfileira a geração em vez de responder com o arquivo: relatórios grandes
-  # estourariam o tempo da requisição e prenderiam um worker web.
   def generate
-    run = CustomReportRun.create!(
-      custom_report: @report,
-      format:        params[:format].presence || 'csv',
-      status:        'pending',
-      filename:      suggested_filename(@report, params[:format]),
-    )
-
-    CustomReportGenerateJob.perform_later(run: run)
+    run = CustomReportRun.enqueue!(report: @report, format: params[:format])
 
     render json: run_json(run), status: :accepted
   end
@@ -105,17 +107,26 @@ class CustomReportsController < ApplicationController
     end
 
     send_file @run.file_path,
-              filename: @run.filename,
-              type:     content_type_for(@run.format),
+              filename:    @run.filename,
+              type:        content_type_for(@run.format),
               disposition: 'attachment'
   end
 
   private
 
+  # Lista com OR: quem administra os modelos não precisa ter report.custom para
+  # gerenciá-los. O recorte dos dados continua sendo feito em
+  # CustomReport::Query, com as permissões de quem pede.
   def check_permission
-    return if current_user.permissions?('report.custom')
+    return if current_user.permissions?(%w[report.custom admin.custom_report])
 
     render json: { error: __('You do not have permission to use custom reports.') }, status: :forbidden
+  end
+
+  def check_admin_permission
+    return if current_user.permissions?('admin.custom_report')
+
+    render json: { error: __('You do not have permission to manage custom reports.') }, status: :forbidden
   end
 
   def set_report
@@ -171,13 +182,6 @@ class CustomReportsController < ApplicationController
 
   def render_not_editable
     render json: { error: __('Only the author of a report can change it.') }, status: :forbidden
-  end
-
-  def suggested_filename(report, format)
-    slug = report.name.to_s.parameterize.presence || 'report'
-    ext  = format.to_s == 'xlsx' ? 'xlsx' : 'csv'
-
-    "#{slug}-#{Time.zone.now.strftime('%Y%m%d-%H%M%S')}.#{ext}"
   end
 
   def content_type_for(format)

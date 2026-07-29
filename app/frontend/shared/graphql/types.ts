@@ -149,6 +149,14 @@ export type ChannelEmailValidateConfigurationRoundtripMutationVariables = Exact<
 
 export type ChannelEmailValidateConfigurationRoundtripMutation = { channelEmailValidateConfigurationRoundtrip: { __typename: 'ChannelEmailValidateConfigurationRoundtripPayload', success: boolean, errors: Array<{ __typename: 'UserError', message: string, messagePlaceholder: Array<string> | null | undefined, field: string | null | undefined, exception: Types.EnumUserErrorException | null | undefined }> | null | undefined } | null | undefined };
 
+export type CustomReportGenerateMutationVariables = Exact<{
+  customReportId: string | number;
+  format?: string | null | undefined;
+}>;
+
+
+export type CustomReportGenerateMutation = { customReportGenerate: { __typename: 'CustomReportGeneratePayload', customReportRun: { __typename: 'CustomReportRun', id: string, format: string, status: string, filename: string | null | undefined, createdAt: string, downloadable: boolean, downloadPath: string | null | undefined } | null | undefined, errors: Array<{ __typename: 'UserError', message: string, field: string | null | undefined }> | null | undefined } | null | undefined };
+
 export type CustomReportListQueryVariables = Exact<{
   visibility?: string | null | undefined;
 }>;
@@ -167,6 +175,13 @@ export type CustomReportResultsQueryVariables = Exact<{
 
 
 export type CustomReportResultsQuery = { customReportResults: { __typename: 'CustomReportResult', totalCount: number, page: number, perPage: number, totalPages: number, columns: Array<{ __typename: 'CustomReportColumn', name: string, display: string }>, enabledFilters: Array<{ __typename: 'CustomReportColumn', name: string, display: string }>, rows: Array<{ __typename: 'CustomReportRow', id: string, values: any }> } };
+
+export type CustomReportRunsQueryVariables = Exact<{
+  limit?: number | null | undefined;
+}>;
+
+
+export type CustomReportRunsQuery = { customReportRuns: Array<{ __typename: 'CustomReportRun', id: string, format: string, status: string, filename: string | null | undefined, totalRows: number | null | undefined, processedRows: number | null | undefined, progressPercent: number | null | undefined, errorMessage: string | null | undefined, createdAt: string, downloadable: boolean, downloadPath: string | null | undefined, customReport: { __typename: 'CustomReport', id: string, name: string } }> };
 
 export type EmailAddressesQueryVariables = Exact<{
   onlyActive?: boolean | null | undefined;
@@ -1989,14 +2004,6 @@ export type SessionQueryVariables = Exact<{ [key: string]: never; }>;
 
 
 export type SessionQuery = { session: { __typename: 'Session', id: string, afterAuth: { __typename: 'SessionAfterAuth', type: Types.EnumAfterAuthType, data: any } | null | undefined } };
-
-export type TicketSignatureQueryVariables = Exact<{
-  groupId: string | number;
-  ticketId?: string | number | null | undefined;
-}>;
-
-
-export type TicketSignatureQuery = { ticketSignature: { __typename: 'Signature', id: string, renderedBody: string | null | undefined } | null | undefined };
 
 export type TranslationsQueryVariables = Exact<{
   locale: string;

@@ -1,10 +1,16 @@
 # Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
+
 # Customização ATS: relatório personalizado.
 
 Zammad::Application.routes.draw do
   api_path = Rails.configuration.api_path
 
   # Modelos salvos de relatório
+  #
+  # A rota de search vem antes de /custom_reports/:id, senão 'search' seria
+  # interpretado como um id.
+  match api_path + '/custom_reports/search',       to: 'custom_reports#search',   via: %i[get post]
+
   match api_path + '/custom_reports',              to: 'custom_reports#index',    via: :get
   match api_path + '/custom_reports',              to: 'custom_reports#create',   via: :post
   match api_path + '/custom_reports/:id',          to: 'custom_reports#show',     via: :get

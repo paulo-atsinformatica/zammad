@@ -1,0 +1,19 @@
+query customReportRuns($limit: Int) {
+  customReportRuns(limit: $limit) {
+    id
+    format
+    status
+    filename
+    totalRows
+    processedRows
+    progressPercent
+    errorMessage
+    createdAt
+    downloadable
+    downloadPath
+    customReport {
+      id
+      name
+    }
+  }
+}

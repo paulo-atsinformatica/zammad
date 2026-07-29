@@ -1,0 +1,385 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: zammad-ats\n"
+"POT-Creation-Date: \n"
+"PO-Revision-Date: 2026-07-29 00:00+0000\n"
+"Language-Team: Portuguese (Brazil)\n"
+"Language: pt-br\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=n > 1;\n"
+
+#. Traduções das customizações ATS.
+#.
+#. Este arquivo existe separado de i18n/zammad.pt-br.po de propósito.
+#. Translation.po_files_for_locale faz Dir.glob 'i18n/*.pt-br.po' e processa
+#. zammad.pt-br.po primeiro, depois os demais em ordem alfabética,
+#. sobrescrevendo entradas repetidas. Assim uma sincronização com o upstream
+#. pode substituir zammad.pt-br.po por completo sem perder nada daqui.
+#.
+#. Ao adicionar uma string traduzível em código customizado, adicione o msgid
+#. aqui também, e depois rode: rails zammad:translations:sync
+#.
+#. ------------------------------ Relatório personalizado
+msgid "Custom Report"
+msgstr "Relatório Personalizado"
+
+msgid "Custom Reports"
+msgstr "Relatórios Personalizados"
+
+msgid "Custom report results"
+msgstr "Resultado do relatório"
+
+msgid "Manage custom reports of your system."
+msgstr "Gerencie os relatórios personalizados do sistema."
+
+msgid "Create and generate custom reports. Results always respect the group and object permissions of the user generating them."
+msgstr "Criar e gerar relatórios personalizados. O resultado sempre respeita as permissões de grupo e de objeto de quem gera o relatório."
+
+msgid "Save custom reports visible to every user who may use custom reports."
+msgstr "Salvar relatórios personalizados visíveis para todos os usuários que podem usar relatórios personalizados."
+
+msgid "Save custom reports visible to the members of a group."
+msgstr "Salvar relatórios personalizados visíveis para os membros de um grupo."
+
+msgid "Share Custom Report Globally"
+msgstr "Compartilhar relatório personalizado globalmente"
+
+msgid "Share Custom Report With Group"
+msgstr "Compartilhar relatório personalizado com grupo"
+
+msgid "New Report"
+msgstr "Novo relatório"
+
+msgid "Search for custom reports"
+msgstr "Pesquisar relatórios personalizados"
+
+msgid "Report"
+msgstr "Relatório"
+
+msgid "Report about"
+msgstr "Relatório sobre"
+
+msgid "Visible for"
+msgstr "Visível para"
+
+msgid "Only me"
+msgstr "Somente eu"
+
+msgid "Members of selected groups"
+msgstr "Membros dos grupos selecionados"
+
+msgid "Everyone"
+msgstr "Todos"
+
+msgid "Only used when the report is visible for members of selected groups."
+msgstr "Usado apenas quando o relatório é visível para os membros dos grupos selecionados."
+
+msgid "This only controls who sees this report. The data is always limited to what the person generating it is allowed to see."
+msgstr "Isto controla apenas quem vê este relatório. Os dados sempre se limitam ao que a pessoa que gera o relatório tem permissão de ver."
+
+msgid "Columns"
+msgstr "Colunas"
+
+msgid "Columns shown in the grid and in the exported file."
+msgstr "Colunas exibidas na grade e no arquivo exportado."
+
+msgid "Filters available when viewing"
+msgstr "Filtros disponíveis na visualização"
+
+msgid "Attributes the viewer may filter by. Leave empty to offer no filters."
+msgstr "Atributos que quem visualiza pode filtrar. Deixe vazio para não oferecer filtros."
+
+msgid "Fixed scope of the report. Whoever opens it cannot widen this."
+msgstr "Escopo fixo do relatório. Quem abrir não consegue ampliá-lo."
+
+msgid "No filter"
+msgstr "Sem filtro"
+
+msgid "Filters"
+msgstr "Filtros"
+
+msgid "Export"
+msgstr "Exportar"
+
+msgid "Export format"
+msgstr "Formato de exportação"
+
+msgid "CSV"
+msgstr "CSV"
+
+msgid "Excel (xlsx)"
+msgstr "Excel (xlsx)"
+
+msgid "Recent exports"
+msgstr "Exportações recentes"
+
+msgid "Download"
+msgstr "Baixar"
+
+msgid "Ready"
+msgstr "Pronto"
+
+msgid "Processing…"
+msgstr "Processando…"
+
+msgid "Generation failed."
+msgstr "A geração falhou."
+
+msgid "Report queued. You will be notified when it is ready to download."
+msgstr "Relatório na fila. Você será avisado quando estiver pronto para baixar."
+
+msgid "Could not queue the report."
+msgstr "Não foi possível colocar o relatório na fila."
+
+msgid "Custom report generation failed."
+msgstr "A geração do relatório personalizado falhou."
+
+msgid "Your custom report is ready to download."
+msgstr "Seu relatório personalizado está pronto para baixar."
+
+msgid "This report is not available for download."
+msgstr "Este relatório não está disponível para download."
+
+msgid "Failed to load report"
+msgstr "Não foi possível carregar o relatório"
+
+msgid "No report available. Ask an administrator to configure one."
+msgstr "Nenhum relatório disponível. Peça a um administrador para configurar um."
+
+msgid "%s record(s) found"
+msgstr "%s registro(s) encontrado(s)"
+
+msgid "Page %s of %s"
+msgstr "Página %s de %s"
+
+msgid "Previous"
+msgstr "Anterior"
+
+msgid "Next"
+msgstr "Próxima"
+
+msgid "Apply"
+msgstr "Aplicar"
+
+msgid "Clear"
+msgstr "Limpar"
+
+msgid "Only the author of a report can change it."
+msgstr "Somente o autor de um relatório pode alterá-lo."
+
+msgid "You do not have permission to use custom reports."
+msgstr "Você não tem permissão para usar relatórios personalizados."
+
+msgid "You do not have permission to manage custom reports."
+msgstr "Você não tem permissão para gerenciar relatórios personalizados."
+
+msgid "You do not have permission to share reports at this level."
+msgstr "Você não tem permissão para compartilhar relatórios neste nível."
+
+msgid "At least one group is required to share a report with a group."
+msgstr "É necessário pelo menos um grupo para compartilhar um relatório com um grupo."
+
+msgid "Unknown attribute(s): %s"
+msgstr "Atributo(s) desconhecido(s): %s"
+
+msgid "The report matches %s rows, which is above the limit of %s. Please narrow the filters."
+msgstr "O relatório retorna %s linhas, acima do limite de %s. Restrinja os filtros."
+
+msgid "Custom report row limit"
+msgstr "Limite de linhas do relatório personalizado"
+
+msgid "Maximum number of rows a single custom report may generate. Protects the server from an unfiltered report scanning the whole database."
+msgstr "Número máximo de linhas que um relatório personalizado pode gerar. Protege o servidor de um relatório sem filtro varrendo todo o banco de dados."
+
+msgid "Delete expired custom report files."
+msgstr "Remover arquivos expirados de relatórios personalizados."
+
+#. ------------------------------ Controle de tempo de atendimento
+msgid "Ticket Time Tracking"
+msgstr "Tempo de Atendimento do Ticket"
+
+msgid "Ticket Time Trackings Report"
+msgstr "Relatório de Tempo de Atendimento"
+
+msgid "Access to the Ticket Time Trackings report."
+msgstr "Acesso ao relatório de Tempo de Atendimento."
+
+msgid "Track time spent on tickets."
+msgstr "Contabilizar o tempo gasto nos tickets."
+
+msgid "Allow automatic time tracking on tickets."
+msgstr "Permitir a contagem automática de tempo nos tickets."
+
+msgid "You do not have permission to track time on tickets."
+msgstr "Você não tem permissão para contabilizar tempo em tickets."
+
+msgid "Currently processing this ticket…"
+msgstr "Atendendo este ticket agora…"
+
+msgid "Active Ticket Found"
+msgstr "Já existe um ticket em atendimento"
+
+msgid "Do you want to pause that ticket and start tracking this one?"
+msgstr "Deseja pausar aquele ticket e iniciar a contagem neste?"
+
+msgid "Switch and Start"
+msgstr "Trocar e iniciar"
+
+msgid "Time tracking switched"
+msgstr "Contagem transferida"
+
+msgid "Failed to switch time tracking"
+msgstr "Não foi possível transferir a contagem"
+
+msgid "Active tracking not found"
+msgstr "Nenhuma contagem ativa encontrada"
+
+msgid "Source ticket tracking not found"
+msgstr "Contagem do ticket de origem não encontrada"
+
+msgid "Target ticket already has active tracking"
+msgstr "O ticket de destino já tem uma contagem ativa"
+
+msgid "User already has an active ticket time tracking"
+msgstr "O usuário já tem uma contagem de tempo ativa"
+
+msgid "You already have an active time tracking on ticket"
+msgstr "Você já tem uma contagem de tempo ativa no ticket"
+
+msgid "No tracking found to resume"
+msgstr "Nenhuma contagem encontrada para retomar"
+
+msgid "Tracking is not paused"
+msgstr "A contagem não está pausada"
+
+msgid "User does not have time tracking enabled"
+msgstr "O usuário não tem o controle de tempo habilitado"
+
+msgid "Ticket is closed"
+msgstr "O ticket está fechado"
+
+msgid "Ticket is not assigned to user"
+msgstr "O ticket não está atribuído ao usuário"
+
+msgid "must be after started_at"
+msgstr "deve ser posterior ao início"
+
+#. ------------------------------ Controle de pausas
+msgid "Pause Control"
+msgstr "Controle de Pausas"
+
+msgid "Pause Type"
+msgstr "Tipo de Pausa"
+
+msgid "Pause Types"
+msgstr "Tipos de Pausa"
+
+msgid "New Pause Type"
+msgstr "Novo tipo de pausa"
+
+msgid "Search for pause types"
+msgstr "Pesquisar tipos de pausa"
+
+msgid "Pause Indicators"
+msgstr "Indicadores de Pausa"
+
+msgid "Access to the Pause Indicators report."
+msgstr "Acesso ao relatório de Indicadores de Pausa."
+
+msgid "User Pauses Report"
+msgstr "Relatório de Pausas de Usuários"
+
+msgid "Access to the User Pauses report."
+msgstr "Acesso ao relatório de Pausas de Usuários."
+
+msgid "Allow user to manage pause states (online, offline, pause)."
+msgstr "Permitir que o usuário controle seus estados de pausa (online, offline, pausa)."
+
+msgid "Time Limit (minutes)"
+msgstr "Tempo limite (minutos)"
+
+msgid "Set to 0 for unlimited"
+msgstr "Use 0 para ilimitado"
+
+msgid "Delay reason is required"
+msgstr "O motivo do atraso é obrigatório"
+
+msgid "Delay reason is required when time limit is exceeded"
+msgstr "O motivo do atraso é obrigatório quando o tempo limite é excedido"
+
+msgid "You do not have permission to use pause control."
+msgstr "Você não tem permissão para usar o controle de pausas."
+
+msgid "User does not have pause control enabled"
+msgstr "O usuário não tem o controle de pausas habilitado"
+
+msgid "User is not logged in to pause control"
+msgstr "O usuário não está conectado ao controle de pausas"
+
+msgid "No active pause control session"
+msgstr "Nenhuma sessão de controle de pausas ativa"
+
+msgid "User is already in pause"
+msgstr "O usuário já está em pausa"
+
+msgid "User is not in pause"
+msgstr "O usuário não está em pausa"
+
+msgid "User is in pause"
+msgstr "O usuário está em pausa"
+
+msgid "Active pause not found"
+msgstr "Nenhuma pausa ativa encontrada"
+
+msgid "Pause ended by supervisor"
+msgstr "Pausa encerrada pelo supervisor"
+
+msgid "Failed to end pause"
+msgstr "Não foi possível encerrar a pausa"
+
+msgid "Cannot change state while in pause"
+msgstr "Não é possível mudar o estado durante uma pausa"
+
+msgid "Cannot logout while in pause"
+msgstr "Não é possível sair durante uma pausa"
+
+msgid "Cannot perform actions while in pause"
+msgstr "Não é possível executar ações durante uma pausa"
+
+msgid "Invalid state"
+msgstr "Estado inválido"
+
+#. ------------------------------ Mensagens de bloqueio
+msgid "You only have read access to this ticket and cannot change it."
+msgstr "Você tem apenas acesso de leitura a este ticket e não pode alterá-lo."
+
+msgid "None of the actions could be applied. You may not have permission to change the affected fields."
+msgstr "Nenhuma das ações pôde ser aplicada. Você pode não ter permissão para alterar os campos envolvidos."
+
+msgid "The value selected for \"%s\" is not allowed by the current workflow rules."
+msgstr "O valor selecionado em \"%s\" não é permitido pelas regras de fluxo de trabalho atuais."
+
+msgid "The field \"%s\" is required."
+msgstr "O campo \"%s\" é obrigatório."
+
+#. ------------------------------ Strings do Zammad ainda sem tradução oficial
+#. e usadas pelas telas customizadas
+msgid "Audit Logs"
+msgstr "Logs de Auditoria"
+
+msgid "Manage audit logs of your system."
+msgstr "Gerencie os logs de auditoria do sistema."
+
+msgid "Login/Logout"
+msgstr "Entrada/Saída"
+
+msgid "User features"
+msgstr "Recursos de usuário"
+
+msgid "User-specific features and controls."
+msgstr "Recursos e controles específicos do usuário."
+
+msgid "Failed to generate knowledge base draft for \"%s\": %s"
+msgstr "Não foi possível gerar o rascunho da base de conhecimento para \"%s\": %s"

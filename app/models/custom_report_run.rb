@@ -1,4 +1,5 @@
 # Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
+
 # Customização ATS: uma geração (execução) de relatório personalizado.
 
 class CustomReportRun < ApplicationModel
@@ -21,6 +22,32 @@ class CustomReportRun < ApplicationModel
   scope :expired, -> { where(expires_at: ..Time.zone.now) }
 
   after_destroy :remove_file
+
+  # Ponto único de enfileiramento, usado pela API REST e pelo GraphQL, para as
+  # duas rotas concordarem sobre formato padrão e nome de arquivo.
+  #
+  # Enfileira em vez de gerar na hora: relatórios grandes estourariam o tempo da
+  # requisição e prenderiam um worker web.
+  def self.enqueue!(report:, format: nil)
+    format = FORMATS.include?(format.to_s) ? format.to_s : 'csv'
+
+    run = create!(
+      custom_report: report,
+      format:        format,
+      status:        'pending',
+      filename:      suggested_filename(report, format),
+    )
+
+    CustomReportGenerateJob.perform_later(run: run)
+
+    run
+  end
+
+  def self.suggested_filename(report, format)
+    slug = report.name.to_s.parameterize.presence || 'report'
+
+    "#{slug}-#{Time.zone.now.strftime('%Y%m%d-%H%M%S')}.#{format}"
+  end
 
   # Volume compartilhado em Docker (zammad-storage). O job roda no scheduler e
   # o download é servido pelo railsserver, então não pode ser tmp local.

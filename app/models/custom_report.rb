@@ -1,4 +1,5 @@
 # Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
+
 # Customização ATS: modelo salvo de relatório personalizado.
 
 class CustomReport < ApplicationModel
@@ -6,6 +7,12 @@ class CustomReport < ApplicationModel
   include ChecksClientNotification
   include HasAuditLogs
   include ChecksConditionValidation
+  # CanSearch alimenta o grid de Gerenciar > Relatórios Personalizados, que
+  # pagina via /custom_reports/search. Depende de CanSelector por causa do
+  # selector2sql usado em CanSearch#search_sql_base. Sem HasSearchIndexBackend
+  # de propósito: a busca sempre roda no banco, sem depender do Elasticsearch.
+  include CanSelector
+  include CanSearch
 
   # Objetos que podem ser a linha do relatório. Fase 1 executa apenas Ticket;
   # os outros já validam para permitir salvar modelos antes da fase 2.
@@ -69,7 +76,7 @@ class CustomReport < ApplicationModel
     return true if visibility == 'global'
     return false if visibility != 'group'
 
-    (group_ids & self.class.visible_group_ids(user)).present?
+    group_ids.intersect?(self.class.visible_group_ids(user))
   end
 
   # Somente quem criou (ou um admin) mexe no modelo. Compartilhar um relatório
