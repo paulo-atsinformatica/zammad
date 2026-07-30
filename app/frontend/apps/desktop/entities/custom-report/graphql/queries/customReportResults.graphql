@@ -21,6 +21,11 @@ query customReportResults(
     enabledFilters {
       name
       display
+      type
+      options {
+        value
+        label
+      }
     }
     rows {
       id

@@ -1,4 +1,5 @@
 # Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
+
 # Customização ATS: monta a consulta de um relatório personalizado.
 
 # Ponto central de segurança do relatório personalizado.
@@ -91,8 +92,8 @@ class CustomReport::Query
 
   # Percorre os registros em lotes, para que o consumo de memória não cresça
   # com o tamanho do relatório.
-  def each_batch(batch_size: 500, &block)
-    relation.reorder(id: :asc).in_batches(of: batch_size, &block)
+  def each_batch(batch_size: 500, &)
+    relation.reorder(id: :asc).in_batches(of: batch_size, &)
   end
 
   def target_class
@@ -119,10 +120,37 @@ class CustomReport::Query
     given.each_with_object({}) do |(key, value), result|
       attribute = CustomReport.normalize_attribute(key.to_s.split('.').last, target_class)
       next if attribute.blank?
-      next if !allowed.include?(attribute)
+      next if allowed.exclude?(attribute)
 
-      result["#{selector_prefix}.#{attribute}"] = value
+      condition = permitted_condition(attribute, value)
+      next if condition.blank?
+
+      result["#{selector_prefix}.#{attribute}"] = condition
     end
+  end
+
+  # O operador chega da requisição e iria direto ao Selector::Sql. Só passa o que
+  # o tipo do atributo permite (ver CustomReport::FilterDefinition).
+  def permitted_condition(attribute, value)
+    condition = value.respond_to?(:to_h) ? value.to_h.symbolize_keys : {}
+    operator  = condition[:operator].to_s
+    return if !filter_definition(attribute).permits?(operator)
+
+    # Campo em branco significa "não filtrar por isto". Comparado com nil e ''
+    # em vez de blank? para não descartar um filtro booleano em `false`.
+    return if condition[:value].nil? || condition[:value] == ''
+
+    { operator: operator, value: condition[:value] }
+  end
+
+  def filter_definition(attribute)
+    @filter_definitions ||= {}
+    @filter_definitions[attribute] ||= CustomReport::FilterDefinition.new(
+      name:         attribute,
+      display:      attribute,
+      target_class: target_class,
+      user:         user,
+    )
   end
 
   def selector_prefix

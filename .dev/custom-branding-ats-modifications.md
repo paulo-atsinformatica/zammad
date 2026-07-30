@@ -470,13 +470,31 @@ Duas telas, de propósito em interfaces diferentes:
 - **Visualizar** — `/desktop/custom-reports`, na **Desktop View (Vue)**. Grid
   paginado, botão de filtros, exportação em fila e download.
 
-O item do menu Relatórios aponta para a URL da Desktop View, e não para uma rota
-hash do SPA legado. **Isso é obrigatório, não estético:** abrir uma segunda
-instância do SPA legado faz `_plugin/session_taken_over.coffee` mandar
-`session_takeover` no `ws:login`, e o backend (`Sessions.send_to`) derruba a aba
-original com "Uma nova sessão foi criada com a sua conta". A Desktop View não
-participa desse mecanismo. A rota legada `#report/custom` continua registrada
-apenas para redirecionar links antigos (notificação de "relatório pronto").
+A tela de visualização usa o **bundle** da Desktop View, mas não pertence a ela:
+mora em `/report/custom-reports`, sem navegação lateral, como guia independente.
+Três peças fazem isso funcionar:
+
+1. `config/routes/custom_report_ui.rb` — `/report` e `/report/*path` servem o
+   mesmo HTML de `desktop#index`. O curinga existe para o refresh não dar 404.
+2. `app/frontend/apps/desktop/router/index.ts` (upstream) — a base do history era
+   a string fixa `'desktop'`. Agora deriva do primeiro segmento do path, restrita
+   a uma lista de pontos de montagem conhecidos (`desktop`, `report`), para a URL
+   não poder definir base arbitrária. Sem isso o roteador não casa a rota e a
+   página abre vazia.
+3. `export const isMainRoute = true` no `routes.ts` da página — coloca a rota em
+   `mainRoutes`, fora do wrapper `LayoutPage`, que é quem renderiza a sidebar.
+
+A página tem casca própria (`components/CustomReportPage.vue`) em vez de
+`LayoutContent`: `LayoutContent` depende do grid e das composables da navegação
+lateral, que não existem fora de `LayoutPage`.
+
+O item do menu Relatórios aponta para essa URL, e não para uma rota hash do SPA
+legado. **Isso é obrigatório, não estético:** abrir uma segunda instância do SPA
+legado faz `_plugin/session_taken_over.coffee` mandar `session_takeover` no
+`ws:login`, e o backend (`Sessions.send_to`) derruba a aba original com "Uma nova
+sessão foi criada com a sua conta". A Desktop View não participa desse mecanismo.
+A rota legada `#report/custom` continua registrada apenas para redirecionar links
+antigos (notificação de "relatório pronto").
 
 Arquivos ATS puros (sem risco em sync): `app/models/custom_report.rb`,
 `app/models/custom_report_run.rb`, `app/models/custom_report/{query,columns,result}.rb`,
@@ -506,6 +524,7 @@ Arquivos ATS puros (sem risco em sync): `app/models/custom_report.rb`,
 | `app/frontend/shared/entities/online-notification/graphql/queries/onlineNotifications.graphql` | Fragmento inline para `OnlineNotificationStandaloneCustomReportData`; sem ele o campo volta vazio. |
 | `app/frontend/shared/composables/activity-message/activityMessageBuilder/builders/online-notification-standalone.ts` | `switch` no `__typename` cai em `default: return null` para tipo desconhecido, e o sino não mostra mensagem nenhuma. |
 | `spec/factories/online_notification_standalone.rb` | Trait `:custom_report`, usada pelo spec de regressão do payload. |
+| `app/frontend/apps/desktop/router/index.ts` | Base do history derivada do ponto de montagem, para o bundle servir `/report` além de `/desktop`. Era a string fixa `'desktop'`. |
 | `app/assets/javascripts/app/models/online_notification_standalone.coffee` | `activityMessage` cai num `else` que devolve string de debug em inglês para `kind` desconhecido. Também define `uiUrl` para a notificação levar ao relatório. |
 | `db/seeds/settings.rb` | Setting `custom_report_max_rows` (instalação nova não roda a migration). |
 | `db/seeds/permissions.rb` | Todas as permissões ATS. Instalação nova não roda as migrations que as criavam, então o menu e o player simplesmente não apareciam. |
@@ -577,6 +596,21 @@ Nada em `app/assets/javascripts/app/views/navigation/*.jst.eco` foi alterado:
   monta o payload de gravação a partir dessa lista e descarta em silêncio o que
   faltar. `group_ids` e `enabled_filters` estavam fora, então grupos e filtros
   habilitados nunca eram salvos.
+- **O operador do filtro é validado antes de chegar ao `Selector::Sql`.**
+  `CustomReport::FilterDefinition::OPERATORS_BY_TYPE` define o que cada tipo
+  aceita, e o resultado é intersectado com `Selector::Sql::VALID_OPERATORS` para
+  ficar em sincronia com o upstream. Sem isso o operador vinha da requisição e ia
+  direto ao construtor de SQL: um valor desconhecido levanta exceção (500), e um
+  inesperado — `is set` num campo de texto — mudaria o significado do filtro.
+  `CustomReport::Query#permitted_condition` descarta o que não passar.
+- **`User` e `Organization` ficam fora de `ENUMERABLE_RELATIONS` de propósito.**
+  O tipo de filtro é derivado da relação do atributo, e para relações pequenas
+  (estado, prioridade) a lista inteira vai como opção de select. Cliente e
+  organização continuam como texto: listar a base seria problema de volume e de
+  privacidade — quem atende um grupo passaria a enxergar a carteira inteira.
+  Grupo é select, mas recortado por `group_ids_access('read')`.
+- **Valor em branco é comparado com `nil` e `''`, não com `blank?`:** um filtro
+  booleano em `false` é `blank?` e seria descartado.
 
 ### Traduções pt-BR das customizações (`i18n/ats.pt-br.po`)
 

@@ -1,4 +1,5 @@
 # Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
+
 # Customização ATS: página de resultados de um relatório personalizado.
 
 # Monta uma página de resultados pronta para um grid: metadados das colunas,
@@ -66,13 +67,16 @@ class CustomReport::Result
     end
   end
 
-  # Quais filtros a tela deve oferecer, com rótulo já traduzido.
+  # Quais filtros a tela deve oferecer, com rótulo traduzido e o controle
+  # adequado ao tipo do atributo (ver CustomReport::FilterDefinition).
   def filter_metadata
     report.normalize_attributes(report.enabled_filters).map do |name|
-      {
-        name:    name,
-        display: columns.display_for(name),
-      }
+      CustomReport::FilterDefinition.new(
+        name:         name,
+        display:      columns.display_for(name),
+        target_class: report.target_class,
+        user:         user,
+      ).to_h
     end
   end
 

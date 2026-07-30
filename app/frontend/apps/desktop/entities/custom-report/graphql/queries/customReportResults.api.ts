@@ -22,6 +22,11 @@ export const CustomReportResultsDocument = gql`
     enabledFilters {
       name
       display
+      type
+      options {
+        value
+        label
+      }
     }
     rows {
       id

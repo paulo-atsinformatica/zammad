@@ -115,6 +115,30 @@ msgstr "Excel (xlsx)"
 msgid "Recent exports"
 msgstr "Exportações recentes"
 
+msgid "Report exports"
+msgstr "Exportações do relatório"
+
+msgid "Back to the report"
+msgstr "Voltar ao relatório"
+
+msgid "No export yet. Generate one from the report screen."
+msgstr "Nenhuma exportação ainda. Gere uma na tela do relatório."
+
+msgid "Generating |%s|…"
+msgstr "Gerando |%s|…"
+
+msgid "Show"
+msgstr "Ver"
+
+msgid "File"
+msgstr "Arquivo"
+
+msgid "Status"
+msgstr "Situação"
+
+msgid "All"
+msgstr "Todos"
+
 msgid "Download"
 msgstr "Baixar"
 

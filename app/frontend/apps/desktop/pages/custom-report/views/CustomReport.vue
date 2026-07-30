@@ -2,41 +2,44 @@
 <!-- Customização ATS: relatório personalizado. -->
 
 <script setup lang="ts">
-import { computed, onUnmounted, ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 
-import CommonLink from '#shared/components/CommonLink/CommonLink.vue'
-import { NotificationTypes } from '#shared/components/CommonNotifications/types.ts'
-import { useNotifications } from '#shared/components/CommonNotifications/useNotifications.ts'
 import Form from '#shared/components/Form/Form.vue'
 import type { FormFieldValue, FormSchemaNode } from '#shared/components/Form/types.ts'
 import { i18n } from '#shared/i18n.ts'
-import MutationHandler from '#shared/server/apollo/handler/MutationHandler.ts'
 import QueryHandler from '#shared/server/apollo/handler/QueryHandler.ts'
 
 import CommonButton from '#desktop/components/CommonButton/CommonButton.vue'
 import CommonLoader from '#desktop/components/CommonLoader/CommonLoader.vue'
 import CommonSimpleTable from '#desktop/components/CommonTable/CommonSimpleTable.vue'
-import LayoutContent from '#desktop/components/layout/LayoutContent.vue'
-import { useCustomReportGenerateMutation } from '#desktop/entities/custom-report/graphql/mutations/customReportGenerate.api.ts'
 import { useCustomReportListQuery } from '#desktop/entities/custom-report/graphql/queries/customReportList.api.ts'
 import { useCustomReportResultsQuery } from '#desktop/entities/custom-report/graphql/queries/customReportResults.api.ts'
-import { useCustomReportRunsQuery } from '#desktop/entities/custom-report/graphql/queries/customReportRuns.api.ts'
 
 import CustomReportFilters from '../components/CustomReportFilters.vue'
+import CustomReportPage from '../components/CustomReportPage.vue'
+import { useCustomReportExport } from '../composables/useCustomReportExport.ts'
 
 import type { RuntimeFilters } from '../types.ts'
 
 const DEFAULT_FORMAT = 'csv'
+const ALL_VISIBILITIES = 'all'
 
 const selectedReportId = ref<string>()
 const format = ref(DEFAULT_FORMAT)
+const visibility = ref(ALL_VISIBILITIES)
 const page = ref(1)
 const filters = ref<RuntimeFilters>({})
 const filtersOpen = ref(false)
 
-const { notify } = useNotifications()
+const { generate, goToExports } = useCustomReportExport()
 
-const listQuery = new QueryHandler(useCustomReportListQuery())
+const listQuery = new QueryHandler(
+  useCustomReportListQuery(() => ({
+    // 'all' não é um nível de visibilidade; o backend trata a ausência do
+    // argumento como "todos".
+    visibility: visibility.value === ALL_VISIBILITIES ? undefined : visibility.value,
+  })),
+)
 const listResult = listQuery.result()
 const listLoading = listQuery.loading()
 
@@ -47,15 +50,39 @@ const reports = computed(() => listResult.value?.customReportList ?? [])
 // cada escolha o Form seria remontado.
 const initialReportId = ref<string>()
 
-// Seleciona o primeiro relatório disponível para a tela não abrir vazia.
-watch(reports, (value) => {
-  if (selectedReportId.value || !value.length) return
+const selectReport = (id: string | undefined) => {
+  selectedReportId.value = id
+  initialReportId.value = id
+  // Filtros e página pertencem ao relatório anterior.
+  filters.value = {}
+  page.value = 1
+  filtersOpen.value = false
+}
 
-  selectedReportId.value = value[0].id
-  initialReportId.value = value[0].id
+// Seleciona o primeiro disponível para a tela não abrir vazia, e reage a uma
+// troca de visibilidade que tire o relatório atual da lista.
+watch(reports, (value) => {
+  if (value.some((report) => report.id === selectedReportId.value)) return
+
+  selectReport(value[0]?.id)
 })
 
 const toolbarSchema = computed<FormSchemaNode[]>(() => [
+  {
+    type: 'select',
+    name: 'visibility',
+    label: __('Visible for'),
+    value: ALL_VISIBILITIES,
+    outerClass: 'min-w-48',
+    props: {
+      options: [
+        { value: ALL_VISIBILITIES, label: __('All') },
+        { value: 'global', label: __('Everyone') },
+        { value: 'group', label: __('Members of selected groups') },
+        { value: 'personal', label: __('Only me') },
+      ],
+    },
+  },
   {
     type: 'select',
     name: 'customReportId',
@@ -84,18 +111,19 @@ const toolbarSchema = computed<FormSchemaNode[]>(() => [
 ])
 
 const onToolbarChanged = (fieldName: string, newValue: FormFieldValue) => {
-  if (fieldName === 'format') {
-    format.value = String(newValue)
-    return
+  switch (fieldName) {
+    case 'format':
+      format.value = String(newValue)
+      break
+    case 'visibility':
+      visibility.value = String(newValue)
+      break
+    case 'customReportId':
+      selectReport(String(newValue))
+      break
+    default:
+      break
   }
-
-  if (fieldName !== 'customReportId') return
-
-  selectedReportId.value = String(newValue)
-  // Filtros e página pertencem ao relatório anterior.
-  filters.value = {}
-  page.value = 1
-  filtersOpen.value = false
 }
 
 const resultsQuery = new QueryHandler(
@@ -145,78 +173,20 @@ const applyFilters = (value: RuntimeFilters) => {
 
 const goToPage = (target: number) => {
   if (target < 1 || target > totalPages.value) return
+
   page.value = target
 }
 
-// --- Exportação -------------------------------------------------------------
-//
-// O arquivo não é gerado na requisição: um relatório grande estouraria o tempo
-// e prenderia um worker. A mutation enfileira e esta lista acompanha.
-
-const runsQuery = new QueryHandler(useCustomReportRunsQuery(() => ({ limit: 10 })))
-const runsResult = runsQuery.result()
-
-const runs = computed(() => runsResult.value?.customReportRuns ?? [])
-
-const hasRunningExport = computed(() =>
-  runs.value.some((run) => run.status === 'pending' || run.status === 'running'),
-)
-
-// Sem subscription para relatório personalizado, então o progresso vem de
-// polling — e só enquanto houver geração em andamento.
-let pollTimer: ReturnType<typeof setInterval> | undefined
-
-const stopPolling = () => {
-  if (!pollTimer) return
-  clearInterval(pollTimer)
-  pollTimer = undefined
-}
-
-watch(hasRunningExport, (running) => {
-  if (!running) {
-    stopPolling()
-    return
-  }
-  if (pollTimer) return
-
-  pollTimer = setInterval(() => runsQuery.refetch(), 4000)
-})
-
-onUnmounted(stopPolling)
-
-const generateMutation = new MutationHandler(useCustomReportGenerateMutation())
-
-const generate = async () => {
+const exportReport = () => {
   if (!selectedReportId.value) return
 
-  await generateMutation.send({
-    customReportId: selectedReportId.value,
-    format: format.value,
-  })
-
-  notify({
-    id: 'custom-report-queued',
-    type: NotificationTypes.Success,
-    message: __('Report queued. You will be notified when it is ready to download.'),
-  })
-
-  runsQuery.refetch()
-}
-
-const runProgressLabel = (run: (typeof runs.value)[number]) => {
-  if (run.status === 'failed') return run.errorMessage || i18n.t('Generation failed.')
-  if (run.status === 'succeeded') return i18n.t('Ready')
-  if (run.progressPercent === null || run.progressPercent === undefined) {
-    return i18n.t('Processing…')
-  }
-
-  return `${run.progressPercent}%`
+  generate(selectedReportId.value, format.value)
 }
 </script>
 
 <template>
-  <LayoutContent :breadcrumb-items="[{ label: __('Custom Report') }]" width="full">
-    <template #headerRight>
+  <CustomReportPage :title="__('Custom Report')">
+    <template #actions>
       <CommonButton
         v-if="result?.enabledFilters.length"
         size="medium"
@@ -225,96 +195,73 @@ const runProgressLabel = (run: (typeof runs.value)[number]) => {
       >
         {{ $t('Filters') }}
       </CommonButton>
+      <CommonButton size="medium" prefix-icon="list" @click="goToExports">
+        {{ $t('Report exports') }}
+      </CommonButton>
       <CommonButton
         variant="primary"
         size="medium"
         prefix-icon="download"
         :disabled="!selectedReportId"
-        @click="generate"
+        @click="exportReport"
       >
         {{ $t('Export') }}
       </CommonButton>
     </template>
 
-    <div class="flex flex-col gap-4">
-      <CommonLoader :loading="listLoading">
-        <Form
-          v-if="reports.length"
-          id="custom-report-toolbar"
-          :schema="toolbarSchema"
-          form-class="flex flex-wrap items-end gap-3"
-          @changed="onToolbarChanged"
-        />
-        <CommonLabel v-else>
-          {{ $t('No report available. Ask an administrator to configure one.') }}
-        </CommonLabel>
-      </CommonLoader>
-
-      <CustomReportFilters
-        v-if="filtersOpen && result"
-        :available="result.enabledFilters"
-        :model-value="filters"
-        @apply="applyFilters"
+    <CommonLoader :loading="listLoading">
+      <Form
+        id="custom-report-toolbar"
+        :schema="toolbarSchema"
+        form-class="flex flex-wrap items-end gap-3"
+        @changed="onToolbarChanged"
       />
+      <CommonLabel v-if="!reports.length">
+        {{ $t('No report available. Ask an administrator to configure one.') }}
+      </CommonLabel>
+    </CommonLoader>
 
-      <CommonLoader :loading="resultsLoading">
-        <template v-if="result">
-          <CommonSimpleTable
-            :caption="$t('Custom report results')"
-            :headers="tableHeaders"
-            :items="tableItems"
-          />
+    <CustomReportFilters
+      v-if="filtersOpen && result"
+      :available="result.enabledFilters"
+      :model-value="filters"
+      @apply="applyFilters"
+    />
 
-          <div class="mt-3 flex items-center justify-between gap-3">
-            <CommonLabel size="small">
-              {{ i18n.t('%s record(s) found', totalCount) }}
-            </CommonLabel>
+    <CommonLoader :loading="resultsLoading">
+      <template v-if="result">
+        <CommonSimpleTable
+          :caption="$t('Custom report results')"
+          :headers="tableHeaders"
+          :items="tableItems"
+        />
 
-            <div v-if="totalPages > 1" class="flex items-center gap-2">
-              <CommonButton
-                size="medium"
-                :disabled="result.page <= 1"
-                @click="goToPage(result.page - 1)"
-              >
-                {{ $t('Previous') }}
-              </CommonButton>
-              <CommonLabel size="small">
-                {{ i18n.t('Page %s of %s', result.page, totalPages) }}
-              </CommonLabel>
-              <CommonButton
-                size="medium"
-                :disabled="result.page >= totalPages"
-                @click="goToPage(result.page + 1)"
-              >
-                {{ $t('Next') }}
-              </CommonButton>
-            </div>
-          </div>
-        </template>
-      </CommonLoader>
+        <div class="mt-3 flex items-center justify-between gap-3">
+          <CommonLabel size="small">
+            {{ i18n.t('%s record(s) found', totalCount) }}
+          </CommonLabel>
 
-      <section v-if="runs.length" class="flex flex-col gap-2">
-        <CommonLabel size="small">{{ $t('Recent exports') }}</CommonLabel>
-
-        <ul class="flex flex-col gap-1">
-          <li
-            v-for="run in runs"
-            :key="run.id"
-            class="flex flex-wrap items-center gap-3 rounded-lg bg-blue-200 px-3 py-2 dark:bg-gray-700"
-          >
-            <CommonLabel class="grow">{{ run.filename }}</CommonLabel>
-            <CommonLabel size="small">{{ runProgressLabel(run) }}</CommonLabel>
-            <CommonLink
-              v-if="run.downloadable && run.downloadPath"
-              :link="run.downloadPath"
-              rest-api
-              size="small"
+          <div v-if="totalPages > 1" class="flex items-center gap-2">
+            <CommonButton
+              size="medium"
+              :disabled="result.page <= 1"
+              @click="goToPage(result.page - 1)"
             >
-              {{ $t('Download') }}
-            </CommonLink>
-          </li>
-        </ul>
-      </section>
-    </div>
-  </LayoutContent>
+              {{ $t('Previous') }}
+            </CommonButton>
+            <CommonLabel size="small">
+              {{ i18n.t('Page %s of %s', result.page, totalPages) }}
+            </CommonLabel>
+            <CommonButton
+              size="medium"
+              :disabled="result.page >= totalPages"
+              @click="goToPage(result.page + 1)"
+            >
+              {{ $t('Next') }}
+            </CommonButton>
+          </div>
+        </div>
+      </template>
+    </CommonLoader>
+  </CustomReportPage>
 </template>

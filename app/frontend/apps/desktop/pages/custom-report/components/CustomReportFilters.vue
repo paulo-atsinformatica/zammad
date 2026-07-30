@@ -9,11 +9,11 @@ import type { FormSchemaNode, FormSubmitData } from '#shared/components/Form/typ
 
 import CommonButton from '#desktop/components/CommonButton/CommonButton.vue'
 
-import type { AvailableFilter, RuntimeFilters } from '../types.ts'
+import type { AvailableFilter, RuntimeFilter, RuntimeFilters } from '../types.ts'
 
 interface Props {
-  // Apenas os atributos que o relatório habilitou. Quem monta essa lista é o
-  // backend, então a tela não decide o que pode ser filtrado.
+  // Apenas os atributos que o relatório habilitou, com o tipo de controle já
+  // resolvido pelo backend. A tela não decide o que pode ser filtrado.
   available: AvailableFilter[]
   modelValue: RuntimeFilters
 }
@@ -30,23 +30,76 @@ const FORM_ID = 'custom-report-filters'
 // cópia do estado interno do FormKit aqui.
 const formKey = ref(0)
 
-const schema = computed<FormSchemaNode[]>(() =>
-  props.available.map(({ name, display }) => ({
-    type: 'text',
-    name,
-    label: display,
-    value: props.modelValue[name]?.value ?? '',
+// Operador por tipo. Precisa casar com
+// CustomReport::FilterDefinition::OPERATORS_BY_TYPE — o backend descarta o que
+// não estiver permitido para o tipo.
+const OPERATORS = {
+  select: 'is',
+  boolean: 'is',
+  date: 'after (absolute)',
+  text: 'contains',
+} as const
+
+const fieldFor = (filter: AvailableFilter): FormSchemaNode => {
+  const shared = {
+    name: filter.name,
+    label: filter.display,
     outerClass: 'col-span-1',
-  })),
+  }
+
+  switch (filter.type) {
+    case 'select':
+      return {
+        ...shared,
+        type: 'select',
+        props: {
+          options: filter.options.map(({ value, label }) => ({ value, label })),
+          clearable: true,
+          // Rótulos de estado e prioridade já vêm traduzidos do backend;
+          // nomes de grupo são dados do usuário.
+          noOptionsLabelTranslation: true,
+        },
+      }
+    case 'boolean':
+      return {
+        ...shared,
+        type: 'select',
+        props: {
+          options: [
+            { value: 'true', label: __('yes') },
+            { value: 'false', label: __('no') },
+          ],
+          clearable: true,
+        },
+      }
+    case 'date':
+      return { ...shared, type: 'date' }
+    default:
+      return { ...shared, type: 'text' }
+  }
+}
+
+const schema = computed<FormSchemaNode[]>(() => props.available.map(fieldFor))
+
+const typeByName = computed(
+  () => new Map(props.available.map((filter) => [filter.name, filter.type])),
 )
 
-const apply = (data: FormSubmitData<Record<string, string>>) => {
+const apply = (data: FormSubmitData<Record<string, unknown>>) => {
   const filters: RuntimeFilters = {}
 
   Object.entries(data).forEach(([name, value]) => {
-    if (!value) return
-    // 'contains' é mais útil que igualdade exata para filtro digitado à mão.
-    filters[name] = { operator: 'contains', value }
+    if (value === undefined || value === null || value === '') return
+
+    const type = typeByName.value.get(name) ?? 'text'
+
+    // O selector do Zammad espera lista de valores para 'is'.
+    const filter: RuntimeFilter = {
+      operator: OPERATORS[type],
+      value: type === 'select' || type === 'boolean' ? [String(value)] : String(value),
+    }
+
+    filters[name] = filter
   })
 
   emit('apply', filters)
@@ -65,7 +118,7 @@ const clear = () => {
       :key="formKey"
       :schema="schema"
       form-class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3"
-      @submit="apply($event as FormSubmitData<Record<string, string>>)"
+      @submit="apply($event as FormSubmitData<Record<string, unknown>>)"
     />
 
     <div class="flex gap-2">

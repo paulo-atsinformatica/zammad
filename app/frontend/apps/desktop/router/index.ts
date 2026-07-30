@@ -59,8 +59,22 @@ export const routes: Array<RouteRecordRaw> = [
   },
 ]
 
+// Customização ATS: o bundle da Desktop View também serve páginas montadas fora
+// de /desktop — hoje a tela de relatório personalizado, em /report. A base do
+// history precisa acompanhar o ponto de montagem, senão o roteador não casa a
+// rota e a página abre vazia. Só bases conhecidas são aceitas, para o primeiro
+// segmento da URL não virar base arbitrária.
+const MOUNT_POINTS = ['desktop', 'report']
+const DEFAULT_MOUNT_POINT = 'desktop'
+
+const historyBase = (): string => {
+  const [, firstSegment] = window.location.pathname.split('/')
+
+  return MOUNT_POINTS.includes(firstSegment) ? firstSegment : DEFAULT_MOUNT_POINT
+}
+
 const initializeRouter: InitializeAppRouter = (app: App) => {
-  return mainInitializeRouter(app, routes, [systemSetupInfo, activeTaskbarTab], [], 'desktop')
+  return mainInitializeRouter(app, routes, [systemSetupInfo, activeTaskbarTab], [], historyBase())
 }
 
 export default initializeRouter

@@ -1,4 +1,5 @@
 # Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
+
 # Customização ATS: relatório personalizado.
 
 require 'rails_helper'
@@ -69,6 +70,65 @@ RSpec.describe CustomReport::Query do
 
     it 'applies the saved condition on top of the permitted scope' do
       expect(query.relation).to contain_exactly(ticket_a)
+    end
+  end
+
+  # Filtros vindos da tela. O operador chega da requisição e iria direto ao
+  # Selector::Sql, então o recorte aqui é de segurança, não de conveniência.
+  describe 'runtime filters' do
+    subject(:query) { described_class.new(report: report, user: user, filters: filters) }
+
+    let(:user) { create(:agent, groups: [group_a, group_b]) }
+    let(:report) do
+      create(:custom_report, object: 'Ticket', condition: {}, enabled_filters: %w[title])
+    end
+
+    context 'with an enabled attribute and a permitted operator' do
+      let(:filters) { { 'title' => { 'operator' => 'contains', 'value' => 'group a' } } }
+
+      it 'applies the filter' do
+        expect(query.relation).to contain_exactly(ticket_a)
+      end
+    end
+
+    context 'with an attribute the report did not enable' do
+      let(:filters) { { 'group_id' => { 'operator' => 'is', 'value' => [group_a.id] } } }
+
+      it 'ignores it' do
+        expect(query.runtime_filters).to be_empty
+      end
+
+      it 'still returns everything the user may read' do
+        expect(query.relation).to include(ticket_a, ticket_b)
+      end
+    end
+
+    context 'with an operator the attribute type does not allow' do
+      let(:filters) { { 'title' => { 'operator' => 'after (absolute)', 'value' => '2026-01-01' } } }
+
+      it 'drops the condition instead of passing it to the selector' do
+        expect(query.runtime_filters).to be_empty
+      end
+    end
+
+    context 'with an operator the selector does not know' do
+      let(:filters) { { 'title' => { 'operator' => 'nonsense', 'value' => 'x' } } }
+
+      it 'drops the condition' do
+        expect(query.runtime_filters).to be_empty
+      end
+
+      it 'does not raise when building the relation' do
+        expect { query.relation.to_a }.not_to raise_error
+      end
+    end
+
+    context 'with a blank value' do
+      let(:filters) { { 'title' => { 'operator' => 'contains', 'value' => '' } } }
+
+      it 'treats it as no filter' do
+        expect(query.runtime_filters).to be_empty
+      end
     end
   end
 

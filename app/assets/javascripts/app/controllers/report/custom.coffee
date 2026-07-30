@@ -1,10 +1,11 @@
 # Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 # Customização ATS: relatório personalizado.
 
-# A tela de visualização do relatório vive na Desktop View (Vue), em
+# A tela de visualização do relatório usa o bundle da Desktop View, servida em
+# /report (ver config/routes/custom_report_ui.rb), a partir de
 # app/frontend/apps/desktop/pages/custom-report. Aqui ficam apenas o item de
 # menu e um redirecionamento para os links antigos.
-DESKTOP_URL = '/desktop/custom-reports'
+REPORT_URL = '/report/custom-reports'
 
 # Rota legada mantida só para links já existentes (notificação de relatório
 # pronto, favoritos). Redireciona em vez de renderizar: a tela antiga foi
@@ -14,13 +15,13 @@ class App.ReportCustom extends App.ControllerAppContent
 
   constructor: ->
     super
-    window.location.href = DESKTOP_URL
+    window.location.href = REPORT_URL
 
 App.Config.set('report/custom', App.ReportCustom, 'Routes')
 
 # Item no menu de Relatórios.
 #
-# O target é a URL da Desktop View, não uma rota hash do SPA legado. Abrir uma
+# O target é uma URL de verdade, não uma rota hash do SPA legado. Abrir uma
 # segunda instância do SPA legado dispara o evento `session_takeover`
 # (app/assets/javascripts/app/controllers/_plugin/session_taken_over.coffee),
 # que derruba a aba original. A Desktop View não participa desse mecanismo,
@@ -32,7 +33,7 @@ App.Config.set('CustomReport', {
   prio: 100,
   name: __('Custom Report'),
   parent: '#report',
-  target: DESKTOP_URL,
+  target: REPORT_URL,
   external: true,
   permission: ['report.custom']
 }, 'NavBarRight')
