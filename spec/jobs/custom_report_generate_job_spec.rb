@@ -14,7 +14,7 @@ RSpec.describe CustomReportGenerateJob do
   let(:report) do
     create(:custom_report,
            object:        'Ticket',
-           visibility:    'global',
+           visibility:    'personal',
            condition:     {},
            columns:       %w[number title state_id group_id],
            created_by_id: agent.id,

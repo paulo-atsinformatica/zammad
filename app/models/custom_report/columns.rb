@@ -1,4 +1,5 @@
 # Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
+
 # Customização ATS: resolve colunas e valores de um relatório personalizado.
 
 # Traduz a lista de colunas escolhida no relatório em cabeçalhos legíveis e
@@ -26,9 +27,10 @@ class CustomReport::Columns
   end
 
   # Cabeçalho na língua do usuário, usando o rótulo do campo e não o nome da
-  # coluna do banco.
+  # coluna do banco. Passa por display_for para valer a mesma garantia de nunca
+  # devolver vazio.
   def headers
-    names.map { |name| Translation.translate(locale, display_name(name)) }
+    names.map { |name| display_for(name) }
   end
 
   # Associações a pré-carregar. Sem isto, resolver cada coluna *_id faria uma
@@ -48,8 +50,14 @@ class CustomReport::Columns
 
   # Rótulo traduzido de um atributo qualquer, não só das colunas exibidas.
   # Usado para os filtros oferecidos na tela.
+  #
+  # Nunca devolve vazio: o rótulo é campo non-null no GraphQL, e um atributo sem
+  # rótulo derrubaria a consulta inteira da tela em vez de aparecer sem nome.
   def display_for(name)
-    Translation.translate(locale, display_name(name.to_s))
+    name = name.to_s
+    translated = Translation.translate(locale, display_name(name)).to_s
+
+    translated.presence || name.delete_suffix('_id').humanize.presence || name
   end
 
   private

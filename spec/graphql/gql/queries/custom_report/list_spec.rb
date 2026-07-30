@@ -4,7 +4,8 @@
 require 'rails_helper'
 
 RSpec.describe Gql::Queries::CustomReport::List, type: :graphql do
-  let!(:report) { create(:custom_report, name: 'Tickets abertos', visibility: 'global') }
+  let(:group)   { create(:group) }
+  let!(:report) { create(:custom_report_general, name: 'Tickets abertos', groups: [group]) }
 
   let(:query) do
     <<~QUERY
@@ -22,7 +23,7 @@ RSpec.describe Gql::Queries::CustomReport::List, type: :graphql do
 
   # O papel Agent recebe report.custom no seed, então nada a conceder aqui.
   context 'with an agent allowed to use custom reports', authenticated_as: :agent do
-    let(:agent) { create(:agent) }
+    let(:agent) { create(:agent, groups: [group]) }
 
     it 'lists the visible reports' do
       gql.execute(query)

@@ -18,20 +18,23 @@ class CustomReport < ApplicationModel
   # os outros já validam para permitir salvar modelos antes da fase 2.
   OBJECTS = %w[Ticket User Organization].freeze
 
-  # 'personal' = só quem criou; 'group' = membros dos grupos escolhidos;
-  # 'global'   = qualquer usuário com a permissão report.custom.
+  # 'personal' = só quem criou; 'group' = "Geral", visível para quem tem acesso a
+  # algum dos grupos escolhidos.
+  #
+  # Não existe nível "todos": para valer para todo mundo basta escolher todos os
+  # grupos. Um nível global à parte só acrescentaria uma permissão para conceder o
+  # mesmo resultado por outro caminho.
   #
   # Isto controla apenas quem enxerga o MODELO. O escopo dos DADOS é sempre
   # recalculado a partir das permissões de quem gera (ver CustomReport::Query),
-  # de forma que um relatório global nunca revela algo que o usuário não
+  # de forma que um relatório compartilhado nunca revela algo que o usuário não
   # poderia ver por conta própria.
-  VISIBILITIES = %w[personal group global].freeze
+  VISIBILITIES = %w[personal group].freeze
 
   # Permissão necessária para salvar em cada nível. 'personal' não exige nada
   # além de report.custom, já que o modelo não sai do próprio usuário.
   VISIBILITY_PERMISSIONS = {
-    'group'  => 'report.custom.group',
-    'global' => 'report.custom.global',
+    'group' => 'report.custom.group',
   }.freeze
 
   has_and_belongs_to_many :groups
@@ -59,8 +62,7 @@ class CustomReport < ApplicationModel
 
     reports = active.left_outer_joins(:groups).distinct
 
-    reports.where(visibility: 'global')
-      .or(reports.where(created_by_id: user.id))
+    reports.where(created_by_id: user.id)
       .or(reports.where(visibility: 'group', groups: { id: visible_group_ids(user) }))
   end
 
@@ -73,7 +75,6 @@ class CustomReport < ApplicationModel
   def visible_to?(user)
     return false if !user
     return true if created_by_id == user.id
-    return true if visibility == 'global'
     return false if visibility != 'group'
 
     group_ids.intersect?(self.class.visible_group_ids(user))

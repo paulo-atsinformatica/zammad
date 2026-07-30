@@ -5,7 +5,7 @@
 require 'rails_helper'
 
 RSpec.describe Gql::Queries::CustomReport::Runs, type: :graphql do
-  let(:report) { create(:custom_report, visibility: 'global') }
+  let(:report) { create(:custom_report_general) }
 
   let(:query) do
     <<~QUERY

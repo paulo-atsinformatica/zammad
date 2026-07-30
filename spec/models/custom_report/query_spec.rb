@@ -16,7 +16,7 @@ RSpec.describe CustomReport::Query do
   # Sem condição alguma: o resultado é definido apenas pelas permissões, que é
   # exatamente o cenário em que um vazamento apareceria.
   let(:report) do
-    create(:custom_report, object: 'Ticket', visibility: 'global', condition: {})
+    create(:custom_report, object: 'Ticket', visibility: 'personal', condition: {})
   end
 
   describe 'permission intersection' do

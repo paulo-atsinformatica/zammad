@@ -32,6 +32,21 @@ export const CustomReportResultsDocument = gql`
       id
       values
     }
+    summary {
+      groupBy {
+        name
+        display
+      }
+      aggregations {
+        name
+        display
+      }
+      rows {
+        groups
+        values
+      }
+      totals
+    }
     totalCount
     page
     perPage

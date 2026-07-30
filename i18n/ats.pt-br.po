@@ -64,17 +64,17 @@ msgstr "Relatório sobre"
 msgid "Visible for"
 msgstr "Visível para"
 
-msgid "Only me"
-msgstr "Somente eu"
+msgid "Personal view"
+msgstr "Visualização pessoal"
 
-msgid "Members of selected groups"
-msgstr "Membros dos grupos selecionados"
+msgid "General"
+msgstr "Geral"
 
-msgid "Everyone"
-msgstr "Todos"
+msgid "Only used for a general report. Select every group to make it visible to everyone."
+msgstr "Usado apenas em relatório geral. Escolha todos os grupos para deixá-lo visível para todos."
 
-msgid "Only used when the report is visible for members of selected groups."
-msgstr "Usado apenas quando o relatório é visível para os membros dos grupos selecionados."
+msgid "No report available for this visibility."
+msgstr "Nenhum relatório disponível nesta visibilidade."
 
 msgid "This only controls who sees this report. The data is always limited to what the person generating it is allowed to see."
 msgstr "Isto controla apenas quem vê este relatório. Os dados sempre se limitam ao que a pessoa que gera o relatório tem permissão de ver."
@@ -138,6 +138,48 @@ msgstr "Situação"
 
 msgid "All"
 msgstr "Todos"
+
+msgid "Totals"
+msgstr "Totalizadores"
+
+msgid "Total"
+msgstr "Total"
+
+msgid "Group totals by"
+msgstr "Agrupar totais por"
+
+msgid "Leave empty for no totals section."
+msgstr "Deixe vazio para não ter seção de totais."
+
+msgid "Totals to calculate"
+msgstr "Totais a calcular"
+
+msgid "Count needs no field. The others apply to the fields chosen below."
+msgstr "Contagem não precisa de campo. As outras se aplicam aos campos escolhidos abaixo."
+
+msgid "Fields to total"
+msgstr "Campos a totalizar"
+
+msgid "Sum and average only apply to numeric fields."
+msgstr "Soma e média só se aplicam a campos numéricos."
+
+msgid "Count"
+msgstr "Contagem"
+
+msgid "Sum"
+msgstr "Soma"
+
+msgid "Average"
+msgstr "Média"
+
+msgid "Minimum"
+msgstr "Mínimo"
+
+msgid "Maximum"
+msgstr "Máximo"
+
+msgid "The report has more rows than a spreadsheet can hold (%s). Please narrow the filters or export as CSV."
+msgstr "O relatório tem mais linhas do que uma planilha suporta (%s). Restrinja os filtros ou exporte em CSV."
 
 msgid "Download"
 msgstr "Baixar"

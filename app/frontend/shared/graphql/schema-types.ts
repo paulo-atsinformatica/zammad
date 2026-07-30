@@ -812,6 +812,8 @@ export type CustomReportResult = {
   perPage: Scalars['Int']['output'];
   /** Rows of the requested page */
   rows: Array<CustomReportRow>;
+  /** Grouped totals, nil when the report defines none */
+  summary?: Maybe<CustomReportSummary>;
   /** Total number of matching records */
   totalCount: Scalars['Int']['output'];
   /** Number of pages available */
@@ -852,6 +854,28 @@ export type CustomReportRun = {
   status: Scalars['String']['output'];
   /** Rows to process, known only after the initial count */
   totalRows?: Maybe<Scalars['Int']['output']>;
+};
+
+/** Grouped totals of a custom report */
+export type CustomReportSummary = {
+  __typename?: 'CustomReportSummary';
+  /** Calculated totals, in order */
+  aggregations: Array<CustomReportColumn>;
+  /** Attributes the rows are grouped by, in order */
+  groupBy: Array<CustomReportColumn>;
+  /** One entry per group combination */
+  rows: Array<CustomReportSummaryRow>;
+  /** Grand total, keyed by aggregation name */
+  totals: Scalars['JSON']['output'];
+};
+
+/** One group of a custom report summary */
+export type CustomReportSummaryRow = {
+  __typename?: 'CustomReportSummaryRow';
+  /** Group values keyed by attribute name */
+  groups: Scalars['JSON']['output'];
+  /** Aggregated values keyed by aggregation name */
+  values: Scalars['JSON']['output'];
 };
 
 /** Data privacy task type */

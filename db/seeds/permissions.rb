@@ -454,12 +454,6 @@ Permission.create_if_not_exists(
   preferences: { prio: 1545 }
 )
 Permission.create_if_not_exists(
-  name:        'report.custom.global',
-  label:       __('Share Custom Report Globally'),
-  description: __('Save custom reports visible to every user who may use custom reports.'),
-  preferences: { prio: 1546 }
-)
-Permission.create_if_not_exists(
   name:        'ticket',
   label:       __('Ticket'),
   description: __('Access to the ticket interface.'),
@@ -641,7 +635,6 @@ admin.permission_grant('knowledge_base.editor')
 admin.permission_grant('ticket.time_tracking')
 admin.permission_grant('report.custom')
 admin.permission_grant('report.custom.group')
-admin.permission_grant('report.custom.global')
 
 agent = Role.find_by(name: 'Agent')
 agent.permission_grant('user_preferences')

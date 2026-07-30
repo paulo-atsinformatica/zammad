@@ -25,6 +25,7 @@ class CustomReport::Result
       columns:         column_metadata,
       enabled_filters: filter_metadata,
       rows:            rows,
+      summary:         summary,
       total_count:     total_count,
       page:            page,
       per_page:        effective_per_page,
@@ -40,6 +41,13 @@ class CustomReport::Result
 
   def columns
     @columns ||= CustomReport::Columns.new(report: report, user: user)
+  end
+
+  # Os totalizadores acompanham os filtros aplicados, então usam a mesma query da
+  # listagem. nil quando o relatório não define agregação, e a tela não desenha a
+  # seção.
+  def summary
+    @summary ||= CustomReport::Summary.new(report: report, query: query, columns: columns).call
   end
 
   def effective_per_page

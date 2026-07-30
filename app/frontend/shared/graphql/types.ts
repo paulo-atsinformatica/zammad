@@ -174,7 +174,7 @@ export type CustomReportResultsQueryVariables = Exact<{
 }>;
 
 
-export type CustomReportResultsQuery = { customReportResults: { __typename: 'CustomReportResult', totalCount: number, page: number, perPage: number, totalPages: number, columns: Array<{ __typename: 'CustomReportColumn', name: string, display: string }>, enabledFilters: Array<{ __typename: 'CustomReportFilter', name: string, display: string, type: string, options: Array<{ __typename: 'CustomReportFilterOption', value: string, label: string }> }>, rows: Array<{ __typename: 'CustomReportRow', id: string, values: any }> } };
+export type CustomReportResultsQuery = { customReportResults: { __typename: 'CustomReportResult', totalCount: number, page: number, perPage: number, totalPages: number, columns: Array<{ __typename: 'CustomReportColumn', name: string, display: string }>, enabledFilters: Array<{ __typename: 'CustomReportFilter', name: string, display: string, type: string, options: Array<{ __typename: 'CustomReportFilterOption', value: string, label: string }> }>, rows: Array<{ __typename: 'CustomReportRow', id: string, values: any }>, summary: { __typename: 'CustomReportSummary', totals: any, groupBy: Array<{ __typename: 'CustomReportColumn', name: string, display: string }>, aggregations: Array<{ __typename: 'CustomReportColumn', name: string, display: string }>, rows: Array<{ __typename: 'CustomReportSummaryRow', groups: any, values: any }> } | null | undefined } };
 
 export type CustomReportRunsQueryVariables = Exact<{
   limit?: number | null | undefined;

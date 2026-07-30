@@ -72,6 +72,30 @@ RSpec.describe CustomReport::FilterDefinition do
     end
   end
 
+  # display é non-null no GraphQL: um rótulo vazio derrubaria a consulta inteira
+  # da tela de visualização, não só o próprio filtro.
+  describe 'display fallback' do
+    subject(:definition) do
+      described_class.new(name: 'state_id', display: display, target_class: Ticket, user: user)
+    end
+
+    context 'with a blank display' do
+      let(:display) { '' }
+
+      it 'falls back to a humanized attribute name' do
+        expect(definition.display).to eq('State')
+      end
+    end
+
+    context 'with a nil display' do
+      let(:display) { nil }
+
+      it 'still returns a label' do
+        expect(definition.display).to be_present
+      end
+    end
+  end
+
   describe '#permits?' do
     context 'with a select filter' do
       let(:name) { 'state_id' }

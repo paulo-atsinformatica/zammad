@@ -552,8 +552,35 @@ Nada em `app/assets/javascripts/app/views/navigation/*.jst.eco` foi alterado:
   são arrays e usam jsonb.
 - **Progresso pelo WebSocket legado:** as subscriptions GraphQL usadas pelo bulk
   update do 7.2 só existem na Desktop View.
-- **xlsx ficou para a fase 2**, com teto de linhas, porque `ExcelSheet` monta a
-  planilha inteira em memória. CSV é streaming e não tem esse limite.
+- **xlsx não usa `ExcelSheet`.** Ele recebe os registros como Array e monta a
+  planilha inteira em memória, o que inviabiliza relatório grande.
+  `CustomReport::Exporter::Xlsx` usa `WriteXLSX` direto com `constant_memory: 1`,
+  modo em que cada linha vai para disco assim que a próxima começa. O teto de
+  `MAX_ROWS = 1_048_575` é do **formato**, não da memória: uma planilha xlsx não
+  passa disso, e acima o arquivo abriria truncado sem avisar — então a geração
+  falha com mensagem clara e aponta o CSV. Números vão como número
+  (`write_number`), o resto como texto: as colunas já chegam formatadas, e o
+  `write_xlsx` interpretaria uma string como "1-2" como data.
+- **Totalizadores: dois campos, não pares.** `aggregations` guarda as funções e
+  `aggregation_attributes` os campos; `CustomReport::Summary` faz o produto dos
+  dois. Assim o formulário de configuração usa componentes que já existem, sem
+  precisar de um elemento de UI próprio para editar pares função+campo. `count`
+  não usa campo e entra uma vez só.
+- **A agregação roda sobre os ids, não sobre a relação.** `query.relation` carrega
+  `distinct` e possivelmente joins vindos das condições; um `SUM` direto contaria
+  o mesmo registro uma vez por linha duplicada pelo join.
+  `CustomReport::Summary#base` faz `where(id: relation.select(:id))`, o que dá um
+  registro por linha sem abrir mão do recorte de permissão.
+- **Função e atributo da agregação entram no SELECT.** Validados antes: função
+  contra `FUNCTIONS`, atributo contra as colunas reais do objeto, e `sum`/`avg`
+  exigem coluna numérica. Combinação inválida é descartada em silêncio (não
+  levantada), para um modelo salvo cujo campo mudou de tipo ainda gerar o resto do
+  relatório. Coberto por spec, inclusive com função inválida.
+- **Os nomes das relações no agrupamento são resolvidos só para os ids presentes**
+  no resultado. Carregar a tabela relacionada inteira traria a base de usuários
+  completa ao agrupar por proprietário.
+- **`MAX_GROUPS = 1_000`:** agrupar por atributo de alta cardinalidade (título)
+  geraria praticamente uma linha por registro.
 - **Migrations com `up`/`down` explícitos:** a reversão automática do Rails
   falhava tentando remover índices que o `drop_table` já leva.
 - **`global_id_field :id` nos tipos GraphQL:** `CustomReportType` e

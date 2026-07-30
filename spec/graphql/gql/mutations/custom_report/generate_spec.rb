@@ -4,7 +4,8 @@
 require 'rails_helper'
 
 RSpec.describe Gql::Mutations::CustomReport::Generate, type: :graphql do
-  let(:report) { create(:custom_report, visibility: 'global', columns: %w[number title]) }
+  let(:group)  { create(:group) }
+  let(:report) { create(:custom_report_general, groups: [group], columns: %w[number title]) }
 
   let(:mutation) do
     <<~MUTATION
@@ -27,7 +28,7 @@ RSpec.describe Gql::Mutations::CustomReport::Generate, type: :graphql do
 
   # O papel Agent recebe report.custom no seed, então nada a conceder aqui.
   context 'with an agent allowed to use custom reports', authenticated_as: :agent do
-    let(:agent) { create(:agent) }
+    let(:agent) { create(:agent, groups: [group]) }
 
     it 'queues a run' do
       expect { gql.execute(mutation, variables:) }.to change(CustomReportRun, :count).by(1)

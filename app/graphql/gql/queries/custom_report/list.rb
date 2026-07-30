@@ -7,7 +7,7 @@ module Gql::Queries
     description 'Saved custom reports the current user may open'
 
     argument :visibility, String, required: false,
-             description: 'Restrict to one visibility level: global, group or personal'
+             description: 'Restrict to one visibility level: group or personal'
 
     type [Gql::Types::CustomReportType, { null: false }], null: false
 
@@ -24,7 +24,7 @@ module Gql::Queries
 
     def restrict(reports, visibility)
       case visibility
-      when 'global', 'group'
+      when 'group'
         reports.where(visibility:)
       when 'personal'
         # Pessoal é sempre "meu": um relatório pessoal de outra pessoa não é

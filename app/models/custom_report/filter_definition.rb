@@ -39,7 +39,9 @@ class CustomReport::FilterDefinition
 
   def initialize(name:, display:, target_class:, user:)
     @name         = name.to_s
-    @display      = display
+    # O rótulo é non-null no GraphQL; sem esta rede um atributo sem rótulo
+    # derrubaria a consulta inteira da tela, e não só o próprio filtro.
+    @display      = display.presence || @name.delete_suffix('_id').humanize
     @target_class = target_class
     @user         = user
   end

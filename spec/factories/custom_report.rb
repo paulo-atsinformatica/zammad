@@ -1,4 +1,5 @@
 # Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
+
 # Customização ATS: relatório personalizado.
 
 FactoryBot.define do
@@ -7,15 +8,20 @@ FactoryBot.define do
     object          { 'Ticket' }
     visibility      { 'personal' }
     condition       { {} }
-    columns         { [] }
-    group_by        { [] }
-    aggregations    { [] }
+    columns                { [] }
+    group_by               { [] }
+    aggregations           { [] }
+    aggregation_attributes { [] }
     active          { true }
     created_by_id   { 1 }
     updated_by_id   { 1 }
 
-    factory :custom_report_global do
-      visibility { 'global' }
+    # "Geral": visível para quem tem acesso a algum dos grupos escolhidos. Não
+    # existe mais nível global — para valer para todos, escolhem-se todos os
+    # grupos.
+    factory :custom_report_general do
+      visibility { 'group' }
+      groups { [Group.first || create(:group)] }
     end
   end
 

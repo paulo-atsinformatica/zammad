@@ -6,15 +6,22 @@ module Gql::Types::CustomReport
   class FilterType < Gql::Types::BaseObject
     description 'A filter the viewer of a custom report may fill in'
 
-    field :name, String, null:        false,
-                         description: 'Attribute name to filter by'
-    field :display, String, null:        false,
-                            description: 'Translated label for the field'
+    # hash_key é obrigatório aqui, apesar do que diz GraphQL/UnnecessaryFieldAlias:
+    # o objeto deste tipo é um Hash (CustomReport::FilterDefinition#to_h) e sem a
+    # chave explícita a resolução devolve nil, derrubando a consulta inteira com
+    # "Cannot return null for non-nullable field CustomReportFilter.display".
+    # Coberto por spec em spec/graphql/gql/queries/custom_report/results_spec.rb.
+    # rubocop:disable GraphQL/UnnecessaryFieldAlias
+    field :name, String, null: false, hash_key: :name,
+          description: 'Attribute name to filter by'
+    field :display, String, null: false, hash_key: :display,
+          description: 'Translated label for the field'
 
     # Diz à tela que controle renderizar. Sem isto tudo cai num input de texto,
     # o que é inútil para estado, grupo ou data.
-    field :type, String, null:        false,
-                         description: 'select, date, boolean or text'
+    field :type, String, null: false, hash_key: :type,
+          description: 'select, date, boolean or text'
+    # rubocop:enable GraphQL/UnnecessaryFieldAlias
 
     field :options, [Gql::Types::CustomReport::FilterOptionType, { null: false }], null:        false,
                                                                                    description: 'Selectable values, empty unless type is select'

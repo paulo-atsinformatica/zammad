@@ -28,3 +28,22 @@ export interface AvailableFilter {
   type: AvailableFilterType
   options: AvailableFilterOption[]
 }
+
+export interface ReportColumn {
+  name: string
+  display: string
+}
+
+// Totalizadores. As chaves de `groups` e `values` dependem do que o relatório
+// definiu, por isso são mapas e não campos fixos (ver CustomReport::Summary).
+export interface ReportSummaryRow {
+  groups: Record<string, unknown>
+  values: Record<string, unknown>
+}
+
+export interface ReportSummary {
+  groupBy: ReportColumn[]
+  aggregations: ReportColumn[]
+  rows: ReportSummaryRow[]
+  totals: Record<string, unknown>
+}

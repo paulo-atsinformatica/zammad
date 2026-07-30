@@ -5,7 +5,7 @@ class App.CustomReport extends App.Model
   # Todo atributo que o formulário envia precisa estar aqui: o Spine monta o
   # payload de gravação a partir desta lista, e o que faltar é descartado em
   # silêncio.
-  @configure 'CustomReport', 'name', 'object', 'visibility', 'group_ids', 'condition', 'columns', 'enabled_filters', 'active', 'updated_at'
+  @configure 'CustomReport', 'name', 'object', 'visibility', 'group_ids', 'condition', 'columns', 'enabled_filters', 'group_by', 'aggregations', 'aggregation_attributes', 'active', 'updated_at'
   @extend Spine.Model.Ajax
   @url: @apiPath + '/custom_reports'
   @configure_delete = true
@@ -27,9 +27,8 @@ class App.CustomReport extends App.Model
       display: __('Visible for'),
       tag:     'select',
       options:
-        personal: __('Only me')
-        group:    __('Members of selected groups')
-        global:   __('Everyone')
+        personal: __('Personal view')
+        group:    __('General')
       default: 'personal'
       null:    false
       note:    __('This only controls who sees this report. The data is always limited to what the person generating it is allowed to see.')
@@ -40,7 +39,7 @@ class App.CustomReport extends App.Model
       tag:      'column_select',
       relation: 'Group',
       null:     true,
-      note:     __('Only used when the report is visible for members of selected groups.'),
+      note:     __('Only used for a general report. Select every group to make it visible to everyone.'),
     },
     # tag: 'ticket_selector' reaproveita o mesmo editor de condições usado por
     # Overviews, Triggers e Agendamentos, com todos os campos de ticket,
@@ -53,6 +52,26 @@ class App.CustomReport extends App.Model
     { name: 'columns', display: __('Columns'), tag: 'checkboxTicketAttributes', null: true, translate: true, note: __('Columns shown in the grid and in the exported file.') },
     # Atributos que a tela de visualização deixa o usuário filtrar na hora.
     { name: 'enabled_filters', display: __('Filters available when viewing'), tag: 'checkboxTicketAttributes', null: true, translate: true, note: __('Attributes the viewer may filter by. Leave empty to offer no filters.') },
+    # Totalizadores. Agrupa por estes atributos e calcula as funções escolhidas
+    # para cada combinação, mais uma linha de total geral.
+    { name: 'group_by', display: __('Group totals by'), tag: 'checkboxTicketAttributes', null: true, translate: true, note: __('Leave empty for no totals section.') },
+    {
+      name:    'aggregations',
+      display: __('Totals to calculate'),
+      tag:     'select',
+      multiple: true,
+      null:    true,
+      options:
+        count: __('Count')
+        sum:   __('Sum')
+        avg:   __('Average')
+        min:   __('Minimum')
+        max:   __('Maximum')
+      note: __('Count needs no field. The others apply to the fields chosen below.')
+    },
+    # Separado das funções para o formulário não precisar de um editor de pares
+    # função+campo. O backend faz o produto dos dois (ver CustomReport::Summary).
+    { name: 'aggregation_attributes', display: __('Fields to total'), tag: 'checkboxTicketAttributes', null: true, translate: true, note: __('Sum and average only apply to numeric fields.') },
     { name: 'active',     display: __('Active'), tag: 'active', default: true },
   ]
 
@@ -66,9 +85,8 @@ class App.CustomReport extends App.Model
 
   visibilityName: ->
     switch @visibility
-      when 'global'   then App.i18n.translateInline('Everyone')
-      when 'group'    then App.i18n.translateInline('Groups')
-      when 'personal' then App.i18n.translateInline('Only me')
+      when 'group'    then App.i18n.translateInline('General')
+      when 'personal' then App.i18n.translateInline('Personal view')
       else @visibility
 
   filterDescription: ->

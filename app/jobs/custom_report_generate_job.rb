@@ -1,4 +1,5 @@
 # Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
+
 # Customização ATS: geração assíncrona de relatório personalizado.
 
 # Gera o arquivo do relatório fora do ciclo da requisição.
@@ -66,9 +67,13 @@ class CustomReportGenerateJob < ApplicationJob
       notify_progress(run, user, processed, total)
     end
 
-    # Fase 1 gera apenas CSV. xlsx entra na fase 2, com teto de linhas, porque
-    # ExcelSheet monta a planilha em memória.
-    CustomReport::Exporter::Csv.new(run:, query:, columns:, on_progress:)
+    summary = CustomReport::Summary.new(report: run.custom_report, query:, columns:)
+
+    # Os dois exportadores escrevem em streaming; o xlsx tem teto porque o
+    # formato tem (ver CustomReport::Exporter::Xlsx::MAX_ROWS).
+    klass = run.format == 'xlsx' ? CustomReport::Exporter::Xlsx : CustomReport::Exporter::Csv
+
+    klass.new(run:, query:, columns:, summary:, on_progress:)
   end
 
   def fail_run(run, message, user)

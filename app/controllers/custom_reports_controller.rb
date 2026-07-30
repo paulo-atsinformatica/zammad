@@ -146,7 +146,9 @@ class CustomReportsController < ApplicationController
   end
 
   def report_params
-    params.permit(:name, :object, :visibility, :active, group_ids: [], columns: [], group_by: [], aggregations: [], enabled_filters: [], condition: {})
+    params.permit(:name, :object, :visibility, :active,
+                  group_ids: [], columns: [], group_by: [], aggregations: [],
+                  aggregation_attributes: [], enabled_filters: [], condition: {})
   end
 
   # Filtros preenchidos por quem visualiza. O que pode ou não ser filtrado é
@@ -159,7 +161,6 @@ class CustomReportsController < ApplicationController
 
   def filter_by_visibility(reports)
     case params[:visibility]
-    when 'global'   then reports.where(visibility: 'global')
     when 'group'    then reports.where(visibility: 'group')
     when 'personal' then reports.where(visibility: 'personal', created_by_id: current_user.id)
     else reports

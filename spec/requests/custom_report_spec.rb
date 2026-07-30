@@ -6,7 +6,7 @@ require 'rails_helper'
 RSpec.describe 'CustomReport', type: :request do
   let(:admin)    { create(:admin) }
   let(:agent)    { create(:agent) }
-  let!(:report)  { create(:custom_report, name: 'Tickets abertos', visibility: 'global') }
+  let!(:report)  { create(:custom_report_general, name: 'Tickets abertos') }
 
   # A tela Gerenciar > Relatórios Personalizados usa App.ControllerGenericIndex
   # com pagerAjax, que pagina pelo endpoint de search. Sem essa rota a tela nunca
