@@ -13,5 +13,11 @@ FactoryBot.define do
       data { { error_message: 'AI service unavailable', ticket_title: 'Example ticket' } }
       kind { 'kb_answer_generation_failed' }
     end
+
+    # Customização ATS: relatório personalizado.
+    trait :custom_report do
+      data { { custom_report_id: 1, status: 'succeeded' } }
+      kind { 'custom_report' }
+    end
   end
 end

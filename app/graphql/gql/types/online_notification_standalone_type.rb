@@ -15,6 +15,10 @@ module Gql::Types
         ::OnlineNotificationStandalone::BulkJobData.new(**object.data.symbolize_keys)
       when 'kb_answer_generation_failed'
         ::OnlineNotificationStandalone::KbAnswerGenerationFailedData.new(**object.data.symbolize_keys)
+      # Customização ATS: relatório personalizado. Sem este ramo o campo devolve
+      # nil e, sendo non-null, derruba a consulta de notificações inteira.
+      when 'custom_report'
+        ::OnlineNotificationStandalone::CustomReportData.new(**object.data.symbolize_keys)
       end
     end
   end

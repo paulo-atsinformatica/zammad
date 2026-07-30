@@ -57,6 +57,11 @@ query onlineNotifications {
                 errorMessage
                 ticketTitle
               }
+              # Customização ATS: relatório personalizado.
+              ... on OnlineNotificationStandaloneCustomReportData {
+                customReportId
+                status
+              }
             }
           }
           ... on KnowledgeBaseAnswerTranslation {

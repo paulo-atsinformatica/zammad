@@ -1,4 +1,5 @@
 # Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
+
 # Customização ATS: relatório personalizado.
 
 require 'rails_helper'
@@ -13,6 +14,7 @@ RSpec.describe Gql::Queries::CustomReport::Runs, type: :graphql do
           id
           status
           progressPercent
+          errorMessage
           downloadable
           downloadPath
           customReport { name }
@@ -26,7 +28,7 @@ RSpec.describe Gql::Queries::CustomReport::Runs, type: :graphql do
     let(:agent) { create(:agent) }
 
     it 'lists only the runs of the requesting user' do
-      mine   = create(:custom_report_run, custom_report: report, created_by_id: agent.id)
+      mine = create(:custom_report_run, custom_report: report, created_by_id: agent.id)
       create(:custom_report_run, custom_report: report, created_by_id: create(:agent).id)
 
       gql.execute(query)
@@ -48,6 +50,18 @@ RSpec.describe Gql::Queries::CustomReport::Runs, type: :graphql do
       gql.execute(query)
 
       expect(gql.result.data.first).to include('downloadable' => false, 'downloadPath' => nil)
+    end
+
+    # errorMessage vem da coluna `error`. Sem o `method:` no tipo, o GraphQL
+    # levanta "Failed to implement CustomReportRun.errorMessage" e a tela toda
+    # quebra, então este campo precisa estar coberto.
+    it 'exposes the failure reason of a failed run' do
+      create(:custom_report_run, custom_report: report, created_by_id: agent.id,
+                                 status: 'failed', error: 'algo deu errado')
+
+      gql.execute(query)
+
+      expect(gql.result.data.first['errorMessage']).to eq('algo deu errado')
     end
 
     it 'honours the limit' do

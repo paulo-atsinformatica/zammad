@@ -2,9 +2,13 @@
 # Customização ATS: relatório personalizado.
 
 class App.CustomReport extends App.Model
-  @configure 'CustomReport', 'name', 'object', 'visibility', 'condition', 'columns', 'active'
+  # Todo atributo que o formulário envia precisa estar aqui: o Spine monta o
+  # payload de gravação a partir desta lista, e o que faltar é descartado em
+  # silêncio.
+  @configure 'CustomReport', 'name', 'object', 'visibility', 'group_ids', 'condition', 'columns', 'enabled_filters', 'active', 'updated_at'
   @extend Spine.Model.Ajax
   @url: @apiPath + '/custom_reports'
+  @configure_delete = true
 
   @configure_attributes = [
     { name: 'name',       display: __('Name'),   tag: 'input',  type: 'text', limit: 250, null: false },
@@ -50,6 +54,14 @@ class App.CustomReport extends App.Model
     # Atributos que a tela de visualização deixa o usuário filtrar na hora.
     { name: 'enabled_filters', display: __('Filters available when viewing'), tag: 'checkboxTicketAttributes', null: true, translate: true, note: __('Attributes the viewer may filter by. Leave empty to offer no filters.') },
     { name: 'active',     display: __('Active'), tag: 'active', default: true },
+  ]
+
+  # Colunas do grid de Gerenciar > Relatórios Personalizados. Sem isto o
+  # App.ControllerTable levanta "overviewAttributes needed" e a lista fica vazia.
+  @configure_overview = [
+    'name',
+    'object',
+    'visibility',
   ]
 
   visibilityName: ->

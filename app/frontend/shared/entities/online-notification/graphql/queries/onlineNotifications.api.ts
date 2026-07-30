@@ -65,6 +65,10 @@ export const OnlineNotificationsDocument = gql`
                 errorMessage
                 ticketTitle
               }
+              ... on OnlineNotificationStandaloneCustomReportData {
+                customReportId
+                status
+              }
             }
           }
           ... on KnowledgeBaseAnswerTranslation {

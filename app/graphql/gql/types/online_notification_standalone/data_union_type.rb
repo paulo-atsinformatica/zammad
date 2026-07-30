@@ -5,6 +5,8 @@ module Gql::Types::OnlineNotificationStandalone
     description 'Union of data payloads for standalone online notifications'
 
     possible_types Gql::Types::OnlineNotificationStandalone::BulkJobDataType,
-                   Gql::Types::OnlineNotificationStandalone::KbAnswerGenerationFailedDataType
+                   Gql::Types::OnlineNotificationStandalone::KbAnswerGenerationFailedDataType,
+                   # Customização ATS: relatório personalizado.
+                   Gql::Types::OnlineNotificationStandalone::CustomReportDataType
   end
 end

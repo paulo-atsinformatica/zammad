@@ -500,7 +500,12 @@ Arquivos ATS puros (sem risco em sync): `app/models/custom_report.rb`,
 
 | Arquivo | Mudança e motivo |
 |---|---|
-| `app/models/online_notification_standalone.rb` | `kind` é validado contra lista fixa; sem acrescentar `custom_report` a notificação de "pronto" levanta exceção. |
+| `app/models/online_notification_standalone.rb` | `kind` é validado contra lista fixa; sem acrescentar `custom_report` a notificação de "pronto" levanta exceção. Também define `CustomReportData`. |
+| `app/graphql/gql/types/online_notification_standalone_type.rb` | O `case object.kind` em `#data` precisa do ramo `custom_report`. O campo é **non-null**: sem o ramo ele devolve nil e derruba a consulta de notificações **inteira**, não só a do relatório. |
+| `app/graphql/gql/types/online_notification_standalone/data_union_type.rb` | `possible_types` precisa incluir `CustomReportDataType`, senão a union não resolve o payload. |
+| `app/frontend/shared/entities/online-notification/graphql/queries/onlineNotifications.graphql` | Fragmento inline para `OnlineNotificationStandaloneCustomReportData`; sem ele o campo volta vazio. |
+| `app/frontend/shared/composables/activity-message/activityMessageBuilder/builders/online-notification-standalone.ts` | `switch` no `__typename` cai em `default: return null` para tipo desconhecido, e o sino não mostra mensagem nenhuma. |
+| `spec/factories/online_notification_standalone.rb` | Trait `:custom_report`, usada pelo spec de regressão do payload. |
 | `app/assets/javascripts/app/models/online_notification_standalone.coffee` | `activityMessage` cai num `else` que devolve string de debug em inglês para `kind` desconhecido. Também define `uiUrl` para a notificação levar ao relatório. |
 | `db/seeds/settings.rb` | Setting `custom_report_max_rows` (instalação nova não roda a migration). |
 | `db/seeds/permissions.rb` | Todas as permissões ATS. Instalação nova não roda as migrations que as criavam, então o menu e o player simplesmente não apareciam. |
@@ -560,6 +565,18 @@ Nada em `app/assets/javascripts/app/views/navigation/*.jst.eco` foi alterado:
 - **Progresso na tela Vue por polling:** um `setInterval` de 4s que só roda
   enquanto existe execução `pending`/`running`. Não há subscription GraphQL para
   esta feature.
+- **`errorMessage` mapeia a coluna `error`:** o tipo usa
+  `field :error_message, String, method: :error`. A coluna do banco é `error`; sem
+  o `method:` o GraphQL levanta "Failed to implement
+  CustomReportRun.errorMessage" e a tela toda quebra. Coberto por spec, porque a
+  primeira versão do spec não pedia esse campo e o bug passou.
+- **O model CoffeeScript precisa de `@configure_overview`:** sem isso o
+  `App.ControllerTable` levanta "overviewAttributes needed" e o grid de
+  Gerenciar fica vazio.
+- **`@configure` precisa listar todo atributo que o formulário envia:** o Spine
+  monta o payload de gravação a partir dessa lista e descarta em silêncio o que
+  faltar. `group_ids` e `enabled_filters` estavam fora, então grupos e filtros
+  habilitados nunca eram salvos.
 
 ### Traduções pt-BR das customizações (`i18n/ats.pt-br.po`)
 

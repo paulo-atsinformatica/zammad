@@ -850,7 +850,7 @@ export type DataPrivacyTask = {
 };
 
 /** Union of data payloads for standalone online notifications */
-export type DataUnion = OnlineNotificationStandaloneBulkJobData | OnlineNotificationStandaloneKbAnswerGenerationFailedData;
+export type DataUnion = OnlineNotificationStandaloneBulkJobData | OnlineNotificationStandaloneCustomReportData | OnlineNotificationStandaloneKbAnswerGenerationFailedData;
 
 /** EmailAddress model instances */
 export type EmailAddress = {
@@ -2937,6 +2937,15 @@ export type OnlineNotificationStandaloneBulkJobData = {
   __typename?: 'OnlineNotificationStandaloneBulkJobData';
   failedCount: Scalars['Int']['output'];
   total: Scalars['Int']['output'];
+};
+
+/** Data payload for custom report standalone notifications */
+export type OnlineNotificationStandaloneCustomReportData = {
+  __typename?: 'OnlineNotificationStandaloneCustomReportData';
+  /** Report the generation belongs to */
+  customReportId: Scalars['Int']['output'];
+  /** succeeded or failed */
+  status: Scalars['String']['output'];
 };
 
 /** Data payload for knowledge base answer generation failure notifications */

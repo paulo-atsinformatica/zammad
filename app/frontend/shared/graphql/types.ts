@@ -1344,6 +1344,7 @@ export type OnlineNotificationsQuery = { onlineNotifications: { __typename: 'Onl
           | { __typename: 'KnowledgeBaseAnswerTranslation', id: string, title: string, kbLocale: { __typename: 'KnowledgeBaseLocale', systemLocale: { __typename: 'Locale', locale: string } }, answer: { __typename: 'KnowledgeBaseAnswer', id: string } }
           | { __typename: 'OnlineNotificationStandalone', id: string, internalId: number, data:
               | { __typename: 'OnlineNotificationStandaloneBulkJobData', total: number, failedCount: number }
+              | { __typename: 'OnlineNotificationStandaloneCustomReportData', customReportId: number, status: string }
               | { __typename: 'OnlineNotificationStandaloneKbAnswerGenerationFailedData', errorMessage: string, ticketTitle: string }
              }
           | { __typename: 'Organization' }

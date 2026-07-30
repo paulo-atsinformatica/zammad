@@ -19,7 +19,9 @@ module Gql::Types
     field :processed_rows, Integer
     field :progress_percent, Integer, description: 'Nil until the total row count is known'
 
-    field :error_message, String, description: 'Reason the generation failed'
+    # A coluna se chama `error`; o nome exposto é mais explícito, e `error` no
+    # singular confundiria com o `errors` das mutations.
+    field :error_message, String, description: 'Reason the generation failed', method: :error
     field :expires_at, GraphQL::Types::ISO8601DateTime, description: 'When the generated file is removed'
     field :created_at, GraphQL::Types::ISO8601DateTime, null: false
 

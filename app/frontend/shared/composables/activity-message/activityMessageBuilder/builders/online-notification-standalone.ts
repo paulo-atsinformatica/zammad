@@ -3,6 +3,8 @@
 import type {
   OnlineNotificationStandalone,
   OnlineNotificationStandaloneBulkJobData,
+  // Customização ATS: relatório personalizado.
+  OnlineNotificationStandaloneCustomReportData,
   OnlineNotificationStandaloneKbAnswerGenerationFailedData,
 } from '#shared/graphql/types.ts'
 import { i18n } from '#shared/i18n.ts'
@@ -38,6 +40,12 @@ const messageText = (
         data.ticketTitle,
         data.errorMessage,
       )
+    }
+    // Customização ATS: relatório personalizado.
+    case 'OnlineNotificationStandaloneCustomReportData': {
+      const data = metaObject.data as OnlineNotificationStandaloneCustomReportData
+      if (data.status === 'failed') return i18n.t('Custom report generation failed.')
+      return i18n.t('Your custom report is ready to download.')
     }
     default:
       return null
