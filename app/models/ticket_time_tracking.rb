@@ -14,13 +14,24 @@ class TicketTimeTracking < ApplicationModel
 
   validates :started_at, presence: true
   validates :is_active, inclusion: { in: [true, false] }
-  validate :only_one_active_per_user, on: :create
+
+  # Também on: :update — reactivate! liga is_active num registro já existente, e
+  # com a validação só na criação esse caminho podia abrir uma segunda contagem
+  # ativa para o mesmo usuário.
+  validate :only_one_active_per_user, on: %i[create update]
 
   # Callbacks for state change notifications
   after_save :broadcast_state_change
   after_destroy :broadcast_destroyed
 
+  # `active` significa "ocupa o slot único do usuário e está correndo". Uma
+  # contagem pausada NÃO é ativa: pause! desliga is_active justamente para
+  # liberar o usuário a iniciar outro ticket.
   scope :active, -> { where(is_active: true) }
+
+  # Pausada e ainda não encerrada — o que resume_tracking consegue retomar.
+  scope :resumable, -> { where(is_active: false, ended_at: nil).where.not(paused_at: nil) }
+
   scope :for_user, ->(user) { where(user_id: user.id) }
   scope :recent, -> { order(started_at: :desc) }
 
@@ -32,31 +43,26 @@ class TicketTimeTracking < ApplicationModel
     paused_at.present? && resumed_at.nil? && ended_at.nil?
   end
 
+  # Pausar também libera o slot (is_active = false).
+  #
+  # Antes a pausa mantinha is_active, e como a guarda de "já tem contagem ativa"
+  # olha esse campo, pausar um ticket não liberava o usuário para iniciar outro —
+  # ele recebia "Você já está atendendo o ticket #X" mesmo tendo pausado.
+  # Retomar continua funcionando: resume_tracking encontra a contagem pelo escopo
+  # `resumable` e chama reactivate!.
   def pause!
     return false if !active? || paused?
 
-    elapsed = Time.zone.now - (resumed_at || started_at)
-    self.total_seconds = (total_seconds || 0) + elapsed.to_i
-
+    accumulate_elapsed
     self.paused_at = Time.zone.now
     self.resumed_at = nil # Clear resumed_at for new pause
+    self.is_active = false
     save!
   end
 
-  # Pause and deactivate - used when switching to another ticket
-  def pause_and_deactivate!
-    return false if !is_active
-
-    unless paused?
-      elapsed = Time.zone.now - (resumed_at || started_at)
-      self.total_seconds = (total_seconds || 0) + elapsed.to_i
-      self.paused_at = Time.zone.now
-      self.resumed_at = nil
-    end
-
-    self.is_active = false # Deactivate so new tracking can be created
-    save!
-  end
+  # Mantido como nome próprio para a troca de ticket, mas hoje é o mesmo que
+  # pause!: os dois pausam e liberam o slot.
+  alias pause_and_deactivate! pause!
 
   # Reactivate a previously paused and deactivated tracking
   def reactivate!
@@ -76,13 +82,15 @@ class TicketTimeTracking < ApplicationModel
     save!
   end
 
+  # Encerra qualquer contagem ainda aberta, inclusive a que foi pausada ou
+  # desativada por troca de ticket.
+  #
+  # Antes exigia `active?`, então uma contagem pausada ficava em limbo: não dava
+  # para encerrar por lugar nenhum e acumulava com ended_at nulo para sempre.
   def end!
-    return false if !active?
+    return false if ended_at.present?
 
-    unless paused?
-      elapsed = Time.zone.now - (resumed_at || started_at)
-      self.total_seconds = (total_seconds || 0) + elapsed.to_i
-    end
+    accumulate_elapsed if !paused?
 
     self.ended_at = Time.zone.now
     self.is_active = false
@@ -143,6 +151,13 @@ class TicketTimeTracking < ApplicationModel
   end
 
   private
+
+  # Fecha o intervalo em aberto somando ao acumulador. `resumed_at` só existe
+  # depois de uma retomada; na primeira vez o intervalo começa em started_at.
+  def accumulate_elapsed
+    elapsed = Time.zone.now - (resumed_at || started_at)
+    self.total_seconds = (total_seconds || 0) + elapsed.to_i
+  end
 
   def broadcast_state_change
     return if Setting.get('import_mode')

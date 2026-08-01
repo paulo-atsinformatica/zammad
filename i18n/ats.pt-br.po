@@ -64,17 +64,35 @@ msgstr "Relatório sobre"
 msgid "Visible for"
 msgstr "Visível para"
 
-msgid "Personal view"
-msgstr "Visualização pessoal"
+msgid "Available for the following groups"
+msgstr "Disponível para os seguintes grupos"
 
-msgid "General"
-msgstr "Geral"
+msgid "Also available for the following users"
+msgstr "Também disponível para os seguintes usuários"
 
-msgid "Only used for a general report. Select every group to make it visible to everyone."
-msgstr "Usado apenas em relatório geral. Escolha todos os grupos para deixá-lo visível para todos."
+msgid "Added to the groups above, not intersected with them."
+msgstr "Somado aos grupos acima, não cruzado com eles."
 
 msgid "No report available for this visibility."
 msgstr "Nenhum relatório disponível nesta visibilidade."
+
+msgid "Show"
+msgstr "Exibir"
+
+msgid "All reports I can see"
+msgstr "Todos os relatórios que eu vejo"
+
+msgid "Shared with my groups"
+msgstr "Compartilhados com meus grupos"
+
+msgid "Assigned to me"
+msgstr "Atribuídos a mim"
+
+msgid "Export as CSV"
+msgstr "Exportar em CSV"
+
+msgid "Export as Excel (xlsx)"
+msgstr "Exportar em Excel (xlsx)"
 
 msgid "This only controls who sees this report. The data is always limited to what the person generating it is allowed to see."
 msgstr "Isto controla apenas quem vê este relatório. Os dados sempre se limitam ao que a pessoa que gera o relatório tem permissão de ver."

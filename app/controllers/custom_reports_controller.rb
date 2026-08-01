@@ -9,15 +9,13 @@ class CustomReportsController < ApplicationController
   before_action :set_report, only: %i[show update destroy generate results]
   before_action :set_run, only: %i[run_show download]
 
-  # GET /api/v1/custom_reports?visibility=all|global|group|personal
+  # GET /api/v1/custom_reports?scope=all|group|assigned
   def index
-    reports = CustomReport.visible_to(current_user)
-    reports = filter_by_visibility(reports)
+    reports = filter_by_scope(CustomReport.visible_to(current_user))
 
     render json: {
       custom_reports: reports.reorder(name: :asc).map { |report| report_json(report) },
       objects:        CustomReport::OBJECTS,
-      can_share:      shareable_visibilities,
     }, status: :ok
   end
 
@@ -37,7 +35,6 @@ class CustomReportsController < ApplicationController
 
   def create
     report = CustomReport.new(report_params)
-    authorize_visibility!(report.visibility)
 
     report.save!
     render json: report_json(report), status: :created
@@ -45,8 +42,6 @@ class CustomReportsController < ApplicationController
 
   def update
     return render_not_editable if !@report.editable_by?(current_user)
-
-    authorize_visibility!(report_params[:visibility]) if report_params.key?(:visibility)
 
     @report.update!(report_params)
     render json: report_json(@report), status: :ok
@@ -146,8 +141,8 @@ class CustomReportsController < ApplicationController
   end
 
   def report_params
-    params.permit(:name, :object, :visibility, :active,
-                  group_ids: [], columns: [], group_by: [], aggregations: [],
+    params.permit(:name, :object, :active,
+                  group_ids: [], user_ids: [], columns: [], group_by: [], aggregations: [],
                   aggregation_attributes: [], enabled_filters: [], condition: {})
   end
 
@@ -159,26 +154,13 @@ class CustomReportsController < ApplicationController
     params.require(:filters).permit!.to_h
   end
 
-  def filter_by_visibility(reports)
-    case params[:visibility]
-    when 'group'    then reports.where(visibility: 'group')
-    when 'personal' then reports.where(visibility: 'personal', created_by_id: current_user.id)
+  # Recorte da lista, sempre dentro do que o usuário já enxerga.
+  def filter_by_scope(reports)
+    case params[:scope]
+    when 'group'    then reports.joins(:groups).where(groups: { id: CustomReport.visible_group_ids(current_user) })
+    when 'assigned' then reports.merge(CustomReport.assigned_to(current_user))
     else reports
     end
-  end
-
-  def shareable_visibilities
-    %w[personal] + CustomReport::VISIBILITY_PERMISSIONS.select do |_visibility, permission|
-      current_user.permissions?(permission)
-    end.keys
-  end
-
-  def authorize_visibility!(visibility)
-    permission = CustomReport::VISIBILITY_PERMISSIONS[visibility.to_s]
-    return if permission.blank?
-    return if current_user.permissions?(permission)
-
-    raise Exceptions::Forbidden, __('You do not have permission to share reports at this level.')
   end
 
   def render_not_editable

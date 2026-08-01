@@ -1210,8 +1210,16 @@ raise 'At least one user need to have admin permissions'
     user_pauses.find_by(id: current_pause_id, ended_at: nil)
   end
 
+  # Contagem correndo agora. Pausar desliga is_active, então uma contagem pausada
+  # não aparece aqui — é isso que libera o usuário a iniciar outro ticket.
   def active_ticket_tracking
     ticket_time_trackings.active.first
+  end
+
+  # Contagem pausada e ainda não encerrada, para oferecer retomada ao sair da
+  # pausa (ver UserPauseService#end_pause).
+  def resumable_ticket_tracking
+    ticket_time_trackings.resumable.first
   end
 
   def offline?

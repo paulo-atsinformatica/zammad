@@ -6,30 +6,28 @@ module Gql::Queries
 
     description 'Saved custom reports the current user may open'
 
-    argument :visibility, String, required: false,
-             description: 'Restrict to one visibility level: group or personal'
+    argument :scope, String, required: false,
+             description: 'Restrict the list: group (shared with a group I read) or assigned (shared directly with me)'
 
     type [Gql::Types::CustomReportType, { null: false }], null: false
 
     requires_permission 'report.custom'
 
-    def resolve(visibility: nil)
-      reports = ::CustomReport.visible_to(context.current_user)
-      reports = restrict(reports, visibility)
-
-      reports.reorder(name: :asc)
+    def resolve(scope: nil)
+      restrict(::CustomReport.visible_to(context.current_user), scope).reorder(name: :asc)
     end
 
     private
 
-    def restrict(reports, visibility)
-      case visibility
+    # Sempre a partir de visible_to: o recorte estreita a lista, nunca amplia.
+    def restrict(reports, scope)
+      user = context.current_user
+
+      case scope
       when 'group'
-        reports.where(visibility:)
-      when 'personal'
-        # Pessoal é sempre "meu": um relatório pessoal de outra pessoa não é
-        # visível de todo modo, mas ser explícito evita depender disso.
-        reports.where(visibility: 'personal', created_by_id: context.current_user.id)
+        reports.joins(:groups).where(groups: { id: ::CustomReport.visible_group_ids(user) })
+      when 'assigned'
+        reports.merge(::CustomReport.assigned_to(user))
       else
         reports
       end

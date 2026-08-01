@@ -5,7 +5,7 @@ class App.CustomReport extends App.Model
   # Todo atributo que o formulário envia precisa estar aqui: o Spine monta o
   # payload de gravação a partir desta lista, e o que faltar é descartado em
   # silêncio.
-  @configure 'CustomReport', 'name', 'object', 'visibility', 'group_ids', 'condition', 'columns', 'enabled_filters', 'group_by', 'aggregations', 'aggregation_attributes', 'active', 'updated_at'
+  @configure 'CustomReport', 'name', 'object', 'group_ids', 'user_ids', 'condition', 'columns', 'enabled_filters', 'group_by', 'aggregations', 'aggregation_attributes', 'active', 'updated_at'
   @extend Spine.Model.Ajax
   @url: @apiPath + '/custom_reports'
   @configure_delete = true
@@ -22,24 +22,25 @@ class App.CustomReport extends App.Model
       default: 'Ticket',
       null:    false,
     },
-    {
-      name:    'visibility',
-      display: __('Visible for'),
-      tag:     'select',
-      options:
-        personal: __('Personal view')
-        group:    __('General')
-      default: 'personal'
-      null:    false
-      note:    __('This only controls who sees this report. The data is always limited to what the person generating it is allowed to see.')
-    },
+    # Compartilhamento no mesmo modelo da Visão Geral: grupos e/ou usuários.
+    # Quem criou sempre enxerga o próprio relatório, então deixar os dois vazios
+    # equivale ao antigo "pessoal".
     {
       name:     'group_ids',
-      display:  __('Groups'),
+      display:  __('Available for the following groups'),
       tag:      'column_select',
       relation: 'Group',
       null:     true,
-      note:     __('Only used for a general report. Select every group to make it visible to everyone.'),
+      note:     __('This only controls who sees this report. The data is always limited to what the person generating it is allowed to see.'),
+    },
+    {
+      name:     'user_ids',
+      display:  __('Also available for the following users'),
+      tag:      'column_select',
+      relation: 'User',
+      sortBy:   'displayName',
+      null:     true,
+      note:     __('Added to the groups above, not intersected with them.'),
     },
     # tag: 'ticket_selector' reaproveita o mesmo editor de condições usado por
     # Overviews, Triggers e Agendamentos, com todos os campos de ticket,
@@ -80,14 +81,8 @@ class App.CustomReport extends App.Model
   @configure_overview = [
     'name',
     'object',
-    'visibility',
+    'group_ids',
   ]
-
-  visibilityName: ->
-    switch @visibility
-      when 'group'    then App.i18n.translateInline('General')
-      when 'personal' then App.i18n.translateInline('Personal view')
-      else @visibility
 
   filterDescription: ->
     return App.i18n.translateInline('No filter') if _.isEmpty(@condition)

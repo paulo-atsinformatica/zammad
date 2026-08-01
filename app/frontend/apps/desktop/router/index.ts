@@ -4,6 +4,8 @@ import redirectGuard from '#shared/router/guards/before/redirect.ts'
 import mainInitializeRouter from '#shared/router/index.ts'
 import type { InitializeAppRouter, RoutesModule } from '#shared/types/router.ts'
 
+import { currentMountPoint } from '../mountPoint.ts'
+
 import activeTaskbarTab from './guards/before/activeTaskbarTab.ts'
 import systemSetupInfo from './guards/before/systemSetupInfo.ts'
 
@@ -59,22 +61,17 @@ export const routes: Array<RouteRecordRaw> = [
   },
 ]
 
-// Customização ATS: o bundle da Desktop View também serve páginas montadas fora
-// de /desktop — hoje a tela de relatório personalizado, em /report. A base do
-// history precisa acompanhar o ponto de montagem, senão o roteador não casa a
-// rota e a página abre vazia. Só bases conhecidas são aceitas, para o primeiro
-// segmento da URL não virar base arbitrária.
-const MOUNT_POINTS = ['desktop', 'report']
-const DEFAULT_MOUNT_POINT = 'desktop'
-
-const historyBase = (): string => {
-  const [, firstSegment] = window.location.pathname.split('/')
-
-  return MOUNT_POINTS.includes(firstSegment) ? firstSegment : DEFAULT_MOUNT_POINT
-}
-
+// Customização ATS: a base do history acompanha o ponto de montagem do bundle
+// (ver ../mountPoint.ts). Sem isso o roteador não casa a rota das páginas
+// servidas fora de /desktop e elas abrem vazias.
 const initializeRouter: InitializeAppRouter = (app: App) => {
-  return mainInitializeRouter(app, routes, [systemSetupInfo, activeTaskbarTab], [], historyBase())
+  return mainInitializeRouter(
+    app,
+    routes,
+    [systemSetupInfo, activeTaskbarTab],
+    [],
+    currentMountPoint(),
+  )
 }
 
 export default initializeRouter

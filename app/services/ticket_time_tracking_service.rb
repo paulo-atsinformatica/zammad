@@ -54,18 +54,11 @@ class TicketTimeTrackingService < Service::Base
     return error(__('Ticket is closed')) if @ticket.state&.state_type&.name == 'closed'
     return error(__('Ticket is not assigned to user')) if @ticket.owner_id != current_user.id
 
-    # First try to find active paused tracking for THIS ticket
-    tracking_obj = TicketTimeTracking.active.find_by(ticket: @ticket, user: current_user)
-    
-    # If not found, check for deactivated tracking (from closed ticket or switch)
-    if tracking_obj.blank?
-      tracking_obj = TicketTimeTracking.find_by(
-        ticket: @ticket,
-        user: current_user,
-        is_active: false,
-        ended_at: nil
-      )
-    end
+    # Pausar desliga is_active, então o caminho normal é o escopo `resumable`.
+    # A busca por contagem ativa fica como salvaguarda para registros gravados
+    # antes dessa mudança.
+    tracking_obj = TicketTimeTracking.resumable.find_by(ticket: @ticket, user: current_user)
+    tracking_obj ||= TicketTimeTracking.active.find_by(ticket: @ticket, user: current_user)
 
     return error(__('No tracking found to resume')) if tracking_obj.blank?
 
@@ -95,11 +88,14 @@ class TicketTimeTrackingService < Service::Base
     success(tracking_obj)
   end
 
+  # Encerra tanto a contagem correndo quanto a pausada. Antes só encontrava a
+  # ativa, então uma contagem pausada não tinha como ser encerrada.
   def end_tracking
-    tracking = find_active_tracking
-    return tracking if !tracking[:success]
+    tracking_obj = TicketTimeTracking.active.find_by(ticket: @ticket, user: current_user)
+    tracking_obj ||= TicketTimeTracking.resumable.find_by(ticket: @ticket, user: current_user)
 
-    tracking_obj = tracking[:data]
+    return error(__('Active tracking not found')) if tracking_obj.blank?
+
     tracking_obj.end!
 
     current_user.update!(current_active_ticket_id: nil) if current_user.current_active_ticket_id == @ticket.id
@@ -114,9 +110,11 @@ class TicketTimeTrackingService < Service::Base
     from_tracking = TicketTimeTracking.active.find_by(ticket: from_ticket, user: current_user)
     return error(__('Source ticket tracking not found')) if from_tracking.blank?
 
-    # Check if target ticket has an inactive but paused tracking (can be resumed)
-    paused_tracking = TicketTimeTracking.find_by(ticket: to_ticket, user: current_user, is_active: false)
-    if paused_tracking.present? && paused_tracking.paused_at.present?
+    # Escopo `resumable` e não find_by(is_active: false): sem filtrar ended_at
+    # uma contagem JÁ ENCERRADA satisfazia a checagem (end! não limpa paused_at)
+    # e era reativada, fazendo um intervalo fechado voltar a correr.
+    paused_tracking = TicketTimeTracking.resumable.find_by(ticket: to_ticket, user: current_user)
+    if paused_tracking.present?
       # Resume the paused tracking for target ticket
       TicketTimeTracking.transaction do
         from_tracking.pause_and_deactivate!
@@ -159,17 +157,10 @@ class TicketTimeTrackingService < Service::Base
     tracking = TicketTimeTracking.active.find_by(ticket: @ticket, user: current_user)
     return success(tracking) if tracking.present?
 
-    # Check for paused tracking (including closed tickets) to show elapsed time
-    paused_tracking = TicketTimeTracking.find_by(
-      ticket: @ticket,
-      user: current_user,
-      is_active: false,
-      ended_at: nil
-    )
-    if paused_tracking.present? && paused_tracking.paused_at.present?
-      # Return paused tracking info so frontend shows time; resume remains blocked if closed
-      return success(paused_tracking)
-    end
+    # Contagem pausada (inclusive de ticket fechado), para a tela mostrar o tempo
+    # já acumulado. Retomar segue bloqueado se o ticket estiver fechado.
+    paused_tracking = TicketTimeTracking.resumable.find_by(ticket: @ticket, user: current_user)
+    return success(paused_tracking) if paused_tracking.present?
 
     success(nil)
   end

@@ -78,6 +78,36 @@ class TicketTimeTrackingsController < ApplicationController
     render json: trackings.map(&:attributes_with_association_ids), status: :ok
   end
 
+  # GET /api/v1/tickets/:ticket_id/time_tracking/summary
+  #
+  # Tempo por atendente neste ticket. Existe porque um ticket costuma passar de
+  # mão: sem isto só dava para ver o próprio tempo, e não quanto cada um dedicou.
+  #
+  # Não filtra por usuário de propósito — quem enxerga o ticket enxerga quem
+  # trabalhou nele. O acesso ao ticket já foi verificado em check_ticket_access.
+  def summary
+    trackings = TicketTimeTracking
+      .where(ticket_id: @ticket.id)
+      .includes(:user)
+
+    entries = trackings.group_by(&:user_id).map do |user_id, list|
+      seconds = list.sum(&:total_time_seconds)
+
+      {
+        user_id:      user_id,
+        user:         list.first.user&.fullname,
+        total_seconds: seconds,
+        formatted:    format_seconds(seconds),
+        running:      list.any?(&:active?),
+      }
+    end
+
+    render json: {
+      entries:       entries.sort_by { |entry| -entry[:total_seconds] },
+      total_seconds: entries.sum { |entry| entry[:total_seconds] },
+    }, status: :ok
+  end
+
   def switch
     from_ticket = Ticket.find(params[:from_ticket_id])
     to_ticket = @ticket # Already set by before_action
@@ -113,8 +143,12 @@ class TicketTimeTrackingsController < ApplicationController
 
   def check_ticket_access
     return unless @ticket
-    
+
     # Check if user can access the ticket using show? policy
     authorize!(@ticket, :show?)
+  end
+
+  def format_seconds(seconds)
+    format('%02d:%02d:%02d', seconds / 3600, (seconds % 3600) / 60, seconds % 60)
   end
 end

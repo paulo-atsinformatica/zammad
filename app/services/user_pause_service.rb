@@ -99,10 +99,13 @@ class UserPauseService < Service::Base
     end
 
     PauseIndicatorsBroadcast.broadcast_change
-    # Offer to resume ticket tracking if it was paused
-    active_tracking = current_user.active_ticket_tracking
-    if active_tracking&.paused?
-      success(active_pause, resume_tracking: true, tracking_id: active_tracking.id)
+    # Oferece retomar a contagem que a pausa interrompeu.
+    #
+    # Lê resumable_ticket_tracking e não active_ticket_tracking: pausar desliga
+    # is_active, então a contagem interrompida não está mais entre as ativas.
+    paused_tracking = current_user.resumable_ticket_tracking
+    if paused_tracking.present?
+      success(active_pause, resume_tracking: true, tracking_id: paused_tracking.id)
     else
       success(active_pause)
     end

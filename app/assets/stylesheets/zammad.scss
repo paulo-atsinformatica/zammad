@@ -17221,112 +17221,91 @@ body.is-pause-blocked {
   margin-right: 12px;
 }
 
+/* As cores vêm das variáveis de tema, e não de hex claro fixo: a interface tem
+   modo escuro ([data-theme='dark'] redefine as mesmas variáveis), e os valores
+   antigos (#fff, #f9fafb, #e5e7eb) deixavam o player claro sobre fundo escuro.
+   Os tons de estado (verde/âmbar) são fixos de propósito — são semânticos — mas
+   escolhidos em faixa que contrasta nos dois modos. */
 .tt-btn {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
+  width: 30px;
+  height: 30px;
   padding: 0;
-  border: 1px solid #d1d5db;
-  border-radius: 4px;
-  background: #fff;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 6px;
+  background: var(--button-background);
+  color: var(--text-normal);
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: background 0.15s ease, border-color 0.15s ease;
 
   svg {
-    width: 14px;
-    height: 14px;
-    fill: #374151;
+    width: 13px;
+    height: 13px;
+    fill: currentcolor; // acompanha o tema sem precisar repetir a cor
   }
 
   &:hover:not(:disabled) {
-    background: #f3f4f6;
-    border-color: #9ca3af;
+    background: var(--button-active);
+    border-color: var(--interactive-muted);
   }
 
   &:active:not(:disabled) {
-    background: #e5e7eb;
+    background: var(--button-active-active);
   }
 
   &:disabled,
   &.is-disabled {
-    opacity: 0.4;
+    opacity: 0.35;
     cursor: not-allowed;
-    background: #f9fafb;
   }
 
   &.is-ready {
-    border-color: #22c55e;
-    background: #f0fdf4;
-
-    svg {
-      fill: #16a34a;
-    }
+    border-color: hsl(142, 55%, 45%);
+    color: hsl(142, 60%, 55%);
+    background: hsla(142, 55%, 45%, 0.12);
 
     &:hover {
-      background: #dcfce7;
-      border-color: #16a34a;
+      background: hsla(142, 55%, 45%, 0.22);
     }
   }
 }
 
-/* Play button specific */
-.js-tt-start {
-  &.is-ready {
-    border-color: #22c55e;
-    background: #f0fdf4;
+/* Pausar usa âmbar para diferenciar de "iniciar" sem depender do ícone. */
+.js-tt-pause.is-ready {
+  border-color: hsl(38, 80%, 50%);
+  color: hsl(38, 85%, 60%);
+  background: hsla(38, 80%, 50%, 0.12);
 
-    svg {
-      fill: #16a34a;
-    }
-
-    &:hover {
-      background: #dcfce7;
-    }
-  }
-}
-
-/* Pause button specific */
-.js-tt-pause {
-  &.is-ready {
-    border-color: #f59e0b;
-    background: #fffbeb;
-
-    svg {
-      fill: #d97706;
-    }
-
-    &:hover {
-      background: #fef3c7;
-      border-color: #d97706;
-    }
+  &:hover {
+    background: hsla(38, 80%, 50%, 0.22);
   }
 }
 
 /* Timer display */
 .tt-timer {
-  min-width: 70px;
-  padding: 6px 10px;
+  min-width: 72px;
+  padding: 5px 10px;
   font-size: 13px;
   font-weight: 600;
   font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
-  font-variant-numeric: tabular-nums;
-  color: #6b7280;
-  background: #f9fafb;
-  border: 1px solid #e5e7eb;
-  border-radius: 4px;
+  font-variant-numeric: tabular-nums; // largura estável, não "pula" a cada segundo
+  color: var(--text-muted);
+  background: var(--button-background);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 6px;
   text-align: center;
 
   &.is-active {
-    color: #16a34a;
-    background: #f0fdf4;
-    border-color: #bbf7d0;
+    color: hsl(142, 60%, 55%);
+    background: hsla(142, 55%, 45%, 0.12);
+    border-color: hsla(142, 55%, 45%, 0.45);
 
     &.is-paused {
-      color: #d97706;
-      background: #fffbeb;
-      border-color: #fde68a;
+      color: hsl(38, 85%, 60%);
+      background: hsla(38, 80%, 50%, 0.12);
+      border-color: hsla(38, 80%, 50%, 0.45);
     }
   }
 }
@@ -17360,21 +17339,26 @@ body.is-pause-blocked {
 .nav-tab-timeTracking {
   flex-shrink: 0;
   margin-inline-start: 6px;
-  padding: 1px 5px;
+  padding: 1px 6px;
   border-radius: 3px;
   font-size: 11px;
+  font-weight: 600;
   font-variant-numeric: tabular-nums; // largura estável, não "pula" a cada segundo
   line-height: 1.5;
   white-space: nowrap;
-  background: rgba(22, 163, 74, 0.18);
-  color: #16a34a;
+
+  /* O texto era #16a34a sobre o mesmo verde a 18% — verde sobre verde na barra
+     lateral escura, sem contraste para ler. Agora o texto é claro e o fundo
+     carrega a cor de estado, o que legível nos dois temas. */
+  background: hsla(142, 55%, 40%, 0.9);
+  color: hsl(0, 0%, 100%);
 }
 
-/* Pausado usa âmbar e sem contagem, para diferenciar de "correndo" sem depender
-   só de cor (o valor congelado já sinaliza). */
+/* Pausado usa âmbar para diferenciar de "correndo" — e o valor congelado já
+   sinaliza por si, sem depender só da cor. */
 .nav-tab.is-time-tracking-paused .nav-tab-timeTracking {
-  background: rgba(217, 119, 6, 0.18);
-  color: #d97706;
+  background: hsla(38, 80%, 42%, 0.9);
+  color: hsl(0, 0%, 100%);
 }
 
 /* O botão de fechar da aba aparece no hover e ocupa o mesmo canto; esconder o

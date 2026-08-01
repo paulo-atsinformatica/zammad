@@ -6,12 +6,15 @@ import { computed, ref, watch } from 'vue'
 
 import Form from '#shared/components/Form/Form.vue'
 import type { FormFieldValue, FormSchemaNode } from '#shared/components/Form/types.ts'
+import type { EnumOrderDirection } from '#shared/graphql/types.ts'
 import { i18n } from '#shared/i18n.ts'
 import QueryHandler from '#shared/server/apollo/handler/QueryHandler.ts'
 
+import CommonActionMenu from '#desktop/components/CommonActionMenu/CommonActionMenu.vue'
 import CommonButton from '#desktop/components/CommonButton/CommonButton.vue'
 import CommonLoader from '#desktop/components/CommonLoader/CommonLoader.vue'
-import CommonSimpleTable from '#desktop/components/CommonTable/CommonSimpleTable.vue'
+import type { MenuItem } from '#desktop/components/CommonPopoverMenu/types.ts'
+import CommonAdvancedTable from '#desktop/components/CommonTable/CommonAdvancedTable.vue'
 import { useCustomReportListQuery } from '#desktop/entities/custom-report/graphql/queries/customReportList.api.ts'
 import { useCustomReportResultsQuery } from '#desktop/entities/custom-report/graphql/queries/customReportResults.api.ts'
 
@@ -22,12 +25,10 @@ import { useCustomReportExport } from '../composables/useCustomReportExport.ts'
 
 import type { ReportSummary, RuntimeFilters } from '../types.ts'
 
-const DEFAULT_FORMAT = 'csv'
-const ALL_VISIBILITIES = 'all'
+const ALL_SCOPES = 'all'
 
 const selectedReportId = ref<string>()
-const format = ref(DEFAULT_FORMAT)
-const visibility = ref(ALL_VISIBILITIES)
+const scope = ref(ALL_SCOPES)
 const page = ref(1)
 const filters = ref<RuntimeFilters>({})
 const filtersOpen = ref(false)
@@ -36,9 +37,9 @@ const { generate, goToExports } = useCustomReportExport()
 
 const listQuery = new QueryHandler(
   useCustomReportListQuery(() => ({
-    // 'all' não é um nível de visibilidade; o backend trata a ausência do
-    // argumento como "todos".
-    visibility: visibility.value === ALL_VISIBILITIES ? undefined : visibility.value,
+    // 'all' não é um recorte; o backend trata a ausência do argumento como
+    // "tudo que o usuário enxerga".
+    scope: scope.value === ALL_SCOPES ? undefined : scope.value,
   })),
 )
 const listResult = listQuery.result()
@@ -75,28 +76,15 @@ watch(reports, (value) => {
 const staticSchema: FormSchemaNode[] = [
   {
     type: 'select',
-    name: 'visibility',
-    label: __('Visible for'),
-    value: ALL_VISIBILITIES,
+    name: 'scope',
+    label: __('Show'),
+    value: ALL_SCOPES,
     outerClass: 'min-w-48',
     props: {
       options: [
-        { value: ALL_VISIBILITIES, label: __('All') },
-        { value: 'group', label: __('General') },
-        { value: 'personal', label: __('Personal view') },
-      ],
-    },
-  },
-  {
-    type: 'select',
-    name: 'format',
-    label: __('Export format'),
-    value: DEFAULT_FORMAT,
-    outerClass: 'min-w-40',
-    props: {
-      options: [
-        { value: 'csv', label: __('CSV') },
-        { value: 'xlsx', label: __('Excel (xlsx)') },
+        { value: ALL_SCOPES, label: __('All reports I can see') },
+        { value: 'group', label: __('Shared with my groups') },
+        { value: 'assigned', label: __('Assigned to me') },
       ],
     },
   },
@@ -119,11 +107,8 @@ const reportSchema = computed<FormSchemaNode[]>(() => [
 
 const onToolbarChanged = (fieldName: string, newValue: FormFieldValue) => {
   switch (fieldName) {
-    case 'format':
-      format.value = String(newValue)
-      break
-    case 'visibility':
-      visibility.value = String(newValue)
+    case 'scope':
+      scope.value = String(newValue)
       break
     case 'customReportId':
       selectReport(String(newValue))
@@ -139,6 +124,8 @@ const resultsQuery = new QueryHandler(
       customReportId: selectedReportId.value as string,
       page: page.value,
       filters: filters.value,
+      orderBy: orderBy.value,
+      orderDirection: orderDirection.value,
     }),
     // Sem relatório escolhido não há o que consultar.
     () => ({ enabled: Boolean(selectedReportId.value) }),
@@ -150,13 +137,21 @@ const resultsLoading = resultsQuery.loading()
 
 const result = computed(() => resultsResult.value?.customReportResults)
 
-// O grid espera { key, label }; a API entrega { name, display } já traduzido.
-const tableHeaders = computed(
+// CommonAdvancedTable (e não CommonSimpleTable) porque é o componente que traz
+// redimensionar coluna arrastando e ordenar clicando no cabeçalho. Ele recebe os
+// nomes em `headers` e a descrição de cada coluna em `attributes`.
+const tableHeaders = computed(() => result.value?.columns.map((column) => column.name) ?? [])
+
+// dataType 'input' para todas: o backend já entrega os valores formatados como
+// texto (datas em ISO, relações pelo nome), então não há tipo a interpretar aqui.
+const tableAttributes = computed(
   () =>
     result.value?.columns.map((column) => ({
-      key: column.name,
+      name: column.name,
       label: column.display,
-      truncate: true,
+      dataType: 'input',
+      headerPreferences: { noResize: false, truncate: true },
+      columnPreferences: {},
     })) ?? [],
 )
 
@@ -187,10 +182,41 @@ const goToPage = (target: number) => {
   page.value = target
 }
 
-const exportReport = () => {
+// A ordenação é aplicada no banco, não na página carregada — senão ordenaria só
+// as 50 linhas visíveis. CustomReport::Query#ordered só aceita coluna real da
+// tabela, então um nome inesperado cai para `id` em vez de ir ao ORDER BY.
+const orderBy = ref<string>()
+const orderDirection = ref<EnumOrderDirection>()
+
+const sortByColumn = (column: string, direction: EnumOrderDirection) => {
+  orderBy.value = column
+  orderDirection.value = direction
+  page.value = 1
+}
+
+// O formato é escolhido no clique, num menu, em vez de ocupar espaço permanente
+// na barra: quem só consulta o relatório nunca precisa dele.
+const exportActions = computed<MenuItem[]>(() => [
+  {
+    key: 'csv',
+    label: __('Export as CSV'),
+    icon: 'download',
+    // CSV primeiro por ser o formato sem teto de linhas; o xlsx falha acima do
+    // limite do próprio formato (ver CustomReport::Exporter::Xlsx::MAX_ROWS).
+    onClick: () => exportReport('csv'),
+  },
+  {
+    key: 'xlsx',
+    label: __('Export as Excel (xlsx)'),
+    icon: 'download',
+    onClick: () => exportReport('xlsx'),
+  },
+])
+
+const exportReport = (format: string) => {
   if (!selectedReportId.value) return
 
-  generate(selectedReportId.value, format.value)
+  generate(selectedReportId.value, format)
 }
 </script>
 
@@ -208,15 +234,15 @@ const exportReport = () => {
       <CommonButton size="medium" prefix-icon="list" @click="goToExports">
         {{ $t('Report exports') }}
       </CommonButton>
-      <CommonButton
-        variant="primary"
-        size="medium"
-        prefix-icon="download"
+      <CommonActionMenu
+        :actions="exportActions"
         :disabled="!selectedReportId"
-        @click="exportReport"
-      >
-        {{ $t('Export') }}
-      </CommonButton>
+        no-single-action-mode
+        button-size="medium"
+        default-icon="download"
+        default-button-variant="primary"
+        :custom-menu-button-label="$t('Export')"
+      />
     </template>
 
     <!--
@@ -254,10 +280,17 @@ const exportReport = () => {
       <template v-if="result">
         <CustomReportSummary v-if="summary" :summary="summary" />
 
-        <CommonSimpleTable
+        <CommonAdvancedTable
           :caption="$t('Custom report results')"
           :headers="tableHeaders"
+          :attributes="tableAttributes"
           :items="tableItems"
+          :total-items-count="totalCount"
+          :order-by="orderBy"
+          :order-direction="orderDirection"
+          :table-id="`custom-report-${selectedReportId}`"
+          :storage-key-id="`custom-report-${selectedReportId}`"
+          @sort="sortByColumn"
         />
 
         <div class="mt-3 flex items-center justify-between gap-3">

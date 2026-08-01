@@ -33,6 +33,8 @@ Zammad::Application.routes.draw do
   match api_path + '/tickets/:ticket_id/time_tracking/resume', to: 'ticket_time_trackings#resume', via: :post
   match api_path + '/tickets/:ticket_id/time_tracking/end', to: 'ticket_time_trackings#end', via: :post
   match api_path + '/tickets/:ticket_id/time_tracking/current', to: 'ticket_time_trackings#current', via: :get
+  # Antes da rota sem sufixo, senão 'summary' seria lido como parte dela.
+  match api_path + '/tickets/:ticket_id/time_tracking/summary', to: 'ticket_time_trackings#summary', via: :get
   match api_path + '/tickets/:ticket_id/time_tracking', to: 'ticket_time_trackings#index', via: :get
   match api_path + '/tickets/:ticket_id/time_tracking/switch', to: 'ticket_time_trackings#switch', via: :post
 

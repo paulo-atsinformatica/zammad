@@ -18,26 +18,21 @@ class CustomReport < ApplicationModel
   # os outros já validam para permitir salvar modelos antes da fase 2.
   OBJECTS = %w[Ticket User Organization].freeze
 
-  # 'personal' = só quem criou; 'group' = "Geral", visível para quem tem acesso a
-  # algum dos grupos escolhidos.
+  # Compartilhamento no modelo da Visão Geral: por grupos e/ou por usuários
+  # escolhidos. Não há "nível de visibilidade" — quem criou sempre enxerga o
+  # próprio relatório, e "pessoal" é simplesmente um relatório sem grupo nem
+  # usuário adicional.
   #
-  # Não existe nível "todos": para valer para todo mundo basta escolher todos os
-  # grupos. Um nível global à parte só acrescentaria uma permissão para conceder o
-  # mesmo resultado por outro caminho.
+  # Grupos e usuários são somados (união), não intersectados: cada lista amplia o
+  # alcance. Intersectar exigiria estar nos dois, o que tornaria impossível
+  # compartilhar só com uma pessoa fora dos grupos.
   #
   # Isto controla apenas quem enxerga o MODELO. O escopo dos DADOS é sempre
   # recalculado a partir das permissões de quem gera (ver CustomReport::Query),
   # de forma que um relatório compartilhado nunca revela algo que o usuário não
   # poderia ver por conta própria.
-  VISIBILITIES = %w[personal group].freeze
-
-  # Permissão necessária para salvar em cada nível. 'personal' não exige nada
-  # além de report.custom, já que o modelo não sai do próprio usuário.
-  VISIBILITY_PERMISSIONS = {
-    'group' => 'report.custom.group',
-  }.freeze
-
   has_and_belongs_to_many :groups
+  has_and_belongs_to_many :users
   has_many :custom_report_runs, dependent: :destroy
 
   # Só condition usa `store`: columns/group_by/aggregations são arrays em jsonb,
@@ -46,24 +41,32 @@ class CustomReport < ApplicationModel
 
   validates :name, presence: true
   validates :object, presence: true, inclusion: { in: OBJECTS }
-  validates :visibility, presence: true, inclusion: { in: VISIBILITIES }
-  validate :groups_present_for_group_visibility
   validate :enabled_filters_are_known_attributes
 
   scope :active, -> { where(active: true) }
 
-  # Modelos que este usuário pode enxergar.
+  # Modelos que este usuário pode enxergar: os que ele criou, os compartilhados
+  # com algum grupo que ele lê, e os compartilhados diretamente com ele.
   #
-  # Deliberadamente não confia em `Group.all` para o nível de grupo: usa os
-  # grupos em que o usuário tem acesso de leitura, para que perder acesso a um
-  # grupo também esconda os relatórios daquele grupo.
+  # Deliberadamente não confia em `Group.all`: usa os grupos em que o usuário tem
+  # acesso de leitura, para que perder acesso a um grupo também esconda os
+  # relatórios daquele grupo.
   def self.visible_to(user)
     return none if !user
 
-    reports = active.left_outer_joins(:groups).distinct
+    reports = active.left_outer_joins(:groups, :users).distinct
 
     reports.where(created_by_id: user.id)
-      .or(reports.where(visibility: 'group', groups: { id: visible_group_ids(user) }))
+      .or(reports.where(groups: { id: visible_group_ids(user) }))
+      .or(reports.where(users: { id: user.id }))
+  end
+
+  # Compartilhados diretamente com este usuário, sem contar grupo nem autoria.
+  # É o que a tela de visualização oferece como "atribuídos a mim".
+  def self.assigned_to(user)
+    return none if !user
+
+    active.joins(:users).where(users: { id: user.id }).distinct
   end
 
   def self.visible_group_ids(user)
@@ -75,7 +78,7 @@ class CustomReport < ApplicationModel
   def visible_to?(user)
     return false if !user
     return true if created_by_id == user.id
-    return false if visibility != 'group'
+    return true if user_ids.include?(user.id)
 
     group_ids.intersect?(self.class.visible_group_ids(user))
   end
@@ -114,13 +117,6 @@ class CustomReport < ApplicationModel
   end
 
   private
-
-  def groups_present_for_group_visibility
-    return if visibility != 'group'
-    return if groups.present? || group_ids.present?
-
-    errors.add(:groups, __('At least one group is required to share a report with a group.'))
-  end
 
   # Filtro habilitado precisa corresponder a uma coluna real do objeto: a tela
   # de visualização os transforma em condição de consulta, e um nome inválido só

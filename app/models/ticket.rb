@@ -38,7 +38,7 @@ class Ticket < ApplicationModel
   store :preferences
   after_initialize :check_defaults, if: :new_record?
   before_create  :check_generate, :check_defaults, :check_title, :set_default_state, :set_default_priority
-  before_update  :check_defaults, :check_title, :reset_pending_time, :check_owner_active, :end_time_tracking_on_close, :end_time_tracking_on_unassign
+  before_update  :check_defaults, :check_title, :reset_pending_time, :check_owner_active, :end_time_tracking_on_close, :end_time_tracking_on_owner_change
 
   # This must be loaded late as it depends on the internal before_create and before_update handlers of ticket.rb.
   include Ticket::SetsLastOwnerUpdateTime
@@ -788,11 +788,43 @@ returns a hex color code
     true
   end
 
-  def end_time_tracking_on_unassign
+  # Encerra a contagem de quem deixou de ser dono, tanto ao transferir para outro
+  # atendente quanto ao remover o proprietário.
+  #
+  # A versão anterior (end_time_tracking_on_unassign) nunca disparava: checava
+  # `owner_id.present?`, mas no Zammad "sem proprietário" é o id 1 ("Ninguém"),
+  # não nil — a condição era sempre verdadeira e o método voltava antes de
+  # encerrar. Também não cobria a troca para outro dono, só a remoção.
+  #
+  # Encerra em vez de pausar: quem não é mais dono não deve retomar aquele
+  # intervalo. O tempo trabalhado fica registrado e fechado, que é o que o
+  # relatório por atendente precisa.
+  def end_time_tracking_on_owner_change
     return true if !will_save_change_to_attribute?('owner_id')
-    return true if owner_id.present?
 
-    active_time_tracking&.end!
+    previous_owner_id = changes_to_save['owner_id'].first
+    return true if previous_owner_id.blank?
+    return true if previous_owner_id == 1
+
+    TicketTimeTracking
+      .where(ticket_id: id, user_id: previous_owner_id, ended_at: nil)
+      .find_each { |tracking| end_time_tracking_of(tracking) }
+
     true
+  end
+
+  def end_time_tracking_of(tracking)
+    tracking.end!
+
+    # O indicador da barra lateral lê este campo; sem limpar, seguiria apontando
+    # um ticket que a pessoa não atende mais.
+    user = tracking.user
+    return if user.blank?
+    return if user.current_active_ticket_id != id
+
+    user.update!(current_active_ticket_id: nil)
+  rescue => e
+    # Uma contagem que não fecha não pode impedir a gravação do ticket.
+    Rails.logger.error "Could not end time tracking #{tracking.id} after owner change on ticket #{id}: #{e.message}"
   end
 end
