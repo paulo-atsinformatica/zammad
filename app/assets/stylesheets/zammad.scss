@@ -17310,6 +17310,20 @@ body.is-pause-blocked {
   }
 }
 
+/* Tempo somado de todos os atendentes, ao lado do cronômetro pessoal. Só aparece
+   quando o ticket passou por mais de uma pessoa; o detalhe por atendente fica no
+   title. Discreto de propósito: o número que importa no dia a dia é o próprio. */
+.tt-others {
+  padding: 5px 8px;
+  font-size: 12px;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-muted);
+  border: 1px dashed var(--background-modifier-border);
+  border-radius: 6px;
+  cursor: help;
+}
+
 /* Position in ticket zoom controls */
 .ticketZoom-controls {
   display: flex;

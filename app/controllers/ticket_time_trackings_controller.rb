@@ -11,7 +11,7 @@ class TicketTimeTrackingsController < ApplicationController
     result = service.start_tracking
 
     if result.success?
-      render json: result.data.attributes_with_association_ids, status: :created
+      render json: tracking_json(result.data), status: :created
     else
       status_code = result.existing_ticket_id.present? ? :conflict : :unprocessable_entity
       response_data = {
@@ -29,7 +29,7 @@ class TicketTimeTrackingsController < ApplicationController
     result = service.pause_tracking
 
     if result.success?
-      render json: result.data.attributes_with_association_ids, status: :ok
+      render json: tracking_json(result.data), status: :ok
     else
       render json: { error: result.error }, status: :unprocessable_entity
     end
@@ -40,7 +40,7 @@ class TicketTimeTrackingsController < ApplicationController
     result = service.resume_tracking
 
     if result.success?
-      render json: result.data.attributes_with_association_ids, status: :ok
+      render json: tracking_json(result.data), status: :ok
     else
       status_code = result.existing_ticket_id.present? ? :conflict : :unprocessable_entity
       render json: {
@@ -56,7 +56,7 @@ class TicketTimeTrackingsController < ApplicationController
     result = service.end_tracking
 
     if result.success?
-      render json: result.data.attributes_with_association_ids, status: :ok
+      render json: tracking_json(result.data), status: :ok
     else
       render json: { error: result.error }, status: :unprocessable_entity
     end
@@ -67,7 +67,7 @@ class TicketTimeTrackingsController < ApplicationController
     result = service.current_tracking
 
     if result.data
-      render json: result.data.attributes_with_association_ids, status: :ok
+      render json: tracking_json(result.data), status: :ok
     else
       render json: { active: false }, status: :ok
     end
@@ -121,8 +121,8 @@ class TicketTimeTrackingsController < ApplicationController
 
     if result.success?
       render json: {
-        new_tracking: result.data.attributes_with_association_ids,
-        paused_tracking: result.paused_tracking&.attributes_with_association_ids
+        new_tracking: tracking_json(result.data),
+        paused_tracking: result.paused_tracking && tracking_json(result.paused_tracking)
       }, status: :ok
     else
       render json: { error: result.error }, status: :unprocessable_entity
@@ -146,6 +146,16 @@ class TicketTimeTrackingsController < ApplicationController
 
     # Check if user can access the ticket using show? policy
     authorize!(@ticket, :show?)
+  end
+
+  # attributes_with_association_ids serializa só as colunas, e o player precisa
+  # do acumulado deste usuário no ticket — que soma passagens anteriores e não
+  # está em coluna nenhuma.
+  def tracking_json(tracking)
+    tracking.attributes_with_association_ids.merge(
+      'ticket_total_seconds' => tracking.ticket_total_seconds,
+      'total_time_seconds'   => tracking.total_time_seconds,
+    )
   end
 
   def format_seconds(seconds)

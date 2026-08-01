@@ -104,6 +104,26 @@ class TicketTimeTracking < ApplicationModel
     base_seconds + (Time.zone.now - (resumed_at || started_at)).to_i
   end
 
+  # Tudo o que este usuário já acumulou NESTE ticket, somando os intervalos
+  # anteriores que foram encerrados.
+  #
+  # Existe porque cada passagem pelo ticket vira um registro próprio: quando o
+  # ticket vai para outro dono e volta, o novo registro começa do zero e o agente
+  # veria 00:00:00 apesar de já ter trabalhado nele. Os registros continuam
+  # separados de propósito — é o que permite ver o tempo por atendente e por
+  # passagem — e a soma acontece só na exibição.
+  #
+  # Não inclui o segmento em curso: o cliente soma isso sozinho a partir de
+  # resumed_at/started_at, como já faz com total_seconds.
+  def ticket_total_seconds
+    previous = self.class
+      .where(ticket_id: ticket_id, user_id: user_id)
+      .where.not(id: id)
+      .sum(:total_seconds)
+
+    previous + (total_seconds || 0)
+  end
+
   def formatted_time
     seconds = total_time_seconds
     hours = seconds / 3600
@@ -144,6 +164,9 @@ class TicketTimeTracking < ApplicationModel
       resumed_at:         resumed_at,
       ended_at:           ended_at,
       total_seconds:      total_seconds || 0,
+      # Base que o player usa para o cronômetro: inclui as passagens anteriores
+      # deste usuário pelo ticket, sem o segmento em curso.
+      ticket_total_seconds: ticket_total_seconds,
       total_time_seconds: total_time_seconds,
       current_state:      current_state,
       updated_at:         updated_at

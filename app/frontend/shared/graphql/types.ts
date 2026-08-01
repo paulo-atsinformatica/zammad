@@ -158,11 +158,11 @@ export type CustomReportGenerateMutationVariables = Exact<{
 export type CustomReportGenerateMutation = { customReportGenerate: { __typename: 'CustomReportGeneratePayload', customReportRun: { __typename: 'CustomReportRun', id: string, format: string, status: string, filename: string | null | undefined, createdAt: string, downloadable: boolean, downloadPath: string | null | undefined } | null | undefined, errors: Array<{ __typename: 'UserError', message: string, field: string | null | undefined }> | null | undefined } | null | undefined };
 
 export type CustomReportListQueryVariables = Exact<{
-  visibility?: string | null | undefined;
+  scope?: string | null | undefined;
 }>;
 
 
-export type CustomReportListQuery = { customReportList: Array<{ __typename: 'CustomReport', id: string, name: string, object: string, visibility: string, active: boolean }> };
+export type CustomReportListQuery = { customReportList: Array<{ __typename: 'CustomReport', id: string, name: string, object: string, active: boolean }> };
 
 export type CustomReportResultsQueryVariables = Exact<{
   customReportId: string | number;

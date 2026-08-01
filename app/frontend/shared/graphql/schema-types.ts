@@ -755,8 +755,6 @@ export type CustomReport = {
   name: Scalars['String']['output'];
   /** Object the rows represent */
   object: Scalars['String']['output'];
-  /** Who the saved definition is shared with */
-  visibility: Scalars['String']['output'];
 };
 
 /** A column of a custom report result */
@@ -3543,7 +3541,7 @@ export type QueriesChecklistTemplatesArgs = {
 
 /** All available queries */
 export type QueriesCustomReportListArgs = {
-  visibility?: InputMaybe<Scalars['String']['input']>;
+  scope?: InputMaybe<Scalars['String']['input']>;
 };
 
 

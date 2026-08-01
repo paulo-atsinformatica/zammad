@@ -6,12 +6,11 @@ import * as VueCompositionApi from 'vue';
 export type ReactiveFunction<TParam> = () => TParam;
 
 export const CustomReportListDocument = gql`
-    query customReportList($visibility: String) {
-  customReportList(visibility: $visibility) {
+    query customReportList($scope: String) {
+  customReportList(scope: $scope) {
     id
     name
     object
-    visibility
     active
   }
 }

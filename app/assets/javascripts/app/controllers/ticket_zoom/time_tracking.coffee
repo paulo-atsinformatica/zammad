@@ -10,6 +10,22 @@ class App.TicketZoomTimeTracking extends App.Controller
     'click .js-tt-start': 'onStartClick'
     'click .js-tt-pause': 'onPauseClick'
 
+  # Base do cronômetro: o acumulado deste usuário NO TICKET, e não só do registro
+  # atual.
+  #
+  # Cada passagem pelo ticket cria um registro próprio — é isso que permite ver o
+  # tempo por atendente. Sem somar as anteriores, o agente que devolve e recebe o
+  # ticket de volta via 00:00:00 apesar de já ter trabalhado nele.
+  #
+  # ticket_total_seconds é calculado pelo servidor (ver
+  # TicketTimeTracking#ticket_total_seconds) e não inclui o segmento em curso,
+  # que o cronômetro soma sozinho.
+  baseSeconds: (data, fallback = 0) ->
+    return fallback if !data
+    return data.ticket_total_seconds if data.ticket_total_seconds?
+    return data.total_seconds if data.total_seconds?
+    fallback
+
   constructor: (params) ->
     super
     @ticket = params.ticket
@@ -42,10 +58,47 @@ class App.TicketZoomTimeTracking extends App.Controller
 
     @render()
     @checkCurrentTracking()
+    @loadSummary()
 
   render: ->
     @html App.view('ticket_zoom/time_tracking')()
     @updateButtonStates()
+
+  # Tempo por atendente. Um ticket costuma passar de mão, e sem isto cada pessoa
+  # só enxergava o próprio tempo. Só aparece quando mais de um atendente
+  # trabalhou no ticket — para um só, o cronômetro já diz tudo.
+  loadSummary: =>
+    @ajax(
+      id:          "tt_summary_#{@ticket_id}"
+      type:        'GET'
+      url:         "#{@apiPath}/tickets/#{@ticket_id}/time_tracking/summary"
+      processData: true
+      success:     (data) =>
+        @renderSummary(data)
+      error: =>
+        # Não é informação essencial: se falhar, o player segue funcionando.
+        @$('.js-tt-others').addClass('hide')
+    )
+
+  renderSummary: (data) ->
+    element = @$('.js-tt-others')
+    return if !element.length
+
+    entries = data?.entries or []
+    if entries.length < 2
+      element.addClass('hide')
+      return
+
+    detail = _.map(entries, (entry) -> "#{entry.user}: #{entry.formatted}").join('\n')
+
+    element
+      .text(@formatSeconds(data.total_seconds or 0))
+      .attr('title', "#{App.i18n.translateInline('Tempo por atendente')}\n#{detail}")
+      .removeClass('hide')
+
+  formatSeconds: (seconds) ->
+    pad = (value) -> if value < 10 then "0#{value}" else "#{value}"
+    "#{pad(Math.floor(seconds / 3600))}:#{pad(Math.floor((seconds % 3600) / 60))}:#{pad(seconds % 60)}"
 
   checkCurrentTracking: ->
     @ajax(
@@ -56,7 +109,7 @@ class App.TicketZoomTimeTracking extends App.Controller
       success:     (data) =>
         if data && (data.is_active || data.id)
           @tracking = data
-          @totalSeconds = data.total_seconds || 0
+          @totalSeconds = @baseSeconds(data)
           
           # Check if tracking is paused (either active+paused or deactivated)
           if data.is_active
@@ -206,7 +259,7 @@ class App.TicketZoomTimeTracking extends App.Controller
       failResponseNoTrigger: true
       success:     (data) =>
         @tracking = data
-        @totalSeconds = data.total_seconds || 0
+        @totalSeconds = @baseSeconds(data)
         @isPaused = false
         @startTimer(data.resumed_at || data.started_at)
         @updateButtonStates()
@@ -247,7 +300,7 @@ class App.TicketZoomTimeTracking extends App.Controller
       processData: true
       success:     (data) =>
         @tracking = data
-        @totalSeconds = data.total_seconds || @totalSeconds
+        @totalSeconds = @baseSeconds(data, @totalSeconds)
         @isPaused = true
         @stopTimer()
         @updateButtonStates()
@@ -279,7 +332,7 @@ class App.TicketZoomTimeTracking extends App.Controller
       failResponseNoTrigger: true
       success:     (data) =>
         @tracking = data
-        @totalSeconds = data.total_seconds || @totalSeconds
+        @totalSeconds = @baseSeconds(data, @totalSeconds)
         @isPaused = false
         @startTimer(data.resumed_at || data.started_at)
         @updateButtonStates()
@@ -336,7 +389,7 @@ class App.TicketZoomTimeTracking extends App.Controller
       contentType: 'application/json'
       success:     (data) =>
         @tracking = data.new_tracking
-        @totalSeconds = @tracking.total_seconds || 0
+        @totalSeconds = @baseSeconds(@tracking)
         @isPaused = false
         @startTimer(@tracking.resumed_at || @tracking.started_at)
         @updateButtonStates()
@@ -403,8 +456,9 @@ class App.TicketZoomTimeTracking extends App.Controller
       resumed_at: data.resumed_at
       ended_at: data.ended_at
       total_seconds: data.total_seconds
+      ticket_total_seconds: data.ticket_total_seconds
     }
-    @totalSeconds = data.total_seconds || 0
+    @totalSeconds = @baseSeconds(data)
     
     switch data.current_state
       when 'running'
@@ -474,7 +528,7 @@ class App.TicketZoomTimeTracking extends App.Controller
       processData: true
       success:     (data) =>
         @tracking = data
-        @totalSeconds = data.total_seconds || @totalSeconds
+        @totalSeconds = @baseSeconds(data, @totalSeconds)
         @isPaused = true
         @stopTimer()
         @updateButtonStates()
