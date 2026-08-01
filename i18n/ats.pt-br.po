@@ -88,6 +88,18 @@ msgstr "Compartilhados com meus grupos"
 msgid "Assigned to me"
 msgstr "Atribuídos a mim"
 
+msgid "Tempo por atendente"
+msgstr "Tempo por atendente"
+
+msgid "Maximum running time of a ticket time tracking"
+msgstr "Tempo máximo de uma contagem em curso"
+
+msgid "Hours after which a time tracking left running is closed automatically. Set to 0 to disable."
+msgstr "Horas após as quais uma contagem deixada correndo é encerrada automaticamente. Use 0 para desativar."
+
+msgid "Close ticket time trackings left running."
+msgstr "Encerrar contagens de tempo deixadas correndo."
+
 msgid "Export as CSV"
 msgstr "Exportar em CSV"
 

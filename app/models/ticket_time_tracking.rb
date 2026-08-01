@@ -35,8 +35,46 @@ class TicketTimeTracking < ApplicationModel
   scope :for_user, ->(user) { where(user_id: user.id) }
   scope :recent, -> { order(started_at: :desc) }
 
+  # Teto para uma contagem em curso, em horas. Acima disso ela é encerrada
+  # automaticamente pelo Scheduler.
+  DEFAULT_MAX_RUNNING_HOURS = 12
+
   def active?
     is_active && ended_at.nil?
+  end
+
+  # Encerra contagens deixadas correndo. Chamado pelo Scheduler.
+  #
+  # Sem isto, um agente que inicia a contagem e fecha o navegador deixa o
+  # cronômetro correndo por noites e fins de semana inteiros, e esse tempo entra
+  # no relatório como atendimento. Não havia limite nenhum.
+  #
+  # O corte é pelo início do segmento em curso (resumed_at, ou started_at na
+  # primeira vez), e não por started_at sempre: uma contagem legitimamente
+  # retomada hoje não deve morrer porque começou semana passada.
+  def self.close_stale
+    limit = max_running_hours
+    return 0 if limit <= 0
+
+    threshold = limit.hours.ago
+    closed = 0
+
+    active.where(ended_at: nil).find_each do |tracking|
+      next if (tracking.resumed_at || tracking.started_at) > threshold
+
+      tracking.end!
+      tracking.user&.update_columns(current_active_ticket_id: nil) # rubocop:disable Rails/SkipsModelValidations
+      closed += 1
+    rescue => e
+      Rails.logger.error "Could not close stale time tracking #{tracking.id}: #{e.message}"
+    end
+
+    Rails.logger.info "Closed #{closed} stale ticket time tracking(s)." if closed.positive?
+    closed
+  end
+
+  def self.max_running_hours
+    (Setting.get('ticket_time_tracking_max_running_hours').presence || DEFAULT_MAX_RUNNING_HOURS).to_i
   end
 
   def paused?
@@ -192,10 +230,22 @@ class TicketTimeTracking < ApplicationModel
     }
     PushMessages.send_to(user_id, message)
 
-    # Also broadcast a ticket-specific event for other users viewing the ticket
-    # See notify_clients_data_attributes for the total_seconds/total_time_seconds
-    # distinction.
-    ticket_message = {
+    broadcast_to_ticket_watchers
+  end
+
+  # Avisa quem mais está com o ticket aberto, para o estado do player ficar em
+  # sincronia entre agentes.
+  #
+  # Entregue usuário a usuário, e não por broadcast: `Sessions.broadcast` com
+  # 'authenticated' alcança TODA sessão logada, cliente inclusive — o payload traz
+  # ticket, agente e tempo, então um cliente ficaria sabendo qual atendente está
+  # em qual ticket e há quanto tempo. Aqui vai só para quem tem acesso de leitura
+  # ao grupo do ticket.
+  #
+  # Ver notify_clients_data_attributes para a distinção entre total_seconds e
+  # total_time_seconds.
+  def broadcast_to_ticket_watchers
+    message = {
       event: 'Ticket:timeTrackingChange',
       data:  {
         ticket_id:          ticket_id,
@@ -206,7 +256,20 @@ class TicketTimeTracking < ApplicationModel
         updated_at:         updated_at
       }
     }
-    PushMessages.send(message: ticket_message, type: 'authenticated')
+
+    recipient_ids.each { |id| PushMessages.send_to(id, message) }
+  end
+
+  def recipient_ids
+    group_id = ticket&.group_id
+    return [user_id].compact if group_id.blank?
+
+    (User.group_access_ids(group_id, 'read') + [user_id]).compact.uniq
+  rescue => e
+    # Uma falha ao resolver destinatários não pode impedir a gravação; no pior
+    # caso o próprio usuário deixa de ver a atualização em outra aba.
+    Rails.logger.error "Could not resolve time tracking broadcast recipients for ticket #{ticket_id}: #{e.message}"
+    [user_id].compact
   end
 
   def broadcast_destroyed

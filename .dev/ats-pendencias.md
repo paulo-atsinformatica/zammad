@@ -26,13 +26,26 @@ com a explicação do porquê, e remover daqui.
 trabalho, então nada aqui passou por rspec, rubocop, `lint:ts` ou build. É a
 primeira coisa a fazer quando o ambiente voltar.
 
-Ainda em aberto, além da validação:
+Itens 8, 12, 14 e 15 também foram implementados (não validados):
 
-- **Item 8** — o endpoint `GET /tickets/:id/time_tracking/summary` existe e
-  devolve o tempo por atendente, mas nenhuma tela consome.
-- **Item 12** — contagem esquecida correndo indefinidamente.
-- **Item 14** — verificar se `type: 'authenticated'` alcança clientes.
-- **Item 15** — specs dos cenários corrigidos.
+- **8** — o tempo somado dos atendentes aparece ao lado do cronômetro, com o
+  detalhe por pessoa no title, quando mais de um atendente trabalhou no ticket.
+- **12** — `TicketTimeTracking.close_stale`, no Scheduler de hora em hora, com
+  teto configurável em `ticket_time_tracking_max_running_hours` (padrão 12h,
+  0 desativa). O corte usa o início do **segmento em curso**, para não matar uma
+  contagem legitimamente retomada hoje que começou semana passada.
+- **14** — **confirmado que era vazamento.** `Sessions.broadcast(data,
+  'authenticated')` percorre toda sessão logada e só descarta as sem usuário — não
+  há filtro de permissão nem de grupo. O payload leva ticket, agente e tempo, então
+  um cliente ficava sabendo qual atendente estava em qual ticket e há quanto tempo.
+  Agora a entrega é usuário a usuário, restrita a quem tem leitura no grupo do
+  ticket (`User.group_access_ids`).
+- **15** — `spec/models/ticket_time_tracking_regressions_spec.rb`, cobrindo pausa
+  liberando o slot, encerrar contagem pausada, escopo `resumable` excluindo
+  encerradas, acumulado por ticket, troca/remoção de proprietário, varredura de
+  contagens esquecidas e destinatários do broadcast.
+
+Continua em aberto: rodar a bateria de validação quando o Docker voltar.
 
 ---
 
