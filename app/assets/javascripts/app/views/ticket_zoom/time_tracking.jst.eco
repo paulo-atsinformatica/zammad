@@ -11,7 +11,6 @@
     </svg>
   </button>
   <div class="tt-timer js-tt-timer">00:00:00</div>
-  <%# Tempo somado de todos os atendentes, exibido só quando o ticket passou por
-      mais de um. O detalhe por pessoa vai no title. %>
+  <%# Tempo somado dos atendentes; aparece só com mais de um. Detalhe no title. %>
   <div class="tt-others js-tt-others hide"></div>
 </div>
