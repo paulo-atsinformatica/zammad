@@ -5,7 +5,7 @@ require 'rails_helper'
 
 RSpec.describe Gql::Mutations::CustomReport::Generate, type: :graphql do
   let(:group)  { create(:group) }
-  let(:report) { create(:custom_report_general, groups: [group], columns: %w[number title]) }
+  let(:report) { create(:custom_report_shared, groups: [group], columns: %w[number title]) }
 
   let(:mutation) do
     <<~MUTATION
@@ -57,7 +57,7 @@ RSpec.describe Gql::Mutations::CustomReport::Generate, type: :graphql do
   context 'with a report the user cannot see', authenticated_as: :agent do
     let(:agent)  { create(:agent) }
     let(:other)  { create(:agent) }
-    let(:report) { create(:custom_report, visibility: 'personal', created_by_id: other.id) }
+    let(:report) { create(:custom_report, created_by_id: other.id) }
 
     it 'reports it as not found' do
       gql.execute(mutation, variables:)

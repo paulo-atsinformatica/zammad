@@ -29,11 +29,16 @@ App.Config.set('report/custom', App.ReportCustom, 'Routes')
 #
 # `external: true` é o mecanismo do próprio Zammad para renderizar
 # target="_blank" (ver views/navigation/personal.jst.eco).
+# `translate: true` é obrigatório: views/navigation/personal.jst.eco só passa o
+# nome por @T() quando a flag está presente, senão renderiza o texto cru — era por
+# isso que o item aparecia como "Custom Report" mesmo com a tradução no catálogo.
+# Os outros itens ATS não precisam porque o nome deles já é literal em português.
 App.Config.set('CustomReport', {
   prio: 100,
   name: __('Custom Report'),
   parent: '#report',
   target: REPORT_URL,
   external: true,
+  translate: true,
   permission: ['report.custom']
 }, 'NavBarRight')

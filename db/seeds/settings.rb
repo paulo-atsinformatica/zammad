@@ -3063,6 +3063,32 @@ Setting.create_if_not_exists(
   frontend:    true
 )
 
+# Customização ATS: também no seed, e não só na migration. A migration que cria
+# este setting tem guarda de system_init_done, então numa instalação nova ela
+# retorna antes e o setting nunca existiria — o mesmo padrão que já deixou
+# permissões ATS de fora em instalação limpa.
+Setting.create_if_not_exists(
+  title:       __('Maximum running time of a ticket time tracking'),
+  name:        'ticket_time_tracking_max_running_hours',
+  area:        'Ticket::Base',
+  description: __('Hours after which a time tracking left running is closed automatically. Set to 0 to disable.'),
+  options:     {
+    form: [
+      {
+        display: '',
+        null:    true,
+        name:    'ticket_time_tracking_max_running_hours',
+        tag:     'input',
+      },
+    ],
+  },
+  state:       12,
+  preferences: {
+    permission: ['admin.ticket'],
+  },
+  frontend:    false
+)
+
 Setting.create_if_not_exists(
   title:       __('Ticket modification by customers'),
   name:        'customer_ticket_update',

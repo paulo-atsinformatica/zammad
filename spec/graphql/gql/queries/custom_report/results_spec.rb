@@ -10,7 +10,6 @@ RSpec.describe Gql::Queries::CustomReport::Results, type: :graphql do
   let(:report) do
     create(:custom_report,
            object:          'Ticket',
-           visibility:      'group',
            groups:          [group],
            columns:         %w[number title state],
            enabled_filters: %w[title],
@@ -82,7 +81,6 @@ RSpec.describe Gql::Queries::CustomReport::Results, type: :graphql do
     let(:report) do
       create(:custom_report,
              object:        'Ticket',
-             visibility:    'personal',
              created_by_id: create(:agent).id,
              updated_by_id: 1)
     end

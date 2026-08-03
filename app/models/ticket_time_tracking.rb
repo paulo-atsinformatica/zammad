@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 class TicketTimeTracking < ApplicationModel
   include HasHistory
@@ -20,9 +20,9 @@ class TicketTimeTracking < ApplicationModel
   # ativa para o mesmo usuário.
   validate :only_one_active_per_user, on: %i[create update]
 
+  after_destroy :broadcast_destroyed
   # Callbacks for state change notifications
   after_save :broadcast_state_change
-  after_destroy :broadcast_destroyed
 
   # `active` significa "ocupa o slot único do usuário e está correndo". Uma
   # contagem pausada NÃO é ativa: pause! desliga is_active justamente para
@@ -192,22 +192,22 @@ class TicketTimeTracking < ApplicationModel
   # want a ready-to-display value.
   def notify_clients_data_attributes
     {
-      id:                 id,
-      ticket_id:          ticket_id,
-      ticket_number:      ticket&.number,
-      user_id:            user_id,
-      is_active:          is_active,
-      started_at:         started_at,
-      paused_at:          paused_at,
-      resumed_at:         resumed_at,
-      ended_at:           ended_at,
-      total_seconds:      total_seconds || 0,
+      id:                   id,
+      ticket_id:            ticket_id,
+      ticket_number:        ticket&.number,
+      user_id:              user_id,
+      is_active:            is_active,
+      started_at:           started_at,
+      paused_at:            paused_at,
+      resumed_at:           resumed_at,
+      ended_at:             ended_at,
+      total_seconds:        total_seconds || 0,
       # Base que o player usa para o cronômetro: inclui as passagens anteriores
       # deste usuário pelo ticket, sem o segmento em curso.
       ticket_total_seconds: ticket_total_seconds,
-      total_time_seconds: total_time_seconds,
-      current_state:      current_state,
-      updated_at:         updated_at
+      total_time_seconds:   total_time_seconds,
+      current_state:        current_state,
+      updated_at:           updated_at
     }
   end
 
@@ -300,8 +300,3 @@ class TicketTimeTracking < ApplicationModel
   end
 
 end
-
-
-
-
-

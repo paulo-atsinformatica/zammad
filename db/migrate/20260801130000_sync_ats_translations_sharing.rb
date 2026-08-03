@@ -1,4 +1,5 @@
 # Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
+
 # Customização ATS: traduções pt-BR das customizações.
 
 class SyncAtsTranslationsSharing < ActiveRecord::Migration[8.0]

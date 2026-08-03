@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 class TicketTimeTrackingService < Service::Base
   def initialize(current_user:, ticket:)
@@ -19,16 +19,16 @@ class TicketTimeTrackingService < Service::Base
     if existing_tracking.present?
       return error(
         __('User already has an active ticket time tracking'),
-        existing_ticket_id: existing_tracking.ticket_id,
+        existing_ticket_id:     existing_tracking.ticket_id,
         existing_ticket_number: existing_tracking.ticket.number
       )
     end
 
     tracking = TicketTimeTracking.create!(
-      ticket: @ticket,
-      user: current_user,
-      started_at: Time.zone.now,
-      is_active: true,
+      ticket:        @ticket,
+      user:          current_user,
+      started_at:    Time.zone.now,
+      is_active:     true,
       created_by_id: current_user.id,
       updated_by_id: current_user.id
     )
@@ -68,7 +68,7 @@ class TicketTimeTrackingService < Service::Base
     if existing_active.present? && existing_active.ticket_id != @ticket.id
       return error(
         __('User already has an active ticket time tracking'),
-        existing_ticket_id: existing_active.ticket_id,
+        existing_ticket_id:     existing_active.ticket_id,
         existing_ticket_number: existing_active.ticket.number
       )
     end
@@ -77,6 +77,7 @@ class TicketTimeTrackingService < Service::Base
     if tracking_obj.is_active
       # Just paused, simple resume
       return error(__('Tracking is not paused')) if !tracking_obj.paused?
+
       tracking_obj.resume!
     else
       # Was deactivated (from closed ticket or switch), reactivate
@@ -132,13 +133,13 @@ class TicketTimeTrackingService < Service::Base
     TicketTimeTracking.transaction do
       # First, deactivate the source tracking
       from_tracking.pause_and_deactivate!
-      
+
       # Now create the new tracking with validation skipped (we already checked)
       new_tracking = TicketTimeTracking.new(
-        ticket: to_ticket,
-        user: current_user,
-        started_at: Time.zone.now,
-        is_active: true,
+        ticket:        to_ticket,
+        user:          current_user,
+        started_at:    Time.zone.now,
+        is_active:     true,
         total_seconds: 0,
         created_by_id: current_user.id,
         updated_by_id: current_user.id
@@ -174,20 +175,19 @@ class TicketTimeTrackingService < Service::Base
     success(tracking)
   end
 
-  def error(message, **options)
+  def error(message, **)
     Service::Result.new(
       success: false,
-      error: message,
-      **options
+      error:   message,
+      **
     )
   end
 
-  def success(data, **options)
+  def success(data, **)
     Service::Result.new(
       success: true,
-      data: data,
-      **options
+      data:    data,
+      **
     )
   end
 end
-

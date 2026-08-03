@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 class TicketTimeTrackingsController < ApplicationController
   prepend_before_action :authentication_check
@@ -15,8 +15,8 @@ class TicketTimeTrackingsController < ApplicationController
     else
       status_code = result.existing_ticket_id.present? ? :conflict : :unprocessable_entity
       response_data = {
-        error: result.error,
-        existing_ticket_id: result.existing_ticket_id,
+        error:                  result.error,
+        existing_ticket_id:     result.existing_ticket_id,
         existing_ticket_number: result.existing_ticket_number
       }
       Rails.logger.info "Time tracking start error: #{response_data.inspect}"
@@ -31,7 +31,7 @@ class TicketTimeTrackingsController < ApplicationController
     if result.success?
       render json: tracking_json(result.data), status: :ok
     else
-      render json: { error: result.error }, status: :unprocessable_entity
+      render json: { error: result.error }, status: :unprocessable_content
     end
   end
 
@@ -44,8 +44,8 @@ class TicketTimeTrackingsController < ApplicationController
     else
       status_code = result.existing_ticket_id.present? ? :conflict : :unprocessable_entity
       render json: {
-        error: result.error,
-        existing_ticket_id: result.existing_ticket_id,
+        error:                  result.error,
+        existing_ticket_id:     result.existing_ticket_id,
         existing_ticket_number: result.existing_ticket_number
       }, status: status_code
     end
@@ -58,7 +58,7 @@ class TicketTimeTrackingsController < ApplicationController
     if result.success?
       render json: tracking_json(result.data), status: :ok
     else
-      render json: { error: result.error }, status: :unprocessable_entity
+      render json: { error: result.error }, status: :unprocessable_content
     end
   end
 
@@ -94,11 +94,11 @@ class TicketTimeTrackingsController < ApplicationController
       seconds = list.sum(&:total_time_seconds)
 
       {
-        user_id:      user_id,
-        user:         list.first.user&.fullname,
+        user_id:       user_id,
+        user:          list.first.user&.fullname,
         total_seconds: seconds,
-        formatted:    format_seconds(seconds),
-        running:      list.any?(&:active?),
+        formatted:     format_seconds(seconds),
+        running:       list.any?(&:active?),
       }
     end
 
@@ -111,7 +111,7 @@ class TicketTimeTrackingsController < ApplicationController
   def switch
     from_ticket = Ticket.find(params[:from_ticket_id])
     to_ticket = @ticket # Already set by before_action
-    
+
     # Check access to both tickets
     authorize!(from_ticket, :show?)
     authorize!(to_ticket, :show?)
@@ -121,11 +121,11 @@ class TicketTimeTrackingsController < ApplicationController
 
     if result.success?
       render json: {
-        new_tracking: tracking_json(result.data),
+        new_tracking:    tracking_json(result.data),
         paused_tracking: result.paused_tracking && tracking_json(result.paused_tracking)
       }, status: :ok
     else
-      render json: { error: result.error }, status: :unprocessable_entity
+      render json: { error: result.error }, status: :unprocessable_content
     end
   end
 

@@ -4,18 +4,20 @@
 <script setup lang="ts">
 interface Props {
   title: string
+  // Sem sidebar na página de exportações, que não escolhe relatório.
+  withSidebar?: boolean
 }
 
-defineProps<Props>()
+withDefaults(defineProps<Props>(), { withSidebar: false })
 </script>
 
 <!--
   Casca própria em vez de LayoutContent: esta é uma guia independente, fora de
   LayoutPage, e LayoutContent depende do grid e das composables da navegação
-  lateral da Desktop View. Aqui só há cabeçalho, ações e conteúdo.
+  lateral da Desktop View. Aqui só há cabeçalho, barra lateral e conteúdo.
 -->
 <template>
-  <div class="flex min-h-screen flex-col bg-blue-50 text-gray-100 dark:bg-gray-500 dark:text-neutral-400">
+  <div class="flex h-screen flex-col bg-blue-50 text-gray-100 dark:bg-gray-500 dark:text-neutral-400">
     <header
       class="flex flex-wrap items-center justify-between gap-3 border-b border-neutral-100 px-4 py-3 dark:border-gray-900"
     >
@@ -26,8 +28,19 @@ defineProps<Props>()
       </div>
     </header>
 
-    <main class="flex grow flex-col gap-4 p-4">
-      <slot />
-    </main>
+    <!-- min-h-0 para o conteúdo poder rolar dentro da altura da tela em vez de
+         empurrar a página inteira. -->
+    <div class="flex min-h-0 grow">
+      <aside
+        v-if="withSidebar"
+        class="w-72 shrink-0 overflow-y-auto border-e border-neutral-100 p-3 dark:border-gray-900"
+      >
+        <slot name="sidebar" />
+      </aside>
+
+      <main class="flex min-w-0 grow flex-col gap-4 overflow-auto p-4">
+        <slot />
+      </main>
+    </div>
   </div>
 </template>

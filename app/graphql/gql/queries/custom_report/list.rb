@@ -1,4 +1,5 @@
 # Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
+
 # Customização ATS: relatório personalizado.
 
 module Gql::Queries
@@ -6,8 +7,8 @@ module Gql::Queries
 
     description 'Saved custom reports the current user may open'
 
-    argument :scope, String, required: false,
-             description: 'Restrict the list: group (shared with a group I read) or assigned (shared directly with me)'
+    argument :scope, String, required:    false,
+                             description: 'Restrict the list: group (shared with a group I read) or personal (only mine)'
 
     type [Gql::Types::CustomReportType, { null: false }], null: false
 
@@ -26,8 +27,10 @@ module Gql::Queries
       case scope
       when 'group'
         reports.joins(:groups).where(groups: { id: ::CustomReport.visible_group_ids(user) })
-      when 'assigned'
-        reports.merge(::CustomReport.assigned_to(user))
+      when 'personal'
+        # "Visão pessoal" é o que o próprio usuário criou. Um relatório que outra
+        # pessoa compartilhou com ele aparece em Todos, não aqui.
+        reports.where(created_by_id: user.id)
       else
         reports
       end

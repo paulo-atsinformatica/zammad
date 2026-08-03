@@ -4836,22 +4836,6 @@
               },
               "isDeprecated": false,
               "deprecationReason": null
-            },
-            {
-              "name": "visibility",
-              "description": "Who the saved definition is shared with",
-              "args": [],
-              "type": {
-                "kind": "NON_NULL",
-                "name": null,
-                "ofType": {
-                  "kind": "SCALAR",
-                  "name": "String",
-                  "ofType": null
-                }
-              },
-              "isDeprecated": false,
-              "deprecationReason": null
             }
           ],
           "inputFields": null,
@@ -18765,8 +18749,8 @@
               "description": "Saved custom reports the current user may open",
               "args": [
                 {
-                  "name": "visibility",
-                  "description": "Restrict to one visibility level: global, group or personal",
+                  "name": "scope",
+                  "description": "Restrict the list: group (shared with a group I read) or personal (only mine)",
                   "type": {
                     "kind": "SCALAR",
                     "name": "String",

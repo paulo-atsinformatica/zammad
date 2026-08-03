@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 class UserPauseService < Service::Base
   def initialize(current_user:, pause_type_id: nil, started_at: nil)
@@ -20,8 +20,8 @@ class UserPauseService < Service::Base
     if active_pauses.any? && !current_user.in_pause?
       active_pauses.each do |pause|
         pause.update!(
-          ended_at:    Time.zone.now,
-          delay_reason: pause.delay_reason.presence || 'Auto-closed stale pause by system'
+          ended_at:     Time.zone.now,
+          delay_reason: pause.delay_reason.presence || __('Auto-closed stale pause by system')
         )
       end
       active_pauses = []
@@ -74,6 +74,7 @@ class UserPauseService < Service::Base
     if !current_user.in_pause?
       last_pause = current_user.user_pauses.recent.first
       return success(last_pause) if last_pause.present?
+
       return error(__('User is not in pause'))
     end
 
@@ -143,7 +144,7 @@ class UserPauseService < Service::Base
     # Não aceita futuro
     return Time.zone.now if t > Time.zone.now
     # Não aceita mais que 5 minutos no passado (evita abuso; atraso de rede raramente > 1 min)
-    return Time.zone.now - 5.minutes if t < Time.zone.now - 5.minutes
+    return 5.minutes.ago if t < 5.minutes.ago
 
     t
   end
@@ -155,16 +156,15 @@ class UserPauseService < Service::Base
   def error(message)
     Service::Result.new(
       success: false,
-      error: message
+      error:   message
     )
   end
 
-  def success(data, **options)
+  def success(data, **)
     Service::Result.new(
       success: true,
-      data: data,
-      **options
+      data:    data,
+      **
     )
   end
 end
-

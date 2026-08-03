@@ -9,7 +9,7 @@ class CustomReportsController < ApplicationController
   before_action :set_report, only: %i[show update destroy generate results]
   before_action :set_run, only: %i[run_show download]
 
-  # GET /api/v1/custom_reports?scope=all|group|assigned
+  # GET /api/v1/custom_reports?scope=all|group|personal
   def index
     reports = filter_by_scope(CustomReport.visible_to(current_user))
 
@@ -158,7 +158,7 @@ class CustomReportsController < ApplicationController
   def filter_by_scope(reports)
     case params[:scope]
     when 'group'    then reports.joins(:groups).where(groups: { id: CustomReport.visible_group_ids(current_user) })
-    when 'assigned' then reports.merge(CustomReport.assigned_to(current_user))
+    when 'personal' then reports.where(created_by_id: current_user.id)
     else reports
     end
   end

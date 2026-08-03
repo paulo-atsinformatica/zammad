@@ -79,14 +79,11 @@ msgstr "Nenhum relatório disponível nesta visibilidade."
 msgid "Show"
 msgstr "Exibir"
 
-msgid "All reports I can see"
-msgstr "Todos os relatórios que eu vejo"
+msgid "My groups"
+msgstr "Meus grupos"
 
-msgid "Shared with my groups"
-msgstr "Compartilhados com meus grupos"
-
-msgid "Assigned to me"
-msgstr "Atribuídos a mim"
+msgid "Personal view"
+msgstr "Visão pessoal"
 
 msgid "Tempo por atendente"
 msgstr "Tempo por atendente"

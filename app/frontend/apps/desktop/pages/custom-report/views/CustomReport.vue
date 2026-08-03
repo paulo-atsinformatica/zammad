@@ -23,7 +23,7 @@ import CustomReportPage from '../components/CustomReportPage.vue'
 import CustomReportSummary from '../components/CustomReportSummary.vue'
 import { useCustomReportExport } from '../composables/useCustomReportExport.ts'
 
-import type { ReportSummary, RuntimeFilters } from '../types.ts'
+import type { AvailableFilter, ReportSummary, RuntimeFilters } from '../types.ts'
 
 const ALL_SCOPES = 'all'
 
@@ -47,14 +47,8 @@ const listLoading = listQuery.loading()
 
 const reports = computed(() => listResult.value?.customReportList ?? [])
 
-// Valor inicial do select, separado de selectedReportId de propósito: o schema
-// abaixo é computed, e se o `value` dele viesse do ref que o @changed atualiza, a
-// cada escolha o Form seria remontado.
-const initialReportId = ref<string>()
-
 const selectReport = (id: string | undefined) => {
   selectedReportId.value = id
-  initialReportId.value = id
   // Filtros e página pertencem ao relatório anterior.
   filters.value = {}
   page.value = 1
@@ -69,53 +63,34 @@ watch(reports, (value) => {
   selectReport(value[0]?.id)
 })
 
-// Dois formulários de propósito. Um schema computed é recriado quando muda, e o
-// FormKit reaplica o `value` de cada campo — então um campo estático que
-// convivesse com as opções dinâmicas de relatório voltaria ao valor inicial a
-// cada refetch da lista. Aqui só o select de relatório é dinâmico.
-const staticSchema: FormSchemaNode[] = [
+// Schema estático (não computed) de propósito: um schema recriado faz o FormKit
+// reaplicar o `value` de cada campo, e o recorte escolhido voltaria ao padrão a
+// cada refetch da lista.
+//
+// A escolha do relatório saiu daqui e virou a lista da barra lateral, no mesmo
+// modelo da Visão Geral — um select escondia os relatórios atrás de um clique e
+// não deixava ver quais existem.
+const scopeSchema: FormSchemaNode[] = [
   {
     type: 'select',
     name: 'scope',
     label: __('Show'),
     value: ALL_SCOPES,
-    outerClass: 'min-w-48',
+    outerClass: 'grow',
     props: {
       options: [
-        { value: ALL_SCOPES, label: __('All reports I can see') },
-        { value: 'group', label: __('Shared with my groups') },
-        { value: 'assigned', label: __('Assigned to me') },
+        { value: ALL_SCOPES, label: __('All') },
+        { value: 'group', label: __('My groups') },
+        { value: 'personal', label: __('Personal view') },
       ],
     },
   },
 ]
 
-const reportSchema = computed<FormSchemaNode[]>(() => [
-  {
-    type: 'select',
-    name: 'customReportId',
-    label: __('Report'),
-    value: initialReportId.value,
-    outerClass: 'min-w-64',
-    props: {
-      options: reports.value.map((report) => ({ value: report.id, label: report.name })),
-      // Nomes de relatório são dados do usuário, não strings do catálogo.
-      noOptionsLabelTranslation: true,
-    },
-  },
-])
+const onScopeChanged = (fieldName: string, newValue: FormFieldValue) => {
+  if (fieldName !== 'scope') return
 
-const onToolbarChanged = (fieldName: string, newValue: FormFieldValue) => {
-  switch (fieldName) {
-    case 'scope':
-      scope.value = String(newValue)
-      break
-    case 'customReportId':
-      selectReport(String(newValue))
-      break
-    default:
-      break
-  }
+  scope.value = String(newValue)
 }
 
 const resultsQuery = new QueryHandler(
@@ -171,6 +146,13 @@ const totalCount = computed(() => result.value?.totalCount ?? 0)
 // Só existe quando o relatório define totalizadores.
 const summary = computed(() => (result.value?.summary ?? undefined) as ReportSummary | undefined)
 
+// O GraphQL tipa `type` como String; o conjunto fechado de valores é garantido
+// por CustomReport::FilterDefinition, então o estreitamento acontece aqui, na
+// fronteira, em vez de espalhar cast pelo componente.
+const availableFilters = computed(
+  () => (result.value?.enabledFilters ?? []) as unknown as AvailableFilter[],
+)
+
 const applyFilters = (value: RuntimeFilters) => {
   filters.value = value
   page.value = 1
@@ -221,16 +203,8 @@ const exportReport = (format: string) => {
 </script>
 
 <template>
-  <CustomReportPage :title="__('Custom Report')">
+  <CustomReportPage :title="__('Custom Report')" with-sidebar>
     <template #actions>
-      <CommonButton
-        v-if="result?.enabledFilters.length"
-        size="medium"
-        prefix-icon="filter"
-        @click="filtersOpen = !filtersOpen"
-      >
-        {{ $t('Filters') }}
-      </CommonButton>
       <CommonButton size="medium" prefix-icon="list" @click="goToExports">
         {{ $t('Report exports') }}
       </CommonButton>
@@ -245,33 +219,55 @@ const exportReport = (format: string) => {
       />
     </template>
 
-    <!--
-      Fora do CommonLoader de propósito: `loading` volta a ser verdadeiro a cada
-      refetch da lista, e o loader desmontaria o próprio campo que acabou de ser
-      usado — trocar a visibilidade fazia a barra inteira desaparecer.
-    -->
-    <div class="flex flex-wrap items-end gap-3">
-      <Form
-        id="custom-report-toolbar"
-        :schema="staticSchema"
-        form-class="flex flex-wrap items-end gap-3"
-        @changed="onToolbarChanged"
-      />
-      <Form
-        id="custom-report-picker"
-        :schema="reportSchema"
-        form-class="flex flex-wrap items-end gap-3"
-        @changed="onToolbarChanged"
-      />
-    </div>
+    <template #sidebar>
+      <!--
+        O Form fica fora do CommonLoader de propósito: `loading` volta a ser
+        verdadeiro a cada refetch da lista, e o loader desmontaria o próprio
+        campo que acabou de ser usado — trocar o recorte fazia o seletor
+        desaparecer.
+      -->
+      <div class="mb-3 flex items-end gap-2">
+        <Form
+          id="custom-report-scope"
+          :schema="scopeSchema"
+          form-class="grow"
+          @changed="onScopeChanged"
+        />
+        <CommonButton
+          v-if="result?.enabledFilters.length"
+          size="medium"
+          prefix-icon="filter"
+          @click="filtersOpen = !filtersOpen"
+        >
+          {{ $t('Filters') }}
+        </CommonButton>
+      </div>
 
-    <CommonLabel v-if="!listLoading && !reports.length">
-      {{ $t('No report available for this visibility.') }}
-    </CommonLabel>
+      <CommonLabel v-if="!listLoading && !reports.length" size="small">
+        {{ $t('No report available for this visibility.') }}
+      </CommonLabel>
+
+      <ul v-else class="flex flex-col gap-1">
+        <li v-for="report in reports" :key="report.id">
+          <button
+            type="button"
+            class="w-full rounded-lg px-3 py-2 text-start text-sm hover:bg-blue-600 hover:text-white"
+            :class="
+              report.id === selectedReportId
+                ? 'bg-blue-800 text-white'
+                : 'text-gray-100 dark:text-neutral-400'
+            "
+            @click="selectReport(report.id)"
+          >
+            {{ report.name }}
+          </button>
+        </li>
+      </ul>
+    </template>
 
     <CustomReportFilters
-      v-if="filtersOpen && result"
-      :available="result.enabledFilters"
+      v-if="filtersOpen && availableFilters.length"
+      :available="availableFilters"
       :model-value="filters"
       @apply="applyFilters"
     />

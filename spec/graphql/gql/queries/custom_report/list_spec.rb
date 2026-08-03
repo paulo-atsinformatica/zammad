@@ -1,20 +1,20 @@
 # Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
+
 # Customização ATS: relatório personalizado.
 
 require 'rails_helper'
 
 RSpec.describe Gql::Queries::CustomReport::List, type: :graphql do
   let(:group)   { create(:group) }
-  let!(:report) { create(:custom_report_general, name: 'Tickets abertos', groups: [group]) }
+  let!(:report) { create(:custom_report_shared, name: 'Tickets abertos', groups: [group]) }
 
   let(:query) do
     <<~QUERY
-      query customReportList($visibility: String) {
-        customReportList(visibility: $visibility) {
+      query customReportList($scope: String) {
+        customReportList(scope: $scope) {
           id
           name
           object
-          visibility
           active
         }
       }
@@ -39,15 +39,34 @@ RSpec.describe Gql::Queries::CustomReport::List, type: :graphql do
 
       id = gql.result.data.first['id']
 
-      expect(Gql::ZammadSchema.verified_object_from_id(id, type: ::CustomReport)).to eq(report)
+      expect(Gql::ZammadSchema.verified_object_from_id(id, type: CustomReport)).to eq(report)
     end
 
-    it 'restricts to a visibility level when asked' do
-      create(:custom_report, name: 'Somente meu', visibility: 'personal', created_by_id: agent.id)
+    # "Visão pessoal" é o que o próprio usuário criou.
+    it 'restricts to my own reports when asked' do
+      create(:custom_report, name: 'Somente meu', created_by_id: agent.id)
 
-      gql.execute(query, variables: { visibility: 'personal' })
+      gql.execute(query, variables: { scope: 'personal' })
 
       expect(gql.result.data.pluck('name')).to eq(['Somente meu'])
+    end
+
+    it 'restricts to the reports shared with my groups when asked' do
+      create(:custom_report, name: 'Somente meu', created_by_id: agent.id)
+
+      gql.execute(query, variables: { scope: 'group' })
+
+      expect(gql.result.data.pluck('name')).to eq(['Tickets abertos'])
+    end
+
+    # O recorte estreita a lista, nunca amplia: um relatório de outra pessoa,
+    # não compartilhado, não pode aparecer em nenhum escopo.
+    it 'never widens beyond what the user may see' do
+      create(:custom_report, name: 'De outro', created_by_id: create(:agent).id)
+
+      gql.execute(query)
+
+      expect(gql.result.data.pluck('name')).not_to include('De outro')
     end
   end
 

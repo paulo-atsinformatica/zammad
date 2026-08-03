@@ -16,7 +16,7 @@ RSpec.describe CustomReport::Query do
   # Sem condição alguma: o resultado é definido apenas pelas permissões, que é
   # exatamente o cenário em que um vazamento apareceria.
   let(:report) do
-    create(:custom_report, object: 'Ticket', visibility: 'personal', condition: {})
+    create(:custom_report, object: 'Ticket', condition: {})
   end
 
   describe 'permission intersection' do
@@ -40,9 +40,9 @@ RSpec.describe CustomReport::Query do
       end
     end
 
-    # O nível de visibilidade compartilha o MODELO, nunca os dados. Um relatório
-    # global aberto por um agente restrito continua restrito.
-    context 'when a globally shared report is run by a restricted agent' do
+    # O compartilhamento dá acesso ao MODELO, nunca aos dados. Um relatório
+    # compartilhado, aberto por um agente restrito, continua restrito.
+    context 'when a shared report is run by a restricted agent' do
       let(:user) { create(:agent, groups: [group_a]) }
 
       it 'still applies the permissions of the user generating it' do

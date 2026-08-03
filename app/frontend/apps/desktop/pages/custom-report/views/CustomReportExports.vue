@@ -3,6 +3,7 @@
 
 <script setup lang="ts">
 import { computed, onUnmounted, watch } from 'vue'
+import { useRouter } from 'vue-router'
 
 import CommonLink from '#shared/components/CommonLink/CommonLink.vue'
 import { i18n } from '#shared/i18n.ts'
@@ -13,6 +14,10 @@ import CommonLoader from '#desktop/components/CommonLoader/CommonLoader.vue'
 import { useCustomReportRunsQuery } from '#desktop/entities/custom-report/graphql/queries/customReportRuns.api.ts'
 
 import CustomReportPage from '../components/CustomReportPage.vue'
+
+const router = useRouter()
+
+const goToReport = () => router.push({ name: 'CustomReport' })
 
 const runsQuery = new QueryHandler(useCustomReportRunsQuery(() => ({ limit: 50 })))
 const runsResult = runsQuery.result()
@@ -68,7 +73,7 @@ const statusLabel = (run: (typeof runs.value)[number]) => {
       <CommonButton
         size="medium"
         prefix-icon="arrow-bar-left"
-        @click="$router.push({ name: 'CustomReport' })"
+        @click="goToReport"
       >
         {{ $t('Back to the report') }}
       </CommonButton>

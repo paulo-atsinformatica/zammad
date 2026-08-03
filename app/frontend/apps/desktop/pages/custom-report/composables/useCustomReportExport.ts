@@ -81,8 +81,9 @@ export const useCustomReportExport = () => {
   }
 
   const checkProgress = async () => {
+    // refetch devolve { data, error }, não o resultado direto.
     const result = await runsQuery.refetch()
-    const run = result?.customReportRuns?.find((item) => item.id === trackedRunId.value)
+    const run = result?.data?.customReportRuns?.find((item) => item.id === trackedRunId.value)
 
     if (!run) return
 

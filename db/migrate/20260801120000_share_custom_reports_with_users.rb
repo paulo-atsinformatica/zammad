@@ -1,4 +1,5 @@
 # Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
+
 # Customização ATS: compartilhamento do relatório personalizado.
 
 class ShareCustomReportsWithUsers < ActiveRecord::Migration[8.0]

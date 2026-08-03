@@ -1,4 +1,5 @@
 # Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
+
 # Customização ATS: controle de tempo de atendimento.
 
 require 'rails_helper'
@@ -6,10 +7,15 @@ require 'rails_helper'
 # Cenários que já quebraram em produção. Cada bloco cita o sintoma, para uma
 # falha aqui dizer o que voltou a acontecer para o usuário.
 RSpec.describe TicketTimeTracking, :aggregate_failures, type: :model do
-  let(:group)      { create(:group) }
-  let(:user)       { create(:agent, groups: [group]) }
-  let(:other_user) { create(:agent, groups: [group]) }
-  let(:ticket)     { create(:ticket, group: group, owner: user) }
+  let(:group) { create(:group) }
+  let(:user)  { create(:agent, groups: [group]) }
+
+  # let! e não let: o teste de destinatários calcula a lista antes de a
+  # expectativa avaliar `other_user`, e com `let` o agente ainda não existiria no
+  # banco na hora da consulta.
+  let!(:other_user) { create(:agent, groups: [group]) }
+
+  let(:ticket) { create(:ticket, group: group, owner: user) }
 
   def tracking_for(owner = user, ticket_record = ticket, **attributes)
     create(:ticket_time_tracking,
@@ -163,8 +169,10 @@ RSpec.describe TicketTimeTracking, :aggregate_failures, type: :model do
       expect(resumed.reload.ended_at).to be_nil
     end
 
+    # Stub em vez de Setting.set: o setting é criado por seed/migration, e o teste
+    # cobre o comportamento do teto, não a existência do registro.
     it 'is disabled when the limit is zero' do
-      Setting.set('ticket_time_tracking_max_running_hours', 0)
+      allow(described_class).to receive(:max_running_hours).and_return(0)
       stale = tracking_for(user, ticket, started_at: 20.hours.ago)
 
       expect(described_class.close_stale).to eq(0)

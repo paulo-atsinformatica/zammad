@@ -5,22 +5,19 @@
 FactoryBot.define do
   factory :custom_report do
     sequence(:name) { |n| "Relatório #{n}" }
-    object          { 'Ticket' }
-    visibility      { 'personal' }
-    condition       { {} }
+    object                 { 'Ticket' }
+    condition              { {} }
     columns                { [] }
     group_by               { [] }
     aggregations           { [] }
     aggregation_attributes { [] }
-    active          { true }
-    created_by_id   { 1 }
-    updated_by_id   { 1 }
+    active                 { true }
+    created_by_id          { 1 }
+    updated_by_id          { 1 }
 
-    # "Geral": visível para quem tem acesso a algum dos grupos escolhidos. Não
-    # existe mais nível global — para valer para todos, escolhem-se todos os
-    # grupos.
-    factory :custom_report_general do
-      visibility { 'group' }
+    # Compartilhado com um grupo. Sem grupo nem usuário, o relatório só é visto
+    # por quem o criou — o equivalente ao antigo "pessoal".
+    factory :custom_report_shared do
       groups { [Group.first || create(:group)] }
     end
   end
