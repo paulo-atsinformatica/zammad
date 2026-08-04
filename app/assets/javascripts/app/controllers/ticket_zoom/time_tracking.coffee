@@ -7,8 +7,9 @@ class App.TicketZoomTimeTracking extends App.Controller
     '.js-tt-timer': 'timerDisplay'
 
   events:
-    'click .js-tt-start': 'onStartClick'
-    'click .js-tt-pause': 'onPauseClick'
+    'click .js-tt-start':  'onStartClick'
+    'click .js-tt-pause':  'onPauseClick'
+    'click .js-tt-others': 'onOthersClick'
 
   # Base do cronômetro: o acumulado deste usuário NO TICKET, e não só do registro
   # atual.
@@ -77,24 +78,79 @@ class App.TicketZoomTimeTracking extends App.Controller
         @renderSummary(data)
       error: =>
         # Não é informação essencial: se falhar, o player segue funcionando.
-        @$('.js-tt-others').addClass('hide')
+        @$('.js-tt-others-wrap').addClass('hide')
     )
 
   renderSummary: (data) ->
-    element = @$('.js-tt-others')
-    return if !element.length
-
     entries = data?.entries or []
+
+    # Guarda o acumulado DESTE usuário no ticket. É o que o cronômetro mostra
+    # quando não há registro em aberto — ver checkCurrentTracking. As duas
+    # chamadas são assíncronas, então quem chegar por último aplica o valor.
+    mine = _.find(entries, (entry) => entry.user_id is @currentUser?.id)
+    @summarySeconds = mine?.total_seconds or 0
+    if !@tracking && @summarySeconds
+      @totalSeconds = @summarySeconds
+      @renderTime()
+
+    wrap = @$('.js-tt-others-wrap')
+    return if !wrap.length
+
     if entries.length < 2
-      element.addClass('hide')
+      @closeOthers()
+      wrap.addClass('hide')
       return
 
-    detail = _.map(entries, (entry) -> "#{entry.user}: #{entry.formatted}").join('\n')
+    @renderOthersPopover(entries, data.total_seconds or 0)
+    wrap.removeClass('hide')
 
-    element
-      .text(@formatSeconds(data.total_seconds or 0))
-      .attr('title', "#{App.i18n.translateInline('Tempo por atendente')}\n#{detail}")
-      .removeClass('hide')
+  # Conteúdo do popup: o ticket em questão e o tempo de cada atendente. Montado
+  # com jQuery, e não por interpolação de string, para o nome do usuário (dado
+  # digitado por gente) não virar HTML.
+  renderOthersPopover: (entries, totalSeconds) ->
+    popover = @$('.js-tt-others-popover')
+    return if !popover.length
+
+    popover.empty()
+
+    $('<div/>')
+      .addClass('tt-others-title')
+      .text("#{App.Config.get('ticket_hook')}#{@ticket.number}")
+      .appendTo(popover)
+
+    list = $('<ul/>').addClass('tt-others-list').appendTo(popover)
+
+    for entry in entries
+      row = $('<li/>').appendTo(list)
+      row.toggleClass('is-running', !!entry.running)
+      $('<span/>').addClass('tt-others-name').text(entry.user or '-').appendTo(row)
+      $('<span/>').addClass('tt-others-value').text(entry.formatted).appendTo(row)
+
+    total = $('<div/>').addClass('tt-others-total').appendTo(popover)
+    $('<span/>').text(App.i18n.translateInline('Total')).appendTo(total)
+    $('<span/>').addClass('tt-others-value').text(@formatSeconds(totalSeconds)).appendTo(total)
+
+  onOthersClick: (e) ->
+    e.preventDefault()
+    e.stopPropagation()
+
+    if @$('.js-tt-others-popover').hasClass('hide') then @openOthers() else @closeOthers()
+
+  openOthers: ->
+    @$('.js-tt-others-popover').removeClass('hide')
+    @$('.js-tt-others').attr('aria-expanded', 'true')
+
+    # Fecha ao clicar fora. Namespaced para o unbind não derrubar outros
+    # handlers do documento, e removido em closeOthers e no release.
+    $(document).on("click.tt-others-#{@ticket_id}", (event) =>
+      return if $(event.target).closest('.js-tt-others-wrap').length
+      @closeOthers()
+    )
+
+  closeOthers: ->
+    @$('.js-tt-others-popover').addClass('hide')
+    @$('.js-tt-others').attr('aria-expanded', 'false')
+    $(document).off("click.tt-others-#{@ticket_id}")
 
   formatSeconds: (seconds) ->
     pad = (value) -> if value < 10 then "0#{value}" else "#{value}"
@@ -129,11 +185,16 @@ class App.TicketZoomTimeTracking extends App.Controller
           @renderTime()
         else
           @tracking = null
-          @totalSeconds = 0
+          # O acumulado das passagens anteriores continua valendo mesmo sem
+          # registro em aberto: quem devolveu o ticket e o recebeu de volta
+          # precisa ver quanto já trabalhou nele ANTES de clicar em iniciar.
+          # O total vem do resumo, que já é carregado no construtor.
+          @totalSeconds = @summarySeconds or 0
           @isPaused = false
           @isDeactivated = false
           @stopTimer()
           @updateButtonStates()
+          @renderTime()
       error: =>
         @tracking = null
         @totalSeconds = 0
@@ -602,6 +663,7 @@ class App.TicketZoomTimeTracking extends App.Controller
 
   release: ->
     @stopTimer()
+    @closeOthers()
     @ticket.off('change:state_id', @onTicketStateChange)
     @controllerUnbind('ui::ticket::all::loaded', @onTicketLoaded)
     @controllerUnbind('ui::ticket::load', @onTicketLoaded)

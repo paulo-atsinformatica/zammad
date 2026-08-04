@@ -16644,7 +16644,7 @@ div.accounted-time-value {
   left: $navigationWidth; /* Start after sidebar - uses Zammad's variable */
   right: 0;
   height: 32px;
-  background: #ffffff;
+  background: #fff;
   border-bottom: 1px solid var(--border);
   z-index: 500; /* Below sidebar but above content */
   display: flex;
@@ -16761,7 +16761,7 @@ div.accounted-time-value {
   border-radius: 50%;
   font-size: 10px;
   font-weight: 700;
-  color: #ffffff;
+  color: #fff;
   line-height: 1;
 }
 
@@ -16971,6 +16971,7 @@ body.has-status-bar {
   align-items: center;
   justify-content: center;
   animation: pauseBlockerFadeIn 0.3s ease;
+
   /* Stacking context for Chrome so overlay and backdrop-filter render correctly */
   isolation: isolate;
   transform: translateZ(0);
@@ -17000,6 +17001,7 @@ body.has-status-bar {
   from {
     opacity: 0;
   }
+
   to {
     opacity: 1;
   }
@@ -17024,6 +17026,7 @@ body.has-status-bar {
     opacity: 0;
     transform: translateY(20px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -17243,7 +17246,7 @@ body.is-pause-blocked {
   svg {
     width: 13px;
     height: 13px;
-    fill: currentcolor; // acompanha o tema sem precisar repetir a cor
+    fill: currentColor; // acompanha o tema sem precisar repetir a cor
   }
 
   &:hover:not(:disabled) {
@@ -17310,18 +17313,83 @@ body.is-pause-blocked {
   }
 }
 
-/* Tempo somado de todos os atendentes, ao lado do cronômetro pessoal. Só aparece
-   quando o ticket passou por mais de uma pessoa; o detalhe por atendente fica no
-   title. Discreto de propósito: o número que importa no dia a dia é o próprio. */
-.tt-others {
-  padding: 5px 8px;
+/* Tempo por atendente. Fica à ESQUERDA do play, atrás de um botão: mostrado à
+   direita do cronômetro, os dois números apareciam colados e não dava para saber
+   qual era o tempo de quem. Só aparece quando o ticket passou por mais de uma
+   pessoa. */
+.tt-others-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.tt-others-popover {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  z-index: 1200;
+  min-width: 220px;
+  padding: 10px 12px;
+  color: var(--text-normal);
+  background: var(--background-primary);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 8px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.28);
+
+  /* Ancorado à esquerda porque o player vive no canto direito da barra: aberto
+     para a direita, o popup sairia da tela. */
+  @include bidi-style(left, 0, right, auto);
+}
+
+.tt-others-title {
+  margin-bottom: 6px;
   font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.tt-others-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 3px 0;
+    font-size: 13px;
+  }
+
+  /* Quem está com a contagem correndo agora. */
+  li.is-running .tt-others-value {
+    color: hsl(142, 60%, 55%);
+  }
+}
+
+.tt-others-total {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px solid var(--background-modifier-border);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.tt-others-value {
   font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
   font-variant-numeric: tabular-nums;
-  color: var(--text-muted);
-  border: 1px dashed var(--background-modifier-border);
-  border-radius: 6px;
-  cursor: help;
+}
+
+/* O número do ticket herdava o tamanho do <small> da linha de metadados e ficava
+   pequeno demais para o dado mais consultado do cabeçalho. */
+.task-subline .ticket-number-copy {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-normal);
 }
 
 /* Position in ticket zoom controls */
@@ -17476,6 +17544,7 @@ body.is-pause-blocked {
 .datepicker.datepicker-dropdown {
   z-index: 10000 !important;
 }
+
 .package {
   &-table-heading {
     margin-top: 30px;

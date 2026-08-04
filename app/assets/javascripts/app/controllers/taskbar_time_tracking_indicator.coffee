@@ -31,6 +31,19 @@ class App.TaskbarTimeTrackingIndicator extends App.Controller
     # A taskbar recria o DOM das abas nesses eventos, o que remove o cronômetro.
     @controllerBind('taskInit taskUpdate', @refresh)
 
+  # Mesma base do player em App.TicketZoomTimeTracking#baseSeconds: o acumulado
+  # deste usuário NO TICKET, e não só do registro atual.
+  #
+  # Cada passagem pelo ticket cria um registro próprio. Lendo total_seconds, um
+  # agente que devolvia o ticket e o recebia de volta via a aba zerar em 00:00:00
+  # enquanto o player embaixo mostrava o tempo certo — os dois liam campos
+  # diferentes do mesmo payload.
+  baseFrom: (data, fallback = 0) ->
+    return fallback if !data
+    return data.ticket_total_seconds if data.ticket_total_seconds?
+    return data.total_seconds if data.total_seconds?
+    fallback
+
   # Num F5 o usuário já traz current_active_ticket_id (customização ATS), mas
   # não o tempo acumulado — daí a consulta ao endpoint para o cronômetro não
   # começar do zero.
@@ -50,11 +63,12 @@ class App.TaskbarTimeTrackingIndicator extends App.Controller
         return if !data or !data.id
 
         @applyState(
-          ticket_id:     ticketId
-          total_seconds: data.total_seconds
-          resumed_at:    data.resumed_at
-          started_at:    data.started_at
-          current_state: if data.is_active && !data.paused_at then 'running' else 'paused'
+          ticket_id:            ticketId
+          total_seconds:        data.total_seconds
+          ticket_total_seconds: data.ticket_total_seconds
+          resumed_at:           data.resumed_at
+          started_at:           data.started_at
+          current_state:        if data.is_active && !data.paused_at then 'running' else 'paused'
         )
     )
 
@@ -76,13 +90,13 @@ class App.TaskbarTimeTrackingIndicator extends App.Controller
       when 'running'
         @ticketId     = data.ticket_id
         @isPaused     = false
-        @baseSeconds  = data.total_seconds || 0
+        @baseSeconds  = @baseFrom(data)
         @runningSince = new Date(data.resumed_at || data.started_at)
         @startTimer()
       when 'paused'
         @ticketId     = data.ticket_id
         @isPaused     = true
-        @baseSeconds  = data.total_seconds || 0
+        @baseSeconds  = @baseFrom(data)
         @runningSince = null
         @stopTimer()
         @refresh()
