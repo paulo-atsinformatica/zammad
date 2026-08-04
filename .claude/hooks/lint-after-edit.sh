@@ -4,6 +4,34 @@
 # Hook: lint all changed/new files with the appropriate tools.
 # Collects modified and untracked files from git, then runs the matching linters.
 
+# A toolchain (bundle/pnpm) nem sempre está no PATH do host: no ambiente Windows
+# ela vive dentro do container de desenvolvimento. run_tool executa direto quando
+# as ferramentas estão disponíveis e, caso contrário, dentro do container. Sem
+# nenhum dos dois o hook sai sem erro — bloquear a edição por falta de ferramenta
+# só produz ruído a cada turno.
+CONTAINER=''
+if ! { command -v bundle >/dev/null 2>&1 && command -v pnpm >/dev/null 2>&1; }; then
+  CONTAINER=$(docker ps -q -f name=zc-run 2>/dev/null | head -1)
+  [[ -z "$CONTAINER" ]] && exit 0
+fi
+
+run_tool() {
+  if [[ -n "$CONTAINER" ]]; then
+    docker exec "$CONTAINER" bash -lc "cd /app && $*"
+  else
+    eval "$*"
+  fi
+}
+
+# Aspas simples em cada caminho: dentro do container os argumentos são
+# reinterpretados por um shell, então nome com espaço quebraria sem isto.
+quote_files() {
+  local file
+  for file in "$@"; do
+    printf " '%s'" "$file"
+  done
+}
+
 RUBY_FILES=()
 FRONTEND_TS_FILES=()
 FRONTEND_JS_FILES=()
@@ -27,29 +55,30 @@ done < <(git diff --name-only --diff-filter=ACMR HEAD 2>/dev/null; git ls-files 
 FRONTEND_ALL_FILES=("${FRONTEND_TS_FILES[@]}" "${FRONTEND_JS_FILES[@]}")
 
 if [[ ${#RUBY_FILES[@]} -gt 0 ]]; then
-  bundle exec rubocop --autocorrect "${RUBY_FILES[@]}" >&2 || EXIT_CODE=2
+  run_tool "bundle exec rubocop --autocorrect$(quote_files "${RUBY_FILES[@]}")" >&2 || EXIT_CODE=2
 fi
 
 if [[ ${#FRONTEND_ALL_FILES[@]} -gt 0 ]]; then
-  { pnpm lint:js:oxlint:cmd --fix "${FRONTEND_ALL_FILES[@]}" && \
-    pnpm lint:js:eslint:cmd --fix "${FRONTEND_ALL_FILES[@]}" && \
-    { pnpm format:cmd "${FRONTEND_ALL_FILES[@]}"; _fmt_rc=$?; (( _fmt_rc == 0 || _fmt_rc == 2 )); }; } >&2 || EXIT_CODE=2
+  FRONTEND_ARGS=$(quote_files "${FRONTEND_ALL_FILES[@]}")
+  { run_tool "pnpm lint:js:oxlint:cmd --fix${FRONTEND_ARGS}" && \
+    run_tool "pnpm lint:js:eslint:cmd --fix${FRONTEND_ARGS}" && \
+    { run_tool "pnpm format:cmd${FRONTEND_ARGS}"; _fmt_rc=$?; (( _fmt_rc == 0 || _fmt_rc == 2 )); }; } >&2 || EXIT_CODE=2
 fi
 
 if [[ ${#FRONTEND_TS_FILES[@]} -gt 0 ]]; then
-  pnpm lint:ts >&2 || EXIT_CODE=2
+  run_tool 'pnpm lint:ts' >&2 || EXIT_CODE=2
 fi
 
 if [[ ${#COFFEESCRIPT_FILES[@]} -gt 0 ]]; then
-  coffeelint --reporter=csv --rules ./.dev/coffeelint/rules/detect_translatable_string.coffee "${COFFEESCRIPT_FILES[@]}" >&2 || EXIT_CODE=2
+  run_tool "coffeelint --reporter=csv --rules ./.dev/coffeelint/rules/detect_translatable_string.coffee$(quote_files "${COFFEESCRIPT_FILES[@]}")" >&2 || EXIT_CODE=2
 fi
 
 if [[ ${#STYLE_FILES[@]} -gt 0 ]]; then
-  pnpm lint:css:cmd --fix "${STYLE_FILES[@]}" >&2 || EXIT_CODE=2
+  run_tool "pnpm lint:css:cmd --fix$(quote_files "${STYLE_FILES[@]}")" >&2 || EXIT_CODE=2
 fi
 
 if [[ ${#MARKDOWN_FILES[@]} -gt 0 ]]; then
-  pnpm lint:md:cmd --fix "${MARKDOWN_FILES[@]}" >&2 || EXIT_CODE=2
+  run_tool "pnpm lint:md:cmd --fix$(quote_files "${MARKDOWN_FILES[@]}")" >&2 || EXIT_CODE=2
 fi
 
 exit $EXIT_CODE
