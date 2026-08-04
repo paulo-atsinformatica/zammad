@@ -1,4 +1,4 @@
-<!-- Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/ -->
+<!-- Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/ -->
 
 <script setup lang="ts">
 import { computed, watch } from 'vue'
@@ -126,7 +126,7 @@ const goBack = () => {
 
 const submitButtonText = computed(() => {
   if (activeStep.value === 'account') {
-    return __('Connect and Continue')
+    return __('Connect and continue')
   }
 
   if (
@@ -137,10 +137,10 @@ const submitButtonText = computed(() => {
   }
 
   if (['outbound', 'inbound-messages'].includes(activeStep.value)) {
-    return __('Save and Continue')
+    return __('Save and continue')
   }
 
-  return __('Connect and Continue')
+  return __('Connect and continue')
 })
 
 const submitButtonVariant = computed(() => {

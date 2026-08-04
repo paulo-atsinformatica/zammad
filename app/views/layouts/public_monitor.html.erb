@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="<%= I18n.locale %>" dir="ltr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <base href="/">
+  <title><%= Setting.get('product_name') %> - <%= __('Monitor de Pausas') %></title>
+  <%= stylesheet_link_tag "application", media: 'all' %>
+  <% if Rails.configuration.assets.debug %>
+    <%= javascript_include_tag "public_monitor", nonce: true %>
+  <% else %>
+    <%= javascript_include_tag "public_monitor", nonce: true, defer: 'defer' %>
+  <% end %>
+</head>
+<body>
+  <%= yield %>
+</body>
+</html>

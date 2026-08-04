@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import { visitView } from '#tests/support/components/visitView.ts'
 import { mockApplicationConfig } from '#tests/support/mock-applicationConfig.ts'
@@ -27,7 +27,7 @@ describe('guided setup automated info', () => {
     it('shows info screen', async () => {
       const view = await visitView('/guided-setup/automated')
 
-      expect(view.getByText('Automated Setup')).toBeInTheDocument()
+      expect(view.getByText('Automated setup')).toBeInTheDocument()
       expect(view.queryByIconName('spinner')).not.toBeInTheDocument()
 
       expect(view.getByText('This system is configured for automated setup.')).toBeInTheDocument()

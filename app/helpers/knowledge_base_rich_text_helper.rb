@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 module KnowledgeBaseRichTextHelper
   def prepare_rich_text(input)
@@ -33,17 +33,10 @@ module KnowledgeBaseRichTextHelper
       settings = match
         .slice(1...-1)
         .split(',')
-        .to_h { |pair| pair.split(':').map(&:strip) }
+        .to_h { |pair| pair.split(':', 2).map(&:strip) }
         .symbolize_keys
 
-      url = case settings[:provider]
-            when 'youtube'
-              "https://www.youtube.com/embed/#{settings[:id]}"
-            when 'vimeo'
-              "https://player.vimeo.com/video/#{settings[:id]}"
-            end
-
-      return match if !url
+      url = VideoEmbed.embed_url(provider: settings[:provider], id: settings[:id], host: settings[:host])
 
       "<div class='videoWrapper'><iframe allowfullscreen id='#{settings[:provider]}#{settings[:id]}' type='text/html' src='#{url}' frameborder='0'></iframe></div>"
     end

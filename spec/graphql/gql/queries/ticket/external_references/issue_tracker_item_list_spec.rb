@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 require 'rails_helper'
 
@@ -23,6 +23,10 @@ RSpec.describe Gql::Queries::Ticket::ExternalReferences::IssueTrackerItemList, t
         ) {
           assignees
           issueId
+          issueType {
+            color
+            name
+          }
           labels {
             color
             textColor
@@ -44,6 +48,7 @@ RSpec.describe Gql::Queries::Ticket::ExternalReferences::IssueTrackerItemList, t
         title:      'GitHub integration',
         url:        'https://github.com/zammad/zammad/issues/1',
         icon_state: 'closed',
+        issue_type: { name: 'Story', color: 'PURPLE' },
         milestone:  '4.0',
         assignees:  ['Thorsten'],
         labels:     [
@@ -68,13 +73,9 @@ RSpec.describe Gql::Queries::Ticket::ExternalReferences::IssueTrackerItemList, t
     context 'with a GitHub issue tracker' do
       context 'when ticket is used' do
         before do
-          allow_any_instance_of(Service::Ticket::ExternalReferences::IssueTracker::TicketList)
+          allow(Service::Ticket::ExternalReferences::IssueTracker::TicketList)
             .to receive(:execute)
             .and_return(issue_list)
-
-          allow(Service::Ticket::ExternalReferences::IssueTracker::TicketList)
-            .to receive(:new)
-            .and_call_original
 
           gql.execute(query, variables: variables)
         end
@@ -82,20 +83,24 @@ RSpec.describe Gql::Queries::Ticket::ExternalReferences::IssueTrackerItemList, t
         it 'returns issue list', aggregate_failures: true do
           expect(gql.result.data).to eq(issue_list.map do |item|
             item.merge(
-              issueId: item[:id],
-              state:   item[:icon_state],
-              labels:  item[:labels].map do |label|
+              issueId:   item[:id],
+              state:     item[:icon_state],
+              issueType: item[:issue_type] && {
+                name:  item[:issue_type][:name],
+                color: item[:issue_type][:color],
+              },
+              labels:    item[:labels].map do |label|
                 {
                   title:     label[:title],
                   textColor: label[:text_color],
                   color:     label[:color]
                 }
               end
-            ).except(:id, :icon_state).deep_stringify_keys
+            ).except(:id, :icon_state, :issue_type).deep_stringify_keys
           end)
 
           expect(Service::Ticket::ExternalReferences::IssueTracker::TicketList)
-            .to have_received(:new).with(type: 'github', ticket: ticket)
+            .to have_received(:execute).with(type: 'github', ticket: ticket)
         end
       end
 
@@ -104,13 +109,9 @@ RSpec.describe Gql::Queries::Ticket::ExternalReferences::IssueTrackerItemList, t
         let(:variables)           { { issueTrackerType: issue_tracker_type, issueTrackerLinks: issue_tracker_links } }
 
         before do
-          allow_any_instance_of(Service::Ticket::ExternalReferences::IssueTracker::FetchMetadata)
+          allow(Service::Ticket::ExternalReferences::IssueTracker::FetchMetadata)
             .to receive(:execute)
             .and_return(issue_list)
-
-          allow(Service::Ticket::ExternalReferences::IssueTracker::FetchMetadata)
-            .to receive(:new)
-            .and_call_original
 
           gql.execute(query, variables: variables)
         end
@@ -118,20 +119,42 @@ RSpec.describe Gql::Queries::Ticket::ExternalReferences::IssueTrackerItemList, t
         it 'returns issue list', aggregate_failures: true do
           expect(gql.result.data).to eq(issue_list.map do |item|
             item.merge(
-              issueId: item[:id],
-              state:   item[:icon_state],
-              labels:  item[:labels].map do |label|
+              issueId:   item[:id],
+              state:     item[:icon_state],
+              issueType: item[:issue_type] && {
+                name:  item[:issue_type][:name],
+                color: item[:issue_type][:color],
+              },
+              labels:    item[:labels].map do |label|
                 {
                   title:     label[:title],
                   textColor: label[:text_color],
                   color:     label[:color]
                 }
               end
-            ).except(:id, :icon_state).deep_stringify_keys
+            ).except(:id, :icon_state, :issue_type).deep_stringify_keys
           end)
 
           expect(Service::Ticket::ExternalReferences::IssueTracker::FetchMetadata)
-            .to have_received(:new).with(type: 'github', issue_links: issue_tracker_links)
+            .to have_received(:execute).with(type: 'github', issue_links: issue_tracker_links)
+        end
+      end
+
+      context 'when issue has no type (personal repo or untyped issue)' do
+        let(:issue_list_no_type) do
+          [issue_list.first.merge(issue_type: nil)]
+        end
+
+        before do
+          allow(Service::Ticket::ExternalReferences::IssueTracker::TicketList)
+            .to receive(:execute)
+            .and_return(issue_list_no_type)
+
+          gql.execute(query, variables: variables)
+        end
+
+        it 'returns issueType as null' do
+          expect(gql.result.data.first['issueType']).to be_nil
         end
       end
     end

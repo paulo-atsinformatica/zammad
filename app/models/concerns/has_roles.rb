@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 module HasRoles
   extend ActiveSupport::Concern
@@ -8,9 +8,24 @@ module HasRoles
 
     has_and_belongs_to_many :roles,
                             before_add:    %i[validate_agent_limit_by_role validate_roles],
-                            after_add:     %i[cache_update role_check_preference_notifications_default],
-                            before_remove: :last_admin_check_by_role,
-                            after_remove:  %i[cache_update]
+                            after_add:     %i[cache_update role_check_preference_notifications_default audit_log_role_add],
+                            before_remove: %i[last_admin_check_by_role check_active_time_tracking_by_role],
+                            after_remove:  %i[cache_update audit_log_role_remove]
+
+    after_create :audit_log_roles_after_create
+  end
+
+  def audit_log_role_add(role)
+    AuditLog.log_role_assignment(user: self, role:, action_type: 'role_add')
+  end
+
+  def audit_log_role_remove(role)
+    AuditLog.log_role_assignment(user: self, role:, action_type: 'role_remove')
+  end
+
+  # role assignments of a new record fire the association callbacks before it is persisted, log them after creation
+  def audit_log_roles_after_create
+    roles.each { |role| audit_log_role_add(role) }
   end
 
   # Checks a given Group( ID) for given access(es) for the instance associated roles.
@@ -58,6 +73,21 @@ module HasRoles
     save if persisted?
 
     true
+  end
+
+  TIME_TRACKING_PERMISSIONS = %w[ticket.time_tracking user.ticket_time_tracking].freeze
+
+  def check_active_time_tracking_by_role(role)
+    return true unless role.with_permission?(TIME_TRACKING_PERMISSIONS)
+
+    # Check if user still has the permission via other roles after this removal
+    remaining_roles = roles.reject { |r| r.id == role.id }
+    return true if remaining_roles.any? { |r| r.with_permission?(TIME_TRACKING_PERMISSIONS) }
+
+    return true unless active_ticket_tracking
+
+    raise Exceptions::UnprocessableContent,
+          __('Cannot remove role: user has an active ticket time tracking session. End the session first.')
   end
 
   # methods defined here are going to extend the class, not the instance of it

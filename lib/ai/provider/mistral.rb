@@ -1,12 +1,15 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 class AI::Provider::Mistral < AI::Provider
+  include AI::Provider::Concerns::HandlesOpenAIMessages
+  include AI::Provider::Concerns::HasConfigurableModel
+
   MISTRAL_API_BASE_URL = 'https://api.mistral.ai/v1'.freeze
 
   # default model also in app/assets/javascripts/app/lib/app_post/ai_provider/mistral.coffee
   DEFAULT_OPTIONS = {
     temperature:     0.1,
-    model:           'mistral-medium-latest',
+    model:           'mistral-large-2512',
     embedding_model: 'mistral-embed',
   }.freeze
 
@@ -14,19 +17,37 @@ class AI::Provider::Mistral < AI::Provider
     'mistral-embed' => 1024
   }.freeze
 
-  def chat(prompt_system:, prompt_user:)
+  EMBEDDING_INPUT_LIMITS = {
+    'mistral-embed' => 8192
+  }.freeze
+
+  def self.ping!(config)
+    response = UserAgent.get(
+      "#{MISTRAL_API_BASE_URL}/models",
+      {},
+      {
+        **REQUEST_TIMEOUT_OPTIONS,
+        verify_ssl:   true,
+        bearer_token: config[:token],
+        json:         true,
+        log:          {
+          facility:          'AI::Provider',
+          log_only_on_error: true,
+        },
+      },
+    )
+
+    validate_response!(response)
+
+    nil
+  end
+
+  private
+
+  def chat(prompt_system:, prompt_user:, prompt_image:)
     request_body = {
-      model:           options[:model],
-      messages:        [
-        {
-          role:    'system',
-          content: prompt_system,
-        },
-        {
-          role:    'user',
-          content: prompt_user,
-        },
-      ],
+      model:           model_for(prompt_image:),
+      messages:        messages_for(prompt_system:, prompt_user:, prompt_image:),
       response_format: {
         type: options[:json_response] ? 'json_object' : 'text'
       },
@@ -36,13 +57,11 @@ class AI::Provider::Mistral < AI::Provider
       "#{MISTRAL_API_BASE_URL}/chat/completions",
       request_body,
       {
-        open_timeout:  4,
-        read_timeout:  60,
-        verify_ssl:    true,
-        bearer_token:  config[:token],
-        total_timeout: 60,
-        json:          true,
-        log:           {
+        **REQUEST_TIMEOUT_OPTIONS,
+        verify_ssl:   true,
+        bearer_token: config[:token],
+        json:         true,
+        log:          {
           facility: 'AI::Provider',
         },
       },
@@ -62,43 +81,16 @@ class AI::Provider::Mistral < AI::Provider
         input: input,
       },
       {
-        open_timeout:  4,
-        read_timeout:  60,
-        verify_ssl:    true,
-        bearer_token:  config[:token],
-        total_timeout: 60,
-        json:          true,
+        **REQUEST_TIMEOUT_OPTIONS,
+        verify_ssl:   true,
+        bearer_token: config[:token],
+        json:         true,
       },
     )
 
     data = validate_response!(response)
-    data['data'].first['embedding']
+    data['data'].pluck('embedding')
   end
-
-  def self.ping!(config)
-    response = UserAgent.get(
-      "#{MISTRAL_API_BASE_URL}/models",
-      {},
-      {
-        open_timeout:  4,
-        read_timeout:  60,
-        verify_ssl:    true,
-        bearer_token:  config[:token],
-        total_timeout: 60,
-        json:          true,
-        log:           {
-          facility:          'AI::Provider',
-          log_only_on_error: true,
-        },
-      },
-    )
-
-    raise AI::Provider::ResponseError, __('API server not accessible') if response.code.to_i != 200
-
-    nil
-  end
-
-  private
 
   def specific_metadata
     {

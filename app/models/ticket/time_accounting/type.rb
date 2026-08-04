@@ -1,10 +1,11 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 class Ticket::TimeAccounting::Type < ApplicationModel
   include HasDefaultModelUserRelations
 
   include ChecksHtmlSanitized
   include HasCollectionUpdate
+  include HasAuditLogs
 
   collection_push_permission('ticket.agent')
 

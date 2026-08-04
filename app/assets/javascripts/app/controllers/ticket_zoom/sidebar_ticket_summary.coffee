@@ -1,7 +1,7 @@
 class App.SidebarTicketSummary extends App.Controller
   DISPLAY_STRUCTURE: [
     { key: 'customer_request', name: __('Customer Intent'), value: 'customer_request' },
-    { key: 'conversation_summary', name: __('Conversation Summary'), value: 'conversation_summary' },
+    { key: 'conversation_summary', name: __('Conversation Summary'), value: 'conversation_summary', type: 'paragraphs' },
     { key: 'open_questions', name: __('Open Questions'), value: 'open_questions', type: 'list' },
     { key: 'upcoming_events', name: __('Upcoming Events'), value: 'upcoming_events', type: 'list' },
     { key: 'customer_sentiment', name: __('Customer Sentiment'), value: ['customer_emotion', 'customer_mood'] },
@@ -12,9 +12,32 @@ class App.SidebarTicketSummary extends App.Controller
 
     @controllerBind('config_update', @configHasChanged)
 
+    # Remember the enabled state as seen at construction time, so that
+    # 'reload' can detect transitions later on.
+    @sidebarWasEnabled = @sidebarIsEnabled()
+
     return if !@parent?.activeState
 
     @ticketZoomShown()
+
+  reload: =>
+    return if !@parent?.currentTicketRaw
+
+    isEnabled = @sidebarIsEnabled()
+    wasEnabled = @sidebarWasEnabled
+
+    # Update the state before triggering the event, since 'sidebarRerender' is handled
+    #   synchronously and re-enters 'reload' (via 'render') before this method returns.
+    @sidebarWasEnabled = isEnabled
+
+    if wasEnabled isnt isEnabled
+      # If the summary tab is currently active and about to be removed, clear the stored
+      #   active tab so App.Sidebar falls back to another tab instead of leaving all
+      #   sidebar panes hidden (it only falls back when no active tab is stored at all).
+      if !isEnabled && @parentSidebar?.currentTab is 'summary'
+        @parentSidebar.sidebarState.active = undefined
+
+      App.Event.trigger('ui::ticket::sidebarRerender', { taskKey: @taskKey })
 
   activateSummary: =>
     return if @summaryActivated
@@ -30,10 +53,14 @@ class App.SidebarTicketSummary extends App.Controller
     @controllerBind('ticket::summary::update', (data) =>
       return if !@sidebarIsEnabled()
       return if data.ticket_id.toString() isnt @ticket.id.toString()
-      return if data.locale isnt App.i18n.get()
+      return if data.locale isnt App.i18n.get() && !data.error
 
       if data.error
-        @renderSummarization(error: true)
+        if data.ai_analytics_run_id
+          @loadSummarization(null, data.ai_analytics_run_id)
+        else
+          @renderSummarization(error: true)
+
         return
 
       if !@isLoadSummaryNow()
@@ -51,6 +78,18 @@ class App.SidebarTicketSummary extends App.Controller
       return if !@isLoadSummaryNow()
 
       @loadSummarization()
+    )
+
+    @controllerBind('ui::ticket::sidebarToggleTab', (data) =>
+      return if not @parent?.activeState
+      return if @summarizeOnTicketShow()
+      return if data.name is @sidebarItem()?.name
+
+      # Reset activation flag when sidebar tab is switched to any other (#6131).
+      #   Do this only:
+      #   - For the currently active ticket
+      #   - If the summary is not set to be generated on ticket show
+      @summaryActivated = false
     )
 
   isLoadSummaryNow: =>
@@ -94,7 +133,7 @@ class App.SidebarTicketSummary extends App.Controller
         false
       else
         setting = App.Config.get('ai_assistance_ticket_summary_config') || {}
-        setting['generate_on'] != 'on_ticket_summary_sidebar_activation'
+        setting['generate_on'] == 'on_ticket_detail_opening'
 
   sidebarItem: =>
     return if !@sidebarIsEnabled()
@@ -103,7 +142,7 @@ class App.SidebarTicketSummary extends App.Controller
       name:           'summary'
       badgeIcon:      'smart-assist'
       badgeCallback:  @badgeRender
-      sidebarHead:     __('Summary')
+      sidebarHead:     __('AI Summary')
       sidebarCallback: @sidebarCallback
       sidebarActions:  []
     }
@@ -128,10 +167,6 @@ class App.SidebarTicketSummary extends App.Controller
     @badgeRenderLocal()
     @feedbackWidget?.recordUsage({}, null, =>
       @hasUsage = false
-      @notify(
-        type: 'error'
-        msg:  __('Your AI result usage could not be recorded.')
-      )
       false
     )
     @hasUsage = true
@@ -153,7 +188,13 @@ class App.SidebarTicketSummary extends App.Controller
     return false if !App.Config.get('ai_provider')
     return false if !App.Config.get('ai_assistance_ticket_summary')
     return false if !(@ticket and @ticket.currentView() is 'agent')
-    return false if @ticket.state.state_type.name is 'merged'
+
+    # Read from '@parent.currentTicketRaw' (ticket_zoom's own, stable snapshot) rather than
+    #   '@ticket.ai_summary_enabled': 'App.Ticket.find'/'fullLocal' return a freshly constructed
+    #   object on every call, so a value manually assigned onto one instance (e.g. by
+    #   ticket_zoom.coffee) is not visible on another instance resolved independently here.
+    aiSummaryEnabled = @parent?.currentTicketRaw?.ai_summary_enabled
+    return false if aiSummaryEnabled isnt true && aiSummaryEnabled isnt 'true'
 
     true
 
@@ -164,7 +205,10 @@ class App.SidebarTicketSummary extends App.Controller
     switch config.name
       when 'ai_assistance_ticket_summary'
         App.Event.trigger('ui::ticket::sidebarRerender', { taskKey: @taskKey })
+      when 'ai_assistance_ticket_summary_selector'
+        App.Event.trigger('ui::ticket::sidebarRerender', { taskKey: @taskKey })
       when 'ai_assistance_ticket_summary_config'
+        App.Event.trigger('ui::ticket::sidebarRerender', { taskKey: @taskKey })
         @configHasChangedLoadSummary()
 
   getAvailableDisplayStructure: ->
@@ -173,6 +217,8 @@ class App.SidebarTicketSummary extends App.Controller
 
   renderSummarization: (data) =>
     @summaryData = data if data
+    @isPreparingData = (_.isNull(@summaryData?.result) or @summaryData?.error)
+
     @badgeRenderLocal()
 
     return if !@elSidebar
@@ -224,7 +270,7 @@ class App.SidebarTicketSummary extends App.Controller
 
       sender.name != 'System' && article.body?.length > 0
 
-  loadSummarization: (regenerationOfId = null) =>
+  loadSummarization: (regenerationOfId = null, ai_analytics_run_id = null) =>
     return if !@sidebarIsEnabled()
 
     @waitingSummarization = false
@@ -232,6 +278,7 @@ class App.SidebarTicketSummary extends App.Controller
     data = {}
 
     data.regeneration_of_id = regenerationOfId if regenerationOfId
+    data.ai_analytics_run_error_id = ai_analytics_run_id if ai_analytics_run_id
 
     @startStripeAnimation()
 

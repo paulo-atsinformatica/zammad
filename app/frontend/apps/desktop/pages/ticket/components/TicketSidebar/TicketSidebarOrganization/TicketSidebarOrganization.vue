@@ -1,4 +1,4 @@
-<!-- Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/ -->
+<!-- Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/ -->
 
 <script setup lang="ts">
 import { watch, computed } from 'vue'
@@ -29,7 +29,7 @@ const userQuery = new QueryHandler(
   useUserQuery(
     () => ({
       userId: convertToGraphQLId('User', customerId.value),
-      secondaryOrganizationsCount: 3,
+      secondaryOrganizationsCount: 5,
     }),
     () => ({ enabled: Boolean(customerId.value), fetchPolicy: 'cache-first' }),
   ),

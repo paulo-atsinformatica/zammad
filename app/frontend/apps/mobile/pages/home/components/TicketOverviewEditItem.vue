@@ -1,4 +1,4 @@
-<!-- Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/ -->
+<!-- Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/ -->
 
 <script setup lang="ts">
 import { computed } from 'vue'
@@ -85,11 +85,11 @@ const tooltipMessages = computed(() => {
         class="shrink-0"
         name="visibility"
         :messages="tooltipMessages"
-        :heading="__('Limited Visibility')"
+        :heading="__('Limited visibility')"
       >
         <CommonIcon name="tooltip" size="small" />
       </CommonTooltip>
     </div>
-    <CommonIcon v-if="draggable" name="change-order" size="small" class="text-gray shrink-0" />
+    <CommonIcon v-if="draggable" name="change-order" size="small" class="shrink-0 text-gray" />
   </div>
 </template>

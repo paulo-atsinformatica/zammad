@@ -1,8 +1,8 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 class KnowledgeBase
   class AccessibleCategories
-    CategoriesStruct = Struct.new(:editor, :reader, :public_reader, keyword_init: true) do
+    CategoriesStruct = Struct.new(:editor, :reader, :public_reader) do
       def initialize(editor: [], reader: [], public_reader: [])
         super
       end
@@ -59,9 +59,7 @@ class KnowledgeBase
     def scope
       return KnowledgeBase::Category.find_in_batches if categories_filter.blank?
 
-      Array(categories_filter)
-        .map(&:self_with_children)
-        .each
+      [KnowledgeBase::Category.with_recursive_tree_cte(direction: :down, seed: KnowledgeBase::Category.where(id: categories_filter))]
     end
 
     def taxonomize_category(struct, category)

@@ -1,4 +1,4 @@
-<!-- Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/ -->
+<!-- Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/ -->
 
 <script setup lang="ts">
 import { onClickOutside } from '@vueuse/core'
@@ -28,6 +28,7 @@ export interface Props {
   labelAttrs?: Record<string, string>
   label?: string
   block?: boolean
+  maxLength?: number | string
   classes?: {
     label?: string
     input?: string
@@ -64,7 +65,7 @@ const contentTooltip = computed(() => {
 
   if (isHoverTargetLink.value) return i18n.t('Open link')
 
-  return props.label || i18n.t('Start Editing')
+  return props.label || i18n.t('Start editing')
 })
 
 const checkValidity = (edit: string) => {
@@ -292,8 +293,9 @@ defineExpose({
       <CommonLabel
         :id="id"
         ref="label"
-        class="z-10 break-words"
-        style="word-break: normal; overflow-wrap: anywhere"
+        v-tooltip.supportive.truncate="processedContent"
+        class="z-10 wrap-break-word"
+        :style="{ wordBreak: 'normal', overflowWrap: 'anywhere' }"
         v-bind="labelAttrs"
         :size="size"
         :class="[classes?.label, minHeightClassMap[size]]"
@@ -303,7 +305,7 @@ defineExpose({
 
     <div
       v-else
-      class="flex max-w-full items-center gap-2 before:absolute before:top-1/2 before:-left-[5px] before:z-0 before:h-[calc(100%+10px)] before:w-[calc(100%+10px)] before:-translate-y-1/2 before:rounded-md focus-within:before:outline-1 focus-within:before:outline-blue-800"
+      class="flex max-w-full items-center gap-2 before:absolute before:top-1/2 before:-left-1.25 before:z-0 before:h-[calc(100%+10px)] before:w-[calc(100%+10px)] before:-translate-y-1/2 before:rounded-md focus-within:before:outline-1 focus-within:before:outline-blue-800"
       :class="[{ 'w-full': block }, editBackgroundClass, fontSizeClassMap[size]]"
     >
       <div class="relative z-10 w-full ltr:pr-14 rtl:pl-14">
@@ -315,6 +317,7 @@ defineExpose({
           :class="[{ grow: block }, classes?.input || '']"
           :disabled="disabled || loading"
           :placeholder="placeholder"
+          :maxlength="maxLength"
           @keydown.stop.enter="handleEnterKey"
         />
       </div>
@@ -322,7 +325,7 @@ defineExpose({
       <CommonInlineEditButtons
         :submit-label="submitLabel"
         :cancel-label="cancelLabel"
-        class="absolute z-10 ltr:right-0 rtl:left-0 rtl:-order-1"
+        class="absolute inset-e-0 z-10 print:hidden"
         :submit-disabled="!isValid"
         @submit="submitEdit"
         @cancel="stopEditing()"

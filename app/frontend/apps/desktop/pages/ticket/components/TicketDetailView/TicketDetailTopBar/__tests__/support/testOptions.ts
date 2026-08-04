@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import { nullableMock } from '#tests/support/utils.ts'
 
@@ -6,7 +6,7 @@ import type { TicketById } from '#shared/entities/ticket/types.ts'
 import { EnumTicketStateColorCode } from '#shared/graphql/types.ts'
 import { convertToGraphQLId } from '#shared/graphql/utils.ts'
 
-export const testOptionsTopBar: TicketById = nullableMock({
+export const testOptionsTopBar: TicketById = nullableMock<TicketById>({
   __typename: 'Ticket',
   createArticleType: {
     __typename: 'TicketArticleType',

@@ -1,7 +1,8 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import { useRouter } from 'vue-router'
 
+import { useUserFormSchema } from '#shared/entities/user/composables/useUserFormSchema.ts'
 import { useUserAddMutation } from '#shared/entities/user/graphql/mutations/add.api.ts'
 import { defineFormSchema } from '#shared/form/defineFormSchema.ts'
 import type { User, UserAddPayload } from '#shared/graphql/types.ts'
@@ -16,18 +17,17 @@ interface UserCreateOptions {
 export const useUserCreate = (options: UserCreateOptions = {}) => {
   const dialogCreate = useDialogObjectForm('user-create', EnumObjectManagerObjects.User)
 
-  const schema = defineFormSchema([
-    {
-      screen: 'create',
-      object: EnumObjectManagerObjects.User,
-    },
-    {
-      name: 'active',
-      required: true,
-      screen: 'create',
-      object: EnumObjectManagerObjects.User,
-    },
-  ])
+  const { buildUserSchema } = useUserFormSchema()
+
+  const schema = defineFormSchema(
+    buildUserSchema('create', [
+      {
+        name: 'active',
+        screen: 'create',
+        object: EnumObjectManagerObjects.User,
+      },
+    ]),
+  )
 
   const router = useRouter()
 

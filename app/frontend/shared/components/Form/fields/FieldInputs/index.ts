@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import {
   color as inputColorDefinition,
@@ -35,6 +35,7 @@ Object.keys(inputFieldDefinitionList).forEach((inputType) => {
   initializeFieldDefinition(
     inputFieldDefinitionList[inputType],
     {
+      props: ['alternativeBackground'],
       features: [
         addLink,
         addSubmitEvent,

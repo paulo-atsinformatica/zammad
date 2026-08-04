@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 class KnowledgeBasesController < KnowledgeBase::BaseController
   include KnowledgeBaseHelper
@@ -133,7 +133,7 @@ class KnowledgeBasesController < KnowledgeBase::BaseController
 
   # assets for users who don't have KB permissions
   def public_assets
-    return [] if !Setting.get('kb_active_publicly')
+    return {} if !Setting.get('kb_active_publicly')
 
     ApplicationModel::CanAssets.reduce(KnowledgeBase.active, {}, :public)
   end

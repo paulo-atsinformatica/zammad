@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import { waitFor, within } from '@testing-library/vue'
 
@@ -22,6 +22,10 @@ import {
 } from './mocks/ticket-overviews-mocks.ts'
 
 describe('TicketOverviews', () => {
+  beforeEach(() => {
+    mockPermissions(['ticket.agent'])
+  })
+
   it('redirects when overview does not exist', async () => {
     mockDefaultOverviewQueries()
 
@@ -36,7 +40,6 @@ describe('TicketOverviews', () => {
 
   it('displays overviews correctly', async () => {
     mockDefaultOverviewQueries()
-    mockPermissions(['ticket.agent'])
 
     const view = await visitView('tickets/view/my_assigned')
 
@@ -58,7 +61,7 @@ describe('TicketOverviews', () => {
 
     expect(
       await view.findByRole('table', { name: 'Overview: My Assigned Tickets' }),
-    ).toHaveTextContent('My Assigned TicketsState Icon') //  deeper test is in TicketList
+    ).toHaveTextContent('My Assigned TicketsState icon') //  deeper test is in TicketList
   })
 
   it('reorders overviews when subscription comes in', async () => {

@@ -1,4 +1,4 @@
-<!-- Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/ -->
+<!-- Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/ -->
 
 <script setup lang="ts">
 import CommonButton from '#desktop/components/CommonButton/CommonButton.vue'
@@ -33,6 +33,6 @@ const { popover, popoverTarget, toggle } = usePopover()
     variant="secondary"
     @click="toggle(true)"
   >
-    {{ $t('Add From a Template') }}
+    {{ $t('Add from a template') }}
   </CommonButton>
 </template>

@@ -1,4 +1,4 @@
-<!-- Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/ -->
+<!-- Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/ -->
 
 <script setup lang="ts">
 import { useLocaleUpdate } from '#shared/composables/useLocaleUpdate.ts'
@@ -6,14 +6,23 @@ import { useLocaleUpdate } from '#shared/composables/useLocaleUpdate.ts'
 import LayoutContent from '#desktop/components/layout/LayoutContent.vue'
 
 import { useBreadcrumb } from '../composables/useBreadcrumb.ts'
+import { usePersonalSettingTabs } from '../composables/usePersonalSettingTabs.ts'
 
 const { modelCurrentLocale, localeOptions, isSavingLocale, translation } = useLocaleUpdate()
 
 const { breadcrumbItems } = useBreadcrumb(__('Language'))
+
+const { tabs, activeTab } = usePersonalSettingTabs()
 </script>
 
 <template>
-  <LayoutContent :breadcrumb-items="breadcrumbItems" width="narrow" provide-default>
+  <LayoutContent
+    :active-tab="activeTab"
+    :tabs="tabs"
+    :breadcrumb-items="breadcrumbItems"
+    width="narrow"
+    provide-default
+  >
     <div class="mb-4">
       <FormKit
         v-model="modelCurrentLocale"
@@ -23,7 +32,7 @@ const { breadcrumbItems } = useBreadcrumb(__('Language'))
         :label="$t('Your language')"
         :disabled="isSavingLocale"
         :no-options-label-translation="true"
-        sorting="label"
+        sorting="value"
         :options="localeOptions"
       />
 

@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 class ActiveJobLock < ActiveRecord::Base
 
@@ -19,5 +19,12 @@ class ActiveJobLock < ActiveRecord::Base
       created_at:    reset_time_stamp,
       updated_at:    reset_time_stamp
     )
+  end
+
+  # This method is used to find the Delayed::Job record representing the ActiveJob associated with this lock.
+  #
+  # @return [Delayed::Job, nil] the related Delayed::Job record, or nil if not found
+  def related_job
+    ApplicationJob.job_by_active_job_id(active_job_id)
   end
 end

@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 require 'rails_helper'
 
@@ -12,6 +12,7 @@ RSpec.describe GitHub, integration: true, required_envs: %w[GITHUB_ENDPOINT GITH
       title:      'GitHub integration',
       url:        ENV['GITHUB_ISSUE_LINK'],
       icon_state: 'closed',
+      issue_type: nil,
       milestone:  '4.0',
       assignees:  ['Thorsten'],
       labels:     [

@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import { getByIconName, queryByIconName } from '#tests/support/components/iconQueries.ts'
 import renderComponent from '#tests/support/components/renderComponent.ts'
@@ -160,7 +160,7 @@ describe('TicketLiveUsers', () => {
     it('indicates that agent is processing this ticket', async () => {
       const wrapper = renderTicketLiveUsers(undefined, { aiAgentRunning: true })
 
-      expect(wrapper.getByLabelText('AI Agent')).toBeInTheDocument()
+      expect(wrapper.getByLabelText('AI agent')).toBeInTheDocument()
     })
   })
 })

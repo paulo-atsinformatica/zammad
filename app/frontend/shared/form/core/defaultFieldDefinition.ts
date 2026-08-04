@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import type { FormDefaultProps } from '#shared/types/form.ts'
 
@@ -14,6 +14,7 @@ const defaultProps: (keyof FormDefaultProps)[] = [
   'labelSrOnly',
   'labelPlaceholder',
   'internal',
+  'formUpdaterValueChange',
 ]
 
 const defaulfFieldDefinition: Required<Pick<FormKitTypeDefinition, 'props' | 'features'>> = {

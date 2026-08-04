@@ -1,10 +1,9 @@
-<!-- Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/ -->
+<!-- Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/ -->
 
 <script setup lang="ts">
 import { computed } from 'vue'
 
-import type { TicketById } from '#shared/entities/ticket/types.ts'
-import type { Ticket } from '#shared/graphql/types.ts'
+import type { TicketLabel } from '#shared/entities/ticket/types.ts'
 import { useSessionStore } from '#shared/stores/session.ts'
 
 import { type Props as CommonPopoverProps } from '#desktop//components/CommonPopover/CommonPopover.vue'
@@ -14,7 +13,7 @@ import CommonTicketLabel from '#desktop/components/CommonTicketLabel/CommonTicke
 import TicketPopover from './TicketPopoverWithTrigger/TicketPopover.vue'
 
 export interface Props {
-  ticket: Partial<Ticket | TicketById>
+  ticket: TicketLabel
   popoverConfig?: Omit<CommonPopoverProps, 'owner'>
   triggerClass?: string
   noTriggerLink?: boolean

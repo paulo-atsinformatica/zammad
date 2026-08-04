@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 require 'rails_helper'
 
@@ -46,6 +46,42 @@ RSpec.describe Gql::Mutations::User::Current::TaskbarItem::Delete, type: :graphq
 
       it 'fails with error' do
         expect(gql.result.error_type).to eq(ActiveRecord::RecordNotFound)
+      end
+    end
+
+    context 'when deleting another agent\'s taskbar item' do
+      let(:other_agent)   { create(:agent) }
+      let(:taskbar_item)  { create(:taskbar, user: other_agent) }
+      let(:execute_query) { false }
+
+      before do
+        gql.execute(query, variables: { id: gql.id(taskbar_item) })
+      end
+
+      it 'raises forbidden error' do
+        expect(gql.result.error_type).to eq(Exceptions::Forbidden)
+      end
+
+      it 'does not delete the taskbar item' do
+        expect(Taskbar.exists?(taskbar_item.id)).to be(true)
+      end
+    end
+
+    context 'when deleting another user\'s taskbar item' do
+      let(:other_user)    { create(:agent) }
+      let(:taskbar_item)  { create(:taskbar, user_id: other_user.id) }
+      let(:execute_query) { false }
+
+      before do
+        gql.execute(query, variables: { id: gql.id(taskbar_item) })
+      end
+
+      it 'raises forbidden error' do
+        expect(gql.result.error_type).to eq(Exceptions::Forbidden)
+      end
+
+      it 'does not delete the taskbar item' do
+        expect(Taskbar.exists?(taskbar_item.id)).to be(true)
       end
     end
 

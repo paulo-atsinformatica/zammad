@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import { visitView } from '#tests/support/components/visitView.ts'
 
@@ -10,6 +10,14 @@ describe('locale page', () => {
   it('can change language', async () => {
     mockLocalesQuery({
       locales: [
+        // Add always the default language 'en-us' to the list of locales.
+        {
+          locale: 'en-us',
+          name: 'English (United States)',
+          dir: EnumTextDirection.Ltr,
+          alias: 'en',
+          active: true,
+        },
         {
           locale: 'de-de',
           name: 'Deutsch',

@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import { visitView } from '#tests/support/components/visitView.ts'
 import { mockPermissions } from '#tests/support/mock-permissions.ts'
@@ -167,7 +167,7 @@ describe('personal notifications settings', () => {
 
     expect((view.getByLabelText('Notification sound') as HTMLInputElement).value).toEqual('Plop')
 
-    await view.events.click(view.getByRole('button', { name: 'Reset to Default Settings' }))
+    await view.events.click(view.getByRole('button', { name: 'Reset to default settings' }))
 
     expect(await view.findByRole('dialog', { name: 'Confirmation' })).toBeInTheDocument()
 
@@ -216,7 +216,7 @@ describe('personal notifications settings', () => {
       },
     })
 
-    await view.events.click(view.getByRole('button', { name: 'Save Notifications' }))
+    await view.events.click(view.getByRole('button', { name: 'Save notifications' }))
 
     const previousMockedData = mockPersonalSettings()
 

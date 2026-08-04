@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 ##
 # AI::Agent is a model that represents an AI agent with different strcutre parts:
@@ -60,6 +60,7 @@ class AI::Agent < ApplicationModel
   include EnsuresNoRelatedObjects
   include AI::Agent::Assets
   include ChecksClientNotification
+  include HasAuditLogs
 
   PERFORMABLE_PATH = ['ai.ai_agent', 'ai_agent_id'].freeze
 
@@ -75,13 +76,19 @@ class AI::Agent < ApplicationModel
   ensures_no_related_objects_path(*PERFORMABLE_PATH)
 
   class << self
-    def from_performable(input)
-      where(active: true).find_by id: from_performable_id(input)
+    # All active agents referenced by the performable (supports multiple agents per trigger/job).
+    def all_from_performable(input)
+      where(active: true, id: from_performable_ids(input))
     end
 
-    def from_performable_id(input)
+    # Reads the configured agent id(s) from the perform hash. The value was a single
+    #   id in the past (single-select) and is an array now, so we normalize to an array.
+    #   Ids are cast to integers because they may be stored as integers (created via
+    #   API/seeds) or strings (created via the UI); normalizing avoids treating a mere
+    #   type change as a real change (spurious touches).
+    def from_performable_ids(input)
       data = input.respond_to?(:perform) ? input.perform : input
-      data.dig(*PERFORMABLE_PATH)
+      Array.wrap(data&.dig(*PERFORMABLE_PATH)).compact_blank.map(&:to_i).uniq
     end
 
     # Used by ObjectManager::Attribute.attribute_to_references_hash to
@@ -108,10 +115,10 @@ class AI::Agent < ApplicationModel
     end
   end
 
-  def execution_definition
+  def execution_definition(context: {})
     return definition if agent_type.blank?
 
-    agent_type_object.execution_definition.deep_stringify_keys.deep_merge(definition)
+    agent_type_object.execution_definition(context:).deep_stringify_keys.deep_merge(definition)
   end
 
   def execution_action_definition
@@ -124,6 +131,39 @@ class AI::Agent < ApplicationModel
     @agent_type_object ||= agent_type_class&.new(
       type_enrichment_data:,
     )
+  end
+
+  # Merge the agent type's form-visible defaults into the serialized
+  #   `type_enrichment_data` so the legacy edit dialog hydrates fields that
+  #   weren't saved at creation time (e.g. `tag_new_rules` once `tag_new` is
+  #   enabled later). Runtime-only `base_type_enrichment_data` stays on the
+  #   type object and never leaks into the form.
+  def attributes_with_association_ids
+    attrs = super
+    return attrs if agent_type_class.blank?
+
+    defaults = agent_type_class.new.default_type_enrichment_data.stringify_keys
+    attrs['type_enrichment_data'] = defaults.merge(attrs['type_enrichment_data'] || {})
+    attrs
+  end
+
+  def self.working_on_ticket?(ticket)
+    ActiveJobLock
+      .exists?(['lock_key LIKE ?', "TriggerAIAgentJob/Ticket/#{ticket.id}/AIAgent/%"])
+  end
+
+  # Checks for tickets that are marked as ai_agent_running but have no active AI agent jobs.
+  def self.cleanup_orphan_jobs
+    Ticket
+      .where(ai_agent_running: true)
+      .find_each do
+        is_working = AI::Agent.working_on_ticket?(it)
+
+        next if is_working
+
+        it.update_columns ai_agent_running: false # rubocop:disable Rails/SkipsModelValidations
+        it.cache_delete # Clear cache after direct DB update
+      end
   end
 
   private

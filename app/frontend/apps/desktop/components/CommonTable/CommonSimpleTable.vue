@@ -1,4 +1,4 @@
-<!-- Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/ -->
+<!-- Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/ -->
 
 <script setup lang="ts">
 import { computed, toRef } from 'vue'
@@ -51,7 +51,8 @@ const { getCellContentComponent } = useCellContent()
 
 const checkedRows = defineModel<Array<TableItem>>('checkedRows', {
   required: false,
-  default: (props: SimpleTableProps) => props.items.filter((item) => item.checked), // is not reactive by default and making it reactive causes other issues.
+  // is not reactive by default and making it reactive causes other issues.
+  default: (props) => (props.items as Array<TableItem>).filter((item) => item.checked),
 })
 
 const { hasCheckboxId, allCheckboxRowsSelected, selectAllRowCheckboxes, handleCheckboxUpdate } =
@@ -77,7 +78,7 @@ const { hasCheckboxId, allCheckboxRowsSelected, selectAllRowCheckboxes, handleCh
             "
             type="checkbox"
             :model-value="allCheckboxRowsSelected"
-            @update:model-value="selectAllRowCheckboxes"
+            @update:model-value="selectAllRowCheckboxes($event as boolean)"
           />
 
           <slot v-else :name="`column-header-${header.key}`" :header="header">
@@ -121,6 +122,7 @@ const { hasCheckboxId, allCheckboxRowsSelected, selectAllRowCheckboxes, handleCh
               cellAlignmentClasses[header.alignContent || 'left'],
               {
                 'max-w-32 truncate text-black dark:text-white': header.truncate,
+                'size-10': hasCheckboxColumn && header.key === 'checkbox',
               },
             ]"
           >
@@ -132,7 +134,7 @@ const { hasCheckboxId, allCheckboxRowsSelected, selectAllRowCheckboxes, handleCh
                 hasCheckboxId(item.id) ? $t('Deselect this entry') : $t('Select this entry')
               "
               type="checkbox"
-              alternative-backrgound
+              alternative-background
               :classes="{
                 decorator:
                   'group-active:formkit-checked:border-white group-hover:dark:border-white group-hover:group-active:border-white group-hover:group-active:peer-hover:border-white group-hover:formkit-checked:border-black group-hover:dark:formkit-checked:border-white group-hover:dark:peer-hover:border-white  ltr:group-hover:dark:group-hover:peer-hover:formkit-checked:border-white ltr:group-hover:peer-hover:dark:border-white rtl:group-hover:peer-hover:dark:border-white ltr:group-hover:peer-hover:border-black rtl:group-hover:peer-hover:border-black  group-hover:border-black',

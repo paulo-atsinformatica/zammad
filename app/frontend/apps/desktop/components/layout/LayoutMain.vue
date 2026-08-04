@@ -1,4 +1,4 @@
-<!-- Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/ -->
+<!-- Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/ -->
 
 <script setup lang="ts">
 import { computed, useTemplateRef } from 'vue'
@@ -41,8 +41,8 @@ const backgroundVariantClasses = computed(() => {
       backgroundVariantClasses,
       {
         'p-4': !noPadding,
-        'overflow-y-auto': !noScrollable,
-        'overflow-y-hidden': noScrollable,
+        'overflow-y-auto print:h-auto print:overflow-y-visible': !noScrollable,
+        'overflow-y-hidden print:h-auto print:overflow-y-visible': noScrollable,
       },
     ]"
   >

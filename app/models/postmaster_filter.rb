@@ -1,7 +1,8 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 class PostmasterFilter < ApplicationModel
   include ChecksHtmlSanitized
+  include HasAuditLogs
 
   store     :perform
   store     :match
@@ -42,7 +43,7 @@ class PostmasterFilter < ApplicationModel
   def validate_regex_match_rule!(match_rule, operator)
     return if !operator.eql?('matches regex') && !operator.eql?('does not match regex')
 
-    Channel::Filter::Match::EmailRegex.match(value: 'test content', match_rule: match_rule, check_mode: true)
+    FilterProcessor::Match::EmailRegex.match(value: 'test content', match_rule: match_rule, check_mode: true)
   rescue => e
     raise Exceptions::InvalidAttribute.new(condition_attribute_name, e.message)
   end

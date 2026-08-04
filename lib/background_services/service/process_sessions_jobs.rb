@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 class BackgroundServices
   class Service
@@ -72,7 +72,7 @@ class BackgroundServices
           Thread.current.name = "ProcessSessionJobs session client thread (client_id: #{client_id})"
 
           Rails.application.executor.wrap do
-            Sessions.thread_client(client_id, 0, Time.now.utc, fork_id)
+            Sessions.thread_client(client_id, fork_id)
             client_threads.delete(client_id)
             Rails.logger.info { "Closing session client (#{client_id}) thread" }
           end

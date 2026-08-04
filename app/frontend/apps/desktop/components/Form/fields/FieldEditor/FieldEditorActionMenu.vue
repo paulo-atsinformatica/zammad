@@ -1,7 +1,7 @@
-<!-- Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/ -->
+<!-- Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/ -->
 
 <script setup lang="ts">
-import { findParentNodeClosestToPos } from '@tiptap/core'
+// import { findParentNodeClosestToPos } from '@tiptap/core'
 import { onKeyUp, useEventListener } from '@vueuse/core'
 import { computed, nextTick, toRef, type Component } from 'vue'
 
@@ -32,8 +32,10 @@ interface Props {
 
 const props = withDefaults(defineProps<Props>(), {
   visible: true,
-  targetId: getUuid(),
 })
+
+// Generate unique targetId per component instance to avoid cross-editor targeting
+const targetId = computed(() => props.targetId || `editor-action-menu-${getUuid()}`)
 
 const emit = defineEmits<{
   hide: []
@@ -67,34 +69,6 @@ const setPopoverTarget = (target?: HTMLDivElement) => {
     }
     return
   }
-
-  const nearestTableParent = findParentNodeClosestToPos(
-    props.editor.state.selection.$anchor,
-    (node) => node.type.name === props.typeName,
-  )
-
-  if (!nearestTableParent) {
-    popoverTarget.value = undefined
-    if (isOpen.value) close()
-    return
-  }
-
-  if (nearestTableParent) {
-    const wrapperDomNode = props.editor.view.nodeDOM(nearestTableParent.pos) as
-      | HTMLElement
-      | null
-      | undefined
-
-    const tableDomNode = wrapperDomNode?.querySelector('table')
-
-    if (tableDomNode) {
-      popoverTarget.value = tableDomNode
-    }
-
-    if (popoverTarget.value && !isOpen.value) {
-      nextTick(() => open())
-    }
-  }
 }
 
 // `ID` gets set on each editor, so we can distinguish between them
@@ -114,7 +88,7 @@ onKeyUp(['ArrowDown', 'ArrowUp', 'ArrowLeft', 'ArrowRight'], (e) => {
 useEventListener('click', (e) => {
   const target = e.target as HTMLDivElement
 
-  const targetElementWithId = target.closest(`#${CSS.escape(props.targetId)}`)
+  const targetElementWithId = target.closest(`#${CSS.escape(targetId.value)}`)
 
   if (targetElementWithId) {
     setPopoverTarget(targetElementWithId as HTMLDivElement)
@@ -126,7 +100,7 @@ useEventListener('click', (e) => {
 
 const handleMenuItemClick = (action: MenuItem, event: MouseEvent) => {
   if ((action as ActionItem).subMenu) {
-    const newPopoverTarget = document.getElementById(`${CSS.escape(props.targetId)}`)
+    const newPopoverTarget = document.getElementById(`${CSS.escape(targetId.value)}`)
     if (newPopoverTarget) {
       popoverTarget.value = newPopoverTarget as HTMLDivElement
     }

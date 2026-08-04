@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import { renderComponent } from '#tests/support/components/index.ts'
 
@@ -22,6 +22,7 @@ describe('CommonDropdown', () => {
         items: dropdownItems,
         actionLabel: 'text-dropdown',
       },
+      router: true,
     })
 
     await wrapper.events.click(wrapper.getByRole('button', { name: 'text-dropdown' }))
@@ -36,6 +37,7 @@ describe('CommonDropdown', () => {
         items: dropdownItems,
         actionLabel: 'action-dropdown',
       },
+      router: true,
     })
 
     await wrapper.events.click(wrapper.getByRole('button', { name: 'action-dropdown' }))
@@ -55,6 +57,7 @@ describe('CommonDropdown', () => {
         dropdownItems,
         items: dropdownItems,
       },
+      router: true,
       vModel: {
         modelValue: selectedItem,
       },
@@ -71,5 +74,20 @@ describe('CommonDropdown', () => {
     await wrapper.events.click(wrapper.getByText(dropdownItems[1].label))
 
     expect(await wrapper.findByRole('button', { name: dropdownItems[1].label })).toBeInTheDocument()
+  })
+
+  it('supports setting custom trigger', async () => {
+    const wrapper = renderComponent(CommonDropdown, {
+      props: {
+        items: dropdownItems,
+        actionLabel: 'custom-trigger-dropdown',
+      },
+      slots: {
+        trigger: '<button>Custom Trigger</button>',
+      },
+      router: true,
+    })
+
+    expect(wrapper.getByRole('button', { name: 'Custom Trigger' })).toBeInTheDocument()
   })
 })

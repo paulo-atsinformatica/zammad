@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 module Service::Template::Interpolation::Engine::Parser
   # This module is used to scan, collect all replacment variables within a
@@ -11,6 +11,7 @@ module Service::Template::Interpolation::Engine::Parser
     String
     ActiveSupport::TimeWithZone
     ActiveSupport::Duration
+    Date
   ].freeze
 
   # This module validates the scanned replacement variables.
@@ -47,6 +48,20 @@ module Service::Template::Interpolation::Engine::Parser
         else
           escape_replace_value(value, is_string_like: true)
         end
+      end
+    end
+
+    record
+  end
+
+  # Replace variables with URL-encoded values for safe interpolation into URLs.
+  def replace_url_encoded(record, mappings)
+    mappings.each do |variable, value|
+      escaped_variable = Regexp.escape(variable)
+      pattern = %r{#\{#{escaped_variable}\}}
+
+      record.gsub!(pattern) do
+        CGI.escape(value.to_s)
       end
     end
 

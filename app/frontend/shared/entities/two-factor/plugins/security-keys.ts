@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import { EnumTwoFactorAuthenticationMethod } from '#shared/graphql/types.ts'
 
@@ -6,7 +6,7 @@ import type { TwoFactorPlugin } from '../types.ts'
 
 export default {
   name: EnumTwoFactorAuthenticationMethod.SecurityKeys,
-  label: __('Security Keys'),
+  label: __('Security keys'),
   description: __('Complete the sign-in with your security key.'),
   order: 100,
   icon: '2fa-security-keys',

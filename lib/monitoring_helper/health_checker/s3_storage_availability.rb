@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 module MonitoringHelper
   class HealthChecker
@@ -9,7 +9,7 @@ module MonitoringHelper
 
         return if Store::Provider::S3.ping?
 
-        response.issues.push __('The Simple Storage Service is not available.')
+        response.issues.push 'The Simple Storage Service is not available.' # rubocop:disable Zammad/DetectTranslatableString
       end
     end
   end

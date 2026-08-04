@@ -1,0 +1,32 @@
+<div class="main flex reporting">
+  <div class="page-header">
+    <div class="page-header-title">
+      <h1><%- @T('Indicadores de Pausa') %> <small></small></h1>
+    </div>
+  </div>
+
+  <div class="page-body">
+    <div class="page-main">
+      <div class="js-pause-indicators-filters panel panel-default">
+        <div class="panel-heading">
+          <span><%- @T('Filtros') %></span>
+        </div>
+        <div class="panel-body" style="display:flex;gap:24px;flex-wrap:wrap;align-items:flex-end;">
+          <div style="flex:1;min-width:200px;">
+            <label><%- @T('Colaboradores') %></label>
+            <div class="js-colaboradores-filter form-group"><span class="text-muted"><%- @T('Carregando...') %></span></div>
+          </div>
+          <div style="flex:1;min-width:160px;">
+            <label><%- @T('Equipe') %></label>
+            <div class="js-equipe-filter form-group"><span class="text-muted"><%- @T('Carregando...') %></span></div>
+          </div>
+          <div style="flex:0 0 auto;">
+            <button type="button" class="btn btn-primary js-apply-colaboradores-filter"><%- @T('Aplicar') %></button>
+            <button type="button" class="btn btn-default js-clear-colaboradores-filter"><%- @T('Limpar') %></button>
+          </div>
+        </div>
+      </div>
+      <div class="js-report-content"></div>
+    </div>
+  </div>
+</div>

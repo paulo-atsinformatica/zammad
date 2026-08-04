@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 require 'rails_helper'
 
@@ -102,7 +102,7 @@ RSpec.describe 'Desktop > Overviews > Bulk Actions', app: :desktop_view, authent
           .click
       end
 
-      click_on 'Bulk Actions'
+      click_on 'Bulk actions'
     end
 
     # NB: Due to dropdown menus being mounted to the end of the document body, we need the scope outside of the flyout
@@ -117,7 +117,7 @@ RSpec.describe 'Desktop > Overviews > Bulk Actions', app: :desktop_view, authent
       click_on 'Apply'
     end
 
-    expect(page).to have_text('The 2 selected tickets have been updated successfully.')
+    expect(page).to have_text('Bulk action successful for 2 ticket(s).')
 
     within 'main' do
       expect(page).to have_no_text(similar_tickets.first.number)
@@ -130,7 +130,7 @@ RSpec.describe 'Desktop > Overviews > Bulk Actions', app: :desktop_view, authent
           .click
       end
 
-      click_on 'Bulk Actions'
+      click_on 'Bulk actions'
     end
 
     # NB: Due to dropdown menus being mounted to the end of the document body, we need the scope outside of the flyout
@@ -145,7 +145,7 @@ RSpec.describe 'Desktop > Overviews > Bulk Actions', app: :desktop_view, authent
       click_on 'Apply'
     end
 
-    expect(page).to have_text('The 3 selected tickets have been updated successfully.')
+    expect(page).to have_text('Bulk action successful for 3 ticket(s).')
 
     within 'main' do
       expect(page).to have_no_text(exploding_tickets.first.number)
@@ -159,25 +159,25 @@ RSpec.describe 'Desktop > Overviews > Bulk Actions', app: :desktop_view, authent
           .click
       end
 
-      click_on 'Bulk Actions'
+      click_on 'Bulk actions'
     end
 
     within 'aside[role="complementary"]' do
-      click 'button[aria-label="Context menu"]'
+      click 'button[aria-label="Macros"]'
     end
 
     # NB: Due to popover menus being mounted to the end of the document body, we need the scope outside of the flyout
     #   container here.
     click_on 'Close & Tag as Spam'
 
-    expect(page).to have_text('The 4 selected tickets have been updated successfully.')
+    expect(page).to have_text('Bulk action successful for 4 ticket(s).')
 
     within 'main' do
       expect(page).to have_no_text(spam_tickets.first.number)
         .and have_no_text(spam_tickets.second.number)
         .and have_no_text(spam_tickets.third.number)
         .and have_no_text(spam_tickets.fourth.number)
-        .and have_text('Empty Overview')
+        .and have_text('Empty overview')
         .and have_text('No tickets in this state.')
     end
   end

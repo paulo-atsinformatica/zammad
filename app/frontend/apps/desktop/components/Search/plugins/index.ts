@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import { keyBy } from 'lodash-es'
 import { computed } from 'vue'
@@ -22,6 +22,8 @@ export const sortedByPriorityPlugins = searchPlugins.sort((a, b) => a.priority -
 export const sortedByNamePlugins = searchPlugins.sort((a, b) => a.name.localeCompare(b.name))
 
 export const searchPluginByName = keyBy(searchPlugins, 'name')
+
+export const getSearchPlugin = (name: string) => searchPluginByName[name]
 
 export const useSearchPlugins = () => {
   const { hasPermission } = useSessionStore()

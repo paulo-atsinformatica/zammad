@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 class BackgroundServices
   class Service
@@ -15,6 +15,14 @@ class BackgroundServices
 
       def self.queues
         raise 'not implemented'
+      end
+
+      def self.pre_launch
+        start_time = Time.zone.now
+
+        CleanupAction.cleanup_delayed_jobs(start_time, queues:)
+
+        start_time
       end
 
       def launch
@@ -41,6 +49,8 @@ class BackgroundServices
           end
 
           process_results(result, realtime)
+        ensure
+          ActiveSupport::CurrentAttributes.clear_all
         end
       end
 

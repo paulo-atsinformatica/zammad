@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import { provideApolloClient } from '@vue/apollo-composable'
 import { createMockClient } from 'mock-apollo-client'
@@ -14,6 +14,7 @@ const mockQueryResult = (): LocalesQuery => {
   return {
     locales: [
       {
+        __typename: 'Locale',
         locale: 'de-de',
         name: 'Deutsch',
         dir: EnumTextDirection.Ltr,
@@ -21,6 +22,7 @@ const mockQueryResult = (): LocalesQuery => {
         active: true,
       },
       {
+        __typename: 'Locale',
         locale: 'ar',
         name: 'Arabic',
         dir: EnumTextDirection.Rtl,

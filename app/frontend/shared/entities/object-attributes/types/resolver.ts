@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import type { EnumObjectManagerObjects } from '#shared/graphql/types.ts'
 
@@ -32,4 +32,11 @@ export type ObjectAttributeSelectOptions =
 
 export type ObjectAttributeTreeSelectOption = ObjectAttributeSelectOption & {
   children?: ObjectAttributeSelectOption[]
+}
+
+export type FilterSchemaField = {
+  $formkit: string
+  name: string
+  label: string
+  [key: string]: unknown
 }

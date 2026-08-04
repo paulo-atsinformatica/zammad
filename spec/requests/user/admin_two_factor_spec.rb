@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 require 'rails_helper'
 
@@ -19,6 +19,15 @@ RSpec.describe 'User', authenticated_as: :admin, current_user_id: 1, type: :requ
       expect { delete "/api/v1/users/#{agent.id}/admin_two_factor/remove_authentication_method", params: { method: 'authenticator_app' }, as: :json }
         .to change { agent.two_factor_preferences.count }
         .to(0)
+    end
+
+    it 'creates an audit log entry' do
+      two_factor_pref
+
+      delete "/api/v1/users/#{agent.id}/admin_two_factor/remove_authentication_method", params: { method: 'authenticator_app' }, as: :json
+
+      expect(AuditLog.find_by(auditable_type: 'User::TwoFactorPreference', auditable_id: two_factor_pref.id, action_type: 'destroy'))
+        .to have_attributes(user_id: admin.id, auditable_name: 'authenticator_app')
     end
   end
 

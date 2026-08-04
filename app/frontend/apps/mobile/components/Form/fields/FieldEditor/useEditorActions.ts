@@ -1,14 +1,14 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
-import { storeToRefs } from 'pinia'
-import { computed, nextTick, onUnmounted } from 'vue'
+import { computed, nextTick, onUnmounted, toRef } from 'vue'
 
 import useEditorActionHelper from '#shared/components/Form/fields/FieldEditor/composables/useEditorActionHelper.ts'
 import { EXTENSION_NAME as KnowledgeBaseMentionName } from '#shared/components/Form/fields/FieldEditor/extensions/KnowledgeBaseSuggestion.ts'
+import { TableKitExtensionName } from '#shared/components/Form/fields/FieldEditor/extensions/TableKit.ts'
 import { EXTENSION_NAME as TextModuleMentionName } from '#shared/components/Form/fields/FieldEditor/extensions/TextModuleSuggestion.ts'
 import { EXTENSION_NAME as UserMentionName } from '#shared/components/Form/fields/FieldEditor/extensions/UserMention.ts'
 import AiAssistantTextTools from '#shared/components/Form/fields/FieldEditor/features/ai-assistant-text-tools/AiAssistantTextTools/AiAssistantTextTools.vue'
-import FieldEditorColorMenu from '#shared/components/Form/fields/FieldEditor/features/color-picker/EditorColorMenu.vue'
+import EditorColorMenu from '#shared/components/Form/fields/FieldEditor/features/color-picker/EditorColorMenu.vue'
 import type {
   EditorButton,
   EditorContentType,
@@ -54,7 +54,7 @@ export default function useEditorActions(
     fileInput = null
   })
 
-  const { config: applicationConfig } = storeToRefs(useApplicationStore())
+  const applicationConfig = toRef(useApplicationStore(), 'config')
   const { hasPermission } = useSessionStore()
 
   const { localeData } = useLocaleStore()
@@ -65,12 +65,12 @@ export default function useEditorActions(
         id: getUuid(),
         name: 'aiAssistantTextTools',
         contentType: ['text/html', 'text/plain'],
-        label: __('Writing Assistant Tools'),
+        label: __('AI writing assistant tools'),
         showDivider: true,
         dividerClass:
           '[button[aria-expanded=true]+&]:animate-ai-stripe-vertical [button:hover+&]:animate-ai-stripe-vertical [button:focus-visible+&]:animate-ai-stripe-vertical bg-linear-to-t from-pink to-blue',
         permission: 'ticket.agent',
-        show: (config) => config?.ai_assistance_text_tools && !!config.ai_provider,
+        show: (config) => !!(config?.ai_assistance_text_tools && config.ai_provider),
         icon: 'smart-assist-elaborate',
         subMenu: AiAssistantTextTools,
       },
@@ -87,7 +87,7 @@ export default function useEditorActions(
         id: getUuid(),
         name: KnowledgeBaseMentionName,
         contentType: ['text/html', 'text/plain'],
-        label: __('Insert text from Knowledge Base article'),
+        label: __('Insert text from knowledge base answer'),
         icon: 'editor-mention-knowledge-base',
         command: focused((c) => c.openKnowledgeBaseMention()),
         permission: 'ticket.agent',
@@ -182,7 +182,7 @@ export default function useEditorActions(
         contentType: ['text/html'],
         label: __('Change text color'),
         icon: 'editor-text-color',
-        subMenu: FieldEditorColorMenu,
+        subMenu: EditorColorMenu,
       },
       {
         id: getUuid(),
@@ -324,7 +324,7 @@ export default function useEditorActions(
       },
       {
         id: getUuid(),
-        name: 'tableKit',
+        name: TableKitExtensionName,
         contentType: ['text/html'],
         label: __('Insert table'),
         icon: 'editor-table',

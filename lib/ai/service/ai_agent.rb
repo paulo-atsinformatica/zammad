@@ -1,10 +1,11 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 class AI::Service::AIAgent < AI::Service
   def self.lookup_attributes(context_data, _locale)
     {
-      identifier:   'ai_agent',
-      triggered_by: context_data[:ai_agent],
+      identifier:     'ai_agent',
+      triggered_by:   context_data[:ai_agent],
+      related_object: context_data[:ticket],
     }
   end
 

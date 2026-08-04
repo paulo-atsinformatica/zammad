@@ -1,4 +1,4 @@
-<!-- Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/ -->
+<!-- Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/ -->
 
 <script setup lang="ts">
 import { ignorableWatch } from '@vueuse/shared'
@@ -6,8 +6,6 @@ import { debounce } from 'lodash-es'
 import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
-import type { CommonInputSearchExpose } from '#shared/components/CommonInputSearch/CommonInputSearch.vue'
-import CommonInputSearch from '#shared/components/CommonInputSearch/CommonInputSearch.vue'
 import { useRecentSearches } from '#shared/composables/useRecentSearches.ts'
 import { useStickyHeader } from '#shared/composables/useStickyHeader.ts'
 import { EnumSearchableModels } from '#shared/graphql/types.ts'
@@ -15,6 +13,8 @@ import { QueryHandler } from '#shared/server/apollo/handler/index.ts'
 
 import CommonButtonGroup from '#mobile/components/CommonButtonGroup/CommonButtonGroup.vue'
 import type { CommonButtonOption } from '#mobile/components/CommonButtonGroup/types.ts'
+import CommonInputSearch from '#mobile/components/CommonInputSearch/CommonInputSearch.vue'
+import type { CommonInputSearchExpose } from '#mobile/components/CommonInputSearch/CommonInputSearch.vue'
 import CommonSectionMenu from '#mobile/components/CommonSectionMenu/CommonSectionMenu.vue'
 import type { MenuItem } from '#mobile/components/CommonSectionMenu/index.ts'
 
@@ -59,7 +59,7 @@ const searchQuery = new QueryHandler(
   ),
 )
 
-const loading = searchQuery.loading()
+const loading = searchQuery.loadingWithoutCachedResult()
 
 searchQuery.watchOnResult((data) => {
   if (!props.type) return
@@ -136,10 +136,9 @@ const selectRecentSearch = async (recentSearch: string) => {
   await loadByFilter(recentSearch)
 }
 
-const pluginsArray = Object.entries(searchPlugins).map(([name, plugin]) => ({
-  name,
-  ...plugin,
-}))
+const pluginsArray = Object.entries(searchPlugins).map(([name, plugin]) =>
+  Object.assign({ name }, plugin),
+)
 
 const searchPills: CommonButtonOption[] = pluginsArray.map((plugin) => ({
   value: plugin.name,
@@ -213,7 +212,7 @@ export default {
         />
         <CommonLink
           link="/"
-          class="text-blue flex items-center justify-center text-base ltr:pl-3 rtl:pr-3"
+          class="flex items-center justify-center text-base text-blue ltr:pl-3 rtl:pr-3"
         >
           {{ $t('Cancel') }}
         </CommonLink>

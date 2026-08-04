@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import { createPinia, setActivePinia } from 'pinia'
 import { effectScope } from 'vue'
@@ -41,7 +41,7 @@ describe('useObjectAttributeFormFields', () => {
       const objectAttributesLookup = await getObjectAttributeLookup()
 
       const { internalObjectAttributeValues, additionalObjectAttributeValues } =
-        useObjectAttributeFormData(objectAttributesLookup.value, {
+        useObjectAttributeFormData(EnumObjectManagerObjects.Ticket, objectAttributesLookup.value, {
           formId: '123456',
           name: 'Example',
           textarea: 'some example',

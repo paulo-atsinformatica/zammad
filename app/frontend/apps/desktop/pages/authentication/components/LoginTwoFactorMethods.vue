@@ -1,4 +1,4 @@
-<!-- Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/ -->
+<!-- Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/ -->
 
 <script setup lang="ts">
 import type { TwoFactorPlugin } from '#shared/entities/two-factor/types.ts'
@@ -50,6 +50,6 @@ const emit = defineEmits<{
   </div>
 
   <CommonButton class="mt-5" size="large" block @click="emit('cancel')">
-    {{ $t('Cancel & Go Back') }}
+    {{ $t('Cancel & go back') }}
   </CommonButton>
 </template>

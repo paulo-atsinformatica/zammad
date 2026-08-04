@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import type { LocalesQuery } from '#shared/graphql/types.ts'
 import { EnumTextDirection } from '#shared/graphql/types.ts'
@@ -7,7 +7,7 @@ import type { LastArrayElement } from 'type-fest'
 
 const localeForBrowserLanguage = (
   locales: LocalesQuery['locales'],
-): LastArrayElement<LocalesQuery['locales']> => {
+): NonNullable<LastArrayElement<LocalesQuery['locales']>> => {
   const userLanguages = window.navigator.languages || [window.navigator.language]
 
   for (const userLanguage of userLanguages.values()) {
@@ -23,6 +23,7 @@ const localeForBrowserLanguage = (
   }
 
   return {
+    __typename: 'Locale',
     locale: 'en-us',
     alias: 'en',
     // eslint-disable-next-line zammad/zammad-detect-translatable-string

@@ -1,15 +1,23 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import { computed } from 'vue'
 
 const { FormKit } = await import('@formkit/vue')
+const { getNode } = await import('@formkit/core')
 const { EnumAppearanceTheme } = await import('#shared/graphql/types.ts')
 const { renderComponent } = await import('#tests/support/components/index.ts')
 const { mockMediaTheme } = await import('#tests/support/mock-mediaTheme.ts')
 const { waitForNextTick } = await import('#tests/support/utils.ts')
 const { i18n } = await import('#shared/i18n.ts')
 
-export {}
+vi.mock('@vueuse/core', async () => {
+  const mod = await vi.importActual<typeof import('@vueuse/core')>('@vueuse/core')
+
+  return {
+    ...mod,
+    usePreferredColorScheme: () => computed(() => 'dark'),
+  }
+})
 
 const now = new Date('2021-04-13T11:10:00Z')
 
@@ -24,7 +32,6 @@ const renderDateField = async (props: Record<string, unknown> = {}, options: any
     },
     ...options,
     form: true,
-    formField: true,
   })
 }
 
@@ -47,7 +54,7 @@ describe('Fields - FieldDate', () => {
       expect(input).toHaveDisplayValue('YYYY-MM-DD')
 
       await view.events.click(input)
-      await view.events.click(view.getByText('12'))
+      await view.events.click(await view.findByText('12'))
 
       const emittedInput = view.emitted().inputRaw as Array<Array<InputEvent>>
 
@@ -84,13 +91,30 @@ describe('Fields - FieldDate', () => {
 
       expect(view.queryByText('Today')).not.toBeInTheDocument()
 
-      await view.events.click(view.getByText('12'))
+      await view.events.click(await view.findByText('12'))
       await view.events.click(view.getByText('14'))
 
       const emittedInput = view.emitted().inputRaw as Array<Array<InputEvent>>
 
       expect(emittedInput[0][0]).toEqual(['2021-04-12', '2021-04-14'])
       expect(input).toHaveDisplayValue('2021-04-12 - 2021-04-14')
+    })
+
+    it('with partialRange disabled, commits only a complete range (no partial [from, null])', async () => {
+      const view = await renderDateField({ range: true, partialRange: false })
+
+      expect(getNode('date')?.props.partialRange).toBe(false)
+
+      const input = view.getByLabelText('Date')
+      await view.events.click(input)
+
+      // A single date must not reach the form value as a partial `[from, null]`.
+      await view.events.click(await view.findByText('12'))
+      expect(getNode('date')?._value).not.toEqual(['2021-04-12', null])
+
+      // Completing the range commits the full `[from, to]`.
+      await view.events.click(view.getByText('14'))
+      expect(getNode('date')?._value).toEqual(['2021-04-12', '2021-04-14'])
     })
 
     it('renders input and allows typing date range', async () => {
@@ -111,7 +135,7 @@ describe('Fields - FieldDate', () => {
       expect(input).toHaveDisplayValue('2021-04-12 - 2021-04-14')
     })
 
-    it('renders range input and validates range', async () => {
+    it('self-heals a reversed typed range by swapping the bounds', async () => {
       const view = await renderDateField({
         range: true,
       })
@@ -126,7 +150,26 @@ describe('Fields - FieldDate', () => {
       vi.runAllTimers()
       await waitForNextTick()
 
-      expect(input).toBeDescribedBy('The start date must precede or match end date.')
+      // Reordered by the `healDateRange` feature instead of raising an error.
+      const emittedInput = view.emitted().inputRaw as Array<Array<InputEvent>>
+      expect(emittedInput.at(-1)?.[0]).toEqual(['2021-04-14', '2021-04-28'])
+      expect(input).toHaveDisplayValue('2021-04-14 - 2021-04-28')
+    })
+
+    it('heals a reversed range set from outside (programmatic input)', async () => {
+      await renderDateField({ range: true })
+
+      getNode('date')?.input(['2021-04-28', '2021-04-14'])
+      await waitForNextTick()
+
+      expect(getNode('date')?._value).toEqual(['2021-04-14', '2021-04-28'])
+    })
+
+    it('heals a reversed range provided as the initial value', async () => {
+      await renderDateField({ range: true, value: ['2021-04-28', '2021-04-14'] })
+      await waitForNextTick()
+
+      expect(getNode('date')?._value).toEqual(['2021-04-14', '2021-04-28'])
     })
 
     it('renders input and allows selecting today', async () => {
@@ -137,7 +180,7 @@ describe('Fields - FieldDate', () => {
       expect(input).toHaveDisplayValue('YYYY-MM-DD')
 
       await view.events.click(input)
-      await view.events.click(view.getByText('Today'))
+      await view.events.click(await view.findByText('Today'))
 
       const emittedInput = view.emitted().inputRaw as Array<Array<InputEvent>>
 
@@ -165,7 +208,7 @@ describe('Fields - FieldDate', () => {
 
       expect(input).toHaveDisplayValue('2020-02-10')
 
-      await view.events.click(view.getByLabelText('Clear Selection'))
+      await view.events.click(view.getByLabelText('Clear selection'))
 
       const emittedInput = view.emitted().inputRaw as Array<Array<InputEvent>>
 
@@ -187,6 +230,23 @@ describe('Fields - FieldDate', () => {
       expect(view.queryByText('Today')).not.toBeInTheDocument()
     })
 
+    it('disables days after today, if pastOnly present', async () => {
+      const view = await renderDateField({
+        pastOnly: true,
+      })
+
+      const input = view.getByLabelText('Date')
+
+      await view.events.click(input)
+      await view.events.click(await view.findByText('14'))
+
+      expect(input).toHaveDisplayValue('YYYY-MM-DD')
+
+      await view.events.click(view.getByText('13'))
+
+      expect(input).toHaveDisplayValue('2021-04-13')
+    })
+
     it('disables days before today, if futureOnly present', async () => {
       const view = await renderDateField({
         futureOnly: true,
@@ -195,7 +255,7 @@ describe('Fields - FieldDate', () => {
       const input = view.getByLabelText('Date')
 
       await view.events.click(input)
-      await view.events.click(view.getByText('12'))
+      await view.events.click(await view.findByText('12'))
 
       expect(input).toHaveDisplayValue('YYYY-MM-DD')
 
@@ -212,7 +272,7 @@ describe('Fields - FieldDate', () => {
       const input = view.getByLabelText('Date')
 
       await view.events.click(input)
-      await view.events.click(view.getByText('15'))
+      await view.events.click(await view.findByText('15'))
 
       expect(input).toHaveDisplayValue('YYYY-MM-DD')
 
@@ -220,7 +280,8 @@ describe('Fields - FieldDate', () => {
         maxDate: '2021-04-15',
       })
 
-      await view.events.click(view.getByText('15'))
+      await view.events.click(input)
+      await view.events.click(await view.findByText('15'))
 
       expect(input).toHaveDisplayValue('2021-04-15')
     })
@@ -228,24 +289,15 @@ describe('Fields - FieldDate', () => {
     it('renders in dark mode when user prefers dark media theme', async () => {
       mockMediaTheme(EnumAppearanceTheme.Dark)
 
-      vi.mock('@vueuse/core', async () => {
-        const mod = await vi.importActual<typeof import('@vueuse/core')>('@vueuse/core')
-
-        return {
-          ...mod,
-          usePreferredColorScheme: () => computed(() => 'dark'),
-        }
-      })
-
       const view = await renderDateField()
 
       const input = view.getByLabelText('Date')
 
       await view.events.click(input)
 
-      const dialog = view.getByRole('dialog')
+      const dialog = await view.findByRole('dialog')
 
-      expect(dialog).toHaveClass('dp__theme_dark')
+      expect(dialog).toHaveClass('dp--theme-dark')
     })
   })
 
@@ -260,7 +312,7 @@ describe('Fields - FieldDate', () => {
       expect(input).toHaveDisplayValue('YYYY-MM-DD hh:mm')
 
       await view.events.click(input)
-      await view.events.click(view.getByText('Today'))
+      await view.events.click(await view.findByText('Today'))
 
       const emittedInput = view.emitted().inputRaw as Array<Array<InputEvent>>
 
@@ -320,7 +372,7 @@ describe('Fields - FieldDate', () => {
       expect(input).toHaveDisplayValue('MM/DD/YYYY hh:mm pp')
 
       await view.events.click(input)
-      await view.events.click(view.getByText('Today'))
+      await view.events.click(await view.findByText('Today'))
 
       expect(input).toHaveDisplayValue('04/13/2021 11:10 am')
     })

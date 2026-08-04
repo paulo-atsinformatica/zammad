@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import { EnumTicketArticleSenderName } from '#shared/graphql/types.ts'
 
@@ -41,8 +41,8 @@ const actionPlugin: TicketArticleActionPlugin = {
     const type: TicketArticleType = {
       apps: ['mobile', 'desktop'],
       value: 'sms',
-      label: __('Sms'),
-      buttonLabel: __('Add sms'),
+      label: __('SMS'),
+      buttonLabel: __('Add SMS'),
       icon: 'message',
       view: {
         agent: ['change'],
@@ -63,6 +63,7 @@ const actionPlugin: TicketArticleActionPlugin = {
         footer: {
           maxlength: 160,
           warningLength: 30,
+          allowExceedMaxLength: true,
         },
       },
       performReply(ticket) {

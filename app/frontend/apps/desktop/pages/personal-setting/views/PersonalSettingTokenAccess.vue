@@ -1,4 +1,4 @@
-<!-- Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/ -->
+<!-- Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/ -->
 
 <script setup lang="ts">
 import { computed } from 'vue'
@@ -25,11 +25,13 @@ import { useFlyout } from '#desktop/components/CommonFlyout/useFlyout.ts'
 import CommonLoader from '#desktop/components/CommonLoader/CommonLoader.vue'
 import type { MenuItem } from '#desktop/components/CommonPopoverMenu/types.ts'
 import CommonSimpleTable from '#desktop/components/CommonTable/CommonSimpleTable.vue'
+import CommonTableSkeleton from '#desktop/components/CommonTable/Skeleton/CommonTableSkeleton.vue'
 import type { TableSimpleHeader, TableItem } from '#desktop/components/CommonTable/types.ts'
 import LayoutContent from '#desktop/components/layout/LayoutContent.vue'
 
 import { useCheckTokenAccess } from '../composables/permission/useCheckTokenAccess.ts'
 import { useBreadcrumb } from '../composables/useBreadcrumb.ts'
+import { usePersonalSettingTabs } from '../composables/usePersonalSettingTabs.ts'
 import { UserCurrentAccessTokenUpdatesDocument } from '../graphql/subscriptions/userCurrentAccessTokenUpdates.api.ts'
 
 defineOptions({
@@ -48,7 +50,7 @@ defineOptions({
   },
 })
 
-const { breadcrumbItems } = useBreadcrumb(__('Token Access'))
+const { breadcrumbItems } = useBreadcrumb(__('Token access'))
 
 const newAccessTokenFlyout = useFlyout({
   name: 'new-access-token',
@@ -58,7 +60,7 @@ const newAccessTokenFlyout = useFlyout({
 const accessTokenListQuery = new QueryHandler(useUserCurrentAccessTokenListQuery())
 
 const accessTokenListQueryResult = accessTokenListQuery.result()
-const accessTokenListLoading = accessTokenListQuery.loading()
+const accessTokenListLoading = accessTokenListQuery.loadingWithoutCachedResult()
 
 accessTokenListQuery.subscribeToMore<
   UserCurrentAccessTokenUpdatesSubscriptionVariables,
@@ -99,7 +101,7 @@ const tableHeaders: TableSimpleHeader[] = [
   },
   {
     key: 'lastUsedAt',
-    label: __('Last Used'),
+    label: __('Last used'),
     type: 'timestamp',
   },
 ]
@@ -152,12 +154,14 @@ const tableActions: MenuItem[] = [
 ]
 
 const currentAccessTokens = computed<TableItem[]>(() => {
-  return (accessTokenListQueryResult.value?.userCurrentAccessTokenList || []).map((accessToken) => {
-    return {
+  // oxlint-disable no-map-spread
+  return (accessTokenListQueryResult.value?.userCurrentAccessTokenList || []).map(
+    (accessToken) => ({
+      // We can't use the original object, since it got sealed by Apollo Client to maintain immutability.
       ...accessToken,
       permissions: accessToken.preferences?.permission?.join(', ') || '',
-    }
-  })
+    }),
+  )
 })
 
 const currentAccessTokenPresent = computed(() => currentAccessTokens.value.length > 0)
@@ -168,10 +172,14 @@ const helpText = computed(() => [
   ),
   i18n.t("Pick a name for the application, and we'll give you a unique token."),
 ])
+
+const { tabs, activeTab } = usePersonalSettingTabs()
 </script>
 
 <template>
   <LayoutContent
+    :active-tab="activeTab"
+    :tabs="tabs"
     :help-text="helpText"
     :show-inline-help="!currentAccessTokenPresent && !accessTokenListLoading"
     :breadcrumb-items="breadcrumbItems"
@@ -185,18 +193,22 @@ const helpText = computed(() => [
           size="medium"
           @click="newAccessTokenFlyout.open()"
         >
-          {{ $t('New Personal Access Token') }}
+          {{ $t('New personal access token') }}
         </CommonButton>
       </div>
     </template>
 
     <CommonLoader :loading="accessTokenListLoading">
+      <template #skeleton>
+        <CommonTableSkeleton :columns="5" :rows="3" has-actions />
+      </template>
+
       <div class="mb-4">
         <CommonSimpleTable
           :headers="tableHeaders"
           :items="currentAccessTokens"
           :actions="tableActions"
-          :caption="$t('Personal Access Tokens')"
+          :caption="$t('Personal access tokens')"
           class="min-w-150"
         >
           <template #item-suffix-name="{ item }">

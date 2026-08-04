@@ -1,10 +1,11 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import { nullableMock } from '#tests/support/utils.ts'
 
 import type { TicketQuery } from '#shared/graphql/types.ts'
-import { EnumTicketStateColorCode } from '#shared/graphql/types.ts'
+import { EnumTicketStateColorCode, EnumTicketSummaryGeneration } from '#shared/graphql/types.ts'
 import { convertToGraphQLId } from '#shared/graphql/utils.ts'
+import type { DeepPartial } from '#shared/types/utils.ts'
 
 export const mockTicketCreateDate = new Date(2011, 11, 11, 11, 11, 11, 11)
 export const mockTicketUpdateDate = new Date(2011, 12, 12, 12, 12, 12, 12)
@@ -71,6 +72,7 @@ export const defaultGroup = {
   name: 'Test Agents',
   emailAddress: null,
   sharedDrafts: true,
+  summaryGeneration: EnumTicketSummaryGeneration.GlobalDefault,
 }
 
 export const defaultPriority = {
@@ -88,7 +90,7 @@ export const defaultPolicy = {
 }
 
 export const defaultMentions = {
-  __typename: 'Mentions',
+  __typename: 'MentionConnection',
   totalCount: 0,
   edges: [],
 }
@@ -99,32 +101,34 @@ export const defaultMentions = {
  * * */
 export const createDummyTicket = <R = TicketQuery['ticket']>(options?: {
   ticketId?: string
-  owner?: TicketQuery['ticket']['owner']
-  customer?: TicketQuery['ticket']['customer']
-  organization?: TicketQuery['ticket']['organization']
-  state?: TicketQuery['ticket']['state']
+  owner?: DeepPartial<TicketQuery['ticket']['owner']>
+  customer?: DeepPartial<TicketQuery['ticket']['customer']>
+  organization?: DeepPartial<TicketQuery['ticket']['organization']>
+  state?: DeepPartial<TicketQuery['ticket']['state']>
   articleType?: string
-  group?: Partial<TicketQuery['ticket']['group']>
-  defaultPriority?: TicketQuery['ticket']['priority']
-  defaultPolicy?: TicketQuery['ticket']['policy']
-  mentions?: TicketQuery['ticket']['mentions']
+  group?: DeepPartial<TicketQuery['ticket']['group']>
+  defaultPriority?: DeepPartial<TicketQuery['ticket']['priority']>
+  defaultPolicy?: DeepPartial<TicketQuery['ticket']['policy']>
+  mentions?: DeepPartial<TicketQuery['ticket']['mentions']>
   subscribed?: TicketQuery['ticket']['subscribed']
   colorCode?: EnumTicketStateColorCode
   title?: TicketQuery['ticket']['title']
   number?: TicketQuery['ticket']['number']
-  checklist?: TicketQuery['ticket']['checklist']
-  referencingChecklistTickets?: TicketQuery['ticket']['referencingChecklistTickets']
+  checklist?: DeepPartial<TicketQuery['ticket']['checklist']>
+  referencingChecklistTickets?: DeepPartial<TicketQuery['ticket']['referencingChecklistTickets']>
   timeUnit?: TicketQuery['ticket']['timeUnit']
-  timeUnitsPerType?: TicketQuery['ticket']['timeUnitsPerType']
+  timeUnitsPerType?: DeepPartial<TicketQuery['ticket']['timeUnitsPerType']>
   tags?: string[]
-  externalReferences?: TicketQuery['ticket']['externalReferences']
+  externalReferences?: DeepPartial<TicketQuery['ticket']['externalReferences']>
   preferences?: TicketQuery['ticket']['preferences']
   sharedDraftZoomId?: number
   aiAgentRunning?: TicketQuery['ticket']['aiAgentRunning']
+  aiSummaryEnabled?: TicketQuery['ticket']['aiSummaryEnabled']
   escalationAt?: TicketQuery['ticket']['escalationAt']
   firstResponseEscalationAt?: TicketQuery['ticket']['firstResponseEscalationAt']
   updateEscalationAt?: TicketQuery['ticket']['updateEscalationAt']
   closeEscalationAt?: TicketQuery['ticket']['closeEscalationAt']
+  objectAttributeValues?: DeepPartial<TicketQuery['ticket']['objectAttributeValues']>
 }): R => {
   return nullableMock({
     __typename: 'Ticket',
@@ -147,7 +151,7 @@ export const createDummyTicket = <R = TicketQuery['ticket']>(options?: {
     state: options?.state === undefined ? defaultState : options?.state,
     group: options?.group === undefined ? defaultGroup : options?.group,
     priority: options?.defaultPriority === undefined ? defaultPriority : options?.defaultPriority,
-    objectAttributeValues: [],
+    objectAttributeValues: options?.objectAttributeValues || [],
     policy: options?.defaultPolicy === undefined ? defaultPolicy : options?.defaultPolicy,
     tags: options?.tags || [],
     timeUnit: options?.timeUnit || null,
@@ -167,5 +171,6 @@ export const createDummyTicket = <R = TicketQuery['ticket']>(options?: {
       ? convertToGraphQLId('Ticket::SharedDraftZoom', options.sharedDraftZoomId)
       : null,
     aiAgentRunning: options?.aiAgentRunning,
+    aiSummaryEnabled: options?.aiSummaryEnabled ?? true,
   }) as R
 }

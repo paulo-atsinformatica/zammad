@@ -1,4 +1,4 @@
-<!-- Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/ -->
+<!-- Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/ -->
 
 <script setup lang="ts">
 import { nextTick, toRef, watch } from 'vue'
@@ -68,6 +68,9 @@ const handleToggleInput = async () => {
           :entity="subscriber.user"
           :access="subscriber.access"
           :user="subscriber.user"
+          :popover-config="{
+            placement: 'arrowStart',
+          }"
         />
       </div>
     </div>

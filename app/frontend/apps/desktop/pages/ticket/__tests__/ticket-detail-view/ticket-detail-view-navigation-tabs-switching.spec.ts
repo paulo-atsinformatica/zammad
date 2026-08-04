@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import { within, waitFor } from '@testing-library/vue'
 import { beforeEach } from 'vitest'
@@ -161,7 +161,7 @@ describe('Ticket detail view multi tabs switching', () => {
     await view.events.click(await view.findByRole('button', { name: 'Change customer' }))
 
     const flyoutForFirstTicket = await view.findByRole('complementary', {
-      name: 'Change Customer',
+      name: 'Change customer',
     })
 
     expect(flyoutForFirstTicket).toBeInTheDocument()

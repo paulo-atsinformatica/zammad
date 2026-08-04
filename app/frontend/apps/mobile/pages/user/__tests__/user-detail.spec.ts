@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import { getTestRouter } from '#tests/support/components/renderComponent.ts'
 import { visitView } from '#tests/support/components/visitView.ts'
@@ -197,7 +197,7 @@ describe('visiting user page', () => {
 
     await waitUntil(() => mockApi.calls.error)
 
-    await expect(view.findByText('Not Found')).resolves.toBeInTheDocument()
+    await expect(view.findByText('Not found')).resolves.toBeInTheDocument()
   })
 
   it('redirects to error page if access to organization is forbidden', async () => {

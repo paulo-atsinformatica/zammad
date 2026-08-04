@@ -1,4 +1,4 @@
-<!-- Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/ -->
+<!-- Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/ -->
 
 <script setup lang="ts">
 import { type UseElementBoundingReturn, onClickOutside, onKeyDown, useVModel } from '@vueuse/core'
@@ -13,6 +13,7 @@ import type {
 } from '#shared/components/CommonSelect/types.ts'
 import type { AutoCompleteOption } from '#shared/components/Form/fields/FieldAutocomplete/types.ts'
 import { useFocusWhenTyping } from '#shared/composables/useFocusWhenTyping.ts'
+import { useOnEmitter } from '#shared/composables/useOnEmitter.ts'
 import { useTrapTab } from '#shared/composables/useTrapTab.ts'
 import { useTraverseOptions } from '#shared/composables/useTraverseOptions.ts'
 import { i18n } from '#shared/i18n.ts'
@@ -22,14 +23,24 @@ import testFlags from '#shared/utils/testFlags.ts'
 
 import CommonLoader from '#desktop/components/CommonLoader/CommonLoader.vue'
 import { useTransitionCollapse } from '#desktop/composables/useTransitionCollapse.ts'
+import { useTransitionConfig } from '#desktop/composables/useTransitionConfig.ts'
 
 import CommonSelectItem from './CommonSelectItem.vue'
 import { useCommonSelect } from './useCommonSelect.ts'
 
 import type { CommonSelectInternalInstance, DropdownOptionsAction } from './types.ts'
 
+type ComplexSelectValue = { value: SelectValue; label: string }
+
+type CommonSelectValue =
+  | SelectValue
+  | SelectValue[]
+  | ComplexSelectValue
+  | ComplexSelectValue[]
+  | null
+
 export interface Props {
-  modelValue?: SelectValue | SelectValue[] | { value: SelectValue; label: string } | null
+  modelValue?: CommonSelectValue
   options: AutoCompleteOption[] | SelectOption[]
   /**
    * Do not modify local value
@@ -149,6 +160,15 @@ const openDropdown = (bounds: UseElementBoundingReturn, height: Ref<number>) => 
   })
 }
 
+// In case the dropdown is open and the layout changes, we need to update the position of the dropdown just in case.
+useOnEmitter('resize-layout', () => {
+  if (!showDropdown.value) return
+
+  nextTick(() => {
+    inputElementBounds?.update()
+  })
+})
+
 const moveFocusToDropdown = (lastOption = false) => {
   // Focus selected or first available option.
   //   https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Roles/listbox_role#keyboard_interactions
@@ -199,9 +219,39 @@ onKeyDown(
   { target: dropdownElement as Ref<EventTarget> },
 )
 
-const isCurrentValue = (value: string | number | boolean) => {
+const isCurrentValue = (value: CommonSelectValue) => {
   if (props.multiple && Array.isArray(localValue.value)) {
-    return localValue.value.includes(value)
+    return localValue.value.some((v) => {
+      if (typeof v === 'object' && v !== null && 'value' in v) {
+        if (typeof value === 'object' && value !== null && 'value' in value) {
+          return v.value === value.value
+        }
+
+        return v.value === value
+      }
+
+      if (typeof value === 'object' && value !== null && 'value' in value) {
+        return v === value.value
+      }
+
+      return v === value
+    })
+  }
+
+  if (
+    typeof localValue.value === 'object' &&
+    localValue.value !== null &&
+    'value' in localValue.value
+  ) {
+    if (typeof value === 'object' && value !== null && 'value' in value) {
+      return localValue.value.value === value.value
+    }
+
+    return localValue.value.value === value
+  }
+
+  if (typeof value === 'object' && value !== null && 'value' in value) {
+    return localValue.value === value.value
   }
 
   return localValue.value === value
@@ -220,10 +270,10 @@ const select = (option: SelectOption) => {
   }
 
   if (props.multiple && Array.isArray(localValue.value)) {
-    if (localValue.value.includes(option.value)) {
-      localValue.value = localValue.value.filter((v) => v !== option.value)
+    if (localValue.value.includes(option.value as never)) {
+      localValue.value = localValue.value.filter((v) => v !== option.value) as never
     } else {
-      localValue.value.push(option.value)
+      localValue.value.push(option.value as never)
     }
 
     return
@@ -306,8 +356,8 @@ const emptyLabelText = computed(() => {
   return props.filter ? __('No results found') : props.emptyInitialLabelText
 })
 
-const { collapseDuration, collapseEnter, collapseAfterEnter, collapseLeave } =
-  useTransitionCollapse()
+const { transitions } = useTransitionConfig()
+const { collapseEnter, collapseAfterEnter, collapseLeave } = useTransitionCollapse()
 
 const dropdownActions = computed(() => {
   return [
@@ -367,8 +417,8 @@ const goToChildPage = ({ option, noFocus }: { option: AutoCompleteOption; noFocu
   />
   <Teleport to="body">
     <Transition
-      :name="isTargetVisible ? 'collapse' : 'none'"
-      :duration="collapseDuration"
+      :name="transitions.collapse"
+      :appear="isTargetVisible"
       @enter="collapseEnter"
       @after-enter="collapseAfterEnter"
       @leave="collapseLeave"
@@ -395,7 +445,7 @@ const goToChildPage = ({ option, noFocus }: { option: AutoCompleteOption; noFocu
             >
               <CommonLabel
                 v-if="isChildPage"
-                class="text-blue-800! hover:text-black! focus-visible:rounded-xs focus-visible-app-default dark:text-blue-800! dark:hover:text-white!"
+                class="text-blue-800! focus-visible-app-default hover:text-black! focus-visible:rounded-xs dark:text-blue-800! dark:hover:text-white!"
                 :aria-label="$t('Back to previous page')"
                 :prefix-icon="locale.localeData?.dir === 'rtl' ? 'chevron-right' : 'chevron-left'"
                 size="small"
@@ -412,7 +462,7 @@ const goToChildPage = ({ option, noFocus }: { option: AutoCompleteOption; noFocu
                   v-for="action of dropdownActions"
                   :key="action.key"
                   :prefix-icon="action.icon"
-                  class="text-blue-800! hover:text-black! focus-visible:rounded-xs focus-visible-app-default dark:text-blue-800! dark:hover:text-white!"
+                  class="text-blue-800! focus-visible-app-default hover:text-black! focus-visible:rounded-xs dark:text-blue-800! dark:hover:text-white!"
                   size="small"
                   role="button"
                   tabindex="0"
@@ -431,14 +481,17 @@ const goToChildPage = ({ option, noFocus }: { option: AutoCompleteOption; noFocu
               tabindex="-1"
               class="w-full overflow-y-auto"
             >
-              <Transition name="none" mode="out-in">
+              <Transition mode="out-in">
                 <div v-if="options.length">
                   <CommonSelectItem
                     v-for="option in filter ? highlightedOptions : options"
                     :key="String(option.value)"
                     :class="{
                       'first:rounded-t-lg':
-                        hasDirectionUp && !isChildPage && (!multiple || !hasMoreSelectableOptions),
+                        hasDirectionUp &&
+                        !isChildPage &&
+                        !dropdownActions.length &&
+                        (!multiple || !hasMoreSelectableOptions),
                       'last:rounded-b-lg': !hasDirectionUp,
                     }"
                     :selected="isCurrentValue(option.value)"
@@ -452,22 +505,8 @@ const goToChildPage = ({ option, noFocus }: { option: AutoCompleteOption; noFocu
                   />
                 </div>
 
-                <div v-else-if="isLoading" class="flex items-center">
-                  <CommonLoader
-                    v-if="!options.length"
-                    class="ltr:ml-2 rtl:mr-2"
-                    size="small"
-                    loading
-                  />
-                  <CommonSelectItem
-                    :option="{
-                      label: __('Loading…'),
-                      value: '',
-                      disabled: true,
-                    }"
-                    no-selection-indicator
-                    no-interaction
-                  />
+                <div v-else-if="isLoading" class="px-2.5 py-2.5">
+                  <CommonLoader class="w-full" size="small" loading />
                 </div>
                 <CommonSelectItem
                   v-else-if="!options.length"

@@ -1,4 +1,4 @@
-<!-- Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/ -->
+<!-- Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/ -->
 
 <script setup lang="ts">
 import { toRef } from 'vue'
@@ -32,6 +32,7 @@ const formSchema = defineFormSchema([
     required: true,
   },
   {
+    show: false,
     name: 'organization_id',
     object: EnumObjectManagerObjects.Ticket,
   },
@@ -47,7 +48,7 @@ const { changeCustomer } = useTicketChangeCustomer(toRef(props, 'ticket'), {
     header-icon="user"
     no-close-on-action
     :name="ticketChangeCustomerFlyoutName"
-    :header-title="__('Change Customer')"
+    :header-title="__('Change customer')"
     :form="form"
     :footer-action-options="{
       actionButton: {

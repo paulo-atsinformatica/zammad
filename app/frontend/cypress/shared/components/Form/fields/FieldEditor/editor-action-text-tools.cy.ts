@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import { mockApolloClient } from '#cy/utils.ts'
 
@@ -44,7 +44,7 @@ describe('Testing AI text tools', { retries: 2 }, () => {
 
     cy.findByRole('textbox').type('Some text which should be checked.{selectall}')
 
-    cy.findByLabelText('Writing Assistant Tools').click()
+    cy.findByLabelText('AI writing assistant tools').click()
     cy.findByRole('button', { name: 'Text Tool 1' }).click()
 
     cy.findByRole('textbox').should('have.text', 'Some new text returned.')

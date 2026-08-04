@@ -1,37 +1,34 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import type { FormSchemaField } from '#shared/components/Form/types.ts'
+import { useUserFormSchema } from '#shared/entities/user/composables/useUserFormSchema.ts'
 import { useUserUpdateMutation } from '#shared/entities/user/graphql/mutations/update.api.ts'
+import type { EditableUser } from '#shared/entities/user/types.ts'
 import { defineFormSchema } from '#shared/form/defineFormSchema.ts'
-import type { UserQuery } from '#shared/graphql/types.ts'
 import { EnumFormUpdaterId, EnumObjectManagerObjects } from '#shared/graphql/types.ts'
 import { useApplicationStore } from '#shared/stores/application.ts'
-import type { ConfidentTake } from '#shared/types/utils.ts'
 
 import { useDialogObjectForm } from '#mobile/components/CommonDialogObjectForm/useDialogObjectForm.ts'
 
 export const useUserEdit = () => {
   const dialog = useDialogObjectForm('user-edit', EnumObjectManagerObjects.User)
 
+  const { buildUserSchema } = useUserFormSchema()
+
   const schema = defineFormSchema(
-    [
-      {
-        screen: 'edit',
-        object: EnumObjectManagerObjects.User,
-      },
+    buildUserSchema('edit', [
       {
         name: 'active',
-        required: true,
         screen: 'edit',
         object: EnumObjectManagerObjects.User,
       },
-    ],
+    ]),
     { showDirtyMark: true },
   )
 
   const application = useApplicationStore()
 
-  const openEditUserDialog = async (user: ConfidentTake<UserQuery, 'user'>) => {
+  const openEditUserDialog = async (user: EditableUser) => {
     const formChangeFields: Record<string, Partial<FormSchemaField>> = {
       note: {
         props: {

@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 require 'rails_helper'
 
@@ -13,22 +13,20 @@ RSpec.describe AI::Service::TicketSummarize do
   let(:context_data) do
     {
       ticket:,
+      articles: ticket.articles.without_system_notifications,
     }
   end
 
   let(:llm_response) do
     {
       'customer_request'     => 'Customer requested help with an issue.',
-      'conversation_summary' => 'This is a summary of the conversation.',
+      'conversation_summary' => ['This is a summary of the conversation.'],
       'language'             => 'en-us',
     }
   end
 
   before do
     setup_ai_provider('zammad_ai')
-
-    allow_any_instance_of(AI::Service::EmailRemoveQuote)
-      .to receive(:ask_provider).and_return(article.body_as_text)
 
     allow_any_instance_of(AI::Provider::ZammadAI)
       .to receive(:ask).and_return(llm_response)
@@ -37,6 +35,21 @@ RSpec.describe AI::Service::TicketSummarize do
   it 'passes through received ticket summary' do
     result = ai_service.execute
     expect(result.content).to include(llm_response)
+  end
+
+  context 'when conversation_summary is a string' do
+    let(:llm_response) do
+      {
+        'customer_request'     => 'Customer requested help with an issue.',
+        'conversation_summary' => 'This is a summary of the conversation.',
+        'language'             => 'en-us',
+      }
+    end
+
+    it 'converts it to an array' do
+      result = ai_service.execute
+      expect(result.content['conversation_summary']).to eq(['This is a summary of the conversation.'])
+    end
   end
 
   context 'when result is missing a required key' do

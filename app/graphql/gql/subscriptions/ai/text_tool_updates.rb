@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 module Gql::Subscriptions
   class AI::TextToolUpdates < BaseSubscription
@@ -7,10 +7,6 @@ module Gql::Subscriptions
     field :text_tool_id, GraphQL::Types::ID, description: 'AI text tool ID that was updated'
     field :group_ids, [GraphQL::Types::ID], description: 'The group IDs from the updated AI text tool'
     field :remove_text_tool_id, GraphQL::Types::ID, description: 'The AI text tool ID that was removed'
-
-    def authorized?
-      true
-    end
 
     class << self
       # Helper methods for triggering with custom payload.

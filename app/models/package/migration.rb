@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 class Package::Migration < ApplicationModel
 
@@ -57,7 +57,7 @@ class Package::Migration < ApplicationModel
         logger.info "NOTICE: down package migration '#{migration}'"
         load "#{location}/#{migration}"
         classname = name.camelcase
-        classname.constantize.down
+        AuditLog.suspend { classname.constantize.down }
         record = Package::Migration.find_by(name: package.underscore, version: version)
         record&.destroy
 
@@ -68,7 +68,7 @@ class Package::Migration < ApplicationModel
         logger.info "NOTICE: up package migration '#{migration}'"
         load "#{location}/#{migration}"
         classname = name.camelcase
-        classname.constantize.up
+        AuditLog.suspend { classname.constantize.up }
         Package::Migration.create(name: package.underscore, version: version)
       end
     end

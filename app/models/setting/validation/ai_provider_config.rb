@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 class Setting::Validation::AIProviderConfig < Setting::Validation::Base
   attr_reader :provider
@@ -61,7 +61,7 @@ class Setting::Validation::AIProviderConfig < Setting::Validation::Base
   end
 
   def required_attributes_zammad
-    return if Setting.get('system_online_service') || Setting.get('developer_mode')
+    return if Setting.get('system_online_service')
 
     required_attributes_token
   end
@@ -77,10 +77,17 @@ class Setting::Validation::AIProviderConfig < Setting::Validation::Base
   end
 
   def accessible
-    AI::Provider
-      .by_name(provider)
-      .ping!(value)
+    provider_class = AI::Provider.by_name(provider)
+
+    provider_class.ping!(value)
+    check_temperature_support!(provider_class)
+  rescue AIProviderConfigError
+    raise
   rescue => e
     raise AIProviderConfigError, __("AI provider is not accessible: #{e.message}")
+  end
+
+  def check_temperature_support!(provider_class)
+    value['model_temperature_support'] = provider_class.check_temperature_support!(value)
   end
 end

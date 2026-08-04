@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import { mockGraphQLResult } from '#tests/graphql/builders/mocks.ts'
 import { visitView } from '#tests/support/components/visitView.ts'
@@ -44,6 +44,6 @@ describe('requesting a token for the admin password auth', () => {
 
     expect(await view.findByRole('button', { name: 'Retry' })).toBeInTheDocument()
 
-    expect(await view.findByRole('button', { name: 'Cancel & Go Back' })).toBeInTheDocument()
+    expect(await view.findByRole('button', { name: 'Cancel & go back' })).toBeInTheDocument()
   })
 })

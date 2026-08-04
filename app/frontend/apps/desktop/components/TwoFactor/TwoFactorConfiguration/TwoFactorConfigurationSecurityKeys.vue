@@ -1,4 +1,4 @@
-<!-- Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/ -->
+<!-- Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/ -->
 
 <script setup lang="ts">
 import { computed, nextTick, ref } from 'vue'
@@ -57,7 +57,7 @@ const footerActionOptions = computed(() => {
       variant = 'primary'
       break
     case 'register':
-      actionLabel = __('Set Up')
+      actionLabel = __('Set up')
       disabled = true
       break
     case 'retry':
@@ -66,7 +66,7 @@ const footerActionOptions = computed(() => {
       break
     case 'overview':
     default:
-      actionLabel = __('Set Up')
+      actionLabel = __('Set up')
       variant = 'submit'
   }
 
@@ -96,6 +96,8 @@ const configurationQuery = new QueryHandler(
     },
   },
 )
+
+const isLoading = configurationQuery.loadingWithoutCachedResult()
 
 const configuration = computed<ObjectLike>(
   () => configurationQuery.result().value?.userCurrentTwoFactorGetMethodConfiguration,
@@ -365,11 +367,7 @@ defineExpose({
 <template>
   <div class="flex flex-col gap-3">
     <template v-if="state === 'overview'">
-      <CommonLoader
-        v-if="configurationQuery.loading().value"
-        class="my-3"
-        :loading="Boolean(configurationQuery.loading().value)"
-      />
+      <CommonLoader v-if="isLoading" class="my-3" :loading="isLoading" />
       <template v-else>
         <CommonLabel>{{
           $t(

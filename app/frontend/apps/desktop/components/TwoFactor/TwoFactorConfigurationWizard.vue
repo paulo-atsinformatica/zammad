@@ -1,4 +1,4 @@
-<!-- Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/ -->
+<!-- Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/ -->
 
 <script setup lang="ts">
 import { ref, computed, useTemplateRef } from 'vue'
@@ -59,7 +59,7 @@ const footerActionOptions = computed(() => ({
   actionLabel: activeComponentInstance.value?.footerActionOptions?.actionLabel,
   actionButton: activeComponentInstance.value?.footerActionOptions?.actionButton,
   hideCancelButton: activeComponentInstance.value?.footerActionOptions?.hideCancelButton,
-  cancelLabel: activeComponentInstance.value?.footerActionOptions?.cancelLabel || __('Go Back'),
+  cancelLabel: activeComponentInstance.value?.footerActionOptions?.cancelLabel || __('Go back'),
   cancelButton: activeComponentInstance.value?.footerActionOptions?.cancelButton,
 }))
 

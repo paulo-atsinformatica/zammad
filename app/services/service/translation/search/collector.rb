@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 class Service::Translation::Search::Collector
   include Mixin::RequiredSubPaths
@@ -18,8 +18,6 @@ class Service::Translation::Search::Collector
   end
 
   def initialize(locale:, query:, limit:, mode:)
-    super()
-
     @locale = locale
     @query  = query
     @limit  = limit

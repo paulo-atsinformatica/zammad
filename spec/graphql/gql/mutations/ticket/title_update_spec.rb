@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 require 'rails_helper'
 
@@ -42,22 +42,31 @@ RSpec.describe Gql::Mutations::Ticket::TitleUpdate, :aggregate_failures, type: :
       end
 
       it 'uses forced update service' do
-        allow(Service::Ticket::ForcedUpdate).to receive(:new).and_call_original
+        allow(Service::Ticket::ForcedUpdate).to receive(:execute).and_call_original
 
         gql.execute(query, variables: variables)
 
         expect(Service::Ticket::ForcedUpdate)
-          .to have_received(:new)
-          .with(ticket, { title: })
+          .to have_received(:execute)
+          .with(ticket, { title: }, current_user: agent)
+      end
+
+      context 'when agent has no access to the ticket' do
+        let(:agent) { create(:agent) }
+
+        it 'raises an error', :aggregate_failures do
+          gql.execute(query, variables: variables)
+          expect(gql.result.error_type).to eq(Exceptions::Forbidden)
+        end
       end
     end
 
     context 'with a customer', authenticated_as: :customer do
-      let(:customer) { create(:agent) }
+      let(:customer) { ticket.customer }
 
-      it 'raises an error', :aggregate_failures do
+      it 'updates title' do
         gql.execute(query, variables: variables)
-        expect(gql.result.error_type).to eq(Exceptions::Forbidden)
+        expect(gql.result.data[:ticket]).to eq(expected_response)
       end
     end
   end

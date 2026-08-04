@@ -1,10 +1,10 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import '#tests/graphql/builders/mocks.ts'
 
 import renderComponent, { initializePiniaStore } from '#tests/support/components/renderComponent.ts'
 import { mockPermissions } from '#tests/support/mock-permissions.ts'
-import { waitForNextTick } from '#tests/support/utils.ts'
+import { nullableMock, waitForNextTick } from '#tests/support/utils.ts'
 
 import { useRecentSearches } from '#shared/composables/useRecentSearches.ts'
 import {
@@ -57,7 +57,7 @@ describe('QuickSearch', () => {
         wrapper.getByText('Start typing e.g. the name of a ticket, an organization or a user.'),
       ).toBeInTheDocument()
 
-      expect(wrapper.queryByRole('button', { name: 'Clear All' })).not.toBeInTheDocument()
+      expect(wrapper.queryByRole('button', { name: 'Clear all' })).not.toBeInTheDocument()
     })
   })
 
@@ -127,6 +127,10 @@ describe('QuickSearch', () => {
         id: convertToGraphQLId('Ticket', 2),
         title: 'Ticket 1',
         number: '1',
+        state: nullableMock({
+          id: convertToGraphQLId('TicketState', 1),
+          name: 'open',
+        }),
         stateColorCode: EnumTicketStateColorCode.Open,
       } as Ticket,
       {
@@ -155,7 +159,7 @@ describe('QuickSearch', () => {
         wrapper.getByRole('heading', { level: 3, name: 'Recently closed' }),
       ).toBeInTheDocument()
 
-      expect(wrapper.getByRole('link', { name: 'check-circle-noTicket 1' })).toBeInTheDocument()
+      expect(wrapper.getByRole('link', { name: 'openTicket 1' })).toBeInTheDocument()
 
       expect(wrapper.getByRole('link', { name: 'User 1' })).toBeInTheDocument()
 

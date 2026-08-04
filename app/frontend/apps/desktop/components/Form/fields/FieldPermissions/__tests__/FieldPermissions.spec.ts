@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import { getNode } from '@formkit/core'
 import { FormKit } from '@formkit/vue'
@@ -51,7 +51,6 @@ const testOptions: PermissionsParentOption[] = [
 
 const wrapperParameters = {
   form: true,
-  formField: true,
 }
 
 const renderPermissions = async (props: Record<string, unknown> = {}) => {
@@ -128,7 +127,7 @@ describe('Form - Field - Permissions', () => {
     const permissions = wrapper.getAllByRole('treeitem')
 
     const toggleButton = getByRole(permissions[1], 'button', {
-      name: 'Toggle Group',
+      name: 'Toggle group',
     })
 
     await wrapper.events.click(toggleButton)

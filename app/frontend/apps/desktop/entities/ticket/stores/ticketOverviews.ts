@@ -1,10 +1,10 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import { useLocalStorage } from '@vueuse/core'
 import { differenceInSeconds } from 'date-fns'
 import { defaultsDeep, isEqual } from 'lodash-es'
-import { acceptHMRUpdate, defineStore, storeToRefs } from 'pinia'
-import { computed, effectScope, markRaw, onScopeDispose, ref, watch, type Raw } from 'vue'
+import { acceptHMRUpdate, defineStore } from 'pinia'
+import { computed, effectScope, markRaw, onScopeDispose, ref, toRef, watch, type Raw } from 'vue'
 
 import { useQueryPolling } from '#shared/composables/useQueryPolling.ts'
 import type {
@@ -53,8 +53,8 @@ const DEFAULT_CONFIG: TicketOverviewQueryPollingConfig = {
 }
 
 export const useTicketOverviewsStore = defineStore('ticketOverviews', () => {
-  const { user } = storeToRefs(useSessionStore())
-  const { config } = storeToRefs(useApplicationStore())
+  const user = toRef(useSessionStore(), 'user')
+  const config = toRef(useApplicationStore(), 'config')
 
   const localConfig = useLocalStorage(
     `${user.value?.id}-ticket-overview-query-polling`,

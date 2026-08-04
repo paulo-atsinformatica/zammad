@@ -1,9 +1,10 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 class TextModule < ApplicationModel
   include HasDefaultModelUserRelations
 
   include ChecksClientNotification
+  include HasAuditLogs
   include ChecksHtmlSanitized
   include CanCsvImport
   include HasSearchIndexBackend
@@ -71,7 +72,7 @@ import text modules from i18n/text_modules/*.yml if no text modules exist yet.
 
   def validate_content
     return true if content.blank?
-    return true if content.match?(%r{<.+?>})
+    return true if content.contains_html?
 
     content.gsub!(%r{(\r\n|\n\r|\r)}, "\n")
     self.content = content.text2html

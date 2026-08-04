@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import { within } from '@testing-library/vue'
 
@@ -91,8 +91,9 @@ describe('Ticket detail view - Ticket summary', () => {
       ticketAIAssistanceSummarize: {
         summary: {
           customerRequest: 'Order not received after payment',
-          conversationSummary:
+          conversationSummary: [
             'The customer paid for an order but claims to have not received it. They provided the order number and requested assistance with tracking.',
+          ],
           openQuestions: ['What was the payment method used?'],
           upcomingEvents: [
             'Check the order status in the system',
@@ -111,13 +112,13 @@ describe('Ticket detail view - Ticket summary', () => {
       name: 'Content sidebar',
     })
 
-    expect(within(contentSidebar).getByRole('button', { name: 'Summary' })).toBeInTheDocument()
+    expect(within(contentSidebar).getByRole('button', { name: 'AI summary' })).toBeInTheDocument()
 
-    await view.events.click(within(contentSidebar).getByRole('button', { name: 'Summary' }))
+    await view.events.click(within(contentSidebar).getByRole('button', { name: 'AI summary' }))
 
     expect(
       await within(contentSidebar).findByRole('heading', {
-        name: 'Customer Intent',
+        name: 'Customer intent',
         level: 3,
       }),
     ).toBeInTheDocument()
@@ -137,7 +138,7 @@ describe('Ticket detail view - Ticket summary', () => {
     })
 
     expect(
-      within(contentSidebar).queryByRole('button', { name: 'Summary' }),
+      within(contentSidebar).queryByRole('button', { name: 'AI summary' }),
     ).not.toBeInTheDocument()
   })
 
@@ -160,13 +161,13 @@ describe('Ticket detail view - Ticket summary', () => {
 
     const view = await visitView('/tickets/1')
 
-    await view.events.click(view.getByRole('button', { name: 'Summary' }))
+    await view.events.click(view.getByRole('button', { name: 'AI summary' }))
 
     const calls = await waitForTicketAiAssistanceSummarizeMutationCalls()
 
     const numberOfCalls = calls.length
 
-    expect(await view.findByRole('heading', { name: 'Customer Intent' }))
+    expect(await view.findByRole('heading', { name: 'Customer intent' }))
 
     await triggerArticleUpdate({
       addArticle: {
@@ -203,13 +204,13 @@ describe('Ticket detail view - Ticket summary', () => {
 
     const view = await visitView('/tickets/1')
 
-    await view.events.click(view.getByRole('button', { name: 'Summary' }))
+    await view.events.click(view.getByRole('button', { name: 'AI summary' }))
 
     const calls = await waitForTicketAiAssistanceSummarizeMutationCalls()
 
     const numberOfCalls = calls.length
 
-    expect(await view.findByRole('heading', { name: 'Customer Intent' }))
+    expect(await view.findByRole('heading', { name: 'Customer intent' }))
 
     await triggerArticleUpdate(
       {
@@ -245,8 +246,9 @@ describe('Ticket detail view - Ticket summary', () => {
       ticketAIAssistanceSummarize: {
         summary: {
           customerRequest: 'Order not received after payment',
-          conversationSummary:
+          conversationSummary: [
             'The customer paid for an order but claims to have not received it. They provided the order number and requested assistance with tracking.',
+          ],
           openQuestions: ['What was the payment method used?'],
           upcomingEvents: [
             'Check the order status in the system',
@@ -267,12 +269,12 @@ describe('Ticket detail view - Ticket summary', () => {
 
     const view = await visitView('/tickets/1')
 
-    await view.events.click(view.getByRole('button', { name: 'Summary' }))
+    await view.events.click(view.getByRole('button', { name: 'AI summary' }))
 
     await triggerSummaryUpdate({
       summary: {
         customerRequest: '...',
-        conversationSummary: 'Summary to see if subscription comes in',
+        conversationSummary: ['Summary to see if subscription comes in'],
         openQuestions: ['...'],
         upcomingEvents: ['foo', 'bar'],
         customerMood: '...',
@@ -282,7 +284,7 @@ describe('Ticket detail view - Ticket summary', () => {
     })
 
     expect(
-      await view.findByRole('heading', { level: 3, name: 'Customer Intent' }),
+      await view.findByRole('heading', { level: 3, name: 'Customer intent' }),
     ).toBeInTheDocument()
 
     expect(await view.findByText('Summary to see if subscription comes in')).toBeInTheDocument()
@@ -375,7 +377,7 @@ describe('Ticket detail view - Ticket summary', () => {
 
     await waitForTicketAiAssistanceSummarizeMutationCalls()
 
-    await view.events.click(view.getByRole('button', { name: 'Summary' }))
+    await view.events.click(view.getByRole('button', { name: 'AI summary' }))
 
     const contentSidebar = view.getByRole('complementary', { name: 'Content sidebar' })
 
@@ -408,7 +410,7 @@ describe('Ticket detail view - Ticket summary', () => {
     await triggerSummaryUpdate({
       summary: {
         customerRequest: '...',
-        conversationSummary: 'Agent replies something',
+        conversationSummary: ['Agent replies something'],
         openQuestions: ['...'],
         upcomingEvents: ['...'],
         customerMood: '...',
@@ -437,7 +439,7 @@ describe('Ticket detail view - Ticket summary', () => {
       })
     })
 
-    it('shows error message to agent if summary generation fails', async () => {
+    it('shows detailed error message to agent if summary generation fails', async () => {
       mockTicketAiAssistanceSummarizeMutation({
         ticketAIAssistanceSummarize: {
           summary: null,
@@ -456,7 +458,7 @@ describe('Ticket detail view - Ticket summary', () => {
 
       const view = await visitView('/tickets/1')
 
-      await view.events.click(view.getByRole('button', { name: 'Summary' }))
+      await view.events.click(view.getByRole('button', { name: 'AI summary' }))
 
       await waitForTicketAiAssistanceSummarizeMutationCalls()
 
@@ -468,48 +470,17 @@ describe('Ticket detail view - Ticket summary', () => {
         },
       })
 
-      expect(
-        view.getByText(
-          'The summary could not be generated. Please try again later or contact your administrator.',
-        ),
-      ).toBeInTheDocument()
-    })
-
-    it('shows specific error message to admin', async () => {
-      mockPermissions(['ticket.agent', 'admin'])
-
-      mockTicketAiAssistanceSummarizeMutation({
-        ticketAIAssistanceSummarize: {
-          summary: null,
-        },
+      const contentSidebar = await view.findByRole('complementary', {
+        name: 'Content sidebar',
       })
 
-      mockApplicationConfig({
-        ai_provider: true,
-        ai_assistance_ticket_summary: true,
-        ai_assistance_ticket_summary_config: {
-          open_questions: true,
-          upcoming_events: true,
-          customer_sentiment: true,
-          generate_on: EnumTicketSummaryGeneration.OnTicketDetailOpening,
-        },
-      })
+      const alert = await within(contentSidebar).findByRole('alert')
 
-      const view = await visitView('/tickets/1')
+      expect(alert).toHaveTextContent(
+        'The summary could not be generated. Please try again later or contact your administrator.',
+      )
 
-      await view.events.click(view.getByRole('button', { name: 'Summary' }))
-
-      await waitForTicketAiAssistanceSummarizeMutationCalls()
-
-      await triggerSummaryUpdate({
-        summary: null,
-        error: {
-          message: 'Authentication problem with provider.',
-          exception: 'Error',
-        },
-      })
-
-      expect(view.getByText('Authentication problem with provider.')).toBeInTheDocument()
+      expect(alert).toHaveTextContent('API server error: Authentication problem with provider.')
     })
 
     it('shows no ai provider is selected', async () => {
@@ -526,7 +497,7 @@ describe('Ticket detail view - Ticket summary', () => {
 
       const view = await visitView('/tickets/1')
 
-      await view.events.click(view.getByRole('button', { name: 'Summary' }))
+      await view.events.click(view.getByRole('button', { name: 'AI summary' }))
 
       expect(
         view.getByText('No AI provider is currently set up. Please contact your administrator.'),
@@ -548,7 +519,32 @@ describe('Ticket detail view - Ticket summary', () => {
 
     const view = await visitView('/tickets/1')
 
-    expect(view.queryByRole('button', { name: 'Summary' })).not.toBeInTheDocument()
+    expect(view.queryByRole('button', { name: 'AI summary' })).not.toBeInTheDocument()
+  })
+
+  it('hides sidebar when summary is not enabled for the ticket', async () => {
+    mockPermissions(['ticket.agent'])
+
+    mockApplicationConfig({
+      ai_provider: true,
+      ai_assistance_ticket_summary: true,
+      ai_assistance_ticket_summary_config: {
+        open_questions: true,
+        upcoming_events: true,
+        customer_sentiment: true,
+        generate_on: EnumTicketSummaryGeneration.OnTicketDetailOpening,
+      },
+    })
+
+    mockTicketQuery({
+      ticket: createDummyTicket({
+        aiSummaryEnabled: false,
+      }),
+    })
+
+    const view = await visitView('/tickets/1')
+
+    expect(view.queryByRole('button', { name: 'AI summary' })).not.toBeInTheDocument()
   })
 
   describe('ticket summary generation is set to "OnTicketSummarySidebarActivation"', () => {
@@ -574,7 +570,7 @@ describe('Ticket detail view - Ticket summary', () => {
 
       const view = await visitView('/tickets/1')
 
-      await view.events.click(await view.findByRole('button', { name: 'Summary' }))
+      await view.events.click(await view.findByRole('button', { name: 'AI summary' }))
 
       await waitForTicketAiAssistanceSummarizeMutationCalls()
     })
@@ -603,7 +599,7 @@ describe('Ticket detail view - Ticket summary', () => {
 
       const view = await visitView('/tickets/1')
 
-      await view.events.click(await view.findByRole('button', { name: 'Summary' }))
+      await view.events.click(await view.findByRole('button', { name: 'AI summary' }))
 
       await waitForTicketAiAssistanceSummarizeMutationCalls()
     })
@@ -634,5 +630,36 @@ describe('Ticket detail view - Ticket summary', () => {
 
       await waitForTicketAiAssistanceSummarizeMutationCalls()
     })
+  })
+
+  it('triggers summary generation only on entering sidebar', async () => {
+    mockPermissions(['ticket.agent'])
+
+    mockApplicationConfig({
+      ai_provider: true,
+      ai_assistance_ticket_summary: true,
+      ai_assistance_ticket_summary_config: {
+        open_questions: true,
+        upcoming_events: true,
+        customer_sentiment: true,
+        generate_on: EnumTicketSummaryGeneration.OnTicketSummarySidebarActivation,
+      },
+    })
+
+    mockTicketQuery({
+      ticket: createDummyTicket({
+        group: { summaryGeneration: EnumTicketSummaryGeneration.GlobalDefault },
+      }),
+    })
+
+    const view = await visitView('/tickets/1')
+
+    await view.events.click(await view.findByRole('button', { name: 'AI summary' }))
+
+    await waitForTicketAiAssistanceSummarizeMutationCalls()
+
+    await view.events.click(await view.findByRole('button', { name: 'Ticket' }))
+
+    expect(await waitForTicketAiAssistanceSummarizeMutationCalls()).toHaveLength(1)
   })
 })

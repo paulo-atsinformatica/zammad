@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 module Token::Permissions
   extend ActiveSupport::Concern
@@ -11,6 +11,8 @@ module Token::Permissions
   end
 
   def permissions?(query)
+    return effective_user.permissions?(query) if preferences[:permission].blank?
+
     effective_user.permissions?(query) && Auth::Permissions.authorized?(self, query)
   end
 

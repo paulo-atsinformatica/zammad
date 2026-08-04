@@ -1,8 +1,13 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 class User::TwoFactorPreference < ApplicationModel
   include HasDefaultModelUserRelations
+  include CanSensitiveAssets
+
+  include User::TwoFactorPreference::HasAuditLogs
   include User::TwoFactorPreference::TriggersSubscriptions
+
+  SENSITIVE_FIELDS = %i[configuration].freeze
 
   belongs_to :user, class_name: 'User', touch: true
 

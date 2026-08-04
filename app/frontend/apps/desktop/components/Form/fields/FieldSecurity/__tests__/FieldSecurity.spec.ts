@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import { getNode } from '@formkit/core'
 import { FormKit } from '@formkit/vue'
@@ -11,7 +11,6 @@ import Form from '#shared/components/Form/Form.vue'
 const renderSecurityField = (props: any = {}) =>
   renderComponent(FormKit, {
     form: true,
-    formField: true,
     props: {
       id: 'security',
       type: 'security',
@@ -239,7 +238,6 @@ describe('Form - Field - Security - Tabs & Options', () => {
     const onSubmit = vi.fn()
     const view = renderComponent(Form, {
       form: true,
-      formField: true,
       props: {
         onSubmit,
         schema: [

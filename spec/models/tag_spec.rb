@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 require 'rails_helper'
 
@@ -63,7 +63,7 @@ RSpec.describe Tag, type: :model do
         it 'creates it and assigns it to a new Tag' do
           expect { described_class.tag_add(object: 'Ticket', item: 'FOO', o_id: 1, created_by_id: 1) }
             .to change(described_class, :count).by(1)
-            .and change { Tag::Item.pluck(:name).include?('FOO') }.to(true) # .exists?(name: 'FOO') fails on MySQL
+            .and change { Tag::Item.pluck(:name).include?('FOO') }.to(true)
             .and change { described_class.last&.tag_item&.name }.to('FOO')
         end
       end

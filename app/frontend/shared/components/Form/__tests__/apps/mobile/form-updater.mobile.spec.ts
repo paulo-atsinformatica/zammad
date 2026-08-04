@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import { waitFor } from '@testing-library/vue'
 import { cloneDeep } from 'lodash-es'
@@ -23,6 +23,7 @@ import {
   type ObjectManagerFrontendAttributesPayload,
   type FormUpdaterQuery,
 } from '#shared/graphql/types.ts'
+import type { DeepPartial } from '#shared/types/utils.ts'
 
 import { FormUpdaterDocument } from '../../../graphql/queries/formUpdater.api.ts'
 import additionalFrontendObjectAttributes from '../../mocks/additionalFrontendObjectAttributes.json'
@@ -205,7 +206,7 @@ const mergedObjectAttributes = mergeFrontendObjectAttributes(
 )
 
 const renderForm = async (
-  formUpdaterQueryResponse: FormUpdaterQuery | FormUpdaterQuery[],
+  formUpdaterQueryResponse: DeepPartial<FormUpdaterQuery> | DeepPartial<FormUpdaterQuery>[],
   options: ExtendedMountingOptions<Props> = {},
   objectManagerFrontendAttributes = mergedObjectAttributes,
 ) => {
@@ -1192,8 +1193,8 @@ describe('Form.vue - Form Updater - special situations', () => {
         example: '',
         group_id: undefined,
         multiselect: [],
-        multitreeselect: undefined,
-        number: '',
+        multitreeselect: [],
+        number: undefined,
         shared: false,
         start_date: undefined,
         state_id: 1,

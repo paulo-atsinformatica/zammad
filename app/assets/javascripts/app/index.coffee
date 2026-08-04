@@ -1,9 +1,9 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 #= require_self
 #= require_tree ./lib/app_init
 #= require_tree ./lib/mixins
-#= require ./config.coffee
+#= require ./config
 #= require_tree ./models
 #= require_tree ./controllers/_application_controller
 #= require_tree ./controllers
@@ -159,7 +159,7 @@ class App extends Spine.Controller
       # translate content
       if attributeConfig.tag is 'active' || attributeConfig.translate || (isObject && item.translate && item.translate())
         isHtmlEscape = true
-        resultLocal  = App.i18n.translateContent(resultLocal)
+        resultLocal  = App.i18n.translateInline(resultLocal)
 
       # transform date
       if attributeConfig.tag is 'date'

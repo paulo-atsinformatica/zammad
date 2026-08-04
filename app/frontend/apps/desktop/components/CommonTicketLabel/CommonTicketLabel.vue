@@ -1,16 +1,16 @@
-<!-- Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/ -->
+<!-- Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/ -->
 
 <script setup lang="ts">
 import { computed } from 'vue'
 
 import { useTicketNumberAndTitle } from '#shared/entities/ticket/composables/useTicketNumberAndTitle.ts'
-import type { TicketById } from '#shared/entities/ticket/types.ts'
+import type { TicketLabel } from '#shared/entities/ticket/types.ts'
 import { EnumTicketStateColorCode } from '#shared/graphql/types.ts'
 
 import CommonTicketStateIndicatorIcon from '#desktop/components/CommonTicketStateIndicator/CommonTicketStateIndicatorIcon.vue'
 
 interface Props {
-  ticket?: Partial<TicketById> | null
+  ticket?: TicketLabel | null
   unauthorized?: boolean
   noLink?: boolean
   noWrap?: boolean
@@ -71,7 +71,7 @@ const { getTicketNumberWithTitle } = useTicketNumberAndTitle()
     <div v-if="withTimestamp" class="flex flex-col">
       <CommonLabel
         :id="ticketId"
-        class="self-start mt-0.5 text-blue-800! group-hover:text-blue-850! group-hover:dark:text-blue-600!"
+        class="mt-0.5 self-start text-blue-800! group-hover:text-blue-850! group-hover:dark:text-blue-600!"
         :class="[classes?.label || '', { 'mt-0! line-clamp-1!': noWrap }]"
       >
         {{ ticket?.title }}

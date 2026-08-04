@@ -1,7 +1,9 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 class Integration::PGPController < ApplicationController
   prepend_before_action :authenticate_and_authorize!
+
+  SENSITIVE_FIELDS = %w[passphrase].freeze
 
   def key_list
     model_index_render(PGPKey, params)
@@ -15,7 +17,7 @@ class Integration::PGPController < ApplicationController
     key = PGPKey.find(params[:id])
 
     if %w[1 true].include?(params[:secret])
-      raise Exceptions::UnprocessableEntity, __('This is not a private PGP key.') if !key.secret
+      raise Exceptions::UnprocessableContent, __('This is not a private PGP key.') if !key.secret
 
       return send_data(
         key.key,

@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import type { TicketOverviewOrderQuery, TicketOverviewsQuery } from '#shared/graphql/types.ts'
 import { EnumOrderDirection } from '#shared/graphql/types.ts'
@@ -8,6 +8,12 @@ import { TicketOverviewsDocument } from '#mobile/entities/ticket/graphql/queries
 import { TicketOverviewUpdatesDocument } from '#mobile/entities/ticket/graphql/subscriptions/ticketOverviewUpdates.api.ts'
 
 import { mockGraphQLApi, mockGraphQLSubscription } from '../mock-graphql-api.ts'
+
+const column = (key: string, value: string) => ({
+  __typename: 'KeyValue' as const,
+  key,
+  value,
+})
 
 export const getApiTicketOverviews = (): TicketOverviewsQuery => ({
   ticketOverviews: [
@@ -25,17 +31,17 @@ export const getApiTicketOverviews = (): TicketOverviewsQuery => ({
       prio: 100,
       active: true,
       viewColumns: [
-        { key: 'number', value: 'Number' },
-        { key: 'title', value: 'Title' },
-        { key: 'created_at', value: 'Created at' },
-        { key: 'updated_at', value: 'Updated at' },
-        { key: 'priority', value: 'Priority' },
+        column('number', 'Number'),
+        column('title', 'Title'),
+        column('created_at', 'Created at'),
+        column('updated_at', 'Updated at'),
+        column('priority', 'Priority'),
       ],
       orderColumns: [
-        { key: 'number', value: 'Number' },
-        { key: 'title', value: 'Title' },
-        { key: 'created_at', value: 'Created at' },
-        { key: 'updated_at', value: 'Updated at' },
+        column('number', 'Number'),
+        column('title', 'Title'),
+        column('created_at', 'Created at'),
+        column('updated_at', 'Updated at'),
       ],
       groupBy: null,
     },
@@ -53,16 +59,16 @@ export const getApiTicketOverviews = (): TicketOverviewsQuery => ({
       prio: 200,
       active: true,
       viewColumns: [
-        { key: 'number', value: 'Number' },
-        { key: 'title', value: 'Title' },
-        { key: 'created_at', value: 'Created at' },
-        { key: 'updated_at', value: 'Updated at' },
+        column('number', 'Number'),
+        column('title', 'Title'),
+        column('created_at', 'Created at'),
+        column('updated_at', 'Updated at'),
       ],
       orderColumns: [
-        { key: 'number', value: 'Number' },
-        { key: 'title', value: 'Title' },
-        { key: 'created_at', value: 'Created at' },
-        { key: 'updated_at', value: 'Updated at' },
+        column('number', 'Number'),
+        column('title', 'Title'),
+        column('created_at', 'Created at'),
+        column('updated_at', 'Updated at'),
       ],
       groupBy: null,
     },
@@ -80,16 +86,16 @@ export const getApiTicketOverviews = (): TicketOverviewsQuery => ({
       prio: 300,
       active: true,
       viewColumns: [
-        { key: 'number', value: 'Number' },
-        { key: 'title', value: 'Title' },
-        { key: 'created_at', value: 'Created at' },
-        { key: 'updated_at', value: 'Updated at' },
+        column('number', 'Number'),
+        column('title', 'Title'),
+        column('created_at', 'Created at'),
+        column('updated_at', 'Updated at'),
       ],
       orderColumns: [
-        { key: 'number', value: 'Number' },
-        { key: 'title', value: 'Title' },
-        { key: 'created_at', value: 'Created at' },
-        { key: 'updated_at', value: 'Updated at' },
+        column('number', 'Number'),
+        column('title', 'Title'),
+        column('created_at', 'Created at'),
+        column('updated_at', 'Updated at'),
       ],
       groupBy: null,
     },

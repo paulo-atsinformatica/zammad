@@ -1,10 +1,10 @@
-Ticket escalado (#{ticket.title})
+Ticket escalonado (#{ticket.title})
 
 <div>Olá, #{recipient.firstname},</div>
 <br>
-<div>O ticket (#{ticket.title}) de "<b>#{ticket.customer.longname}</b>" foi escalado desde "#{ticket.escalation_at}"!</div>
+<div>O ticket (#{ticket.title}) de "<b>#{ticket.customer.longname}</b>" foi escalonado desde "#{ticket.escalation_at}"!</div>
 <br>
-<% if @objects[:artigo] %>
+<% if @objects[:article] %>
   <div>
   Detalhes:
   <blockquote type="cite">

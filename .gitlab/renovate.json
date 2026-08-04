@@ -1,26 +1,57 @@
 {
-  "enabledManagers": ["bundler", "npm", "github-actions"],
-  "lockFileMaintenance": {
-    "enabled": false
-  },
-  "packageRules": [
+  "enabledManagers": ["bundler", "npm", "github-actions", "devcontainer", "custom.regex"],
+  "customManagers": [
     {
-      "matchCategories": ["ci"],
-      "assignees": ["mg"]
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/^\\.gitlab/ci/.*\\.yml$/"
+      ],
+      "matchStrings": ["DEVCONTAINERS_CLI_VERSION: '(?<currentValue>[^']+)'"],
+      "depNameTemplate": "@devcontainers/cli",
+      "datasourceTemplate": "npm"
     },
     {
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/^lib/form_spam_protection/captcha/.*\\.rb$/"
+      ],
+      "matchStrings": ["cdn\\.jsdelivr\\.net/npm/(?<depName>[^@]+)@(?<currentValue>[^/]+)/"],
+      "datasourceTemplate": "npm"
+    }
+  ],
+  "bundler": {
+    "lockFileMaintenance": {
+      "enabled": true,
+      "extends": ["schedule:weekly"],
+      "branchTopic": "lock-file-maintenance-ruby",
+      "commitMessageExtra": "(Ruby)"
+    }
+  },
+  "devcontainer": {
+    "managerFilePatterns": [
+      "/^\\.devcontainer/[^/]+/devcontainer\\.json$/"
+    ]
+  },
+  "npm": {
+    "lockFileMaintenance": {
+      "enabled": true,
+      "extends": ["schedule:weekly"],
+      "branchTopic": "lock-file-maintenance-js",
+      "commitMessageExtra": "(JS)"
+    }
+  },
+  "minimumReleaseAge": "3 days",
+  "assignees": ["fl"],
+  "packageRules": [
+    {
       "matchCategories": ["ruby"],
-      "assignees": ["mg"],
       "addLabels": ["ruby"],
-      "rangeStrategy": "in-range-only",
-      "extends": [":maintainLockFilesWeekly"]
+      "rangeStrategy": "in-range-only"
     },
     {
       "matchCategories": ["js"],
-      "assignees": ["dk"],
       "addLabels": ["javascript"],
-      "rangeStrategy": "bump",
-      "extends": ["schedule:weekly", ":maintainLockFilesWeekly"]
+      "rangeStrategy": "bump"
     },
     {
       "matchCategories": ["js"],
@@ -34,7 +65,6 @@
     },
     {
       "matchCategories": ["js"],
-      "assignees": ["fl"],
       "matchFileNames": [".cypress/package.json"],
       "labels": ["cypress"]
     },
@@ -58,7 +88,6 @@
     },
     {
       "matchCategories": ["js"],
-      "assignees": ["fl"],
       "matchPackageNames": [
         "vitest",
         "jsdom",
@@ -72,7 +101,6 @@
     },
     {
       "matchCategories": ["js"],
-      "assignees": ["fl"],
       "groupName": "Vite packages",
       "groupSlug": "vite-related",
       "matchPackageNames": ["/^vite/", "/^@vitejs/", "!vitest"]
@@ -89,7 +117,6 @@
         "pinia",
         "/^@vue/",
         "/^vue/",
-        "!@vue/eslint-config-prettier",
         "!@vue/eslint-config-typescript",
         "!@vuepic/vue-datepicker"
       ],
@@ -97,16 +124,12 @@
       "groupSlug": "vue"
     },
     {
-      "matchPackageNames": [
-        "@vue/eslint-config-prettier",
-        "@vue/eslint-config-typescript"
-      ],
+      "matchPackageNames": ["@vue/eslint-config-typescript"],
       "groupName": "Vue ESLint Configs",
       "groupSlug": "vue-eslint-configs"
     },
     {
       "matchCategories": ["js"],
-      "assignees": ["fl"],
       "matchPackageNames": [
         "prosemirror-model",
         "prosemirror-state",

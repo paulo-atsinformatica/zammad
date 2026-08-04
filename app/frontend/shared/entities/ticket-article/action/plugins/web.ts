@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import type { TicketArticleActionPlugin, TicketArticleType } from './types.ts'
 
@@ -10,12 +10,15 @@ const actionPlugin: TicketArticleActionPlugin = {
       apps: ['mobile', 'desktop'],
       value: 'web',
       label: __('Web'),
-      buttonLabel: __('Add Reply'),
+      buttonLabel: __('Add reply'),
       icon: 'web',
       view: {
         customer: ['change'],
       },
       fields: {
+        body: {
+          required: true,
+        },
         attachments: {},
       },
       internal: false,

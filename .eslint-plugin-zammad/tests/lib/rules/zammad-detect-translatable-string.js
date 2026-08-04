@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 /**
  * @fileoverview Detect unmarked translatable strings
@@ -56,8 +56,7 @@ ruleTester.run('zammad-detect-translatable-string', rule, {
       code: `'String that should be translatable'`,
       errors: [
         {
-          message:
-            'This string looks like it should be marked as translatable via __(...)',
+          message: 'This string looks like it should be marked as translatable via __(...)',
         },
       ],
       output: `__('String that should be translatable')`,

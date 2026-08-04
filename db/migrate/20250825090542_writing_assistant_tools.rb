@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+﻿# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 class WritingAssistantTools < ActiveRecord::Migration[7.2]
   def change
@@ -24,7 +24,7 @@ Always preserve the original input language. Never translate or convert it to an
 
 Your task is to simplify the text in the original input language to improve comprehension.
 
-You have to follow these rules:
+Follow these rules:
 - Simplify complex words and phrases to make them easier to understand in the original input language.
 - Keep about the same length as the original text.
 - Fix minor spelling and grammar issues when the intended meaning is clear, without adding missing information.
@@ -35,11 +35,11 @@ These examples are only to demonstrate language and HTML preservation, not to ha
 Input: 'This is John Doe from the <strong>Infrastructure Team</strong>. You are welcome to request a free export of your Zammad instance at <i>example-instance.zammad.com</i>. You are entitled to this twice a year, free of charge.'
 Output: 'This is John Doe from the <strong>Infrastructure Team</strong>. You can request a free copy of your Zammad data from <i>example-instance.zammad.com</i>. You are allowed to do this twice a year, without any cost.'
 
-Input: '<p>Microsoft Office installiert, Rechnungen im Postfach sichtbar.</p><p>Azure-App Daten gesendet, Herr Mustermann klärt mit TestMail, wie auf die gemeinsamen <a href=\"https://www.example.com/mailbox\">Mailboxes</a> zugegriffen werden kann.</p><ul><li>Nach dem letzten Windows 11-Update startet die VPN-Verbindung nicht mehr (\"Error: Connection failed\").</li><li>Neustart und Neuinstallation der <a href=\"https://www.example.com\">VPN-App</a> wurden bereits versucht.</li></ul>'
-Output: '<p>Microsoft Office installiert, Rechnungen im Postfach verfügbar.</p><p>Azure-App Daten gesendet, Herr Mustermann klärt mit TestMail, wie auf die gemeinsamen <a href=\"https://www.example.com/mailbox\">E-Mail-Postfächer</a> zugegriffen werden kann.</p><ul><li>Nach dem letzten Windows 11-Update startet die VPN-Verbindung nicht mehr (\"Error: Connection failed\").</li><li>Neustart und Neuinstallation der <a href=\"https://www.example.com\">VPN-App</a> wurden bereits versucht.</li></ul>'
+Input: '<p>Microsoft Office installiert, Rechnungen im Postfach sichtbar.</p><p>Azure-App Daten gesendet, Herr Mustermann kl├ñrt mit TestMail, wie auf die gemeinsamen <a href=\"https://www.example.com/mailbox\">Mailboxes</a> zugegriffen werden kann.</p><ul><li>Nach dem letzten Windows 11-Update startet die VPN-Verbindung nicht mehr (\"Error: Connection failed\").</li><li>Neustart und Neuinstallation der <a href=\"https://www.example.com\">VPN-App</a> wurden bereits versucht.</li></ul>'
+Output: '<p>Microsoft Office installiert, Rechnungen im Postfach verf├╝gbar.</p><p>Azure-App Daten gesendet, Herr Mustermann kl├ñrt mit TestMail, wie auf die gemeinsamen <a href=\"https://www.example.com/mailbox\">E-Mail-Postf├ñcher</a> zugegriffen werden kann.</p><ul><li>Nach dem letzten Windows 11-Update startet die VPN-Verbindung nicht mehr (\"Error: Connection failed\").</li><li>Neustart und Neuinstallation der <a href=\"https://www.example.com\">VPN-App</a> wurden bereits versucht.</li></ul>'
 
-Input: '<p>Echa un vistazo a los desencadenantes de la documentación administrativa de Zammad.</p>'
-Output: '<p>Consulte los desencadenantes en la documentación de administración de Zammad.</p>'",
+Input: '<p>Echa un vistazo a los desencadenantes de la documentaci├│n administrativa de Zammad.</p>'
+Output: '<p>Consulte los desencadenantes en la documentaci├│n de administraci├│n de Zammad.</p>'",
       note:          'This Writing Assistant Tool simplifies the selected text and improves comprehension.',
       active:        true,
       updated_by_id: 1,
@@ -65,17 +65,17 @@ Follow these rules:
   - reference external sources or studies.
   - add names of people, places, or organizations not mentioned.
 - Maintain the original meaning and tone throughout.
-- The expanded output should be a maximum of 2–4 times longer than the draft. Do not exceed this range and do not make the output unnaturally long.
+- The expanded output should be a maximum of 2ÔÇô4 times longer than the draft. Do not exceed this range and do not make the output unnaturally long.
 - To improve writing quality, you are allowed to change the structure, flow, and clarity of the text.
   - Introduce HTML tags for headings, paragraphs, listings, and more to create a well-readable text.
 - Always preserve image (<img>) and link (<a>) HTML tags.
 
 These examples are only to demonstrate language and HTML preservation, not the main task:
 Input: '<p>The <strong>documentation</strong> can be found on <a href=\"https://example.com/doc1\">Page 1</a>.</p><p>For more information, support can help.<br>The support team can be contacted via hotline.</p>'
-Output: '<p>The <strong>documentation</strong> can be found on <a href=\"https://example.com/doc1\">Page 1</a>, where you’ll find detailed instructions and additional resources.</p><p>If you need further assistance, our support team is happy to help.<br>You can reach them anytime via our customer hotline.</p>'
+Output: '<p>The <strong>documentation</strong> can be found on <a href=\"https://example.com/doc1\">Page 1</a>, where youÔÇÖll find detailed instructions and additional resources.</p><p>If you need further assistance, our support team is happy to help.<br>You can reach them anytime via our customer hotline.</p>'
 
-Input: '<p>Die <a href=\"https://www.example.com/presentation-xyz\">Präsentation</a> war interessant. Manche Punkte waren klar, andere weniger.</p>'
-Output: '<h2>Präsentation</h2><p>Die <a href=\"https://www.example.com/presentation-xyz\">Präsentation</a> war insgesamt interessant und ansprechend. Einige der vorgetragenen Punkte waren klar und gut verständlich. Andere Aspekte hingegen waren weniger deutlich und könnten in Zukunft noch weiter vertieft oder erläutert werden.</p>'",
+Input: '<p>Die <a href=\"https://www.example.com/presentation-xyz\">Pr├ñsentation</a> war interessant. Manche Punkte waren klar, andere weniger.</p>'
+Output: '<h2>Pr├ñsentation</h2><p>Die <a href=\"https://www.example.com/presentation-xyz\">Pr├ñsentation</a> war insgesamt interessant und ansprechend. Einige der vorgetragenen Punkte waren klar und gut verst├ñndlich. Andere Aspekte hingegen waren weniger deutlich und k├Ânnten in Zukunft noch weiter vertieft oder erl├ñutert werden.</p>'",
       note:          'This Writing Assistant Tool transforms the draft into a fully formulated text.',
       active:        true,
       updated_by_id: 1,
@@ -108,8 +108,8 @@ Output: '<p>Hier ist ein Link zu <a href=\"https://example.com\">Beispiel</a>.</
 Input: '<p>The <strong>documentation</strong> can be found on <a href=\"https://example.com/doc1\">Page 1</a>.</p><p>For more information, support can help.<br>The support team can be contacted via hotline.</p>'
 Output: '<p>The <strong>documentation</strong> can be found on <a href=\"https://example.com/doc1\">Page 1</a>.</p><p>For more information, support can help.<br>The support team can be contacted via hotline.</p>'
 
-Input: 'Für weitere Infos kann der Support helfen.<br>Der support kann per Hotline kontaktiert werden.'
-Output: 'Für weitere Infos kann der Support helfen.<br>Der support kann per Hotline kontaktiert werden.'",
+Input: 'F├╝r weitere Infos kann der Support helfen.<br>Der support kann per Hotline kontaktiert werden.'
+Output: 'F├╝r weitere Infos kann der Support helfen.<br>Der support kann per Hotline kontaktiert werden.'",
       note:          'This Writing Assistant Tool creates a short summary of the selected text keeping the original meaning.',
       active:        true,
       updated_by_id: 1,

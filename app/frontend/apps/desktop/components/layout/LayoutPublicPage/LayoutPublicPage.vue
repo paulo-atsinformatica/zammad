@@ -1,9 +1,11 @@
-<!-- Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/ -->
+<!-- Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/ -->
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 
 import CommonLogo from '#shared/components/CommonLogo/CommonLogo.vue'
+
+import { useTransitionConfig } from '#desktop/composables/useTransitionConfig.ts'
 
 import LayoutPublicPageBoxActions from './LayoutPublicPageBoxActions.vue'
 
@@ -31,6 +33,8 @@ const boxSizeClass = computed(() => {
 })
 
 const hoverPoweredByLogo = ref(false)
+
+const { transitions } = useTransitionConfig()
 </script>
 
 <template>
@@ -78,7 +82,7 @@ const hoverPoweredByLogo = ref(false)
         >
           <div class="relative">
             <CommonIcon name="logo-flat" size="base" />
-            <Transition name="fade">
+            <Transition :name="transitions.fade">
               <CommonIcon
                 v-if="hoverPoweredByLogo"
                 class="absolute top-0"

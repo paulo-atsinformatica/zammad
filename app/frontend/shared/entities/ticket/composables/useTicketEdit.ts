@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import { isEqual } from 'lodash-es'
 import { computed, ref, watch } from 'vue'
@@ -29,7 +29,7 @@ const TICKET_FORM_RELEVANT_KEYS = [
   'group',
   'owner',
   'state',
-  'pending_time',
+  'pendingTime',
   'priority',
   'customer',
   'organization',
@@ -42,6 +42,21 @@ export const useTicketEdit = (
   errorCallback?: (error: GraphQLHandlerError) => boolean,
 ) => {
   const initialTicketValue = ref<FormValues>()
+
+  // Values that must be seeded explicitly on a ticket form reset: the form-only
+  // fields and the owner_id (system user is represented as null in the form).
+  // All other ticket fields should come from the entity object, so server-side
+  // changes (e.g. the automatic new->open transition on a reply) are reflected.
+  const buildTicketResetValues = (ticketValue: TicketById): FormValues => {
+    const { internalId: ownerInternalId } = ticketValue.owner
+
+    return {
+      id: ticketValue.id,
+      shared_draft_id: undefined,
+      owner_id: ownerInternalId === 1 ? null : ownerInternalId,
+      isDefaultFollowUpStateSet: undefined, // the default value for reset situations.
+    }
+  }
 
   const mutationUpdate = new MutationHandler(useTicketUpdateMutation(), {
     errorCallback,
@@ -74,19 +89,17 @@ export const useTicketEdit = (
   watch(
     ticketFormRelatedData,
     () => {
-      if (!ticket.value) {
-        return
-      }
+      if (!ticket.value) return
 
-      const { internalId: ownerInternalId } = ticket.value.owner
-
-      initialTicketValue.value = {
-        id: ticket.value.id,
-        owner_id: ownerInternalId === 1 ? null : ownerInternalId,
-        isDefaultFollowUpStateSet: undefined, // the default value for reset situations.
-      }
+      initialTicketValue.value = buildTicketResetValues(ticket.value)
 
       if (!form.value?.formInitialSettled) return
+
+      // Skip the refresh while the own update mutation is running - the form
+      // is still dirty with the submitted values and the success handling
+      // resets it with the fresh entity data afterwards. A refresh at this
+      // point would send the outdated values to the form updater again.
+      if (mutationUpdate.loading().value) return
 
       form.value?.resetForm(
         {
@@ -95,6 +108,7 @@ export const useTicketEdit = (
         },
         {
           resetDirty: false,
+          resetFlags: false,
         },
       )
     },
@@ -134,8 +148,11 @@ export const useTicketEdit = (
     }
   }
 
-  const { missingBodyAttachmentReference, bodyAttachmentReferenceConfirmation } =
-    useCheckBodyAttachmentReference()
+  const {
+    missingBodyAttachmentReference,
+    bodyAttachmentReferenceConfirmation,
+    skipAttachmentReferenceCheck,
+  } = useCheckBodyAttachmentReference()
 
   const editTicket = async (
     formData: FormSubmitData<TicketUpdateFormData>,
@@ -160,7 +177,11 @@ export const useTicketEdit = (
     const article = processArticle(form.value.formId, formArticle)
 
     const { internalObjectAttributeValues, additionalObjectAttributeValues } =
-      useObjectAttributeFormData(ticketObjectAttributesLookup.value, formData)
+      useObjectAttributeFormData(
+        EnumObjectManagerObjects.Ticket,
+        ticketObjectAttributesLookup.value,
+        formData,
+      )
 
     const ticketMeta = meta || {}
 
@@ -173,21 +194,34 @@ export const useTicketEdit = (
       )
     }
 
-    return mutationUpdate.send({
-      ticketId: ticket.value.id,
-      input: {
-        ...internalObjectAttributeValues,
-        objectAttributeValues: additionalObjectAttributeValues,
-        article,
-        sharedDraftId,
-      } as TicketUpdateInput,
-      meta: ticketMeta,
-    })
+    return mutationUpdate
+      .send({
+        ticketId: ticket.value.id,
+        input: {
+          ...internalObjectAttributeValues,
+          objectAttributeValues: additionalObjectAttributeValues,
+          article,
+          sharedDraftId,
+        } as TicketUpdateInput,
+        meta: ticketMeta,
+      })
+      .then((result) => {
+        if (result?.ticketUpdate?.ticket) {
+          // Reset missingBodyAttachmentReference confirmation prompts
+          // after successful ticket update
+          skipAttachmentReferenceCheck.value = false
+        }
+        // Always pass mutation result on
+        // so to not change the behavior of the editTicket caller
+        // down the line
+        return result
+      })
   }
 
   return {
     initialTicketValue,
     isTicketFormGroupValid,
     editTicket,
+    buildTicketResetValues,
   }
 }

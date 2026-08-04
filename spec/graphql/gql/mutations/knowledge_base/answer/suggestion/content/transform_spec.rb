@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 require 'rails_helper'
 
@@ -69,6 +69,21 @@ RSpec.describe Gql::Mutations::KnowledgeBase::Answer::Suggestion::Content::Trans
         it 'raises an error' do
           expect(gql.result.error_type).to eq(ActiveRecord::RecordNotFound)
         end
+      end
+    end
+
+    context 'when agent has no KB category access to an internal answer', authenticated_as: :restricted_agent do
+      let(:restricted_agent)               { create(:agent) }
+      let(:internal_knowledge_base_answer) { create(:knowledge_base_answer, :internal, :with_image, :with_attachment) }
+      let(:variables)                      { { translationId: Gql::ZammadSchema.id_from_object(internal_knowledge_base_answer.translation), formId: '5570fac8-8868-40b7-89e7-1cdabbd954ba' } }
+
+      before do
+        KnowledgeBase::PermissionsUpdate.new(internal_knowledge_base_answer.category).update!(restricted_agent.roles.first => 'none')
+        gql.execute(mutation, variables: variables)
+      end
+
+      it 'raises a forbidden error' do
+        expect(gql.result.error_type).to eq(Exceptions::Forbidden)
       end
     end
 

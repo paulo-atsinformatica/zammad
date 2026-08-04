@@ -1,7 +1,7 @@
-<!-- Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/ -->
+<!-- Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/ -->
 
 <script setup lang="ts">
-import { computed, type SetupContext, toRefs, useSlots } from 'vue'
+import { computed, toRefs, useSlots } from 'vue'
 
 import type { ObjectLike } from '#shared/types/utils.ts'
 
@@ -27,14 +27,13 @@ const emit = defineEmits<{
 
 const { items, entity } = toRefs(props)
 
-const { filteredMenuItems } = usePopoverMenu(items, entity)
+// If no explicit items prop is provided, inject from a parent provider (e.g., CommonActionMenu)
+// Otherwise, create an independent instance for this component
+const { filteredMenuItems } = usePopoverMenu(items, entity, {
+  injects: !items.value?.length,
+})
 
-/**
- * Workaround to satisfy linter
- * @bug https://github.com/vuejs/language-tools/issues/5082
- * Wait to be closed
- * */
-const slots: SetupContext['slots'] = useSlots()
+const slots = useSlots()
 
 const showHeaderLabel = computed(() => {
   if (!filteredMenuItems.value && !slots.default) return false
@@ -71,7 +70,7 @@ const getHoverFocusStyles = (variant?: Variant) => {
     <div v-if="showHeaderLabel" role="heading" aria-level="2" class="px-2 py-1.5">
       <slot name="header">
         <CommonLabel
-          class="line-clamp-1 text-stone-200! dark:text-neutral-500! cursor-default"
+          class="line-clamp-1 cursor-default text-stone-200! dark:text-neutral-500!"
           size="small"
         >
           {{ i18n.t(headerLabel) }}
@@ -135,7 +134,7 @@ const getHoverFocusStyles = (variant?: Variant) => {
               <slot :name="`item-${item.key}`" v-bind="item">
                 <component
                   :is="item.component || CommonPopoverMenuItem"
-                  class="focus-visible-app-default flex grow p-2.5 focus-visible:-outline-offset-1!"
+                  class="flex grow p-2.5 focus-visible-app-default focus-visible:-outline-offset-1!"
                   :class="{
                     'rounded-t-lg!': index === 0 && !showHeaderLabel,
                     'rounded-b-lg!': index === filteredMenuItems?.length - 1,

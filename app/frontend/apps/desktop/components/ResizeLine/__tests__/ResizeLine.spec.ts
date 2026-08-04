@@ -1,9 +1,11 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import { fireEvent } from '@testing-library/vue'
 import { expect } from 'vitest'
 
 import renderComponent from '#tests/support/components/renderComponent.ts'
+
+import { useOnEmitter } from '#shared/composables/useOnEmitter.ts'
 
 import ResizeLine from '#desktop/components/ResizeLine/ResizeLine.vue'
 
@@ -72,5 +74,23 @@ describe('ResizeLine', () => {
     })
 
     expect(wrapper.getByRole('separator')).toHaveAttribute('aria-orientation', 'vertical')
+  })
+
+  it('exposes a global event bus to listen when the element is resized', async () => {
+    const wrapper = renderComponent(ResizeLine, {
+      props: {
+        label: 'test-label',
+      },
+    })
+
+    const resizeFunction = vi.fn()
+
+    useOnEmitter('resize-layout', resizeFunction)
+
+    await wrapper.events.click(wrapper.getByRole('button'))
+    expect(resizeFunction).toHaveBeenCalledTimes(1)
+
+    await fireEvent.touchStart(wrapper.getByRole('button'))
+    expect(resizeFunction).toHaveBeenCalledTimes(2)
   })
 })

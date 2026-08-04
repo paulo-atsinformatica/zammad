@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import { visitView } from '#tests/support/components/visitView.ts'
 import { mockApplicationConfig } from '#tests/support/mock-applicationConfig.ts'
@@ -50,9 +50,9 @@ describe('guided setup system information', () => {
     it('can configure system information', async () => {
       const view = await visitView('/guided-setup/manual/system-information')
 
-      expect(view.getByText('System Information')).toBeInTheDocument()
+      expect(view.getByText('System information')).toBeInTheDocument()
 
-      expect(view.queryByRole('button', { name: 'Go Back' })).not.toBeInTheDocument()
+      expect(view.queryByRole('button', { name: 'Go back' })).not.toBeInTheDocument()
 
       const organizationField = view.getByLabelText('Organization name')
       const urlField = view.getByLabelText('System URL')
@@ -78,7 +78,7 @@ describe('guided setup system information', () => {
       await view.events.upload(logoField, testFile)
 
       const continueButton = view.getByRole('button', {
-        name: 'Save and Continue',
+        name: 'Save and continue',
       })
 
       await view.events.click(continueButton)

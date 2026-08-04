@@ -1,4 +1,4 @@
-<!-- Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/ -->
+<!-- Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/ -->
 
 <script setup lang="ts">
 import type { FormRef } from '#shared/components/Form/types.ts'
@@ -25,7 +25,6 @@ export interface Props {
   canUseDraft?: boolean
   sharedDraftId?: string | null
   liveUserList: TicketLiveAppUser[]
-  setSkipNextStateUpdate: (skip: boolean) => void
 }
 
 defineProps<Props>()
@@ -46,15 +45,10 @@ const { ticket } = useTicketInformation()
       :live-user-list="liveUserList"
     />
 
-    <TicketSharedDraftZoom
-      v-if="hasAvailableDraft"
-      :form="form"
-      :shared-draft-id="sharedDraftId"
-      :set-skip-next-state-update="setSkipNextStateUpdate"
-    />
+    <TicketSharedDraftZoom v-if="hasAvailableDraft" :form="form" :shared-draft-id="sharedDraftId" />
   </div>
 
-  <template v-if="isTicketEditable">
+  <div v-if="isTicketEditable" class="flex gap-4 overflow-x-auto p-1">
     <CommonButton
       v-if="dirty"
       size="large"
@@ -80,11 +74,12 @@ const { ticket } = useTicketInformation()
     <CommonButton
       v-else
       size="large"
+      class="truncate"
       variant="submit"
       type="button"
       :disabled="disabled"
       @click="$emit('submit', $event)"
       >{{ $t('Update') }}
     </CommonButton>
-  </template>
+  </div>
 </template>

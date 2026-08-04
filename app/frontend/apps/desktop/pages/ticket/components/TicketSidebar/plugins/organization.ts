@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import {
   TicketSidebarScreenType,
@@ -14,6 +14,7 @@ export default <TicketSidebarPlugin>{
   component: TicketSidebarOrganization,
   permissions: ['ticket.agent'],
   screens: [TicketSidebarScreenType.TicketDetailView, TicketSidebarScreenType.TicketCreate],
+  views: ['agent'],
   icon: 'buildings',
   order: 2000,
   available: (context: TicketSidebarContext) => {

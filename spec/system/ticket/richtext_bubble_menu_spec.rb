@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 require 'rails_helper'
 
@@ -8,7 +8,7 @@ RSpec.describe 'Richtext Bubble Menu', authenticated_as: :authenticate, type: :s
   let(:ai_assistance_text_tools) { true }
   let(:ui_richtext_bubble_menu)  { true }
   let(:input)                    { 'Teh qwik braun foxx jumpz ova da laizi doge.' }
-  let(:output)                   { Struct.new(:content, :stored_result, :ai_analytics_run, :fresh, keyword_init: true).new(content: 'The quick brown fox jumps over the lazy dog.', stored_result: nil, ai_analytics_run: create(:ai_analytics_run), fresh: false) }
+  let(:output)                   { Struct.new(:content, :stored_result, :ai_analytics_run, :fresh).new(content: 'The quick brown fox jumps over the lazy dog.', stored_result: nil, ai_analytics_run: create(:ai_analytics_run), fresh: false) }
   let(:text_tool_name)           { Faker::Lorem.unique.sentence }
 
   def authenticate
@@ -46,11 +46,11 @@ RSpec.describe 'Richtext Bubble Menu', authenticated_as: :authenticate, type: :s
 
       expect(page).to have_css('.bubble-menu[role=menu]')
 
-      find("[aria-label='Writing Assistant Tools']").click
+      find("[aria-label='AI Writing Assistant Tools']").click
       find('.js-action', text: text_tool_name).click
 
       in_modal do
-        expect(page).to have_css('h1', text: "Writing Assistant: #{text_tool_name}")
+        expect(page).to have_css('h1', text: "AI Writing Assistant: #{text_tool_name}")
           .and have_text(input)
           .and have_text(output[:content])
 
@@ -75,7 +75,7 @@ RSpec.describe 'Richtext Bubble Menu', authenticated_as: :authenticate, type: :s
         find("[data-name='body']").send_keys([magic_key, 'a'])
 
         expect(page).to have_css('.bubble-menu[role=menu]')
-          .and have_no_css('.bubble-menu-item[aria-label="Writing Assistant Tools"]')
+          .and have_no_css('.bubble-menu-item[aria-label="AI Writing Assistant Tools"]')
       end
     end
 
@@ -108,7 +108,7 @@ RSpec.describe 'Richtext Bubble Menu', authenticated_as: :authenticate, type: :s
         find("[data-name='body']").send_keys([magic_key, 'a'])
 
         expect(page).to have_css('.bubble-menu[role=menu]')
-          .and have_no_css('.bubble-menu-item[aria-label="Writing Assistant Tools"]')
+          .and have_no_css('.bubble-menu-item[aria-label="AI Writing Assistant Tools"]')
       end
     end
   end

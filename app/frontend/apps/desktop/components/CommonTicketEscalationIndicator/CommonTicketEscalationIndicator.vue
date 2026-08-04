@@ -1,4 +1,4 @@
-<!-- Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/ -->
+<!-- Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/ -->
 
 <script setup lang="ts">
 import type { TicketById } from '#shared/entities/ticket/types.ts'
@@ -28,20 +28,20 @@ defineProps<Props>()
     <template #popover-content>
       <div class="p-3">
         <CommonLabel size="large" class="pb-3">
-          {{ $t('Escalation Times') }}
+          {{ $t('Escalation times') }}
         </CommonLabel>
 
-        <div class="flex gap-2.5 flex-col">
+        <div class="flex flex-col gap-2.5">
           <CommonTicketEscalationIndicatorItem
-            :label="$t('First Response Time')"
+            :label="$t('First response time')"
             :escalation-time="ticket?.firstResponseEscalationAt"
           />
           <CommonTicketEscalationIndicatorItem
-            :label="$t('Update Time')"
+            :label="$t('Update time')"
             :escalation-time="ticket?.updateEscalationAt"
           />
           <CommonTicketEscalationIndicatorItem
-            :label="$t('Solution Time')"
+            :label="$t('Solution time')"
             :escalation-time="ticket?.closeEscalationAt"
           />
         </div>

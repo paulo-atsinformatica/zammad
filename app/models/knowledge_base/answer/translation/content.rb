@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 class KnowledgeBase::Answer::Translation::Content < ApplicationModel
   include HasAgentAllowedParams
@@ -42,24 +42,43 @@ class KnowledgeBase::Answer::Translation::Content < ApplicationModel
 
   def search_index_attribute_lookup(include_references: true)
     attrs = super
-    attrs['body'] = ActionController::Base.helpers.strip_tags attrs['body']
+    attrs['body'] = body_text_only
     attrs
   end
 
-  private
-
-  def touch_translation
-    return if !translation.persisted?
-
-    translation&.touch # rubocop:disable Rails/SkipsModelValidations
+  def body_text_only
+    body
+      .gsub(%r{<br\s*/?>}i, "\n")
+      .gsub(%r{<div\s*>}i, "\n")
+      .then { ActionController::Base.helpers.strip_tags(it) }
   end
 
-  before_save :sanitize_body
-  after_save  :touch_translation
-  after_touch :touch_translation
+  private
 
   def sanitize_body
     self.body = HtmlSanitizer.dynamic_image_size(body)
   end
 
+  before_save :sanitize_body
+
+  def bump_translation_edited_at
+    return if !translation.persisted?
+
+    # The body is the translation's embedded content but lives on this separate record, so it never
+    # shows up in the translation's own changes. Touch the translation so its reindex hook fires; a
+    # body change also bumps edited_at (the editorial timestamp shown in the views).
+    if saved_change_to_body?
+      translation.touch(:edited_at) # rubocop:disable Rails/SkipsModelValidations
+    else
+      translation.touch # rubocop:disable Rails/SkipsModelValidations
+    end
+  end
+
+  after_save :bump_translation_edited_at
+
+  def touch_translation
+    translation.touch # rubocop:disable Rails/SkipsModelValidations
+  end
+
+  after_touch :touch_translation
 end

@@ -1,6 +1,7 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 require 'rails_helper'
+require_relative 'ordering_examples'
 
 RSpec.describe Service::AI::Analytics::GenerateReport::WithUsages do
   describe '#execute' do
@@ -9,16 +10,18 @@ RSpec.describe Service::AI::Analytics::GenerateReport::WithUsages do
     before { ai_analytics_run }
 
     context 'when format is xlsx' do
+      subject(:service_result) { described_class.execute(format: :xlsx) }
+
       it 'returns the report as XLSX' do
-        expect(described_class.new(format: :xlsx).execute)
-          .to be_a(String)
+        expect(service_result).to be_a(String)
       end
     end
 
     context 'when format is json' do
+      subject(:service_result) { described_class.execute(format: :json) }
+
       it 'returns the report as JSON' do
-        response = described_class.new(format: :json).execute
-        expect(JSON.parse(response))
+        expect(JSON.parse(service_result))
           .to contain_exactly(include('id' => ai_analytics_run.id))
       end
     end
@@ -135,5 +138,9 @@ RSpec.describe Service::AI::Analytics::GenerateReport::WithUsages do
           )
       end
     end
+  end
+
+  it_behaves_like 'ordering items correctly and returning latest entries' do
+    let(:ai_analytics_runs) { create_list(:ai_analytics_run, 10) }
   end
 end

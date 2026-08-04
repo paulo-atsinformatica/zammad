@@ -1,9 +1,9 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 require 'rails_helper'
 
 class AI::Provider::SampleProvider < AI::Provider
-  def chat(prompt_system:, prompt_user:)
+  def chat(prompt_system:, prompt_user:, prompt_image:)
     { response: "System: #{prompt_system}\nUser: #{prompt_user}" }.to_json
   end
 
@@ -70,6 +70,7 @@ RSpec.describe AI::Service do
           expect(new_run.payload).to eq(
             'prompt_system' => "system prompt\n",
             'prompt_user'   => "user prompt\n",
+            'prompt_image'  => nil,
           )
         end
 
@@ -88,6 +89,7 @@ RSpec.describe AI::Service do
               payload: {
                 'prompt_system' => "system prompt\n",
                 'prompt_user'   => "user prompt\n",
+                'prompt_image'  => nil,
               },
               error:   {
                 'error_message' => 'Sample error',

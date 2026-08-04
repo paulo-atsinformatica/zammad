@@ -1,9 +1,7 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
-import { storeToRefs } from 'pinia'
-import { computed, type Ref } from 'vue'
+import { computed, toRef, type Ref } from 'vue'
 
-import type { TicketById } from '#shared/entities/ticket/types.ts'
 import { EnumTicketScreenBehavior } from '#shared/graphql/types.ts'
 import { useWalker } from '#shared/router/walker.ts'
 import { useSessionStore } from '#shared/stores/session.ts'
@@ -13,7 +11,7 @@ import { useUserCurrentTaskbarTabsStore } from '#desktop/entities/user/current/s
 export const useTicketScreenBehavior = (currentTaskbarTabId: Ref<string | undefined>) => {
   const { deleteTaskbarTab } = useUserCurrentTaskbarTabsStore()
 
-  const { user } = storeToRefs(useSessionStore())
+  const user = toRef(useSessionStore(), 'user')
 
   const walker = useWalker()
 
@@ -35,7 +33,13 @@ export const useTicketScreenBehavior = (currentTaskbarTabId: Ref<string | undefi
     ticket,
   }: {
     screenBehaviour?: EnumTicketScreenBehavior
-    ticket: TicketById
+    ticket: {
+      state: {
+        stateType: {
+          name: string
+        }
+      }
+    }
   }) => {
     const currentScreenBehaviour = screenBehaviour || secondaryAction.value
 

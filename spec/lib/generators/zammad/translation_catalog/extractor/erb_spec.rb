@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 require 'rails_helper'
 
@@ -43,7 +43,7 @@ RSpec.describe Zammad::TranslationCatalog::Extractor::Erb do
 
   context 'with strings too long' do
     let(:string) do
-      <<~"CODE"
+      <<~CODE
         <%= t("#{'a' * 3001}") %>
       CODE
     end

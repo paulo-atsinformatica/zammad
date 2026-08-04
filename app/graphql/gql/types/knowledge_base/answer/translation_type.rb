@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 module Gql::Types::KnowledgeBase::Answer
   class TranslationType < Gql::Types::BaseObject
@@ -8,6 +8,8 @@ module Gql::Types::KnowledgeBase::Answer
 
     field :title, String, null: false
     field :maybe_locale, String, description: 'Specified only for knowledge bases with multiple locales'
+    field :edited_at, GraphQL::Types::ISO8601DateTime, null: false
+    field :visibility, Gql::Types::Enum::KnowledgeBase::VisibilityType, null: false, description: "Publication state of the translation's answer, used for color-coding"
 
     # Contains all categories of the answer (already translated).
     field :category_tree_translation, [Gql::Types::KnowledgeBase::Category::TranslationType], null: false
@@ -20,6 +22,10 @@ module Gql::Types::KnowledgeBase::Answer
       return if !KnowledgeBase.with_multiple_locales_exists?
 
       object.kb_locale.system_locale.locale.upcase
+    end
+
+    def visibility
+      object.answer.visibility
     end
 
     def category_tree_translation

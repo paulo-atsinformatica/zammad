@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import { flushPromises } from '@vue/test-utils'
 
@@ -261,7 +261,7 @@ describe('guided setup import source status', () => {
       expect(successMessage).toBeInTheDocument()
 
       const goToLoginButton = view.getByRole('button', {
-        name: 'Go to Login',
+        name: 'Go to login',
       })
       await view.events.click(goToLoginButton)
 

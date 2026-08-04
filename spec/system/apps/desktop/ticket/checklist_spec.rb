@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 require 'rails_helper'
 
@@ -54,8 +54,9 @@ RSpec.describe 'Desktop > Ticket > Checklist', app: :desktop_view, authenticated
     using_session :agent2 do
       login(username: other_agent.login, password: 'test')
 
-      find('[role="searchbox"]').fill_in(with: it_title.first(5))
-      click_on it_title
+      visit "/tickets/#{Ticket.last.id}"
+      wait_for_form_to_settle("form-ticket-edit-#{Ticket.last.id}")
+
       add_article_to_it_ticket
       check_all_checkboxes
       close_ticket
@@ -86,7 +87,7 @@ RSpec.describe 'Desktop > Ticket > Checklist', app: :desktop_view, authenticated
 
     open_checklist
 
-    click_on 'Add From a Template'
+    click_on 'Add from a template'
     click_on checklist_template.name
   end
 
@@ -112,17 +113,22 @@ RSpec.describe 'Desktop > Ticket > Checklist', app: :desktop_view, authenticated
   end
 
   def add_article_to_main_ticket
-    click_on('Add reply')
-    find_editor('Text').type('Some notes about the new employee onboarding.')
+    within 'main' do
+      find('button', text: 'Add internal note').click
+      find_editor('Text').type('Some notes about the new employee onboarding.')
+    end
 
     click_on 'Update'
     wait_for_gql('shared/entities/ticket/graphql/mutations/update.graphql')
   end
 
   def add_article_to_it_ticket
-    click_on('Add reply')
-    find_editor('Text').type('Some notes about the new employee onboarding.')
-    find_editor('Text').type("ping @@#{agent.firstname}")
+    within 'main' do
+      find('button', text: 'Add internal note').click
+      find_editor('Text').type('Some notes about the new employee onboarding.')
+      find_editor('Text').type("ping @@#{agent.firstname}")
+    end
+
     find('li', text: agent.fullname).click
     wait_for_form_updater
 
@@ -151,7 +157,7 @@ RSpec.describe 'Desktop > Ticket > Checklist', app: :desktop_view, authenticated
   def try_closing
     close_ticket
 
-    expect(page).to have_text('Incomplete Ticket Checklist')
+    expect(page).to have_text('Incomplete ticket checklist')
 
     click_on 'Yes, open the checklist'
   end
@@ -161,11 +167,19 @@ RSpec.describe 'Desktop > Ticket > Checklist', app: :desktop_view, authenticated
   end
 
   def close_ticket
-    find('button[aria-label="Ticket"]').click
+    dismiss_notification
+
+    find('#ticketSidebar + div button[aria-label="Ticket"]').click
 
     find_select('State').select_option('closed')
 
     click_on 'Update'
+  end
+
+  def dismiss_notification
+    find('button[aria-label="Hide notification"]', wait: 0).click
+  rescue Capybara::ElementNotFound
+    nil
   end
 
   def close_and_verify

@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 require 'rails_helper'
 
@@ -19,6 +19,10 @@ RSpec.describe 'Channel::EmailParser#reprocess_failed_articles', aggregate_failu
       allow_any_instance_of(HtmlSanitizer::Strict).to receive(:run_sanitization).and_call_original
       Channel::EmailParser.reprocess_failed_articles
       expect(Ticket::Article.last.body).not_to eq(HtmlSanitizer::UNPROCESSABLE_HTML_MSG)
+    end
+
+    it 'stores body_rendering_error in article preferences' do
+      expect(Ticket::Article.last.preferences['body_rendering_error']).to be(true)
     end
   end
 end

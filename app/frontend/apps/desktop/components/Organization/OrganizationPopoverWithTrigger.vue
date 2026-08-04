@@ -1,4 +1,4 @@
-<!-- Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/ -->
+<!-- Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/ -->
 
 <script setup lang="ts">
 import { computed } from 'vue'
@@ -43,12 +43,14 @@ const organizationInternalId = computed(() => getIdFromGraphQLId(props.organizat
 
 const session = useSessionStore()
 
-const isAgent = computed(() => session.hasPermission('ticket.agent'))
+const hasOrganizationAccess = computed(() =>
+  session.hasPermission(['ticket.agent', 'admin.organization']),
+)
 </script>
 
 <template>
   <CommonPopoverWithTrigger
-    v-if="isAgent"
+    v-if="hasOrganizationAccess"
     :class="[
       !$slots?.default?.() ? 'rounded-full! focus-visible:outline-2!' : '',
       triggerClass ?? '',
@@ -56,7 +58,7 @@ const isAgent = computed(() => session.hasPermission('ticket.agent'))
     :no-hover-styling="noHoverStyling"
     :no-focus-styling="noFocusStyling"
     :z-index="zIndex"
-    :trigger-link="!noLink ? `/organization/profile/${organizationInternalId}` : undefined"
+    :trigger-link="!noLink ? `/organizations/${organizationInternalId}` : undefined"
     :trigger-link-active-class="
       !$slots?.default?.()
         ? 'outline-2! outline-offset-1! outline-blue-800! hover:outline-blue-800!'
@@ -78,7 +80,9 @@ const isAgent = computed(() => session.hasPermission('ticket.agent'))
       </slot>
     </template>
   </CommonPopoverWithTrigger>
-  <slot v-else>
-    <CommonOrganizationAvatar v-bind="{ ...avatarConfig, ...$attrs }" :entity="organization" />
-  </slot>
+  <div v-else class="pointer-events-none" v-bind="$attrs">
+    <slot>
+      <CommonOrganizationAvatar v-bind="avatarConfig" :entity="organization" />
+    </slot>
+  </div>
 </template>

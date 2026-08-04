@@ -53,6 +53,7 @@ export const TicketArticleAttributesFragmentDoc = gql`
   }
   preferences
   bodyWithUrls
+  bodyRenderingError
   internal
   createdAt
   author {
@@ -91,5 +92,10 @@ export const TicketArticleAttributesFragmentDoc = gql`
     error
   }
   detectedLanguage
+  highlightedTexts {
+    startIndex
+    endIndex
+    colorClass
+  }
 }
     `;

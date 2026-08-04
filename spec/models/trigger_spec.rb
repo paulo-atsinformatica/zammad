@@ -1,6 +1,7 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 require 'rails_helper'
+require 'models/concerns/has_audit_logs_examples'
 require 'models/application_model_examples'
 require 'models/concerns/has_xss_sanitized_note_examples'
 require 'models/concerns/touches_perform_references_examples'
@@ -17,6 +18,8 @@ RSpec.describe Trigger, type: :model do
     { 'ticket.title'=>{ 'value'=>'triggered' } }
   end
 
+  it_behaves_like 'HasAuditLogs', update_attribute: 'name', update_value: 'Some updated name'
+
   it_behaves_like 'ApplicationModel', can_assets: { selectors: %i[condition perform] }
   it_behaves_like 'HasXssSanitizedNote', model_factory: :trigger
   it_behaves_like 'TouchesPerformReferences'
@@ -30,6 +33,42 @@ RSpec.describe Trigger, type: :model do
     it { is_expected.to validate_presence_of(:execution_condition_mode) }
     it { is_expected.to validate_inclusion_of(:activator).in_array(%w[action time]) }
     it { is_expected.to validate_inclusion_of(:execution_condition_mode).in_array(%w[selective always]) }
+
+    it 'rejects a tag action without a tag' do
+      trigger = build(:trigger, perform: { 'ticket.tags' => { 'operator' => 'add', 'value' => '' } })
+      expect(trigger).not_to be_valid
+    end
+
+    it 'accepts a tag action with a tag' do
+      trigger = build(:trigger, perform: { 'ticket.tags' => { 'operator' => 'add', 'value' => 'foo' } })
+      expect(trigger).to be_valid
+    end
+  end
+
+  describe '#search_index_attribute_lookup' do
+    let(:condition) do
+      { 'ticket.group_id' => { 'operator' => 'is', 'value' => %w[1 2], 'value_completion' => '' } }
+    end
+    let(:perform) do
+      { 'ticket.tags' => { 'operator' => 'add', 'value' => 'estest' } }
+    end
+
+    it 'adds a searchable text representation of the store columns', :aggregate_failures do
+      attributes = trigger.search_index_attribute_lookup
+
+      expect(attributes['condition_text']).to eq('ticket.group_id ticket group_id operator is value 1 2 value_completion')
+      expect(attributes['perform_text']).to eq('ticket.tags ticket tags operator add value estest')
+    end
+
+    context 'with an expert mode condition' do
+      let(:condition) do
+        { 'operator' => 'AND', 'conditions' => [ { 'name' => 'ticket.group_id', 'operator' => 'is', 'value' => %w[1] } ] }
+      end
+
+      it 'splits field names used as values' do
+        expect(trigger.search_index_attribute_lookup['condition_text']).to include('group_id')
+      end
+    end
   end
 
   describe 'Send-email triggers' do
@@ -256,8 +295,76 @@ RSpec.describe Trigger, type: :model do
         end
       end
 
+      context 'when ticket has attachments or inline images (#5918)' do
+        let(:condition) do
+          { 'ticket.action' => { 'operator' => 'is', 'value' => 'update' } }
+        end
+
+        let(:perform) do
+          { 'article.note' => { 'subject' => 'Test subject note', 'internal' => 'true', 'body' => 'some body with #{last_external_article.body_as_html}', 'include_attachments' => true } } # rubocop:disable Lint/InterpolationCheck
+        end
+
+        context 'when inline images are used' do
+          it 'does add attachments because last article has inline attachments' do
+            ticket = create(:ticket)
+            create(:ticket_article, :with_inline_attachment, ticket: ticket)
+            TransactionDispatcher.commit
+
+            UserInfo.current_user_id = 1
+            create(:ticket_article, :with_inline_attachment, ticket: ticket, body: 'Second article with inline attachments')
+
+            expect { TransactionDispatcher.commit }.to change(Ticket::Article, :count).by(1)
+
+            note = Ticket::Article.last
+            expect(note.attachments.count).to eq(1)
+          end
+
+          it 'does not add attachments from first article because perform only uses last_external_article' do
+            ticket = create(:ticket)
+            create(:ticket_article, :with_inline_attachment, ticket: ticket)
+            TransactionDispatcher.commit
+
+            UserInfo.current_user_id = 1
+            create(:ticket_article, ticket: ticket, body: 'Second article without inline attachments')
+            expect { TransactionDispatcher.commit }.to change(Ticket::Article, :count).by(1)
+
+            note = Ticket::Article.last
+            expect(note.attachments.count).to eq(0)
+          end
+        end
+
+        context 'when attachments are used' do
+          it 'does add attachments because latest article has attachments and include_attachments is activated' do
+            ticket = create(:ticket)
+            create(:ticket_article, :with_attachment, ticket: ticket)
+            TransactionDispatcher.commit
+
+            UserInfo.current_user_id = 1
+            create(:ticket_article, :with_attachment, ticket: ticket, body: 'Second article with attachments')
+
+            expect { TransactionDispatcher.commit }.to change(Ticket::Article, :count).by(1)
+
+            note = Ticket::Article.last
+            expect(note.attachments.count).to eq(1)
+          end
+
+          it 'does not add attachments from first article because attachments are only used from the latest article if activated' do
+            ticket = create(:ticket)
+            create(:ticket_article, :with_attachment, ticket: ticket)
+            TransactionDispatcher.commit
+
+            UserInfo.current_user_id = 1
+            create(:ticket_article, ticket: ticket, body: 'Second article without attachments')
+            expect { TransactionDispatcher.commit }.to change(Ticket::Article, :count).by(1)
+
+            note = Ticket::Article.last
+            expect(note.attachments.count).to eq(0)
+          end
+        end
+      end
+
       context 'notification.email recipient' do
-        let!(:ticket) { create(:ticket) }
+        let!(:ticket)     { create(:ticket) }
         let!(:recipient1) { create(:user, email: 'test1@zammad-test.com') }
         let!(:recipient2) { create(:user, email: 'test2@zammad-test.com') }
         let!(:recipient3) { create(:user, email: 'test3@zammad-test.com') }
@@ -1551,28 +1658,54 @@ RSpec.describe Trigger, type: :model do
 
       it 'returns true if it was performed yesterday' do
         travel(-1.day) do
-          trigger.performed_on(ticket, activator_type: 'reminder_reached')
+          trigger.performable_on?(ticket, activator_type: 'reminder_reached')
         end
 
         expect(trigger).to be_performable_on(ticket, activator_type: 'reminder_reached')
       end
 
       it 'returns true if it was performed today on another ticket' do
-        trigger.performed_on(create(:ticket), activator_type: 'reminder_reached')
+        trigger.performable_on?(create(:ticket), activator_type: 'reminder_reached')
 
         expect(trigger).to be_performable_on(ticket, activator_type: 'reminder_reached')
       end
 
       it 'returns true if it was performed today by another activator' do
-        trigger.performed_on(ticket, activator_type: 'escalation')
+        trigger.performable_on?(ticket, activator_type: 'escalation')
 
         expect(trigger).to be_performable_on(ticket, activator_type: 'reminder_reached')
       end
 
       it 'returns false if it was performed today on the same ticket by the same activator and same user' do
-        trigger.performed_on(ticket, activator_type: 'reminder_reached')
+        trigger.performable_on?(ticket, activator_type: 'reminder_reached')
 
         expect(trigger).not_to be_performable_on(ticket, activator_type: 'reminder_reached')
+      end
+
+      # https://github.com/zammad/zammad/issues/5655
+      it 'returns true if it was performed today and then ticket related field was changed' do
+        ticket.update(pending_time: 30.minutes.from_now)
+        trigger.performable_on?(ticket, activator_type: 'reminder_reached')
+
+        expect { ticket.update(pending_time: 1.hour.from_now) }
+          .to change { trigger.performable_on?(ticket, activator_type: 'reminder_reached') }
+          .to true
+      end
+
+      # https://github.com/zammad/zammad/issues/5655
+      it 'returns true if it was performed today and then ticket related field was changed and reverted back to original' do
+        initial_pending_time = 1.hour.from_now
+        ticket.update(pending_time: initial_pending_time)
+
+        trigger.performable_on?(ticket, activator_type: 'reminder_reached')
+
+        ticket.update(pending_time: 2.hours.from_now)
+
+        trigger.performable_on?(ticket, activator_type: 'reminder_reached')
+
+        expect { ticket.update(pending_time: initial_pending_time) }
+          .to change { trigger.performable_on?(ticket, activator_type: 'reminder_reached') }
+          .to true
       end
     end
   end
@@ -1799,7 +1932,7 @@ RSpec.describe Trigger, type: :model do
   end
 
   describe 'Extend trigger conditions with an article accounted time entry flag #4760' do
-    let!(:ticket) { create(:ticket) }
+    let!(:ticket) { create(:ticket, state_name: 'pending reminder') }
 
     before do
       ticket && article && trigger

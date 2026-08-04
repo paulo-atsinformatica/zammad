@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import { ref } from 'vue'
 
@@ -8,11 +8,12 @@ import type { Ref } from 'vue'
 export default function useNavigateOptions(
   items: Ref<unknown[]>,
   onSelect: (item: unknown) => void,
+  getOptionId: (index: number) => string = (index) => `mention-${index}`,
 ) {
   const selectedIndex = ref(0)
 
   const focus = (index: number) => {
-    const element = document.querySelector(`#mention-${index}`)
+    const element = document.getElementById(getOptionId(index))
     element?.scrollIntoView({ block: 'nearest' })
   }
 

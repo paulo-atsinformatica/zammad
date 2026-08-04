@@ -1,8 +1,19 @@
 class Reporting extends App.ControllerAppContent
-  @requiredPermission: 'report'
+  @requiredPermission: ['report', 'report.pause_indicators', 'report.user_pauses', 'report.ticket_time_trackings']
 
   constructor: ->
     super
+    # If user has only granular report permission(s), redirect to first available report
+    if !@permissionCheck('report')
+      if @permissionCheck('report.user_pauses')
+        @navigate '#report/user_pauses'
+        return
+      if @permissionCheck('report.ticket_time_trackings')
+        @navigate '#report/ticket_time_trackings'
+        return
+      if @permissionCheck('report.pause_indicators')
+        @navigate '#report/pause_indicators'
+        return
     @title __('Reporting')
     @navupdate '#report'
     @startLoading()
@@ -321,7 +332,7 @@ class Download extends App.Controller
     for key, value of @params.profileSelected
       if value
         profile_id = key
-    downloadUrl = "#{@apiPath}/reports/sets?sheet=true;metric=#{@params.metric};year=#{@params.year};month=#{@params.month};week=#{@params.week};day=#{@params.day};timeRange=#{@params.timeRange};profile_id=#{profile_id};downloadBackendSelected=#{@params.downloadBackendSelected}"
+    downloadUrl = "#{@apiPath}/reports/sets?sheet=true&metric=#{@params.metric}&year=#{@params.year}&month=#{@params.month}&week=#{@params.week}&day=#{@params.day}&timeRange=#{@params.timeRange}&profile_id=#{profile_id}&downloadBackendSelected=#{@params.downloadBackendSelected}"
 
     if count > 0
       @$('.js-dataDownloadButton').html(App.view('report/download_button')(
@@ -636,4 +647,7 @@ class Sidebar extends App.Controller
     @ui.setStoreParams()
 
 App.Config.set('report', Reporting, 'Routes')
-App.Config.set('Reporting', { prio: 8000, parent: '', name: __('Reporting'), translate: true, target: '#report', icon: 'report', permission: ['report'] }, 'NavBarRight')
+App.Config.set('Reporting', { prio: 8000, parent: '', name: __('Reporting'), translate: true, target: '#report', icon: 'report', permission: ['report', 'report.pause_indicators', 'report.user_pauses', 'report.ticket_time_trackings'] }, 'NavBarRight')
+
+# Native attendance report - must appear as first option in Reporting dropdown (so user can select it)
+App.Config.set('ReportAttendance', { prio: 100, name: __('Relatório de Atendimento'), parent: '#report', target: '#report', permission: ['report'], translate: true }, 'NavBarRight')

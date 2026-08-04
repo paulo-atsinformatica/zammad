@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import { defineStore } from 'pinia'
 
@@ -16,7 +16,7 @@ export const staticObjectAttributes: EntityStaticObjectAttributes = {
         relation: 'User',
       },
       id: 'created_by_id-1',
-      dataType: 'autocomplete',
+      dataType: 'autocompletion_ajax',
       isStatic: true,
       isInternal: true,
     },
@@ -34,7 +34,7 @@ export const staticObjectAttributes: EntityStaticObjectAttributes = {
       dataOption: {
         relation: 'User',
       },
-      dataType: 'autocomplete',
+      dataType: 'autocompletion_ajax',
       id: 'updated_by_id-1',
       isStatic: true,
       isInternal: true,

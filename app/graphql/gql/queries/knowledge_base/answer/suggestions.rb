@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 module Gql::Queries
   class KnowledgeBase::Answer::Suggestions < BaseQuery
@@ -8,19 +8,26 @@ module Gql::Queries
 
     type [Gql::Types::KnowledgeBase::Answer::TranslationType], null: true
 
-    def self.authorize(_obj, ctx)
-      ctx.current_user.permissions?('ticket.agent')
-    end
+    requires_permission 'ticket.agent'
 
     def resolve(query:)
-      SearchKnowledgeBaseBackend.new(
+      results = SearchKnowledgeBaseBackend.new(
         knowledge_base:    nil,
         locale:            nil,
         scope:             nil,
         flavor:            'agent',
         index:             'KnowledgeBase::Answer::Translation',
         highlight_enabled: false,
-      ).search(query, user: context.current_user).map { |meta| ::KnowledgeBase::Answer::Translation.find(meta[:id]) }
+      ).search(query, user: context.current_user)
+
+      ids = results.pluck(:id)
+
+      # Load all hits in a single query with the associations the type resolves.
+      #   in_order_of preserves the search (relevance) order and drops hits whose
+      #   record no longer exists (stale search index).
+      ::KnowledgeBase::Answer::Translation
+        .includes(:content, answer: :category, kb_locale: :system_locale)
+        .in_order_of(:id, ids)
     end
   end
 end

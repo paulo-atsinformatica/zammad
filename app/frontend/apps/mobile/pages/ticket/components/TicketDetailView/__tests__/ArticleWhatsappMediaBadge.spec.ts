@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import { renderComponent } from '#tests/support/components/index.ts'
 
@@ -21,7 +21,7 @@ describe('rendering media error badge for Whatsapp', () => {
     })
 
     expect(view.getByIconName('update')).toBeInTheDocument()
-    expect(view.getByText('Media Download Error')).toBeInTheDocument()
+    expect(view.getByText('Media download error')).toBeInTheDocument()
 
     await view.events.click(view.getByRole('button'))
 

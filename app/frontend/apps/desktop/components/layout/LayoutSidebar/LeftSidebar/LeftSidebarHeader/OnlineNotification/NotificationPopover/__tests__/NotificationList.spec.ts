@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import { generateObjectData } from '#tests/graphql/builders/index.ts'
 import renderComponent from '#tests/support/components/renderComponent.ts'
@@ -31,6 +31,10 @@ const defaults = {
         },
         typeName: 'update',
         objectName: 'Ticket',
+        meta: {
+          __typename: 'OnlineNotificationMeta' as const,
+          createdByAi: false,
+        },
         metaObject: {
           id: convertToGraphQLId('Ticket', 1),
           internalId: 1,
@@ -59,6 +63,10 @@ const defaults = {
         },
         typeName: 'update',
         objectName: 'Ticket',
+        meta: {
+          __typename: 'OnlineNotificationMeta' as const,
+          createdByAi: false,
+        },
         metaObject: {
           id: convertToGraphQLId('Ticket', 3),
           internalId: 3,
@@ -87,6 +95,10 @@ const defaults = {
         },
         typeName: 'create',
         objectName: 'Ticket',
+        meta: {
+          __typename: 'OnlineNotificationMeta' as const,
+          createdByAi: false,
+        },
         metaObject: {
           // __typename: 'Ticket', // If not set mocker does not return this object
           id: convertToGraphQLId('Ticket', 2),
@@ -194,7 +206,7 @@ describe('NotificationList', () => {
       wrapper.getByRole('button', {
         name: 'Admin Foo updated ticket Bunch of articles',
       }),
-    ).toHaveAttribute('aria-description', 'Remove Notification')
+    ).toHaveAttribute('aria-description', 'Remove notification')
 
     expect(wrapper.emitted('remove')).toEqual([[list[0]]])
   })
@@ -213,6 +225,10 @@ describe('NotificationList', () => {
                   createdBy: null,
                   typeName: 'update',
                   objectName: 'Ticket',
+                  meta: {
+                    __typename: 'OnlineNotificationMeta' as const,
+                    createdByAi: false,
+                  },
                   metaObject: null,
                 },
               },
@@ -222,11 +238,71 @@ describe('NotificationList', () => {
       },
     })
 
+    // gap is css based -> You can no longer see the ticket. in 18 hours
     expect(wrapper.getByRole('listitem')).toHaveTextContent(
-      'You can no longer see the ticket. in 18 hours',
+      'You can no longer see the ticket.in 18 hours',
     )
 
     expect(wrapper.getAllByIconName('x-lg')).toHaveLength(2)
     expect(wrapper.getByRole('presentation')).toBeInTheDocument() // x icon
+  })
+
+  it('displays AI agent notification', async () => {
+    const wrapper = renderComponent(NotificationList, {
+      props: {
+        list: edgesToArray(
+          generateObjectData<OnlineNotificationConnection>('OnlineNotificationConnection', {
+            edges: [
+              {
+                node: {
+                  id: convertToGraphQLId('OnlineNotification', 1),
+                  seen: false,
+                  createdAt: '2026-04-22T15:11:17Z',
+                  createdBy: {
+                    id: convertToGraphQLId('User', 1),
+                    fullname: '-',
+                    lastname: '',
+                    firstname: '-',
+                    email: '',
+                    vip: false,
+                    outOfOffice: false,
+                    outOfOfficeStartAt: null,
+                    outOfOfficeEndAt: null,
+                    active: false,
+                    image: null,
+                  },
+                  typeName: 'create',
+                  objectName: 'KnowledgeBase::Answer::Translation',
+                  meta: {
+                    __typename: 'OnlineNotificationMeta',
+                    createdByAi: true,
+                  },
+                  metaObject: {
+                    id: convertToGraphQLId('KnowledgeBase::Answer::Translation', 6),
+                    title: 'New answer for knowledge base article',
+                    kbLocale: {
+                      systemLocale: {
+                        locale: 'en-us',
+                      },
+                    },
+                    answer: {
+                      id: convertToGraphQLId('KnowledgeBase::Answer', 6),
+                    },
+                  },
+                },
+                cursor: 'MQ',
+              },
+            ],
+            pageInfo: {
+              endCursor: 'Mw',
+              hasNextPage: false,
+            },
+          }),
+        ),
+      },
+      router: true,
+    })
+
+    expect(wrapper.getByLabelText('AI agent')).toBeInTheDocument()
   })
 })

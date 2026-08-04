@@ -1,4 +1,4 @@
-<!-- Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/ -->
+<!-- Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/ -->
 
 <script setup lang="ts">
 import { computed } from 'vue'
@@ -6,6 +6,7 @@ import { computed } from 'vue'
 import { QueryHandler } from '#shared/server/apollo/handler/index.ts'
 
 import CommonLoader from '#desktop/components/CommonLoader/CommonLoader.vue'
+import TicketRelationAndRecentListsSkeleton from '#desktop/pages/ticket/components/TicketDetailView/TicketRelationAndRecentLists/TicketRelationAndRecentListsSkeleton.vue'
 import TicketSimpleTable from '#desktop/pages/ticket/components/TicketDetailView/TicketSimpleTable/TicketSimpleTable.vue'
 import type { TicketRelationAndRecentListItem } from '#desktop/pages/ticket/components/TicketDetailView/TicketSimpleTable/types.ts'
 import { useTicketRelationAndRecentTicketListsQuery } from '#desktop/pages/ticket/graphql/queries/ticketRelationAndRecentTicketLists.api.ts'
@@ -35,8 +36,7 @@ const ticketRelationAndRecentListsQuery = new QueryHandler(
   ),
 )
 
-// :TODO introduce debounced loading
-const isLoading = ticketRelationAndRecentListsQuery.loading()
+const isLoading = ticketRelationAndRecentListsQuery.loadingWithoutCachedResult()
 
 const tableData = ticketRelationAndRecentListsQuery.result()
 
@@ -51,10 +51,14 @@ const ticketsRecentlyViewed = computed(
 
 <template>
   <CommonLoader :loading="isLoading">
+    <template #skeleton>
+      <TicketRelationAndRecentListsSkeleton />
+    </template>
+
     <div class="space-y-6">
       <TicketSimpleTable
         v-if="ticketsByCustomer && ticketsByCustomer.length > 0"
-        :label="$t('Recent Customer Tickets')"
+        :label="$t('Recent customer tickets')"
         :tickets="ticketsByCustomer"
         :selected-ticket-id="selectedTicketId"
         @click-ticket="$emit('click-ticket', $event)"
@@ -62,7 +66,7 @@ const ticketsRecentlyViewed = computed(
 
       <TicketSimpleTable
         v-if="ticketsRecentlyViewed && ticketsRecentlyViewed.length > 0"
-        :label="$t('Recently Viewed Tickets')"
+        :label="$t('Recently viewed tickets')"
         :selected-ticket-id="selectedTicketId"
         :tickets="ticketsRecentlyViewed"
         @click-ticket="$emit('click-ticket', $event)"

@@ -1,4 +1,4 @@
-<!-- Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/ -->
+<!-- Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/ -->
 
 <script setup lang="ts">
 import { computed } from 'vue'
@@ -70,7 +70,7 @@ const overflowCount = computed(() => {
     <template #default="slotProps">
       <slot v-bind="slotProps">
         <div
-          class="flex h-8 w-8 items-center justify-center rounded-full bg-green-200 text-sm text-gray-300 dark:text-neutral-400 dark:bg-gray-600"
+          class="flex h-8 w-8 items-center justify-center rounded-full bg-green-200 text-sm text-gray-300 dark:bg-gray-600 dark:text-neutral-400"
         >
           {{ overflowCount }}
         </div>

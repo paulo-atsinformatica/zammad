@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 require 'rails_helper'
 
@@ -86,8 +86,8 @@ RSpec.describe 'Manage > Channels > WhatsApp', :use_vcr, required_envs: %w[WHATS
       in_modal do
         expect(page)
           .to have_field('business_id', with: channel.options[:business_id])
-          .and have_field('access_token', with: channel.options[:access_token])
-          .and have_field('app_secret', with: channel.options[:app_secret])
+          .and have_field('access_token', with: SensitiveParamsHelper::SENSITIVE_MASK)
+          .and have_field('app_secret', with: SensitiveParamsHelper::SENSITIVE_MASK)
 
         click_on 'Next'
       end

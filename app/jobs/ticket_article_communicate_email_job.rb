@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 class TicketArticleCommunicateEmailJob < ApplicationJob
 
@@ -186,7 +186,7 @@ class TicketArticleCommunicateEmailJob < ApplicationJob
       ticket.state = Ticket::State.find_by(default_follow_up: true)
       ticket.save!
       TransactionDispatcher.commit
-      UserInfo.current_user_id = nil
+      UserInfo.reset
     end
 
     raise error_or_message

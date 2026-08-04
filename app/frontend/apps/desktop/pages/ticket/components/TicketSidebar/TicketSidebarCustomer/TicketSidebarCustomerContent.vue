@@ -1,4 +1,4 @@
-<!-- Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/ -->
+<!-- Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/ -->
 
 <script setup lang="ts">
 import { computed, type ComputedRef } from 'vue'
@@ -21,6 +21,7 @@ import { NavigationMenuDensity } from '#desktop/components/NavigationMenu/types.
 import TicketListPopoverWithTrigger from '#desktop/components/Ticket/TicketListPopoverWithTrigger.vue'
 import UserInfo from '#desktop/components/User/UserInfo.vue'
 import type { TicketInformation } from '#desktop/entities/ticket/types.ts'
+import { useUserEdit } from '#desktop/entities/user/composables/useUserEdit.ts'
 import { useTicketInformation } from '#desktop/pages/ticket/composables/useTicketInformation.ts'
 import {
   type TicketSidebarContentProps,
@@ -61,6 +62,8 @@ if (props.context.screenType === TicketSidebarScreenType.TicketDetailView) {
   ;({ isTicketAgent, isTicketEditable } = useTicketView(ticket))
 }
 
+const { openUserEditFlyout } = useUserEdit()
+
 const actions = computed<MenuItem[]>(() => [
   {
     key: CUSTOMER_FLYOUT_KEY,
@@ -72,9 +75,15 @@ const actions = computed<MenuItem[]>(() => [
         ticket,
       }),
   },
+  {
+    key: 'edit-customer',
+    label: __('Edit customer'),
+    icon: 'pencil',
+    show: () => props.customer.policy.update,
+    onClick: () => openUserEditFlyout(props.customer, { title: __('Edit customer') }),
+  },
 ])
 </script>
-
 <template>
   <TicketSidebarContent
     v-model="persistentStates.scrollPosition"
@@ -90,6 +99,9 @@ const actions = computed<MenuItem[]>(() => [
       :object="customer"
       :skip-attributes="['firstname', 'lastname', 'organization_id', 'organization_ids']"
       :inline-editable="{ note: useUserNoteUpdateMutation }"
+      :style="{
+        '--top-header-height': '-4.5px', // Needed to offset the negative vertical margin of the inline editor and not receive the global header height as top value
+      }"
     />
 
     <CommonSimpleEntityList
@@ -104,6 +116,7 @@ const actions = computed<MenuItem[]>(() => [
     />
 
     <CommonSectionCollapse
+      v-if="customer.ticketsCount?.open || customer.ticketsCount?.closed"
       id="customer-tickets"
       v-model="persistentStates.collapseTickets"
       :title="__('Tickets')"
@@ -115,20 +128,22 @@ const actions = computed<MenuItem[]>(() => [
           {
             id: 'open',
             label: __('open tickets'),
-            title: __('Open Tickets'),
+            title: __('Open tickets'),
             icon: 'check-circle-no',
             iconColor: 'fill-yellow-500',
             count: customer?.ticketsCount?.open || 0,
             route: `/search/${customer?.ticketsCount?.openSearchQuery ?? ''}?entity=Ticket`,
+            show: () => Boolean(customer?.ticketsCount?.open),
           },
           {
             id: 'closed',
             label: __('closed tickets'),
-            title: __('Closed Tickets'),
+            title: __('Closed tickets'),
             icon: 'check-circle-outline',
             iconColor: 'fill-green-400',
             count: customer?.ticketsCount?.closed || 0,
             route: `/search/${customer?.ticketsCount?.closedSearchQuery ?? ''}?entity=Ticket`,
+            show: () => Boolean(customer?.ticketsCount?.closed),
           },
         ]"
       >

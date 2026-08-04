@@ -1,12 +1,12 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 class User::AdminTwoFactorsController < ApplicationController
   prepend_before_action :authenticate_and_authorize!
 
+  # calls the model method directly instead of Service::User::TwoFactor::RemoveMethod,
+  # because the service would execute as the target user and break audit log attribution
   def remove_authentication_method
-    Service::User::TwoFactor::RemoveMethod
-      .new(user: params_user, method_name: params[:method])
-      .execute
+    params_user.two_factor_destroy_authentication_method(params[:method])
 
     render json: {}
   end

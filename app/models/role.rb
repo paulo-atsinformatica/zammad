@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 class Role < ApplicationModel
   include HasDefaultModelUserRelations
@@ -14,13 +14,18 @@ class Role < ApplicationModel
   include CanSearch
 
   include Role::Assets
+  include Role::HasAuditLogs
 
-  has_and_belongs_to_many :users, after_add: :cache_update, after_remove: :cache_update
+  self.audit_log_attributes_ignored = %i[preferences]
+
+  has_and_belongs_to_many :users,
+                          after_add:    %i[cache_update audit_log_user_add],
+                          after_remove: %i[cache_update audit_log_user_remove]
   has_and_belongs_to_many :permissions,
                           before_add:    %i[validate_agent_limit_by_permission validate_permissions],
-                          after_add:     %i[cache_update cache_add_kb_permission],
-                          before_remove: :last_admin_check_by_permission,
-                          after_remove:  %i[cache_update cache_remove_kb_permission]
+                          after_add:     %i[cache_update cache_add_kb_permission audit_log_permission_add],
+                          before_remove: %i[last_admin_check_by_permission check_active_time_tracking_by_permission],
+                          after_remove:  %i[cache_update cache_remove_kb_permission audit_log_permission_remove]
   validates               :name, presence: true, uniqueness: { case_sensitive: false }
   store                   :preferences
   has_many                :knowledge_base_permissions, class_name: 'KnowledgeBase::Permission', dependent: :destroy
@@ -169,7 +174,43 @@ returns
     end
   end
 
+=begin
+
+check if the role grants agent or admin access (i.e. it has the ticket.agent,
+admin or any admin.* permission)
+
+  role.grants_elevated_access?
+
+returns
+
+  true | false
+
+=end
+
+  def grants_elevated_access?
+    permissions
+      .where(active: true)
+      .exists?(['permissions.name = :agent OR permissions.name = :admin OR permissions.name LIKE :admin_sub',
+                { agent: 'ticket.agent', admin: 'admin', admin_sub: 'admin.%' }])
+  end
+
   private
+
+  def audit_log_user_add(user)
+    AuditLog.log_role_assignment(user:, role: self, action_type: 'role_add')
+  end
+
+  def audit_log_user_remove(user)
+    AuditLog.log_role_assignment(user:, role: self, action_type: 'role_remove')
+  end
+
+  def audit_log_permission_add(permission)
+    AuditLog.log_association_update(record: self, action_type: 'update', key: 'permissions', added: permission.name)
+  end
+
+  def audit_log_permission_remove(permission)
+    AuditLog.log_association_update(record: self, action_type: 'update', key: 'permissions', removed: permission.name)
+  end
 
   def validate_permissions(permission)
     Rails.logger.debug { "self permission: #{permission.id}" }
@@ -188,7 +229,7 @@ returns
     return true if !will_save_change_to_attribute?('active')
     return true if active != false
     return true if !with_permission?(['admin', 'admin.user'])
-    raise Exceptions::UnprocessableEntity, __('At least one user needs to have admin permissions.') if !User.admin_user_exists?(except_role_id: [id])
+    raise Exceptions::UnprocessableContent, __('At least one user needs to have admin permissions.') if !User.admin_user_exists?(except_role_id: [id])
 
     true
   end
@@ -196,9 +237,27 @@ returns
   def last_admin_check_by_permission(permission)
     return true if Setting.get('import_mode')
     return true if permission.name != 'admin' && permission.name != 'admin.user'
-    raise Exceptions::UnprocessableEntity, __('At least one user needs to have admin permissions.') if !User.admin_user_exists?(except_role_id: [id])
+    raise Exceptions::UnprocessableContent, __('At least one user needs to have admin permissions.') if !User.admin_user_exists?(except_role_id: [id])
 
     true
+  end
+
+  TIME_TRACKING_PERMISSIONS = %w[ticket.time_tracking user.ticket_time_tracking].freeze
+
+  def check_active_time_tracking_by_permission(permission)
+    return true unless TIME_TRACKING_PERMISSIONS.include?(permission.name)
+
+    user_ids = users.where(active: true).pluck(:id)
+    return true if user_ids.empty?
+
+    active_count = TicketTimeTracking.active.where(user_id: user_ids).count
+    return true if active_count.zero?
+
+    raise Exceptions::UnprocessableContent,
+          format(
+            __('Cannot revoke ticket time tracking permission: %s user(s) have active tracking sessions. End those sessions first.'),
+            active_count
+          )
   end
 
   def validate_agent_limit_by_attributes
@@ -211,7 +270,7 @@ returns
     currents = User.joins(:roles).where(roles: { id: ticket_agent_role_ids }, users: { active: true }).distinct.pluck(:id)
     news = User.joins(:roles).where(roles: { id: id }, users: { active: true }).distinct.pluck(:id)
     count = currents.concat(news).uniq.count
-    raise Exceptions::UnprocessableEntity, __('Agent limit exceeded, please check your account settings.') if count > Setting.get('system_agent_limit').to_i
+    raise Exceptions::UnprocessableContent, __('Agent limit exceeded, please check your account settings.') if count > Setting.get('system_agent_limit').to_i
 
     true
   end
@@ -225,7 +284,7 @@ returns
     ticket_agent_role_ids = Role.joins(:permissions).where(permissions: { name: 'ticket.agent' }, roles: { active: true }).pluck(:id)
     ticket_agent_role_ids.push(id)
     count = User.joins(:roles).where(roles: { id: ticket_agent_role_ids }, users: { active: true }).distinct.count
-    raise Exceptions::UnprocessableEntity, __('Agent limit exceeded, please check your account settings.') if count > Setting.get('system_agent_limit').to_i
+    raise Exceptions::UnprocessableContent, __('Agent limit exceeded, please check your account settings.') if count > Setting.get('system_agent_limit').to_i
 
     true
   end
@@ -236,7 +295,7 @@ returns
     forbidden_permissions = permissions.reject(&:allow_signup)
     return true if forbidden_permissions.blank?
 
-    raise Exceptions::UnprocessableEntity, "Cannot set default at signup when role has #{forbidden_permissions.join(', ')} permissions."
+    raise Exceptions::UnprocessableContent, "Cannot set default at signup when role has #{forbidden_permissions.join(', ')} permissions."
   end
 
   def cache_add_kb_permission(permission)

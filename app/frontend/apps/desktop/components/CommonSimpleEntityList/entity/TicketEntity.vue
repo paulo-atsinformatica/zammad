@@ -1,4 +1,4 @@
-<!-- Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/ -->
+<!-- Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/ -->
 
 <script setup lang="ts">
 import type { TicketById } from '#shared/entities/ticket/types.ts'
@@ -26,7 +26,7 @@ defineProps<Props>()
   <TicketPopoverWithTrigger
     v-if="context.hasPopover"
     :popover-config="{ orientation: context.popoverOrientation ?? 'left' }"
-    class="flex grow gap-3 rounded-md px-1 py-2 -mx-1 hover:outline hover:outline-blue-600 dark:hover:outline-blue-900"
+    class="-mx-1 flex grow gap-3 rounded-md px-1 py-2 hover:outline hover:outline-blue-600 dark:hover:outline-blue-900"
     trigger-link-active-class="outline-2! outline-blue-800! hover:outline-blue-800!"
     :ticket="entity as Ticket"
   >

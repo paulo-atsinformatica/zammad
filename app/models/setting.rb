@@ -1,9 +1,15 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 # Class variables are used here as performance optimization.
 # Technically it is not thread-safe, but it never caused issues.
 # rubocop:disable Style/ClassVars
 class Setting < ApplicationModel
+  include ChecksClientNotification
+
+  include Setting::HasAuditLogs
+
+  SENSITIVE_SETTING_NAMES = %w[secret auth_ password pw credential endpoint_key _config _token recovery_codes pwd captcha_options].freeze
+
   store         :options
   store         :state_current
   store         :state_initial
@@ -125,6 +131,10 @@ reload config settings
     @@parameter_filter.filter_param(key, value)
   end
 
+  def sensitive?
+    SENSITIVE_SETTING_NAMES.any? { |word| name.include?(word) } # rubocop:disable Style/ArrayIntersect
+  end
+
   private
 
   # load values and cache them
@@ -224,7 +234,7 @@ reload config settings
     self.state_current = { value: state }
   end
 
-  # Notify clients about config changes.
+  # Notify clients about config changes (frontend only!).
   def broadcast_frontend
     return if !frontend
 
@@ -241,6 +251,22 @@ reload config settings
     )
 
     Gql::Subscriptions::ConfigUpdates.trigger(self)
+  end
+
+  def notify_clients_send(data)
+    permissions = preferences['permission']
+
+    if permissions.present?
+      User.with_permissions(permissions).each do |user|
+        PushMessages.send_to(user.id, data[:message])
+      end
+
+      return
+    end
+
+    User.with_permissions('admin.*').each do |user|
+      PushMessages.send_to(user.id, data[:message])
+    end
   end
 
   # NB: Force users to reload on SAML credentials config changes

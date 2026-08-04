@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 require 'rails_helper'
 
@@ -49,7 +49,7 @@ RSpec.describe Gql::Mutations::Ticket::AIAssistance::Summarize, :aggregate_failu
       if expected_cache
         AI::StoredResult.create!(
           content:          expected_cache,
-          version:          AI::Service::TicketSummarize.lookup_version({ ticket: }, Locale.find_by(locale: agent.locale)),
+          version:          AI::Service::TicketSummarize.lookup_version({ articles: ticket.articles.without_system_notifications }, Locale.find_by(locale: agent.locale)),
           **AI::Service::TicketSummarize.lookup_attributes({ ticket: }, Locale.find_by(locale: agent.locale)),
           ai_analytics_run:
         )
@@ -66,7 +66,7 @@ RSpec.describe Gql::Mutations::Ticket::AIAssistance::Summarize, :aggregate_failu
       let(:expected_cache) do
         {
           'customer_request'     => 'example',
-          'conversation_summary' => 'example',
+          'conversation_summary' => ['example'],
           'open_questions'       => ['example'],
           'upcoming_events'      => ['example'],
           'customer_mood'        => 'example',
@@ -78,7 +78,7 @@ RSpec.describe Gql::Mutations::Ticket::AIAssistance::Summarize, :aggregate_failu
         expect(gql.result.data).to eq(
           'summary'   => {
             'customerRequest'     => 'example',
-            'conversationSummary' => 'example',
+            'conversationSummary' => ['example'],
             'openQuestions'       => ['example'],
             'upcomingEvents'      => ['example'],
             'customerMood'        => 'example',
@@ -99,7 +99,7 @@ RSpec.describe Gql::Mutations::Ticket::AIAssistance::Summarize, :aggregate_failu
 
         it 'enqueues a background job to generate the summary' do
           expect(TicketAIAssistanceSummarizeJob).to have_been_enqueued
-            .with(ticket, agent.locale, regeneration_of: ai_analytics_run)
+            .with(ticket, agent.locale, current_user: agent, regeneration_of: ai_analytics_run)
         end
       end
 
@@ -111,7 +111,7 @@ RSpec.describe Gql::Mutations::Ticket::AIAssistance::Summarize, :aggregate_failu
             expect(gql.result.data).to eq(
               'summary'   => {
                 'customerRequest'     => 'example',
-                'conversationSummary' => 'example',
+                'conversationSummary' => ['example'],
                 'openQuestions'       => ['example'],
                 'upcomingEvents'      => ['example'],
                 'customerMood'        => 'example',
@@ -137,7 +137,7 @@ RSpec.describe Gql::Mutations::Ticket::AIAssistance::Summarize, :aggregate_failu
             expect(gql.result.data).to eq(
               'summary'   => {
                 'customerRequest'     => 'example',
-                'conversationSummary' => 'example',
+                'conversationSummary' => ['example'],
                 'openQuestions'       => ['example'],
                 'upcomingEvents'      => ['example'],
                 'customerMood'        => 'example',
@@ -168,7 +168,34 @@ RSpec.describe Gql::Mutations::Ticket::AIAssistance::Summarize, :aggregate_failu
 
       it 'enqueues a background job to generate the summary' do
         expect(TicketAIAssistanceSummarizeJob).to have_been_enqueued
-          .with(ticket, agent.locale, regeneration_of: nil)
+          .with(ticket, agent.locale, current_user: agent, regeneration_of: nil)
+      end
+    end
+
+    context 'when the ticket summary selector does not match' do
+      before do
+        Setting.set('ai_assistance_ticket_summary_selector', {
+                      'condition' => {
+                        'ticket.priority_id' => {
+                          'operator' => 'is',
+                          'value'    => [Ticket::Priority.find_by(name: '3 high').id.to_s],
+                        },
+                      },
+                    })
+
+        clear_enqueued_jobs
+        gql.execute(query, variables: variables)
+      end
+
+      it 'returns nil' do
+        expect(gql.result.data).to include(
+          summary:   be_nil,
+          analytics: be_nil,
+        )
+      end
+
+      it 'does not enqueue a background job to generate the summary' do
+        expect(TicketAIAssistanceSummarizeJob).not_to have_been_enqueued
       end
     end
 

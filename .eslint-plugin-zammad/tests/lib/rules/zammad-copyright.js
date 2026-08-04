@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 /**
  * @fileoverview Enforce presence of Zammad copyright header
@@ -23,7 +23,7 @@ const year = new Date().getFullYear()
 const ruleTester = new RuleTester({
   languageOptions: {
     parser: require('vue-eslint-parser'), // required to parse .vue files properly otherwise js-parser will be used
-  }
+  },
 })
 
 ruleTester.run('zammad-copyright', rule, {

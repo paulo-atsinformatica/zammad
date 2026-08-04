@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 class AI::Agent::Type::TicketTitleRewriter < AI::Agent::Type
 
@@ -19,9 +19,8 @@ class AI::Agent::Type::TicketTitleRewriter < AI::Agent::Type
 
 - Always preserve the original input language (do not translate).
 - Summarize the provided content and come up with a suitable title.
-- Ignore quoted emails or quoted content.
 - Try to use a maximum of 50 characters.
-- Do not explain your given answer.
+- Never explain your given answer.
 - Only answer with the value in the \"title\" field inside the JSON structure."
   end
 

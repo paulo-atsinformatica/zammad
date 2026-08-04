@@ -1,4 +1,4 @@
-<!-- Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/ -->
+<!-- Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/ -->
 
 <script setup lang="ts">
 import { computed, ref } from 'vue'
@@ -19,9 +19,9 @@ import CommonButton from '#desktop/components/CommonButton/CommonButton.vue'
 import CommonPublicLinks from '#desktop/components/CommonPublicLinks/CommonPublicLinks.vue'
 import LayoutPublicPage from '#desktop/components/layout/LayoutPublicPage/LayoutPublicPage.vue'
 import { useSignupForm } from '#desktop/composables/authentication/useSignupForm.ts'
+import { useUserSignupResendMutation } from '#desktop/entities/user/graphql/mutations/userSignupResend.api.ts'
 
 import { useUserSignupMutation } from '../graphql/mutations/userSignup.api.ts'
-import { useUserSignupResendMutation } from '../graphql/mutations/userSignupResend.api.ts'
 
 defineOptions({
   beforeRouteEnter(to) {
@@ -132,7 +132,7 @@ const goToLogin = () => {
 
     <template #boxActions>
       <CommonButton variant="secondary" size="medium" :disabled="isDisabled" @click="goToLogin()">
-        {{ $t('Cancel & Go Back') }}
+        {{ $t('Cancel & go back') }}
       </CommonButton>
 
       <CommonButton
@@ -152,7 +152,7 @@ const goToLogin = () => {
 
     <template #bottomContent>
       <div class="inline-flex flex-wrap items-center justify-center p-2 text-sm">
-        <CommonLabel class="text-center text-stone-200 dark:text-neutral-500 max-w-90">
+        <CommonLabel class="max-w-90 text-center text-stone-200 dark:text-neutral-500">
           {{
             $t(
               "You're already registered with your email address if you've been in touch with our Support team.",

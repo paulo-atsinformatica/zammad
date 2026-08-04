@@ -1,11 +1,11 @@
-<!-- Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/ -->
+<!-- Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/ -->
 
 <script setup lang="ts">
 import { computed } from 'vue'
 
-import CommonInputSearch from '#shared/components/CommonInputSearch/CommonInputSearch.vue'
 import { useSessionStore } from '#shared/stores/session.ts'
 
+import CommonInputSearch from '#mobile/components/CommonInputSearch/CommonInputSearch.vue'
 import CommonSectionMenu from '#mobile/components/CommonSectionMenu/CommonSectionMenu.vue'
 import type { MenuItem } from '#mobile/components/CommonSectionMenu/index.ts'
 import CommonTicketCreateLink from '#mobile/components/CommonTicketCreateLink/CommonTicketCreateLink.vue'
@@ -19,7 +19,7 @@ const menu: MenuItem[] = [
   {
     type: 'link',
     link: '/tickets/view',
-    label: __('Ticket Overviews'),
+    label: __('Ticket overviews'),
     icon: { name: 'all-tickets', size: 'base' },
     iconBg: 'bg-pink',
     permission: ['ticket.agent', 'ticket.customer'],
@@ -67,7 +67,7 @@ const ticketOverview = computed<MenuItem[]>(() => {
     <CommonSectionMenu
       v-if="session.hasPermission(['ticket.agent', 'ticket.customer'])"
       :items="ticketOverview"
-      :header-label="__('Ticket Overview')"
+      :header-label="__('Ticket overview')"
       :action-label="__('Edit')"
       action-link="/favorite/ticket-overviews/edit"
     >

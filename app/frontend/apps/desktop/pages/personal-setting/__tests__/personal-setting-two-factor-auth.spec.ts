@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import { visitView } from '#tests/support/components/visitView.ts'
 import { mockApplicationConfig } from '#tests/support/mock-applicationConfig.ts'
@@ -35,12 +35,12 @@ describe('password personal settings', () => {
     it('renders ui with authentication apps', async () => {
       const view = await visitView('/personal-setting/two-factor-auth')
 
-      expect(view.getByText('Authenticator App')).toBeInTheDocument()
+      expect(view.getByText('Authenticator app')).toBeInTheDocument()
       expect(
         view.getByText('Get the security code from the authenticator app on your device.'),
       ).toBeInTheDocument()
 
-      expect(view.getByText('Security Keys')).toBeInTheDocument()
+      expect(view.getByText('Security keys')).toBeInTheDocument()
       expect(view.getByText('Complete the sign-in with your security key.')).toBeInTheDocument()
     })
 
@@ -52,7 +52,7 @@ describe('password personal settings', () => {
           action: 'setup',
         })
         expect(
-          flyoutContent.getByText('Set Up Two-factor Authentication: Authenticator App'),
+          flyoutContent.getByText('Set up two-factor authentication: Authenticator app'),
         ).toBeInTheDocument()
       })
 
@@ -85,7 +85,7 @@ describe('password personal settings', () => {
           action: 'edit',
         })
         expect(
-          flyoutContent.getByText('Set Up Two-factor Authentication: Authenticator App'),
+          flyoutContent.getByText('Set up two-factor authentication: Authenticator app'),
         ).toBeInTheDocument()
       })
 

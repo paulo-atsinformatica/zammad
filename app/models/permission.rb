@@ -1,9 +1,12 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 class Permission < ApplicationModel
   include ChecksClientNotification
+  include HasAuditLogs
   include ChecksHtmlSanitized
   include HasCollectionUpdate
+
+  self.audit_log_attributes_ignored = %i[preferences]
 
   has_and_belongs_to_many :roles
   store                   :preferences

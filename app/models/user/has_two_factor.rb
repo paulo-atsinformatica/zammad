@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 # Trigger GraphQL subscriptions on user changes.
 module User::HasTwoFactor
@@ -45,6 +45,14 @@ module User::HasTwoFactor
     auth_two_factor.all_authentication_methods.each do |method|
       auth_two_factor.authentication_method_object(method.method_name)&.destroy_user_config
     end
+  end
+
+  def two_factor_destroy_authentication_method(method_name)
+    method = auth_two_factor.authentication_method_object(method_name)
+
+    raise Exceptions::UnprocessableContent, __('The given two-factor method does not exist.') if !method
+
+    method.destroy_user_config
   end
 
   def two_factor_verify_configuration?(authentication_method, payload, configuration)

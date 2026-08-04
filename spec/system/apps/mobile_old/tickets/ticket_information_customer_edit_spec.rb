@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 require 'rails_helper'
 
@@ -120,8 +120,6 @@ RSpec.describe 'Mobile > Ticket > Information > Customer Edit', app: :mobile, au
 
     find_button('Cancel').click
 
-    within '[role=alert]' do
-      expect(page).to have_text('Are you sure? You have unsaved changes that will get lost.')
-    end
+    expect(page).to have_text('Are you sure? You have unsaved changes that will get lost.')
   end
 end

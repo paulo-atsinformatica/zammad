@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 require 'rails_helper'
 
@@ -24,6 +24,44 @@ RSpec.describe AttachmentsController, type: :request do
     it 'returns ok on success', authenticated_as: -> { create(:admin) } do
       get "/api/v1/attachments/#{attachment_id}"
 
+      expect(response).to have_http_status(:ok)
+    end
+  end
+
+  describe '#show (Ticket::Article)', authenticated_as: -> { agent } do
+    let(:group)    { create(:group) }
+    let(:customer) { create(:customer) }
+    let(:agent)    { create(:agent, groups: [group]) }
+    let(:ticket)   { create(:ticket, group: group, customer: customer) }
+
+    let(:public_article) { create(:ticket_article, ticket: ticket, internal: false) }
+    let(:public_store) do
+      create(:store,
+             object:      'Ticket::Article',
+             o_id:        public_article.id,
+             data:        'public data',
+             filename:    'public.txt',
+             preferences: { 'Content-Type' => 'text/plain' })
+    end
+
+    let(:internal_article) { create(:ticket_article, :internal_note, ticket: ticket) }
+    let(:internal_store) do
+      create(:store,
+             object:      'Ticket::Article',
+             o_id:        internal_article.id,
+             data:        'secret data',
+             filename:    'secret.txt',
+             preferences: { 'Content-Type' => 'text/plain' })
+    end
+
+    it 'customer cannot download internal article attachment' do
+      authenticated_as(customer)
+      get "/api/v1/attachments/#{internal_store.id}"
+      expect(response).to have_http_status(:not_found)
+    end
+
+    it 'agent downloads internal article attachment' do
+      get "/api/v1/attachments/#{internal_store.id}"
       expect(response).to have_http_status(:ok)
     end
   end

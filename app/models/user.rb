@@ -1,9 +1,10 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 class User < ApplicationModel
   include CanBeImported
   include HasActivityStreamLog
   include ChecksClientNotification
+  include CanSensitiveAssets
   include HasHistory
   include HasSearchIndexBackend
   include CanSelector
@@ -19,6 +20,7 @@ class User < ApplicationModel
   include CanPerformChanges
   include User::Assets
   include User::Avatar
+  include User::HasAuditLogs
   include User::Search
   include User::SearchIndex
   include User::TouchesOrganization
@@ -27,6 +29,8 @@ class User < ApplicationModel
   include User::UpdatesTicketOrganization
   include User::OutOfOffice
   include User::Permissions
+
+  SENSITIVE_FIELDS = %i[password].freeze
 
   has_and_belongs_to_many :organizations,          after_add: %i[cache_update create_organization_add_history], after_remove: %i[cache_update create_organization_remove_history], before_add: %i[check_organization_uniqueness], class_name: 'Organization'
   has_and_belongs_to_many :overviews,              dependent: :nullify
@@ -45,8 +49,14 @@ class User < ApplicationModel
   has_many                :overview_sortings,      dependent: :destroy
   has_many                :created_recent_views,   class_name: 'RecentView', foreign_key: :created_by_id, dependent: :destroy, inverse_of: :created_by
   has_many                :recent_closes,          dependent: :delete_all
+  has_many                :performed_audit_logs,   class_name: 'AuditLog', dependent: nil
   has_many                :data_privacy_tasks,     as: :deletable
+  has_many                :ai_analytics_usages,    class_name: 'AI::Analytics::Usage', dependent: :destroy, inverse_of: :user
+  has_many                :user_pauses,            dependent: :destroy
+  has_many                :ticket_time_trackings,  dependent: :destroy
   belongs_to              :organization,           inverse_of: :members, optional: true
+  belongs_to              :current_active_ticket,  class_name: 'Ticket', foreign_key: :current_active_ticket_id, optional: true
+  belongs_to              :current_pause,          class_name: 'UserPause', foreign_key: :current_pause_id, optional: true
 
   before_validation :check_name, :check_email, :check_login, :ensure_password, :ensure_roles, :ensure_organizations, :ensure_different_organizations, :ensure_organizations_limit
   before_validation :check_mail_delivery_failed, on: :update
@@ -88,7 +98,10 @@ class User < ApplicationModel
                                  :chat_agents,
                                  :data_privacy_tasks,
                                  :overviews,
-                                 :mentions
+                                 :mentions,
+                                 :recent_closes,
+                                 :ai_analytics_usages,
+                                 :performed_audit_logs
 
   activity_stream_permission 'admin.user'
 
@@ -108,7 +121,11 @@ class User < ApplicationModel
                                   :image,
                                   :image_source,
                                   :source,
-                                  :login_failed
+                                  :login_failed,
+                                  :out_of_office_replacement_id,
+                                  :current_pause_id,
+                                  :current_active_ticket_id,
+                                  :current_state
 
   csv_object_ids_ignored 1
 
@@ -126,6 +143,7 @@ class User < ApplicationModel
                          :overview_sortings
 
   validates :note, length: { maximum: 5000 }
+  validates :current_state, inclusion: { in: %w[offline online pause] }, allow_nil: true
   sanitized_html :note, no_images: true
 
   def ignore_search_indexing?(_action)
@@ -149,11 +167,27 @@ returns
 =end
 
   def fullname(email_fallback: true, recipient_line: false)
-    name = "#{firstname} #{lastname}".strip
+    # Email sending: always first name last name (regardless of setting)
+    format = recipient_line ? 'first_last' : Setting.get('user_name_format')
+
+    parts, separator = case format
+                       when 'last_first'
+                         [[lastname, firstname], ' ']
+                       when 'last_first_comma'
+                         [[lastname, firstname], ', ']
+                       else
+                         [[firstname, lastname], ' ']
+                       end
+
+    name = parts
+      .map { |part| part.to_s.strip }
+      .compact_blank
+      .join(separator)
+      .strip
 
     if name.blank? && email.present? && email_fallback
       return email
-    elsif recipient_line
+    elsif recipient_line && email.present?
       begin
         return Channel::EmailBuild.recipient_line(name, email)
       rescue
@@ -334,12 +368,14 @@ returns
       create!(data)
     rescue => e
       logger.error e
-      raise Exceptions::UnprocessableEntity, e.message
+      raise Exceptions::UnprocessableContent, e.message
     end
   end
 
   # Find a user by mobile number, either directly or by number variants stored in the Cti::CallerIds.
   def self.by_mobile(number:)
+    return if number.blank?
+
     direct_lookup = User.where(mobile: number).reorder(:updated_at).first
     return direct_lookup if direct_lookup
 
@@ -523,7 +559,6 @@ returns
 =end
 
   def self.signup_verify_via_token(token, user = nil)
-
     # check token
     local_user = Token.check(action: 'Signup', token: token)
     return if !local_user
@@ -693,7 +728,7 @@ try to find correct name
     preferences.fetch(:locale) { Locale.default }
   end
 
-  attr_accessor :skip_ensure_uniq_email
+  attr_accessor :skip_ensure_uniq_email, :name_from_channel_import
 
   def shared_organizations?
     all_organizations.exists? shared: true
@@ -704,7 +739,7 @@ try to find correct name
   end
 
   def all_organization_ids
-    ([organization_id] + organization_ids).uniq
+    ([organization_id] + organization_ids).compact.uniq
   end
 
   def organization_id?(organization_id)
@@ -805,6 +840,8 @@ try to find correct name
 
   def check_name_apply(identifier, input)
     self[identifier] = input if input.present?
+
+    return if input.blank? && !name_from_channel_import
 
     self[identifier].capitalize! if self[identifier]&.match? %r{^([[:upper:]]+|[[:lower:]]+)$}
   end
@@ -942,7 +979,7 @@ try to find correct name
       preferences[:notification_sound][:enabled] = false
     end
     class_name = preferences[:notification_sound][:enabled].class.to_s
-    raise Exceptions::UnprocessableEntity, "preferences.notification_sound.enabled needs to be an boolean, but it was a #{class_name}" if class_name != 'TrueClass' && class_name != 'FalseClass'
+    raise Exceptions::UnprocessableContent, "preferences.notification_sound.enabled needs to be an boolean, but it was a #{class_name}" if class_name != 'TrueClass' && class_name != 'FalseClass'
 
     true
   end
@@ -967,7 +1004,7 @@ raise 'At least one user need to have admin permissions'
     return true if !will_save_change_to_attribute?('active')
     return true if active != false
     return true if !permissions?(['admin', 'admin.user'])
-    raise Exceptions::UnprocessableEntity, __('At least one user needs to have admin permissions.') if !User.admin_user_exists?(except_user_id: id)
+    raise Exceptions::UnprocessableContent, __('At least one user needs to have admin permissions.') if !User.admin_user_exists?(except_user_id: id)
 
     true
   end
@@ -975,7 +1012,7 @@ raise 'At least one user need to have admin permissions'
   def last_admin_check_by_role(role)
     return true if Setting.get('import_mode')
     return true if !role.with_permission?(['admin', 'admin.user'])
-    raise Exceptions::UnprocessableEntity, __('At least one user needs to have admin permissions.') if !User.admin_user_exists?(except_user_id: id)
+    raise Exceptions::UnprocessableContent, __('At least one user needs to have admin permissions.') if !User.admin_user_exists?(except_user_id: id)
 
     true
   end
@@ -988,7 +1025,7 @@ raise 'At least one user need to have admin permissions'
 
     ticket_agent_role_ids = Role.joins(:permissions).where(permissions: { name: 'ticket.agent', active: true }, roles: { active: true }).pluck(:id)
     count                 = User.joins(:roles).where(roles: { id: ticket_agent_role_ids }, users: { active: true }).distinct.count + 1
-    raise Exceptions::UnprocessableEntity, __('Agent limit exceeded, please check your account settings.') if count > Setting.get('system_agent_limit').to_i
+    raise Exceptions::UnprocessableContent, __('Agent limit exceeded, please check your account settings.') if count > Setting.get('system_agent_limit').to_i
 
     true
   end
@@ -1019,7 +1056,7 @@ raise 'At least one user need to have admin permissions'
         count += 1
       end
     end
-    raise Exceptions::UnprocessableEntity, __('Agent limit exceeded, please check your account settings.') if count > Setting.get('system_agent_limit').to_i
+    raise Exceptions::UnprocessableContent, __('Agent limit exceeded, please check your account settings.') if count > Setting.get('system_agent_limit').to_i
 
     true
   end
@@ -1064,6 +1101,9 @@ raise 'At least one user need to have admin permissions'
 
   def destroy_move_dependency_ownership
     result = Models.references(self.class.to_s, id)
+
+    # audit logs are kept untouched to preserve the history of deleted users
+    result.delete('AuditLog')
 
     user_columns = %w[created_by_id updated_by_id out_of_office_replacement_id origin_by_id owner_id archived_by_id published_by_id internal_by_id]
     result.each do |class_name, references|
@@ -1136,7 +1176,7 @@ raise 'At least one user need to have admin permissions'
     return if persisted? && previous_changes.slice(:phone, :mobile).values.flatten.none?(&:present?)
     return if destroyed? && phone.blank? && mobile.blank?
 
-    Cti::CallerId.build(self)
+    Cti::CallerId.add(self)
   end
 
   def login_was_email?
@@ -1152,5 +1192,41 @@ raise 'At least one user need to have admin permissions'
     errors.add :base, __('Secondary organizations cannot include the primary organization.')
 
     raise ActiveRecord::RecordInvalid, self
+  end
+
+  public
+
+  def in_pause?
+    current_state == 'pause' && current_pause_id.present? && active_pause.present?
+  end
+
+  def can_work?
+    !in_pause?
+  end
+
+  def active_pause
+    return nil if current_pause_id.blank?
+
+    user_pauses.find_by(id: current_pause_id, ended_at: nil)
+  end
+
+  # Contagem correndo agora. Pausar desliga is_active, então uma contagem pausada
+  # não aparece aqui — é isso que libera o usuário a iniciar outro ticket.
+  def active_ticket_tracking
+    ticket_time_trackings.active.first
+  end
+
+  # Contagem pausada e ainda não encerrada, para oferecer retomada ao sair da
+  # pausa (ver UserPauseService#end_pause).
+  def resumable_ticket_tracking
+    ticket_time_trackings.resumable.first
+  end
+
+  def offline?
+    current_state == 'offline'
+  end
+
+  def online?
+    current_state == 'online'
   end
 end

@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 /**
  * Creates an oxford-comma separated list of items.
@@ -63,8 +63,12 @@ export const getInitials = (
   email?: Maybe<string>,
   phone?: Maybe<string>,
   mobile?: Maybe<string>,
+  format?: string,
 ) => {
   if (firstname && lastname) {
+    if (format && format !== 'first_last') {
+      return lastname[0] + firstname[0]
+    }
     return firstname[0] + lastname[0]
   }
 

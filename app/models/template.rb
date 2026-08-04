@@ -1,7 +1,8 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 class Template < ApplicationModel
   include ChecksClientNotification
+  include HasAuditLogs
   include HasSearchIndexBackend
   include CanSelector
   include CanSearch
@@ -12,7 +13,8 @@ class Template < ApplicationModel
   scope :sorted, -> { order(:name) }
 
   store     :options
-  validates :name, presence: true
+  validates :name,    presence: true
+  validates :options, 'validations/verify_perform_rules': true
 
   association_attributes_ignored :user
 end

@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import { FormKit } from '@formkit/vue'
 
@@ -7,7 +7,6 @@ import type { ExtendedMountingOptions } from '#tests/support/components/index.ts
 
 const wrapperParameters = {
   form: true,
-  formField: true,
 }
 
 const renderButton = (options: ExtendedMountingOptions<unknown> = {}) => {

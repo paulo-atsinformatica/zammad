@@ -1,7 +1,8 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 class Macro < ApplicationModel
   include ChecksClientNotification
+  include HasAuditLogs
   include ChecksHtmlSanitized
   include CanSeed
   include HasCollectionUpdate

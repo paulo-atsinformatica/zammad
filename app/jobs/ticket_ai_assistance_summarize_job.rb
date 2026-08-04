@@ -1,20 +1,21 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 class TicketAIAssistanceSummarizeJob < AIJob
   include HasActiveJobLock
 
+  EXISTING_ACTIVE_JOB_LOCK_BEHAVIOUR = :dismiss_running
+
   def lock_key
-    "#{self.class.name}/#{arguments[0].id}/#{arguments[0].articles.last&.created_at}/#{arguments[1]}"
+    "#{self.class.name}/#{arguments[0].id}/#{arguments[0].articles.without_system_notifications.last&.created_at}/#{arguments[1]}"
   end
 
-  def perform(ticket, locale, regeneration_of: nil)
-    summarize = Service::Ticket::AIAssistance::Summarize.new(
+  def perform(ticket, locale, current_user: nil, regeneration_of: nil)
+    current_user ||= UserInfo.current_user || User.find_by(id: 1)
+    ai_result = Service::Ticket::AIAssistance::Summarize.with_current_user(current_user).execute(
       locale:,
       ticket:,
       regeneration_of:,
     )
-
-    ai_result = summarize.execute
 
     # Trigger the update for the new desktop view.
     trigger_subscription(ticket:, locale:, data: {
@@ -34,8 +35,12 @@ class TicketAIAssistanceSummarizeJob < AIJob
                            }
                          })
 
-    # Trigger the update for the old stack without real date (it will be refetched on frontend decision).
-    broadcast({ ticket_id: ticket.id, locale:, error: true })
+    ai_analytics_run = AI::Analytics::Run.where(related_object: ticket).where.not(error: nil).last
+
+    # Trigger the update for the old stack without real data (it will be refetched on frontend decision).
+    # But add the analaytic run entry from this error to have the possibility that the error can be shown in the
+    # desktop app.
+    broadcast({ ticket_id: ticket.id, error: true, ai_analytics_run_id: ai_analytics_run&.id })
   end
 
   private

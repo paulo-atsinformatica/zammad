@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 # This job counts *all* user tickets and stores the count in the user preferences
 # It is very similar to what Gql::Types::TicketCountType does but not the same!
@@ -53,10 +53,10 @@ class TicketUserTicketCounterJob < ApplicationJob
 
     # Trigger subscriptions so that needed lists in the frontend will be refetched
     # This happens regardless of whether the counter needed updating, because also the order of the list could change.
-    Gql::Subscriptions::Ticket::CustomerTicketsByFilterUpdates.trigger(nil, arguments: { customer_id: Gql::ZammadSchema.id_from_internal_id(User, customer_id) })
+    Gql::Subscriptions::Ticket::ByCustomerUpdates.trigger(nil, arguments: { customer_id: Gql::ZammadSchema.id_from_internal_id(User, customer_id) })
 
     return if organization_id.blank?
 
-    Gql::Subscriptions::Ticket::OrganizationTicketsByFilterUpdates.trigger(nil, arguments: { organization_id: Gql::ZammadSchema.id_from_internal_id(Organization, organization_id) })
+    Gql::Subscriptions::Ticket::ByOrganizationUpdates.trigger(nil, arguments: { organization_id: Gql::ZammadSchema.id_from_internal_id(Organization, organization_id) })
   end
 end

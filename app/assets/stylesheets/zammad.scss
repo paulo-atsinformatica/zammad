@@ -1,3 +1,6 @@
+@use 'sass:list';
+@use 'sass:string';
+
 $high-priority-color: hsl(360, 71%, 60%);
 $low-priority-color: hsl(200, 68%, 73%);
 $minWidth: 1024px;
@@ -14,23 +17,23 @@ $mobileNavigationWidthOpen: 220px;
   --button-active: hsl(204, 7%, 28%);
   --button-active-active: hsla(0, 0%, 0%, 0.55);
   --button-primary-text: var(--text-inverted);
-  --button-primary-background: hsl(203, 65%, 55%);
-  --button-primary-background-active: hsl(203, 65%, 45%);
+  --button-primary-background: #480404;
+  --button-primary-background-active: #8a0303;
   --header-primary: hsl(202, 8%, 28%);
   --header-secondary: hsl(198, 10%, 69%);
   --text-normal: hsl(60, 1%, 34%);
   --text-muted: hsl(213, 3%, 64%);
   --text-muted-highlight: hsl(205, 90%, 90%);
   --text-muted-alt: hsl(197, 16%, 65%);
-  --text-link: hsl(204, 72%, 50%);
+  --text-link: #480404;
   --text-inverted: white;
   --text-active: white;
-  --text-nav: hsl(204, 72%, 50%);
+  --text-nav: #480404;
   --text-button-primary: var(--button-primary-background);
   --text-button-primary-active: var(--button-primary-background-active);
   --text-button-secondary: var(--interactive-muted);
-  --nav-icon: hsl(0, 0%, 50%);
-  --highlight: hsl(205, 90%, 60%);
+  --nav-icon: hsl(0, 0%, 100%);
+  --highlight: #480404;
   --interactive-primary: black;
   --interactive-muted: hsl(210, 3%, 71%);
   --interactive-muted-active: hsl(210, 4%, 71%);
@@ -44,7 +47,7 @@ $mobileNavigationWidthOpen: 220px;
   --background-quaternary: hsl(231, 9%, 16%);
   --background-quaternary-alt: hsl(228, 17%, 91%);
   --background-popover: white;
-  --background-active: hsl(233, 9%, 19%);
+  --background-active: #480404;
   --background-highlight: hsl(200, 100%, 91%);
   --background-article-meta: hsl(212, 14%, 99%);
   --background-article-customer: hsl(201, 46%, 93%);
@@ -65,13 +68,13 @@ $mobileNavigationWidthOpen: 220px;
   --border-article-customer: hsl(199, 38%, 90%);
   --border-article-customer-selected: hsl(199, 44%, 85%);
   --shadow-highlight: hsl(201, 62%, 90%);
-  --supergood-color: hsl(145, 51%, 45%);
-  --good-color: hsl(62, 45%, 46%);
+  --supergood-color: #480404;
+  --good-color: #480404;
   --ok-color: hsl(41, 100%, 49%);
   --bad-color: hsl(30, 93%, 50%);
   --superbad-color: hsl(19, 90%, 51%);
-  --ghost-color: hsl(0, 0%, 74%);
-  --danger-color: hsl(0, 65%, 55%);
+  --ghost-color: hsl(0, 0%, 100%);
+  --danger-color: #480404;
   --pending-color: hsl(206, 7%, 28%);
   --elevation-stroke: 0 1px hsl(210, 7%, 94%);
   --elevation-low: 0 1px 5px hsla(205, 30%, 30%, 0.1);
@@ -90,14 +93,14 @@ $mobileNavigationWidthOpen: 220px;
   --fullscreen-text-link: var(--text-inverted);
   --fullscreen-text-muted: hsl(233, 7%, 26%);
   --fullscreen-drop-shadow: 0 8px 17px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
-  --menu-text: hsl(0, 0%, 74%);
+  --menu-text: hsl(0, 0%, 100%);
   --menu-text-active: white;
   --menu-text-open: white;
   --menu-text-closed: white;
   --menu-text-escalating: white;
-  --menu-background-active: var(--button-primary-background);
-  --menu-icon: hsl(206, 5%, 42%);
-  --menu-icon-secondary: hsl(0, 0%, 30%);
+  --menu-background-active: #a40404;
+  --menu-icon: hsl(0, 0%, 100%);
+  --menu-icon-secondary: hsl(0, 0%, 100%);
   --menu-icon-secondary-hover-background: var(--text-inverted);
   --menu-switch-background: hsl(0, 0%, 5%);
   --menu-switch-pointer: var(--background-tertiary);
@@ -114,7 +117,6 @@ $mobileNavigationWidthOpen: 220px;
   --table-border: hsl(0, 0%, 69%);
   --table-header-background: hsla(0, 0%, 0%, 0.1);
 }
-
 // dark mode
 [data-theme='dark'] {
   --button-action-color: hsl(0, 0%, 80%);
@@ -122,15 +124,17 @@ $mobileNavigationWidthOpen: 220px;
   --button-background-active: hsla(0, 0%, 100%, 0.015);
   --button-active: hsla(0, 0%, 100%, 0.1);
   --button-active-active: hsla(0, 0%, 100%, 0.08);
+  --button-primary-background: #a40404; // Vermelho claro no modo escuro
+  --button-primary-background-active: #8a0303; // Vermelho claro mais escuro quando ativo
   --header-primary: white;
   --header-secondary: hsl(198, 5%, 73%);
   --text-normal: hsl(205, 1%, 86%);
   --text-muted: hsl(213, 3%, 60%);
   --text-muted-alt: hsl(213, 8%, 61%);
-  --text-link: hsl(202, 72%, 50%);
-  --text-nav: hsl(205, 1%, 84%);
-  --nav-icon: hsl(0, 0%, 50%);
-  --highlight: hsl(205, 90%, 60%);
+  --text-link: white; // Branco no modo escuro
+  --text-nav: white; // Branco no modo escuro
+  --nav-icon: hsl(0, 0%, 100%);
+  --highlight: #480404;
   --interactive-primary: white;
   --interactive-muted: hsl(213, 3%, 64%);
   --interactive-muted-active: hsl(213, 3%, 35%);
@@ -144,7 +148,7 @@ $mobileNavigationWidthOpen: 220px;
   --background-quaternary: hsl(230, 7%, 13%);
   --background-quaternary-alt: hsl(230, 4%, 30%);
   --background-popover: hsl(216, 3%, 30%);
-  --background-active: var(--highlight);
+  --background-active: #480404;
   --background-highlight: hsl(205, 30%, 27%);
   --background-article-meta: hsl(230, 7%, 25%);
   --background-article-customer: hsl(218, 8%, 32%);
@@ -165,13 +169,13 @@ $mobileNavigationWidthOpen: 220px;
   --border-article-customer: hsl(209, 6%, 30%);
   --border-article-customer-selected: hsl(199, 10%, 33%);
   --shadow-highlight: hsl(205, 42%, 36%);
-  --supergood-color: hsl(145, 51%, 45%);
-  --good-color: hsl(62, 45%, 46%);
+  --supergood-color: #480404;
+  --good-color: #480404;
   --ok-color: hsl(41, 100%, 49%);
   --bad-color: hsl(30, 93%, 50%);
   --superbad-color: hsl(19, 90%, 51%);
-  --ghost-color: hsl(0, 0%, 50%);
-  --danger-color: hsl(0, 82%, 59%);
+  --ghost-color: hsl(0, 0%, 100%);
+  --danger-color: #480404;
   --pending-color: hsl(205, 1%, 44%);
   --elevation-stroke: 0 1px hsla(0, 0%, 0%, 0.13);
   --elevation-low: 0 1px 5px hsla(0, 0%, 0%, 0.15);
@@ -187,10 +191,20 @@ $mobileNavigationWidthOpen: 220px;
   --tag-background: hsl(230, 5%, 32%);
   --table-border: hsl(0, 0%, 72%);
   --table-header-background: hsla(0, 0%, 0%, 0.2);
+  --menu-text: hsl(0, 0%, 100%);
+  --menu-icon: hsl(0, 0%, 100%);
+  --menu-icon-secondary: hsl(0, 0%, 100%);
+  --menu-background-active: #a40404;
 }
 
 @mixin dark {
   [data-theme='dark'] & {
+    @content;
+  }
+}
+
+@mixin light {
+  [data-theme='light'] & {
     @content;
   }
 }
@@ -360,7 +374,7 @@ a {
 }
 
 a.create {
-  color: hsl(145, 51%, 45%);
+  color: #480404;
   text-decoration: underline;
 }
 
@@ -888,15 +902,15 @@ pre code {
   &--create,
   &--success {
     color: var(--text-inverted);
-    background: hsl(145, 51%, 45%);
+    background: #480404;
 
     &:active {
-      background: hsl(145, 51%, 35%);
+      background: #480404;
     }
 
     &.btn--secondary {
       background: var(--background-secondary);
-      color: hsl(145, 51%, 45%);
+      color: #480404;
 
       &:active {
         background: var(--button-background-active);
@@ -982,10 +996,10 @@ pre code {
     }
 
     &.btn--positive {
-      color: hsl(145, 51%, 45%);
+      color: #480404;
 
       &:active {
-        color: hsl(145, 51%, 30%);
+        color: #480404;
         background: none;
       }
     }
@@ -994,7 +1008,7 @@ pre code {
       color: var(--danger-color);
 
       &:active {
-        color: hsl(0, 65%, 40%);
+        color: #480404;
         background: none;
       }
     }
@@ -1502,6 +1516,15 @@ pre code {
     background: var(--ai-assist-pink);
     color: var(--text-active);
   }
+
+  &.badge--new {
+    color: hsl(45, 98%, 17%);
+    background: var(--ok-color);
+  }
+
+  &.badge--closed {
+    background: var(--supergood-color);
+  }
 }
 
 .key-value {
@@ -1694,6 +1717,7 @@ td.align-right {
 }
 
 .table tr.is-inactive,
+.table tr.is-inactive td span.text-tools-feedback-output,
 .table tr td span.is-inactive {
   color: var(--text-muted);
   text-decoration: line-through;
@@ -2421,6 +2445,11 @@ fieldset > .form-group {
   margin-bottom: 0;
 }
 
+// Form channel spam protection: stacked fields with a medium control width.
+.js-spamProtection .controls {
+  max-width: 32rem;
+}
+
 .controls--select {
   position: relative;
 }
@@ -2778,6 +2807,7 @@ input.has-error {
 }
 
 .help-inline:not(:empty) {
+  display: block;
   color: var(--danger-color);
   padding: 2px;
   font-size: 13px;
@@ -2968,6 +2998,57 @@ input.has-error {
       fill: var(--text-muted);
       opacity: 0.5;
     }
+  }
+
+  .searchfield-shortcut {
+    position: absolute;
+
+    @include bidi-style(right, 0, left, auto);
+
+    top: 0;
+    height: 100%;
+    width: 50px;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    .btn {
+      width: 28px;
+      height: 28px;
+      padding: 4px;
+      display: flex !important;
+      align-items: center;
+      justify-content: center;
+      background: transparent !important;
+      border: 1px solid var(--border) !important;
+      border-radius: 50% !important;
+      box-shadow: none !important;
+
+      .icon {
+        width: 16px;
+        height: 16px;
+        fill: var(--text-muted);
+      }
+
+      &:hover {
+        border-color: var(--border-highlight) !important;
+        box-shadow: 0 0 4px 0 var(--shadow-highlight) !important;
+      }
+
+      &:focus-visible {
+        border-color: var(--border-highlight) !important;
+        box-shadow: 0 0 4px 0 var(--shadow-highlight) !important;
+      }
+    }
+  }
+
+  &.has-shortcut .empty-search {
+    @include bidi-style(right, 30px, left, auto);
+  }
+
+  &.has-shortcut input[type='search'] {
+    @include bidi-style(padding-right, 80px, padding-left, 0);
   }
 }
 
@@ -3967,6 +4048,35 @@ ol.tabs li {
   }
 }
 
+// Ícone logo branco no tema claro e escuro
+.icon-logo {
+  fill: white !important;
+  color: white !important;
+}
+
+// Garantir que seja branco em todos os contextos (sobrescreve .icon { fill: currentColor; })
+.icon.icon-logo,
+svg .icon-logo,
+.logo .icon-logo,
+.icon-logo use {
+  fill: white !important;
+  color: white !important;
+}
+
+// No modo escuro também branco
+[data-theme='dark'] .icon-logo {
+  fill: white !important;
+  color: white !important;
+}
+
+[data-theme='dark'] .icon.icon-logo,
+[data-theme='dark'] svg .icon-logo,
+[data-theme='dark'] .logo .icon-logo,
+[data-theme='dark'] .icon-logo use {
+  fill: white !important;
+  color: white !important;
+}
+
 [class*='icon-file-'] {
   color: var(--file-icon-background);
   fill: var(--file-icon-color);
@@ -4038,7 +4148,7 @@ ol.tabs li {
   display: inline-block;
   width: 30px;
   height: 30px;
-  background: hsl(145, 51%, 45%);
+  background: #480404;
   animation: rotateplane 1.2s infinite ease-in-out;
 }
 
@@ -4567,18 +4677,30 @@ footer {
   @include bidi-style(margin-left, 80px, margin-right, 0);
 }
 
+#loading-app {
+  background: #480404 !important;
+
+  @include dark {
+    background: #480404 !important;
+  }
+}
+
 .splash {
   position: absolute;
   left: 0;
   top: 0;
   width: 100%;
   height: 100%;
-  background: var(--background-primary);
+  background: #480404 !important;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 16px;
   color: var(--text-normal);
+
+  @include dark {
+    background: #480404 !important;
+  }
 
   .icon {
     @include bidi-style(margin-right, 10px, margin-left, 0);
@@ -4587,11 +4709,16 @@ footer {
 
 .navigation {
   width: $navigationWidth;
-  background: var(--menu-background-primary);
+  background: #480404 !important;
   border: var(--menu-border);
   position: relative;
   container-name: navigation;
   container-type: inline-size;
+
+  // No modo escuro, a navigation deve ser vermelha (igual ao modo claro)
+  @include dark {
+    background: #480404 !important;
+  }
 
   @include phone {
     position: absolute;
@@ -4828,6 +4955,14 @@ footer {
   }
 }
 
+.tasks.tasks-navigation {
+  background: #480404 !important;
+
+  @include dark {
+    background: #480404 !important;
+  }
+}
+
 .tasks.tasks--standalone {
   background: none;
   margin: 8px 0 0;
@@ -4839,6 +4974,8 @@ footer {
   padding: 0;
   margin-bottom: 9px;
   display: flex;
+  border-bottom: 1px solid var(--background-modifier-border);
+  padding-bottom: 4px;
 
   .icon-holder {
     &:first-child .icon-task-state {
@@ -4893,6 +5030,14 @@ footer {
 
   @include phone {
     width: $mobileNavigationWidthOpen;
+  }
+}
+
+.tasks-navigation {
+  background: #480404 !important;
+
+  @include dark {
+    background: #480404 !important;
   }
 }
 
@@ -5173,8 +5318,8 @@ footer {
   width: 100%;
   padding: 5px 33px;
   height: 30px;
-  color: var(--menu-text);
-  background: var(--menu-background-secondary);
+  color: #000;
+  background: white !important; // Fundo branco nos dois temas
   line-height: 20px;
   outline: none;
   border: none;
@@ -5186,6 +5331,10 @@ footer {
   @include phone {
     padding: 5px 33px;
     font-size: 16px;
+  }
+
+  @include dark {
+    background: white !important; // Fundo branco no modo escuro também
   }
 }
 
@@ -5228,9 +5377,13 @@ input[type='search']::-webkit-search-decoration {
   @include bidi-style(left, 10px, right, auto);
 
   z-index: 2;
-  fill: var(--menu-icon);
+  fill: #480404 !important; // Vermelho escuro nos dois temas
   transition: opacity 0.1s;
   pointer-events: none;
+
+  @include dark {
+    fill: #480404 !important; // Vermelho escuro no modo escuro também
+  }
 }
 
 .search.loading .icon-magnifier {
@@ -5290,6 +5443,7 @@ input[type='search']::-webkit-search-decoration {
 
 .search .logo .icon-logo {
   position: relative;
+  fill: white !important;
 
   @include phone {
     width: 35px;
@@ -5394,15 +5548,24 @@ input[type='search']::-webkit-search-decoration {
   position: relative;
   flex-shrink: 0;
   display: flex;
+  background: #480404 !important;
 
   @include phone {
     flex-direction: column;
+  }
+
+  @include dark {
+    background: #480404 !important;
   }
 }
 
 .user-menu > li {
   flex: 1;
-  background: var(--menu-background-primary);
+  background: #480404 !important;
+
+  @include dark {
+    background: #480404 !important;
+  }
 }
 
 .user-menu .list-button {
@@ -5436,7 +5599,7 @@ input[type='search']::-webkit-search-decoration {
   right: 4px;
   bottom: 4px;
   left: 4px;
-  background: var(--menu-icon-secondary-hover-background);
+  background: white;
 }
 
 .user-menu > li.is-active .list-button::before {
@@ -5446,31 +5609,57 @@ input[type='search']::-webkit-search-decoration {
 .user-menu li.add:hover .list-button::before,
 .user-menu li.add.is-active .list-button::before,
 .user-menu li.add.is-hovered .list-button::before {
-  background: #38ae6a;
+  background: white;
 }
 
 .user-menu-icon {
   width: 20px;
   height: 20px;
   fill: var(--menu-icon-secondary);
+  position: relative;
+  z-index: 1;
 }
 
+// Ícone plus branco por padrão
 .user-menu-icon.icon-plus {
-  fill: hsl(145, 51%, 45%);
+  fill: white !important;
 }
 
-.user-menu > li:hover .user-menu-icon {
-  fill: var(--menu-background-primary);
+// No modo escuro também branco
+[data-theme='dark'] .user-menu-icon.icon-plus {
+  fill: white !important;
 }
 
-.user-menu > li.is-active .user-menu-icon {
+// No hover, ícone plus fica vermelho
+.user-menu > li.add:hover .list-button .user-menu-icon.icon-plus,
+.user-menu > li.add.is-hovered .list-button .user-menu-icon.icon-plus {
+  fill: #480404 !important;
+}
+
+// No modo escuro, hover também fica vermelho
+[data-theme='dark'] .user-menu > li.add:hover .list-button .user-menu-icon.icon-plus,
+[data-theme='dark'] .user-menu > li.add.is-hovered .list-button .user-menu-icon.icon-plus {
+  fill: #480404 !important;
+}
+
+// Quando ativo, mantém comportamento original
+.user-menu > li.add.is-active .list-button .user-menu-icon.icon-plus {
   fill: var(--text-inverted);
 }
 
-.user-menu > li.add:hover .user-menu-icon.icon-plus,
-.user-menu > li.add.is-hovered .user-menu-icon.icon-plus,
-.user-menu > li.add.is-active .user-menu-icon.icon-plus {
-  fill: var(--text-inverted);
+// Ícones report e cog: vermelho escuro no hover (modo claro e escuro)
+.user-menu > li:hover .list-button .user-menu-icon.icon-report,
+.user-menu > li.is-hovered .list-button .user-menu-icon.icon-report,
+.user-menu > li:hover .list-button .user-menu-icon.icon-cog,
+.user-menu > li.is-hovered .list-button .user-menu-icon.icon-cog {
+  fill: #480404 !important;
+}
+
+[data-theme='dark'] .user-menu > li:hover .list-button .user-menu-icon.icon-report,
+[data-theme='dark'] .user-menu > li.is-hovered .list-button .user-menu-icon.icon-report,
+[data-theme='dark'] .user-menu > li:hover .list-button .user-menu-icon.icon-cog,
+[data-theme='dark'] .user-menu > li.is-hovered .list-button .user-menu-icon.icon-cog {
+  fill: #480404 !important;
 }
 
 .user-menu > li:not(:last-child) {
@@ -5663,8 +5852,7 @@ li.add .dropdown-nose {
   }
 
   &--unique {
-    /* stylelint-disable-next-line declaration-property-value-no-unknown */
-    background-image: image_url('/assets/images/avatar-bg.png');
+    background-image: url('/assets/images/avatar-bg.png');
     background-size: 300px 226px;
     color: var(--text-inverted);
     line-height: 40px;
@@ -5767,7 +5955,7 @@ li.add .dropdown-nose {
     }
 
     &-color-1 {
-      background: hsl(148, 100%, 38%);
+      background: #480404;
     }
 
     &-color-2 {
@@ -6390,6 +6578,11 @@ a.list-group-item.active > .badge,
   fill: var(--supergood-color);
 }
 
+// Ícone mood-supergood deve ser vermelho
+.icon-mood-supergood {
+  fill: var(--supergood-color) !important;
+}
+
 .good-color {
   fill: var(--good-color);
 }
@@ -6602,8 +6795,8 @@ a.list-group-item.active > .badge,
   }
 
   .primary {
-    color: hsl(145, 51%, 45%);
-    background: hsl(145, 51%, 45%);
+    color: #480404;
+    background: #480404;
   }
 }
 
@@ -6674,6 +6867,61 @@ a.list-group-item.active > .badge,
   @include bidi-style(margin-right, 10px, margin-left, 0);
 
   flex-shrink: 0;
+}
+
+.activity-ai-avatar {
+  &-outer {
+    position: relative;
+    padding: 2px;
+    border-radius: 100%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    flex-shrink: 0;
+    border: 1px solid transparent;
+    background-clip: border-box;
+    isolation: isolate;
+
+    &::before {
+      content: '';
+      position: absolute;
+      border-radius: 100%;
+      z-index: -1;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(to right, var(--ai-assist-blue), var(--ai-assist-pink));
+      animation: 2s rotate infinite linear;
+
+      @media (prefers-reduced-motion: reduce) {
+        animation: none;
+      }
+    }
+
+    @include phone {
+      width: 30px;
+      height: 30px;
+    }
+
+    .icon {
+      fill: var(--text-inverted);
+    }
+  }
+
+  &-inner {
+    border-radius: 100%;
+    background: var(--background-popover);
+    padding: 4px;
+
+    .icon-ai-agent {
+      width: 100%;
+      height: 100%;
+      fill: var(--ai-assist-blue);
+    }
+  }
 }
 
 .activity-body {
@@ -6946,6 +7194,153 @@ a.list-group-item.active > .badge,
 
 .ticketZoom {
   background: var(--background-primary);
+}
+
+// Time tracking controls
+.time-tracking-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-right: 8px;
+
+  .time-tracking-time {
+    font-family: monospace;
+    font-size: 14px;
+    color: var(--text-normal);
+    padding: 4px 8px;
+    background: var(--background-secondary);
+    border-radius: 3px;
+    min-width: 70px;
+    text-align: center;
+  }
+
+  .btn {
+    white-space: nowrap;
+  }
+}
+
+// User state menu
+.menu-item.user-state {
+  .state-indicator {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    margin-right: 8px;
+    vertical-align: middle;
+  }
+}
+
+.dropdown-menu .state-indicator {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  margin-right: 8px;
+  vertical-align: middle;
+}
+
+// User state dropdown styles
+.dropdown:has(.js-user-state-button) {
+  .js-user-state-button {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    
+    .menu-item-icon {
+      width: 16px;
+      height: 16px;
+    }
+    
+    &.u-highlight {
+      color: hsl(145, 50%, 45%);
+    }
+  }
+  
+  .user-state-elapsed {
+    font-size: 11px;
+    font-weight: 600;
+    color: hsl(40, 90%, 50%);
+    background: hsla(40, 90%, 50%, 0.15);
+    padding: 2px 6px;
+    border-radius: 3px;
+    margin-left: 6px;
+    font-variant-numeric: tabular-nums;
+  }
+  
+  .dropdown-menu {
+    a {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      
+      .icon {
+        width: 14px;
+        height: 14px;
+        opacity: 0.7;
+      }
+    }
+  }
+}
+
+// Pause blocker overlay
+.pause-blocker-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  z-index: 99999;
+  display: none !important; // Hidden by default, shown via JavaScript
+  align-items: center;
+  justify-content: center;
+  pointer-events: none; // Don't block interactions when hidden
+
+  &:not(:empty) {
+    display: flex !important; // Show when has content
+    pointer-events: auto; // Allow interactions when visible
+  }
+}
+
+.pause-blocker-content {
+  background: var(--background-secondary);
+  padding: 40px;
+  border-radius: 8px;
+  text-align: center;
+  max-width: 400px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+
+  .pause-blocker-icon {
+    margin-bottom: 20px;
+
+    .icon {
+      width: 64px;
+      height: 64px;
+      fill: var(--text-muted);
+    }
+  }
+
+  h2 {
+    margin: 0 0 10px;
+    color: var(--text-normal);
+  }
+
+  .pause-type-name {
+    font-weight: bold;
+    color: var(--text-link);
+    margin: 10px 0;
+  }
+
+  .pause-message {
+    color: var(--text-muted);
+    margin: 20px 0;
+  }
+
+  .btn {
+    margin-top: 20px;
+  }
 }
 
 .ticketZoom-controls {
@@ -7342,6 +7737,10 @@ a.list-group-item.active > .badge,
     margin-top: 0;
   }
 
+  p {
+    margin: 8px 0;
+  }
+
   p:last-of-type {
     margin-bottom: 0;
   }
@@ -7372,6 +7771,23 @@ a.list-group-item.active > .badge,
   padding: 5px;
   border-radius: 5px;
   margin: -5px;
+}
+
+.kb-ai-generate-wrapper {
+  position: relative;
+
+  &::after {
+    content: ' ';
+    position: absolute;
+    width: 88%; // Minus the plus
+    right: 0;
+    bottom: 0;
+    background-image: linear-gradient(to right, var(--ai-assist-blue), var(--ai-assist-pink));
+    background-size: 100% 2px;
+    background-position: 0 100%;
+    background-repeat: no-repeat;
+    padding-bottom: 2px;
+  }
 }
 
 .is-internal .internal-border {
@@ -7943,6 +8359,11 @@ a.list-group-item.active > .badge,
   }
 }
 
+.text-tools-feedback-output {
+  display: inline-block;
+  min-width: 4em;
+}
+
 .bubble-wrapper {
   @extend .zIndex-6;
 
@@ -8086,6 +8507,10 @@ a.list-group-item.active > .badge,
     border-radius: 3px;
     padding: 12px;
     background: var(--background-primary);
+
+    p {
+      margin: 0;
+    }
   }
 
   .result-field {
@@ -8129,7 +8554,7 @@ a.list-group-item.active > .badge,
     display: flex;
     flex-direction: column;
 
-    .alert > p + p {
+    .alert > p:first-child {
       margin: 0;
     }
 
@@ -8626,11 +9051,11 @@ a.list-group-item.active > .badge,
     }
 
     &.tabsSidebar-tab-count--success {
-      background: hsl(145, 51%, 45%);
+      background: #480404;
       opacity: 1;
 
       &::after {
-        border-right-color: hsl(145, 51%, 45%);
+        border-right-color: #480404;
       }
     }
 
@@ -8731,11 +9156,11 @@ a.list-group-item.active > .badge,
   }
 
   &.tabsSidebar-tab-count--success {
-    background: hsl(145, 51%, 45%);
+    background: #480404;
     opacity: 0.5;
 
     &::after {
-      border-right-color: hsl(145, 51%, 45%);
+      border-right-color: #480404;
     }
   }
 
@@ -8785,7 +9210,7 @@ a.list-group-item.active > .badge,
     &,
     &[contenteditable]:hover,
     &[contenteditable]:focus {
-      background: hsl(145, 51%, 45%);
+      background: #480404;
     }
   }
 
@@ -8866,6 +9291,16 @@ a.list-group-item.active > .badge,
   padding: 4px 1px;
 }
 
+/* Fixes #6058 - Attachment delete icon disappears when filename is too long
+ * Fixes #6071 - Ticket > Zoom > Sidebar > Tag: Delete icon disappears when name is too long
+ * by adding ellipsis to long names and preventing it from overflowing its container
+ */
+.list-item-name-shrinkable {
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
 .list-item-delete {
   padding: 0 10px;
 
@@ -8887,6 +9322,17 @@ a.list-group-item.active > .badge,
 
 .list-item-delete:hover .icon {
   fill: hsl(1, 77%, 47%);
+}
+
+// Same icon-button style as .list-item-delete (geometry + muted default), but a positive green
+// hover colour instead of the destructive red — used to link an AI-suggested knowledge base answer.
+.list-item-add:hover .icon {
+  fill: var(--supergood-color);
+}
+
+// Separate the "Suggested by AI" section from the "+ Link" / "+ AI draft" controls above it.
+.kb-suggestions-title {
+  margin-top: 20px;
 }
 
 li.list-item-none {
@@ -8924,9 +9370,24 @@ li.list-item-none {
   transition: margin 250ms;
   flex-shrink: 0;
   border-top: 1px solid var(--border);
+  position: relative;
+  z-index: 1000; // Ensure it's above other content but below modals
+  display: flex;
+  align-items: center;
 
   &.is-closed {
     margin-bottom: -60px;
+  }
+
+  // Customização ATS: player de tempo de atendimento. Fica no lado direito da
+  // barra, logo antes do cluster Descartar/Ficar na aba/Atualizar — a zona
+  // esquerda é dos avatares de quem está vendo o ticket. A margem separa do
+  // botão de commit para não convidar a clique acidental em Atualizar.
+  &-timeTracking {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    margin-inline-end: 14px;
   }
 
   @include phone {
@@ -8950,6 +9411,8 @@ li.list-item-none {
     align-items: center;
     justify-content: flex-end;
     padding: 10px;
+    flex: 1;
+    min-width: 0;
   }
 
   &-avatars {
@@ -8983,6 +9446,10 @@ li.list-item-none {
         height: 100%;
         background: linear-gradient(to right, var(--ai-assist-blue), var(--ai-assist-pink));
         animation: 2s rotate infinite linear;
+
+        @media (prefers-reduced-motion: reduce) {
+          animation: none;
+        }
       }
 
       @include phone {
@@ -9722,8 +10189,6 @@ li.list-item-none {
   overflow: hidden;
 
   @include rtl(text-align, right);
-
-  overscroll-behavior: contain;
 }
 
 .dropdown-menu .divider {
@@ -9843,7 +10308,7 @@ li.list-item-none {
 
 .dropdown-menu > li.create:hover,
 .dropdown-menu > li.create.is-active {
-  background: hsl(145, 51%, 45%);
+  background: #480404;
 }
 
 .dropdown-menu > li[disabled] {
@@ -10105,11 +10570,11 @@ li.dropdown-header {
 }
 
 .recipientList--new {
-  background: hsl(145, 51%, 45%);
+  background: #480404;
 }
 
 .dropdown .recipientList--new:hover {
-  background: hsl(147, 52%, 43%);
+  background: #480404;
 }
 
 .recipientList-controls {
@@ -10881,7 +11346,7 @@ label + .wizard-buttonList {
 }
 
 .avatar--new {
-  background: hsl(145, 51%, 45%);
+  background: #480404;
 
   @extend .u-clickable;
 }
@@ -11612,16 +12077,25 @@ output {
 
   &.zammad-switch--dark {
     label {
-      background: var(--menu-switch-background);
+      background: white !important; // Fundo sempre branco
     }
 
     label::after {
-      background: var(--menu-switch-pointer);
+      background: #a40404 !important; // Vermelho claro quando desativado
+    }
+
+    // Quando ativado, bolinha verde
+    input:checked + label::after {
+      background: #38AE6A !important; // Verde quando ativado
     }
   }
 
   &.zammad-switch--green input:checked + label {
-    background: var(--supergood-color);
+    background: white !important; // Fundo sempre branco
+  }
+
+  &.zammad-switch--green input:checked + label::after {
+    background: #38AE6A !important; // Verde quando ativado
   }
 }
 
@@ -11632,16 +12106,21 @@ output {
   height: 100%;
   border-radius: inherit;
   outline: none;
-  background: var(--background-secondary);
+  background: white !important; // Fundo sempre branco
   box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.1) inset;
   transition: background 200ms;
 
   @extend %clickable;
 
+  // No modo escuro também branco
+  @include dark {
+    background: white !important;
+  }
+
   &::after {
     content: '';
     position: absolute;
-    transition: transform 200ms;
+    transition: transform 200ms, background 200ms;
     width: calc(60% - 2px);
     height: calc(100% - 2px);
     border-radius: inherit;
@@ -11650,14 +12129,23 @@ output {
     box-shadow:
       0 0 0 1px rgba(0, 0, 0, 0.05),
       0 1px 3px rgba(0, 0, 0, 0.2);
-    background: var(--background-secondary);
+
+    // Lighter knob color for better visibility in dark mode.
+    //   https://github.com/zammad/zammad/issues/5983
+    @include dark {
+      background: var(--background-quaternary-alt);
+    }
+
+    @include light {
+      background: var(--background-secondary);
+    }
 
     @include rtl(transform, translateX(70%));
   }
 }
 
 .dropdown-menu.dropdown-menu--light .zammad-switch input:not(:checked) + label {
-  background: var(--background-primary);
+  background: white !important; // Fundo sempre branco
 }
 
 .zammad-switch input {
@@ -11680,11 +12168,12 @@ output {
   }
 
   &:checked + label {
-    background: var(--highlight);
+    background: white !important; // Fundo sempre branco mesmo quando ativado
   }
 
   &:checked + label::after {
     transform: translateX(70%);
+    background: #38AE6A !important; // Verde quando ativado
 
     @include rtl(transform, none);
   }
@@ -11761,7 +12250,15 @@ output {
   padding: 10px 5px 6px;
   margin: 0;
 
-  label {
+  .day-time-separator {
+    color: var(--text-muted);
+    font-size: 13px;
+    margin-bottom: 6px;
+    cursor: default;
+  }
+
+  label,
+  .day-time-separator {
     text-align: center;
   }
 
@@ -12495,7 +12992,8 @@ output {
   color: var(--text-inverted);
   padding: 0 14px 11px;
   position: absolute;
-  min-width: 0;
+  min-width: 0; /* for unsupported browsers that don't support max-content below */
+  min-width: max-content;
   cursor: default;
 
   &.datepicker-rtl {
@@ -12527,6 +13025,7 @@ output {
   th,
   td {
     border: none;
+    background: transparent;
   }
 
   .next,
@@ -13157,8 +13656,8 @@ output {
     overflow: hidden;
 
     &.is-picking {
-      cursor: /* stylelint-disable-next-line declaration-property-value-no-unknown */
-        image_url('/assets/images/eyedropper.gif') 0 15,
+      cursor:
+        url('/assets/images/eyedropper.gif') 0 15,
         auto;
     }
 
@@ -13481,6 +13980,10 @@ output {
   h3 {
     font-weight: 700;
 
+    span {
+      font-weight: inherit !important;
+    }
+
     strong {
       font-weight: inherit;
     }
@@ -13488,14 +13991,26 @@ output {
 
   h1 {
     font-size: 20px;
+
+    span {
+      font-size: inherit !important;
+    }
   }
 
   h2 {
     font-size: 16px;
+
+    span {
+      font-size: inherit !important;
+    }
   }
 
   h3 {
     font-size: 14px;
+
+    span {
+      font-size: inherit !important;
+    }
   }
 
   p {
@@ -13518,8 +14033,6 @@ output {
   table {
     table-layout: auto;
     width: 100%;
-    overflow: auto;
-    -webkit-overflow-scrolling: touch;
     word-break: keep-all;
 
     col {
@@ -13574,6 +14087,8 @@ output {
     border-radius: 6px;
     border: 0;
     background-color: var(--background-modifier-border);
+    white-space: pre-wrap;
+    word-break: break-all;
 
     code {
       padding: 0;
@@ -13582,9 +14097,11 @@ output {
   }
 
   code {
-    padding: 3px;
+    padding: 1px 3px;
     border-radius: 6px;
     background-color: var(--background-modifier-border);
+    white-space: pre-wrap;
+    overflow-wrap: break-word;
   }
 
   hr {
@@ -13608,25 +14125,25 @@ output {
 
       [style*='color:rgb(239, 68, 68)'], [style*='color: rgb(239, 68, 68)'], /* red 1 */
       [style*='color:rgb(205, 121, 45)'], [style*='color: rgb(205, 121, 45)'], /* orange 1 */
-      [style*='color:rgb(80, 140, 70)'], [style*='color: rgb(80, 140, 70)'], /* green 1 */
+      [style*='color:rgb(72, 4, 4)'], [style*='color: rgb(72, 4, 4)'], /* green 1 -> red */
       [style*='color:rgb(48, 100, 172)'], [style*='color: rgb(48, 100, 172)'], /* blue 1 */
       [style*='color:rgb(107, 41, 132)'], [style*='color: rgb(107, 41, 132)'], /* purple 1 */
 
       [style*='color:rgb(235, 61, 79)'], [style*='color: rgb(235, 61, 79)'], /* red 2 */
       [style*='color:rgb(233, 159, 59)'], [style*='color: rgb(233, 159, 59)'], /* orange 2 */
-      [style*='color:rgb(95, 159, 84)'], [style*='color: rgb(95, 159, 84)'], /* green 2 */
+      [style*='color:rgb(72, 4, 4)'], [style*='color: rgb(72, 4, 4)'], /* green 2 -> red */
       [style*='color:rgb(70, 147, 231)'], [style*='color: rgb(70, 147, 231)'], /* blue 2 */
       [style*='color:rgb(153, 62, 195)'], [style*='color: rgb(153, 62, 195)'], /* purple 2 */
 
       [style*='color:rgb(237, 97, 118)'], [style*='color: rgb(237, 97, 118)'], /* red 3 */
       [style*='color:rgb(243, 193, 79)'], [style*='color: rgb(243, 193, 79)'], /* orange 3 */
-      [style*='color:rgb(127, 187, 118)'], [style*='color: rgb(127, 187, 118)'], /* green 3 */
+      [style*='color:rgb(72, 4, 4)'], [style*='color: rgb(72, 4, 4)'], /* green 3 -> red */
       [style*='color:rgb(91, 174, 243)'], [style*='color: rgb(91, 174, 243)'], /* blue 3 */
       [style*='color:rgb(179, 91, 223)'], [style*='color: rgb(179, 91, 223)'], /* purple 3 */
 
       [style*='color:rgb(241, 152, 167)'], [style*='color: rgb(241, 152, 167)'], /* red 4 */
       [style*='color:rgb(246, 211, 102)'], [style*='color: rgb(246, 211, 102)'], /* orange 4 */
-      [style*='color:rgb(170, 214, 164)'], [style*='color: rgb(170, 214, 164)'], /* green 4 */
+      [style*='color:rgb(72, 4, 4)'], [style*='color: rgb(72, 4, 4)'], /* green 4 -> red */
       [style*='color:rgb(122, 202, 247)'], [style*='color: rgb(122, 202, 247)'], /* blue 4 */
       [style*='color:rgb(201, 135, 236)'] [style*='color: rgb(201, 135, 236)'] /* purple 4 */
     ) {
@@ -13659,10 +14176,10 @@ output {
       color: rgb(246, 211, 102) !important;
     }
 
-    /* green 1 */
+    /* green 1 -> red */
     [style*='color:rgb(80, 140, 70)'],
     [style*='color: rgb(80, 140, 70)'] {
-      color: rgb(170, 214, 164) !important;
+      color: rgb(72, 4, 4) !important;
     }
 
     /* blue 1 */
@@ -13689,10 +14206,10 @@ output {
       color: rgb(243, 193, 79) !important;
     }
 
-    /* green 2 */
+    /* green 2 -> red */
     [style*='color:rgb(95, 159, 84)'],
     [style*='color: rgb(95, 159, 84)'] {
-      color: rgb(127, 187, 118) !important;
+      color: rgb(72, 4, 4) !important;
     }
 
     /* blue 2 */
@@ -13719,10 +14236,10 @@ output {
       color: rgb(233, 159, 59) !important;
     }
 
-    /* green 3 */
+    /* green 3 -> red */
     [style*='color:rgb(127, 187, 118)'],
     [style*='color: rgb(127, 187, 118)'] {
-      color: rgb(95, 159, 84) !important;
+      color: rgb(72, 4, 4) !important;
     }
 
     /* blue 3 */
@@ -13749,10 +14266,10 @@ output {
       color: rgb(205, 121, 45) !important;
     }
 
-    /* green 4 */
+    /* green 4 -> red */
     [style*='color:rgb(170, 214, 164)'],
     [style*='color: rgb(170, 214, 164)'] {
-      color: rgb(80, 140, 70) !important;
+      color: rgb(72, 4, 4) !important;
     }
 
     /* blue 4 */
@@ -13790,6 +14307,35 @@ output {
 
   &.is-visible {
     display: block;
+  }
+
+  &.is-loading {
+    cursor: default;
+
+    .batch-overlay-circle,
+    .batch-overlay-cancel,
+    .batch-overlay-box {
+      visibility: hidden !important;
+    }
+  }
+
+  &-loading {
+    display: none;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    align-items: center;
+
+    .is-loading & {
+      display: flex;
+    }
+  }
+
+  &-loading-label {
+    @include bidi-style(margin-left, 10px, margin-right, 0);
+
+    margin-top: 1px;
   }
 
   &-backdrop {
@@ -14323,7 +14869,7 @@ output {
     $rainbow: ();
 
     @while $i <= 360 {
-      $rainbow: append($rainbow, unquote('hsl(#{$i},100%,50%)'), comma);
+      $rainbow: list.append($rainbow, string.unquote('hsl(#{$i},100%,50%)'), comma);
       $i: $i + 60;
     }
 
@@ -14331,8 +14877,8 @@ output {
     background: linear-gradient(to right, $rainbow);
     position: relative;
     overflow: hidden;
-    cursor: /* stylelint-disable-next-line declaration-property-value-no-unknown */
-      image_url('/assets/images/colorcircle.gif') 8 8,
+    cursor:
+      url('/assets/images/colorcircle.gif') 8 8,
       auto;
     user-select: none;
   }
@@ -14569,6 +15115,10 @@ body.fit {
 
 .margin-bottom-5 {
   margin-bottom: 5px;
+}
+
+.gap-16 {
+  gap: 16px;
 }
 
 /*
@@ -15434,6 +15984,131 @@ span.is-disabled {
   }
 }
 
+/* Pause Indicators Report - status indicator and timer column */
+.table--pause-indicators {
+  .pause-indicators-col-indicator {
+    width: 32px;
+    text-align: center;
+    vertical-align: middle;
+  }
+
+  .pause-indicator {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    flex-shrink: 0;
+
+    &.pause-indicator--online {
+      background-color: #16a34a;
+      box-shadow: 0 0 0 2px rgba(22, 163, 74, 0.35);
+    }
+
+    &.pause-indicator--offline {
+      background-color: #dc2626;
+      box-shadow: 0 0 0 2px rgba(220, 38, 38, 0.35);
+    }
+
+    &.pause-indicator--logged-out {
+      background-color: #9ca3af;
+      box-shadow: 0 0 0 2px rgba(156, 163, 175, 0.35);
+    }
+
+    &.pause-indicator--pause {
+      box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.12);
+    }
+
+    &.pause-indicator--default {
+      background-color: #f59e0b;
+    }
+  }
+
+  .js-pause-duration {
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
+  }
+}
+
+/* Pause Indicators Report - dropdown de ações em portal (não cortado pelo overflow) */
+.dropdown-menu--portal-pause {
+  display: block;
+  z-index: 1060;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.175);
+  min-width: 0; /* anula o min-width: 100% do .dropdown-menu global que gerava quadrado cinza */
+  max-width: min(280px, 95vw);
+  width: max-content;
+}
+
+/* Mesma lista da topbar: wrapper e conteúdo no relatório; evita que o menu estique (quadrado cinza) */
+.report-status-dropdown {
+  min-width: 0;
+  width: max-content;
+}
+
+.report-status-dropdown .dropdown-status-inner {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  width: max-content;
+  min-width: 0;
+}
+
+.report-status-dropdown .status-dropdown {
+  position: static;
+  opacity: 1;
+  visibility: visible;
+  transform: none;
+  box-shadow: none;
+  min-width: 180px;
+  max-width: min(280px, 95vw);
+  width: max-content;
+  padding: 6px 0;
+  max-height: 280px; /* mesmo limite visual da lista de pausas/topbar */
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* Itens desabilitados no dropdown de ações do relatório (ex.: set_offline/logout quando em pausa) */
+.report-status-dropdown .status-dropdown-item.is-disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* Botão de ação da linha em estado loading */
+.status-bar-toggle--report.is-loading {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+/* Pause Indicators Report - filter list of collaborators */
+.pause-indicators-colaboradores-list {
+  max-height: 280px;
+  overflow-y: auto;
+  border: 1px solid #e5e7eb;
+  border-radius: 4px;
+  padding: 8px;
+  margin-bottom: 10px;
+  background: #fafafa;
+
+  .pause-indicators-colaborador-item {
+    display: block;
+    padding: 6px 8px;
+    margin: 0;
+    cursor: pointer;
+    border-radius: 4px;
+
+    &:hover {
+      background: #f3f4f6;
+    }
+
+    input {
+      margin-right: 8px;
+    }
+  }
+}
+
 .duplicate-ticket-detection {
   position: relative;
   margin-bottom: 0;
@@ -15956,5 +16631,913 @@ div.accounted-time-value {
 
   &-acknowledgment {
     margin: 0;
+  }
+}
+
+/* ==========================================================================
+   User Status Bar - ATS Time Control System
+   ========================================================================== */
+
+.user-status-bar {
+  position: fixed;
+  top: 0;
+  left: $navigationWidth; /* Start after sidebar - uses Zammad's variable */
+  right: 0;
+  height: 32px;
+  background: #ffffff;
+  border-bottom: 1px solid var(--border);
+  z-index: 500; /* Below sidebar but above content */
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 0 16px;
+  font-family: inherit;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+
+  /* Mobile: full width since sidebar collapses */
+  @media (max-width: $minWidth) {
+    left: 0;
+  }
+}
+
+[data-theme='dark'] .user-status-bar {
+  background: var(--background-tertiary);
+  border-bottom: 1px solid var(--border);
+}
+
+.status-bar-container {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.status-bar-title,
+.user-status-bar-title {
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--text-normal);
+  margin-right: 6px;
+  white-space: nowrap;
+  font-family: inherit;
+}
+
+.status-bar-indicator {
+  position: relative;
+}
+
+.status-bar-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--background-modifier-accent-light);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 4px 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+
+  &:hover {
+    background: var(--background-modifier-accent);
+  }
+
+  &:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--background-modifier-accent);
+  }
+}
+
+.status-bar-text {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-normal);
+  white-space: nowrap;
+}
+
+.status-bar-elapsed {
+  display: inline-flex;
+  align-items: center;
+  background: var(--background-modifier-accent);
+  color: var(--text-normal);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 3px;
+  margin-left: 4px;
+  font-variant-numeric: tabular-nums;
+}
+
+.status-bar-arrow {
+  width: 10px;
+  height: 10px;
+  fill: var(--text-muted);
+  margin-left: 2px;
+  transition: transform 0.2s ease;
+}
+
+.status-bar-login {
+  background: var(--background-modifier-accent-light);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 4px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-normal);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+
+  &:hover {
+    background: var(--background-modifier-accent);
+  }
+}
+
+.status-dot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  font-size: 10px;
+  font-weight: 700;
+  color: #ffffff;
+  line-height: 1;
+}
+
+.status-dot--online {
+  background: #16a34a;
+}
+
+.status-dot--offline {
+  background: #dc2626;
+}
+
+.status-dot--pause {
+  background: #f59e0b;
+}
+
+.js-status-dropdown.is-open .status-bar-arrow {
+  transform: rotate(180deg);
+}
+
+.status-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  min-width: 180px;
+  background: #fff;
+  border-radius: 6px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.05);
+  padding: 6px 0;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-8px);
+  transition: all 0.2s ease;
+  z-index: 501; /* Just above the status bar */
+}
+
+.js-status-dropdown.is-open .status-dropdown {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.status-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  color: #374151;
+  text-decoration: none;
+  font-size: 13px;
+  transition: background 0.15s ease;
+  cursor: pointer;
+
+  &:hover {
+    background: #f3f4f6;
+    color: #111827;
+  }
+
+  &.is-active {
+    background: #eff6ff;
+    color: #1d4ed8;
+
+    .status-dropdown-icon {
+      color: #1d4ed8;
+    }
+  }
+
+  &.is-disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+
+  &--action {
+    color: #dc2626;
+
+    &:hover {
+      background: #fef2f2;
+      color: #b91c1c;
+    }
+
+    .status-dropdown-icon {
+      color: #dc2626;
+    }
+  }
+}
+
+.status-dropdown-item--center {
+  justify-content: center;
+  text-align: center;
+}
+
+.status-dropdown-icon {
+  width: 16px;
+  height: 16px;
+  fill: currentColor;
+  color: #6b7280;
+  flex-shrink: 0;
+
+  &--online {
+    color: #22c55e;
+  }
+}
+
+.status-dropdown-item-name {
+  flex: 1;
+}
+
+.status-dropdown-check {
+  width: 14px;
+  height: 14px;
+  fill: currentColor;
+  color: #1d4ed8;
+  flex-shrink: 0;
+}
+
+.status-dropdown-divider {
+  height: 1px;
+  background: #e5e7eb;
+  margin: 6px 0;
+}
+
+.status-dropdown-header {
+  padding: 6px 12px 4px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #9ca3af;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Bloco de justificativa quando tempo de pausa excedido */
+.status-dropdown-exceeded {
+  padding: 8px 12px 4px;
+  margin: 0 0 4px;
+}
+
+.status-dropdown-exceeded-text {
+  font-size: 12px;
+  font-weight: 600;
+  color: #b91c1c;
+  margin-bottom: 6px;
+}
+
+.status-dropdown-exceeded-label {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 4px;
+}
+
+.status-dropdown-reason {
+  width: 100%;
+  min-height: 48px;
+  resize: vertical;
+  margin-bottom: 8px;
+}
+
+/* Adjust layout when status bar is present */
+body.has-status-bar {
+  /* Main content area - push down to make room for status bar */
+  .main {
+    top: 32px !important;
+    height: calc(100% - 32px) !important;
+  }
+
+  /* Content wrapper */
+  .content {
+    top: 32px !important;
+    height: calc(100% - 32px) !important;
+  }
+
+  /* Vertical layout containers */
+  .vertical.main {
+    top: 32px !important;
+    height: calc(100% - 32px) !important;
+  }
+
+  /* The flex container for content */
+  .flex.vertical:not(.navigation) {
+    top: 32px !important;
+    height: calc(100% - 32px) !important;
+  }
+
+  /* Workspace area */
+  .workspace {
+    top: 32px !important;
+    height: calc(100% - 32px) !important;
+  }
+}
+
+/* ==========================================================================
+   Pause Blocker - Blocks UI when user is in pause
+   ========================================================================== */
+
+.pause-blocker-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.85);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  z-index: 99999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: pauseBlockerFadeIn 0.3s ease;
+  /* Stacking context for Chrome so overlay and backdrop-filter render correctly */
+  isolation: isolate;
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+
+  /* Fullscreen variant (plugin) - always on top and visible in Chrome */
+  &.pause-blocker-overlay--fullscreen {
+    z-index: 100000;
+    display: flex !important;
+  }
+
+  &.is-exceeded {
+    background: rgba(127, 29, 29, 0.9);
+
+    .pause-blocker-modal {
+      border-color: #dc2626;
+      box-shadow: 0 0 0 4px rgba(220, 38, 38, 0.3), 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    }
+
+    .pause-blocker-timer-value {
+      color: #fca5a5;
+    }
+  }
+}
+
+@keyframes pauseBlockerFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.pause-blocker-modal {
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  max-width: 420px;
+  width: 90%;
+  max-height: 90vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  animation: pauseBlockerSlideUp 0.3s ease;
+  border: 2px solid #64748b;
+}
+
+@keyframes pauseBlockerSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.pause-blocker-header {
+  background: linear-gradient(135deg, #64748b 0%, #475569 100%);
+  padding: 24px;
+  text-align: center;
+  color: #fff;
+}
+
+.pause-blocker-icon {
+  margin-bottom: 12px;
+
+  .icon-pause {
+    width: 48px;
+    height: 48px;
+    fill: currentColor;
+  }
+}
+
+.pause-blocker-title {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: #fff;
+}
+
+.pause-blocker-body {
+  padding: 24px;
+  text-align: center;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  flex: 1;
+  min-height: 0;
+}
+
+.pause-blocker-pause-name {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1f2937;
+  margin-bottom: 20px;
+  padding: 12px 20px;
+  background: #fef3c7;
+  border-radius: 8px;
+  display: inline-block;
+}
+
+.pause-blocker-timer {
+  margin-bottom: 16px;
+}
+
+.pause-blocker-timer-label {
+  display: block;
+  font-size: 13px;
+  color: #6b7280;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.pause-blocker-timer-value {
+  display: block;
+  font-size: 48px;
+  font-weight: 700;
+  color: #f59e0b;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.pause-blocker-limit {
+  font-size: 14px;
+  color: #6b7280;
+  margin-bottom: 16px;
+}
+
+.pause-blocker-exceeded {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-align: left;
+}
+
+.pause-blocker-exceeded-icon {
+  flex-shrink: 0;
+
+  .icon-warning {
+    width: 24px;
+    height: 24px;
+    fill: #dc2626;
+  }
+}
+
+.pause-blocker-exceeded-text {
+  font-size: 14px;
+  font-weight: 600;
+  color: #dc2626;
+}
+
+.pause-blocker-reason {
+  text-align: left;
+  margin-bottom: 8px;
+
+  label {
+    display: block;
+    font-size: 14px;
+    font-weight: 500;
+    color: #374151;
+    margin-bottom: 8px;
+  }
+
+  textarea {
+    width: 100%;
+    border: 2px solid #d1d5db;
+    border-radius: 8px;
+    padding: 12px;
+    font-size: 14px;
+    resize: vertical;
+    min-height: 80px;
+    transition: border-color 0.2s ease;
+
+    &:focus {
+      outline: none;
+      border-color: #f59e0b;
+      box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.2);
+    }
+
+    &::placeholder {
+      color: #9ca3af;
+    }
+  }
+}
+
+.pause-blocker-footer {
+  padding: 16px 24px 24px;
+  text-align: center;
+
+  .btn--large {
+    padding: 14px 32px;
+    font-size: 16px;
+    border-radius: 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+    border: none;
+    color: #fff;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    &:hover {
+      background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(22, 163, 74, 0.4);
+    }
+
+    &:active {
+      transform: translateY(0);
+    }
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .btn-icon {
+      display: none;
+    }
+  }
+}
+
+/* Block body scroll when pause blocker is active */
+body.is-pause-blocked {
+  overflow: hidden !important;
+}
+
+/* ==========================================================================
+   Ticket Time Tracking Player
+   ========================================================================== */
+
+.ticket-time-tracking-player {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-right: 12px;
+}
+
+/* As cores vêm das variáveis de tema, e não de hex claro fixo: a interface tem
+   modo escuro ([data-theme='dark'] redefine as mesmas variáveis), e os valores
+   antigos (#fff, #f9fafb, #e5e7eb) deixavam o player claro sobre fundo escuro.
+   Os tons de estado (verde/âmbar) são fixos de propósito — são semânticos — mas
+   escolhidos em faixa que contrasta nos dois modos. */
+.tt-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 6px;
+  background: var(--button-background);
+  color: var(--text-normal);
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+
+  svg {
+    width: 13px;
+    height: 13px;
+    fill: currentcolor; // acompanha o tema sem precisar repetir a cor
+  }
+
+  &:hover:not(:disabled) {
+    background: var(--button-active);
+    border-color: var(--interactive-muted);
+  }
+
+  &:active:not(:disabled) {
+    background: var(--button-active-active);
+  }
+
+  &:disabled,
+  &.is-disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+  }
+
+  &.is-ready {
+    border-color: hsl(142, 55%, 45%);
+    color: hsl(142, 60%, 55%);
+    background: hsla(142, 55%, 45%, 0.12);
+
+    &:hover {
+      background: hsla(142, 55%, 45%, 0.22);
+    }
+  }
+}
+
+/* Pausar usa âmbar para diferenciar de "iniciar" sem depender do ícone. */
+.js-tt-pause.is-ready {
+  border-color: hsl(38, 80%, 50%);
+  color: hsl(38, 85%, 60%);
+  background: hsla(38, 80%, 50%, 0.12);
+
+  &:hover {
+    background: hsla(38, 80%, 50%, 0.22);
+  }
+}
+
+/* Timer display */
+.tt-timer {
+  min-width: 72px;
+  padding: 5px 10px;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  font-variant-numeric: tabular-nums; // largura estável, não "pula" a cada segundo
+  color: var(--text-muted);
+  background: var(--button-background);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 6px;
+  text-align: center;
+
+  &.is-active {
+    color: hsl(142, 60%, 55%);
+    background: hsla(142, 55%, 45%, 0.12);
+    border-color: hsla(142, 55%, 45%, 0.45);
+
+    &.is-paused {
+      color: hsl(38, 85%, 60%);
+      background: hsla(38, 80%, 50%, 0.12);
+      border-color: hsla(38, 80%, 50%, 0.45);
+    }
+  }
+}
+
+/* Tempo somado de todos os atendentes, ao lado do cronômetro pessoal. Só aparece
+   quando o ticket passou por mais de uma pessoa; o detalhe por atendente fica no
+   title. Discreto de propósito: o número que importa no dia a dia é o próprio. */
+.tt-others {
+  padding: 5px 8px;
+  font-size: 12px;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-muted);
+  border: 1px dashed var(--background-modifier-border);
+  border-radius: 6px;
+  cursor: help;
+}
+
+/* Position in ticket zoom controls */
+.ticketZoom-controls {
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  gap: 8px;
+
+  .js-settingContainer {
+    order: 0;
+  }
+
+  .spacer {
+    flex: 1;
+    order: 1;
+  }
+
+  .js-highlighterContainer,
+  .js-overviewNavigatorContainer {
+    order: 2;
+  }
+}
+
+/* Cronômetro de tempo de atendimento na aba lateral do ticket.
+   O nó é inserido por App.TaskbarTimeTrackingIndicator, para o agente ver o
+   tempo correndo enquanto navega em outra aba. Mostra o tempo em vez de apenas
+   um sinal: a informação útil é quanto já foi contado. */
+.nav-tab-timeTracking {
+  flex-shrink: 0;
+  margin-inline-start: 6px;
+  padding: 1px 6px;
+  border-radius: 3px;
+  font-size: 11px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums; // largura estável, não "pula" a cada segundo
+  line-height: 1.5;
+  white-space: nowrap;
+
+  /* O texto era #16a34a sobre o mesmo verde a 18% — verde sobre verde na barra
+     lateral escura, sem contraste para ler. Agora o texto é claro e o fundo
+     carrega a cor de estado, o que legível nos dois temas. */
+  background: hsla(142, 55%, 40%, 0.9);
+  color: hsl(0, 0%, 100%);
+}
+
+/* Pausado usa âmbar para diferenciar de "correndo" — e o valor congelado já
+   sinaliza por si, sem depender só da cor. */
+.nav-tab.is-time-tracking-paused .nav-tab-timeTracking {
+  background: hsla(38, 80%, 42%, 0.9);
+  color: hsl(0, 0%, 100%);
+}
+
+/* O botão de fechar da aba aparece no hover e ocupa o mesmo canto; esconder o
+   cronômetro nesse momento evita os dois disputando o espaço. */
+.nav-tab.is-time-tracking:hover .nav-tab-timeTracking {
+  display: none;
+}
+
+/* Reports - filters layout */
+.report-filters {
+  .report-filters-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px 16px;
+    align-items: flex-end;
+  }
+
+  .report-filter-field {
+    flex: 1 1 200px;
+    min-width: 180px;
+    position: relative;
+  }
+
+  /* Campos Responsável e Equipe com tamanho alinhado aos demais */
+  .report-filter-field--responsavel,
+  .report-filter-field--equipe {
+    flex: 0 0 240px;
+    max-width: 260px;
+  }
+
+  .report-filters-actions {
+    margin-top: 12px;
+    display: flex;
+    justify-content: flex-end;
+  }
+}
+
+/* Reports - pagination bar */
+.report-pagination {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 20px;
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--color-border);
+
+  .report-pagination-info {
+    color: var(--color-text-muted, #666);
+    font-size: 13px;
+  }
+
+  .report-pagination-nav {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    .report-pagination-page {
+      font-size: 13px;
+      color: var(--color-text-muted, #666);
+    }
+
+    a.disabled {
+      pointer-events: none;
+      opacity: 0.6;
+    }
+  }
+
+  .report-pagination-per-page {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-left: auto;
+
+    label {
+      margin: 0;
+      font-size: 13px;
+      color: var(--color-text-muted, #666);
+    }
+  }
+}
+
+/* Relatório de Tempo de Atendimento - coluna Ticket com largura limitada */
+.report-content .table--ticket-time-trackings {
+  table-layout: fixed;
+  width: 100%;
+
+  th:nth-child(1),
+  td:nth-child(1),
+  .js-ticket-cell {
+    width: 140px;
+    max-width: 140px;
+    min-width: 140px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+/* Datepicker dropdown positioning fix for reports */
+.datepicker.datepicker-dropdown {
+  z-index: 10000 !important;
+}
+.package {
+  &-table-heading {
+    margin-top: 30px;
+  }
+
+  &-action-header {
+    width: 100px;
+  }
+
+  &-action-cell {
+    overflow: visible !important;
+    text-align: right;
+    width: 50px;
+  }
+
+  &-action-toggle {
+    padding: 0;
+  }
+}
+
+.audit-log-diff {
+  --diff-removed-background: hsl(355, 100%, 97%);
+  --diff-removed-text: hsl(356, 73%, 41%);
+  --diff-added-background: hsl(137, 100%, 95%);
+  --diff-added-text: hsl(134, 60%, 33%);
+
+  @include dark {
+    --diff-removed-background: hsla(4, 70%, 60%, 0.15);
+    --diff-removed-text: hsl(4, 89%, 71%);
+    --diff-added-background: hsla(140, 60%, 50%, 0.15);
+    --diff-added-text: hsl(137, 55%, 62%);
+  }
+
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  font-family: monospace;
+  font-size: 12px;
+  line-height: 1.7;
+  overflow: auto;
+
+  &-line {
+    padding: 0 10px;
+    white-space: pre-wrap;
+
+    &--removed {
+      background: var(--diff-removed-background);
+      color: var(--diff-removed-text);
+    }
+
+    &--added {
+      background: var(--diff-added-background);
+      color: var(--diff-added-text);
+    }
+  }
+
+  &-sign {
+    display: inline-block;
+    width: 14px;
+  }
+
+  &-empty {
+    color: var(--text-muted);
+    padding: 10px;
   }
 }

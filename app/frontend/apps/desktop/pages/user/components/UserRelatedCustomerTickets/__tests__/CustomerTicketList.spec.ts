@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import { waitFor, within } from '@testing-library/vue'
 import { flushPromises } from '@vue/test-utils'
@@ -11,9 +11,9 @@ import { EnumTicketStateTypeCategory, type TicketEdge, type User } from '#shared
 import emitter from '#shared/utils/emitter.ts'
 
 import {
-  mockCustomerTicketsByFilterQuery,
-  waitForCustomerTicketsByFilterQueryCalls,
-} from '#desktop/entities/ticket/graphql/queries/customerTicketsByFilter.mocks.ts'
+  mockTicketsByCustomerQuery,
+  waitForTicketsByCustomerQueryCalls,
+} from '#desktop/entities/ticket/graphql/queries/ticketsByCustomer.mocks.ts'
 
 import CustomerTicketList, { type Props } from '../CustomerTicketList.vue'
 
@@ -67,7 +67,7 @@ const customer: User = {
   updatedAt: '2020-01-01T12:00:00Z',
 }
 
-const mockCustomerTicketsByFilterQueryWithData = (ticketCount: number) => {
+const mockTicketsByCustomerQueryWithData = (ticketCount: number) => {
   const testTickets = Array(ticketCount).fill(createDummyTicket())
 
   const edges = testTickets.slice(0, 5).map(
@@ -78,8 +78,8 @@ const mockCustomerTicketsByFilterQueryWithData = (ticketCount: number) => {
       }) as TicketEdge,
   )
 
-  mockCustomerTicketsByFilterQuery({
-    ticketsByFilter: {
+  mockTicketsByCustomerQuery({
+    ticketsByCustomer: {
       __typename: 'TicketConnection',
       edges,
       pageInfo: {
@@ -91,7 +91,7 @@ const mockCustomerTicketsByFilterQueryWithData = (ticketCount: number) => {
 }
 
 const renderCustomerTicketList = async (ticketCount: number, props?: Partial<Props>) => {
-  mockCustomerTicketsByFilterQueryWithData(ticketCount)
+  mockTicketsByCustomerQueryWithData(ticketCount)
 
   const view = renderComponent(CustomerTicketList, {
     props: {
@@ -103,12 +103,18 @@ const renderCustomerTicketList = async (ticketCount: number, props?: Partial<Pro
     router: true,
   })
 
+  await vi.dynamicImportSettled()
   await flushPromises()
 
   return view
 }
 
 describe('CustomerTicketList.vue', () => {
+  afterEach(async () => {
+    await vi.dynamicImportSettled()
+    await flushPromises()
+  })
+
   it('render heading with a ticket count', async () => {
     const view = await renderCustomerTicketList(5)
 
@@ -133,7 +139,7 @@ describe('CustomerTicketList.vue', () => {
 
     await view.events.click(button)
 
-    const calls = await waitForCustomerTicketsByFilterQueryCalls()
+    const calls = await waitForTicketsByCustomerQueryCalls()
 
     expect(calls.at(-1)?.variables.pageSize).toEqual(100)
   })
@@ -161,7 +167,7 @@ describe('CustomerTicketList.vue', () => {
       customerOrganizations: true,
     })
 
-    const calls = await waitForCustomerTicketsByFilterQueryCalls()
+    const calls = await waitForTicketsByCustomerQueryCalls()
 
     expect(calls.at(-1)?.variables.customerOrganizations).toBe(true)
   })
@@ -171,13 +177,13 @@ describe('CustomerTicketList.vue', () => {
       customerOrganizations: true,
     })
 
-    const calls = await waitForCustomerTicketsByFilterQueryCalls()
+    const calls = await waitForTicketsByCustomerQueryCalls()
 
     expect(calls).toHaveLength(1)
 
-    emitter.emit(`customer-ticket-list-refetch:${customer.internalId}`)
+    emitter.emit(`customer-ticket-list-refetch:${customer.id}`)
 
-    waitFor(() => {
+    await waitFor(() => {
       expect(calls).toHaveLength(2)
     })
   })

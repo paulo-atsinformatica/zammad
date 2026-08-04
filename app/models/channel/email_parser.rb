@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 # encoding: utf-8
 
@@ -373,7 +373,7 @@ returns
     end
     return true if !attribute
 
-    key_short = attribute[ attribute.length - 3, attribute.length ]
+    key_short = attribute[ -3, attribute.length ]
     return true if key_short != '_id'
 
     class_object = class_name.to_classname.constantize
@@ -445,7 +445,7 @@ returns
       next if key == 'created_by_id'
 
       # check if id exists
-      key_short = key[ key.length - 3, key.length ]
+      key_short = key[ -3, key.length ]
       if key_short == '_id'
         key_short = key[ 0, key.length - 3 ]
         header = "x-zammad-#{header_name}-#{key_short}"
@@ -537,6 +537,15 @@ returns
     postmaster_response(channel, msg)
   end
 
+  SAMPLE_MAIL_FIELDS = %i[from from_email from_display_name to cc subject body content_type reply-to attachments].freeze
+
+  # Prepares sample data for email parsing verification tests
+  def self.prepare_sample_mail(mail)
+    new
+      .parse(mail)
+      .slice(*SAMPLE_MAIL_FIELDS)
+  end
+
   private
 
   # generate Message ID on the fly if it was missing
@@ -561,7 +570,8 @@ returns
     end
 
     Rails.logger.info "Send mail too large postmaster message to: #{reply_mail[:to]}"
-    reply_mail[:from] = EmailAddress.find_by(channel: channel).email
+    email_address = EmailAddress.find_by(channel: channel)
+    reply_mail[:from] = Channel::EmailBuild.recipient_line(email_address.name, email_address.email)
     channel.deliver(reply_mail)
   rescue => e
     Rails.logger.error "Error during sending of postmaster oversized email auto-reply: #{e.inspect}\n#{e.backtrace}"

@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 require 'rails_helper'
 require 'system/apps/mobile_old/examples/core_workflow_examples'
@@ -135,7 +135,7 @@ RSpec.describe 'Mobile > Ticket > Update', app: :mobile, authenticated_as: :agen
 
         expect(page).to have_no_css('label', text: 'Pending until')
 
-        date = 1.day.from_now.beginning_of_minute
+        date = 1.day.from_now.change(hour: 3).beginning_of_minute
 
         within_form(form_updater_gql_number: 1) do
           find_select('State').select_option('pending reminder')
@@ -154,7 +154,7 @@ RSpec.describe 'Mobile > Ticket > Update', app: :mobile, authenticated_as: :agen
         submit_form
 
         ticket.reload
-        expect(ticket.pending_time.localtime).to eq(date)
+        expect(ticket.pending_time).to eq(date)
       end
 
       it 'can save form on another page' do
@@ -301,11 +301,13 @@ RSpec.describe 'Mobile > Ticket > Update', app: :mobile, authenticated_as: :agen
           find_button('Go back').click
           find_button('Add reply').click
 
-          within_form(form_updater_gql_number: 1) do
-            find_editor('Text').type('Foobar')
-          end
+          wait_for_test_flag('ticket-article-reply.opened')
 
-          find_button('Done').click
+          # Wait for form_updater to finish populating the article group before typing.
+          wait_for_form_updater 2
+          find_editor('Text').type('Foobar')
+
+          find_button('Done', disabled: false).click
 
           wait_for_form_updater 3
 
@@ -324,11 +326,13 @@ RSpec.describe 'Mobile > Ticket > Update', app: :mobile, authenticated_as: :agen
           find_button('Go back').click
           find_button('Add reply').click
 
-          within_form(form_updater_gql_number: 1) do
-            find_editor('Text').type('Foobar')
-          end
+          wait_for_test_flag('ticket-article-reply.opened')
 
-          find_button('Done').click
+          # Wait for form_updater to finish populating the article group before typing.
+          wait_for_form_updater 2
+          find_editor('Text').type('Foobar')
+
+          find_button('Done', disabled: false).click
 
           wait_for_form_updater 3
 

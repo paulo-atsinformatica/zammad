@@ -1,5 +1,6 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 import { within } from '@testing-library/vue'
+import { flushPromises } from '@vue/test-utils'
 
 import { visitView } from '#tests/support/components/visitView.ts'
 import { mockPermissions } from '#tests/support/mock-permissions.ts'
@@ -35,13 +36,17 @@ describe('Ticket detail view - draft handling', () => {
         },
       })
 
+      mockMacrosQuery({
+        macros: [],
+      })
+
       mockTicketQuery({
         ticket: createDummyTicket(),
       })
 
       const view = await visitView('/tickets/1')
 
-      const actionMenu = await view.findByLabelText('Additional ticket edit actions')
+      const actionMenu = await view.findByLabelText('Drafts & macros')
 
       await view.events.click(actionMenu)
 
@@ -70,8 +75,9 @@ describe('Ticket detail view - draft handling', () => {
       })
 
       const view = await visitView('/tickets/1')
+      await flushPromises()
 
-      const actionMenu = await view.findByLabelText('Additional ticket edit actions')
+      const actionMenu = await view.findByLabelText('Drafts & macros')
 
       await view.events.click(actionMenu)
 
@@ -151,12 +157,16 @@ describe('Ticket detail view - draft handling', () => {
         },
       })
 
+      mockMacrosQuery({
+        macros: [],
+      })
+
       mockTicketQuery({ ticket: createDummyTicket({ sharedDraftZoomId: 123 }) })
 
       const view = await visitView('/tickets/1')
 
       const bottomButton = await view.findByRole('button', {
-        name: 'Draft Available',
+        name: 'Draft available',
       })
 
       await view.events.click(bottomButton)
@@ -240,7 +250,7 @@ describe('Ticket detail view - draft handling', () => {
 
       const view = await visitView('/tickets/1')
 
-      expect(view.queryByLabelText('Additional ticket edit actions')).not.toBeInTheDocument()
+      expect(view.queryByLabelText('Drafts & macros')).not.toBeInTheDocument()
     })
   })
 })

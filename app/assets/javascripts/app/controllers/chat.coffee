@@ -12,7 +12,7 @@ class App.CustomerChat extends App.Controller
     '.chat-workspace':            'workspace'
 
   sounds:
-    chat_new: new Audio('assets/sounds/chat_new.mp3')
+    chat_new: 'assets/sounds/chat_new.mp3'
 
   constructor: ->
     super
@@ -148,7 +148,11 @@ class App.CustomerChat extends App.Controller
       # do not play sound on initial load
       if @switch()
         if counter > 0 && @lastWaitingChatCount isnt undefined
-          @sounds.chat_new.play()
+          try
+            audio = new Audio(@sounds.chat_new)
+            audio.play()?.catch?(->)
+          catch
+            # sound unavailable
           @notifyDesktop(
             title: "#{counter} #{App.i18n.translateInline('Waiting Customers')}",
             url: '#customer_chat'
@@ -177,7 +181,7 @@ class App.CustomerChat extends App.Controller
       if App.Chat.first() && !preferences || !preferences.chat || !preferences.chat.active || _.isEmpty(preferences.chat.active)
 
         # if we only have one chat, active it automatically
-        if App.Chat.count() < 2
+        if App.Chat.count() is 1
           preferences.chat = {}
           preferences.chat.active = {}
           preferences.chat.active[App.Chat.first().id] = 'on'
@@ -413,7 +417,7 @@ class ChatWindow extends App.Controller
     '.js-metaForm':                  'metaForm'
 
   sounds:
-    message: new Audio('assets/sounds/chat_message.mp3')
+    message: 'assets/sounds/chat_message.mp3'
 
   constructor: ->
     super
@@ -690,7 +694,11 @@ class ChatWindow extends App.Controller
     if !isFocused
       @addUnreadMessages()
       @updateModified(true)
-      @sounds.message.play()
+      try
+        audio = new Audio(@sounds.message)
+        audio.play()?.catch?(->)
+      catch
+        # sound unavailable
       @notifyDesktop(
         title: @name
         body: App.Utils.html2text(message)

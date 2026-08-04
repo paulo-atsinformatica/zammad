@@ -1,7 +1,10 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 module ChecksCoreWorkflow
   extend ActiveSupport::Concern
+
+  # keep in sync with App.Model@_validate_is_empty
+  EMPTY_VALUES = [nil, {}, [], [''], ''].freeze
 
   included do
     before_create :validate_workflows
@@ -47,7 +50,7 @@ module ChecksCoreWorkflow
       next if self[key].blank?
       next if restricted_value?(perform_result, key)
 
-      raise Exceptions::ApplicationModel.new(self, "Invalid value '#{self[key]}' for field '#{key}'!")
+      raise Exceptions::ApplicationModel.new(self, core_workflow_error(__('The value selected for "%s" is not allowed by the current workflow rules.'), key))
     end
   end
 
@@ -59,14 +62,45 @@ module ChecksCoreWorkflow
     end
   end
 
+  # Customização ATS: as mensagens originais eram inglês hardcoded com o nome
+  # cru da coluna interpolado no meio ("Invalid value 'x' for field
+  # 'state_id'!"). Como a interpolação acontece antes de a mensagem chegar ao
+  # frontend, não sobrava msgid para casar e traduzir por override era
+  # impossível — por isso a tradução é feita aqui, no servidor.
+  # Também troca o nome da coluna pelo rótulo do campo, que é o que o usuário
+  # vê na tela.
+  def core_workflow_error(template, key)
+    user   = UserInfo.current_user
+    locale = user.try(:locale) || Setting.get('locale_default') || 'en-us'
+
+    Translation.translate(locale, template, core_workflow_field_label(key, user, locale))
+  end
+
+  def core_workflow_field_label(key, user, locale)
+    attribute = ObjectManager::Object
+      .new(self.class.to_s)
+      .attributes(user, skip_permission: user.nil?)
+      .find { |item| item[:name] == key.to_s }
+
+    return key.to_s if attribute.blank? || attribute[:display].blank?
+
+    Translation.translate(locale, attribute[:display].to_s)
+  # O rótulo é só cosmético: se a busca falhar (classe sem ObjectManager,
+  # atributo removido), cai no nome da coluna em vez de transformar um erro de
+  # validação legível num 500.
+  rescue => e
+    Rails.logger.debug { "Could not resolve display label for '#{key}': #{e.message}" }
+    key.to_s
+  end
+
   def check_mandatory(perform_result)
     perform_result[:mandatory].each_key do |key|
       next if field_visible?(perform_result, key)
       next if !field_mandatory?(perform_result, key)
       next if !column_empty?(key)
-      next if !colum_default?(key)
+      next if column_default?(key)
 
-      raise Exceptions::ApplicationModel.new(self, "Missing required value for field '#{key}'!")
+      raise Exceptions::ApplicationModel.new(self, core_workflow_error(__('The field "%s" is required.'), key))
     end
   end
 
@@ -79,10 +113,10 @@ module ChecksCoreWorkflow
   end
 
   def column_empty?(key)
-    self[key].nil? || ([true, false].exclude?(self[key]) && self[key].blank?)
+    EMPTY_VALUES.include?(self[key])
   end
 
-  def colum_default?(key)
-    self.class.column_defaults[key].nil?
+  def column_default?(key)
+    EMPTY_VALUES.exclude?(self.class.column_defaults[key])
   end
 end

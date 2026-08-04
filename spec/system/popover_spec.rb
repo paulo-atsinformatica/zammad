@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 require 'rails_helper'
 
@@ -52,7 +52,7 @@ RSpec.describe 'Popover', type: :system do
     Ticket.find(1).update!(owner: current_user)
 
     ensure_block_keeps_running do
-      Sessions.thread_client(Sessions.sessions.first, 0, Time.now.utc, nil)
+      Sessions.thread_client(Sessions.sessions.first, nil)
     end
 
     expect(page).to have_no_css('.popover')

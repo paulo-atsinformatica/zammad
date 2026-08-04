@@ -1,4 +1,4 @@
-<!-- Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/ -->
+<!-- Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/ -->
 
 <script setup lang="ts">
 import { computed, ref } from 'vue'
@@ -113,7 +113,7 @@ const retry = () => {
 
     <template #boxActions>
       <CommonButton variant="secondary" size="medium" :disabled="isDisabled" @click="goToLogin()">
-        {{ $t('Cancel & Go Back') }}
+        {{ $t('Cancel & go back') }}
       </CommonButton>
 
       <CommonButton

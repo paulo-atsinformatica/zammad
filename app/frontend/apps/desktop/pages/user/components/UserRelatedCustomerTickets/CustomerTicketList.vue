@@ -1,10 +1,9 @@
-<!-- Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/ -->
+<!-- Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/ -->
 
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 
-import { useDebouncedLoading } from '#shared/composables/useDebouncedLoading.ts'
 import { useOnEmitter } from '#shared/composables/useOnEmitter.ts'
 import { usePagination } from '#shared/composables/usePagination.ts'
 import { EnumTicketStateTypeCategory, type User } from '#shared/graphql/types.ts'
@@ -15,7 +14,7 @@ import CommonButton from '#desktop/components/CommonButton/CommonButton.vue'
 import CommonShowMoreButton from '#desktop/components/CommonShowMoreButton/CommonShowMoreButton.vue'
 import CommonSimpleEntityList from '#desktop/components/CommonSimpleEntityList/CommonSimpleEntityList.vue'
 import { EntityType } from '#desktop/components/CommonSimpleEntityList/types.ts'
-import { useCustomerTicketsByFilterQuery } from '#desktop/entities/ticket/graphql/queries/customerTicketsByFilter.api.ts'
+import { useTicketsByCustomerQuery } from '#desktop/entities/ticket/graphql/queries/ticketsByCustomer.api.ts'
 
 import CustomerTicketListSkeleton from './skeleton/CustomerTicketListSkeleton.vue'
 
@@ -29,7 +28,7 @@ export interface Props {
 const props = defineProps<Props>()
 
 const customerTicketsQuery = new QueryHandler(
-  useCustomerTicketsByFilterQuery(() => ({
+  useTicketsByCustomerQuery(() => ({
     customerId: props.customer.id,
     customerOrganizations: props.customerOrganizations,
     stateTypeCategory: props.stateTypeCategory,
@@ -39,15 +38,13 @@ const customerTicketsQuery = new QueryHandler(
 
 const customerTicketsResult = customerTicketsQuery.result()
 
-const loading = customerTicketsQuery.loading()
+const loading = customerTicketsQuery.loadingWithoutCachedResult()
 
-const { debouncedLoading } = useDebouncedLoading({
-  isLoading: loading,
-})
+const customerTickets = computed(() =>
+  normalizeEdges(customerTicketsResult.value?.ticketsByCustomer),
+)
 
-const customerTickets = computed(() => normalizeEdges(customerTicketsResult.value?.ticketsByFilter))
-
-const pagination = usePagination(customerTicketsQuery, 'ticketsByFilter', 100)
+const pagination = usePagination(customerTicketsQuery, 'ticketsByCustomer', 100)
 
 useOnEmitter(`customer-ticket-list-refetch:${props.customer.id}`, () => {
   customerTicketsQuery.refetch()
@@ -78,32 +75,32 @@ const goToTicketSearch = () => {
 </script>
 
 <template>
-  <CustomerTicketListSkeleton v-if="debouncedLoading && !customerTickets.array.length" />
-  <CommonSimpleEntityList
-    v-else
-    :id="`customer-ticket-list-${customerOrganizations ? 'orgs-' : ''}${stateTypeCategory}`"
-    :type="EntityType.Ticket"
-    :label="label"
-    :entity="customerTickets"
-    has-popover
-    no-collapse
-  >
-    <template #trailing="{ entities, totalCount }">
-      <div v-if="totalCount" class="flex items-center justify-end gap-2.5">
-        <CommonShowMoreButton
-          :entities="entities"
-          :total-count="totalCount"
-          @click="pagination.fetchNextPage"
-        />
-        <CommonButton
-          v-if="totalCount > 5"
-          variant="secondary"
-          size="small"
-          @click="goToTicketSearch"
-        >
-          {{ $t('Search all') }}
-        </CommonButton>
-      </div>
-    </template>
-  </CommonSimpleEntityList>
+  <CustomerTicketListSkeleton :loading="loading">
+    <CommonSimpleEntityList
+      :id="`customer-ticket-list-${customerOrganizations ? 'orgs-' : ''}${stateTypeCategory}`"
+      :type="EntityType.Ticket"
+      :label="label"
+      :entity="customerTickets"
+      has-popover
+      no-collapse
+    >
+      <template #trailing="{ entities, totalCount }">
+        <div v-if="totalCount" class="flex items-center justify-end gap-2.5">
+          <CommonShowMoreButton
+            :entities="entities"
+            :total-count="totalCount"
+            @click="pagination.fetchNextPage"
+          />
+          <CommonButton
+            v-if="totalCount > 5"
+            variant="secondary"
+            size="small"
+            @click="goToTicketSearch"
+          >
+            {{ $t('Search all') }}
+          </CommonButton>
+        </div>
+      </template>
+    </CommonSimpleEntityList>
+  </CustomerTicketListSkeleton>
 </template>

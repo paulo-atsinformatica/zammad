@@ -1,4 +1,4 @@
-<!-- Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/ -->
+<!-- Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/ -->
 
 <script setup lang="ts">
 import { computed, reactive } from 'vue'
@@ -67,14 +67,11 @@ const formSchema = [
   {
     isLayout: true,
     component: 'FormGroup',
-    props: {
-      class: '@container/form-group',
-    },
     children: [
       {
         id: 'timeUnit',
         name: 'time_unit',
-        label: __('Accounted Time'),
+        label: __('Accounted time'),
         type: 'text',
         required: true,
         placeholder: __('Enter the time you want to record'),
@@ -107,7 +104,7 @@ const formSchema = [
         if: '$timeAccountingTypes === true',
         id: 'accountedTimeTypeId',
         name: 'accounted_time_type_id',
-        label: __('Activity Type'),
+        label: __('Activity type'),
         type: 'select',
         props: {
           clearable: true,
@@ -125,7 +122,7 @@ const schemaData = reactive({
 })
 
 const footerActionOptions = computed<ActionFooterOptions>(() => ({
-  actionLabel: __('Account Time'),
+  actionLabel: __('Account time'),
   actionButton: { variant: 'submit', type: 'submit' },
   cancelLabel: __('Skip'),
 }))
@@ -133,7 +130,7 @@ const footerActionOptions = computed<ActionFooterOptions>(() => ({
 
 <template>
   <CommonFlyout
-    :header-title="__('Time Accounting')"
+    :header-title="__('Time accounting')"
     :form="form"
     :footer-action-options="footerActionOptions"
     header-icon="stopwatch"

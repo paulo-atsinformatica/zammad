@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import { getNode } from '@formkit/core'
 import { within } from '@testing-library/vue'
@@ -77,7 +77,7 @@ describe('Ticket detail view', () => {
       expect(
         within(sidebar).getByRole('heading', {
           level: 3,
-          name: 'Accounted Time',
+          name: 'Accounted time',
         }),
       ).toBeInTheDocument()
 
@@ -184,9 +184,16 @@ describe('Ticket detail view', () => {
 
       const view = await visitView('/tickets/1')
 
-      await view.events.click(await view.findByRole('button', { name: 'Add internal note' }))
+      await getNode('form-ticket-edit-1')?.settled
 
-      await view.events.type(await view.findByRole('textbox', { name: 'Text' }), 'Foo note')
+      const floatingToolbar = view.getByRole('toolbar', { name: 'Ticket actions' })
+
+      await view.events.click(
+        await within(floatingToolbar).findByRole('button', { name: 'Add internal note' }),
+      )
+
+      const editor = await view.findByRole('textbox', { name: 'Text' })
+      await view.events.type(editor, 'Foo note')
 
       mockTicketUpdateMutation({
         ticketUpdate: {
@@ -211,16 +218,16 @@ describe('Ticket detail view', () => {
       await waitForTicketUpdateMutationCalls()
 
       const flyout = await view.findByRole('complementary', {
-        name: 'Time Accounting',
+        name: 'Time accounting',
       })
 
       expect(
         within(flyout).getByRole('heading', {
           level: 2,
         }),
-      ).toHaveTextContent('Time Accounting')
+      ).toHaveTextContent('Time accounting')
 
-      await view.events.type(await within(flyout).findByLabelText('Accounted Time'), '1')
+      await view.events.type(await within(flyout).findByLabelText('Accounted time'), '1')
 
       await getNode('form-ticket-time-accounting')?.settled
 
@@ -233,7 +240,7 @@ describe('Ticket detail view', () => {
 
       await view.events.click(
         within(flyout).getByRole('button', {
-          name: 'Account Time',
+          name: 'Account time',
         }),
       )
 
@@ -251,7 +258,7 @@ describe('Ticket detail view', () => {
 
       expect(
         view.queryByRole('complementary', {
-          name: 'Time Accounting',
+          name: 'Time accounting',
         }),
       ).not.toBeInTheDocument()
     })

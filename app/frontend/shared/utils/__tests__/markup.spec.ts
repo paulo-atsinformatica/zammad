@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import { cleanupMarkup, markup } from '../markup.ts'
 
@@ -9,8 +9,9 @@ describe('markup()', () => {
     expect(markup('_underline_')).toBe('<u>underline</u>')
     expect(markup('//strikethrough//')).toBe('<del>strikethrough</del>')
     expect(markup('§keyboard§')).toBe('<kbd>keyboard</kbd>')
+    expect(markup('Paragraph¶New line')).toBe('Paragraph<br>New line')
     expect(markup('[link](https://zammad.org)')).toBe(
-      '<a href="https://zammad.org" target="_blank">link</a>',
+      '<a href="https://zammad.org" target="_blank" rel="noopener noreferrer">link</a>',
     )
   })
 
@@ -26,6 +27,7 @@ describe('cleanupMarkup()', () => {
     expect(cleanupMarkup('_underline_')).toBe('underline')
     expect(cleanupMarkup('//strikethrough//')).toBe('strikethrough')
     expect(cleanupMarkup('§keyboard§')).toBe('keyboard')
+    expect(cleanupMarkup('Paragraph¶New line')).toBe('ParagraphNew line')
     expect(cleanupMarkup('[link](https://zammad.org)')).toBe('link')
   })
 })

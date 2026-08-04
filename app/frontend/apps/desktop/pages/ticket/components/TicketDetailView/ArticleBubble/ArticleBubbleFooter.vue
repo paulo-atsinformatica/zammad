@@ -1,4 +1,4 @@
-<!-- Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/ -->
+<!-- Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/ -->
 
 <script setup lang="ts">
 import CommonFilePreview from '#shared/components/CommonFilePreview/CommonFilePreview.vue'
@@ -38,7 +38,6 @@ defineEmits<{
       :download-url="attachment.downloadUrl"
       :preview-url="attachment.preview"
       :file="attachment"
-      :no-preview="!$c.ui_ticket_zoom_attachments_preview"
       no-remove
       @preview="($event, type) => $emit('preview', type, attachment)"
     />

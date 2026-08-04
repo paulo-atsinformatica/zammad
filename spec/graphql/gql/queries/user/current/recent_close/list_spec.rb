@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 require 'rails_helper'
 
@@ -71,6 +71,27 @@ RSpec.describe Gql::Queries::User::Current::RecentClose::List, type: :graphql do
           { '__typename' => 'Ticket', 'id' => gql.id(inaccessible_customer_ticket) },
           { '__typename' => 'User', 'id' => gql.id(customer) },
           { '__typename' => 'Ticket', 'id' => gql.id(ticket) },
+        ]
+      )
+    end
+  end
+
+  context 'with an admin without agent permissions', authenticated_as: :user do
+    let(:admin) { create(:admin) }
+    let(:user)  { admin }
+
+    before do
+      admin.roles.each { |role| role.permission_revoke('ticket.agent') }
+      admin.reload
+
+      # Re-run the query with updated permissions; existing recent_closes for this user
+      gql.execute(query, variables: variables)
+    end
+
+    it 'returns data without tickets' do
+      expect(gql.result.data).to eq(
+        [
+          { '__typename' => 'User', 'id' => gql.id(customer) },
         ]
       )
     end

@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import { getNode } from '@formkit/core'
 import { FormKit } from '@formkit/vue'
@@ -62,7 +62,6 @@ const testOptions = [
 
 const wrapperParameters = {
   form: true,
-  formField: true,
   store: true,
   dialog: true,
 }
@@ -280,10 +279,14 @@ describe('Form - Field - TreeSelect - Options', () => {
 
     let selectOptions = wrapper.getAllByRole('option')
 
-    expect(selectOptions).toHaveLength(optionsProp.length)
+    expect(selectOptions).toHaveLength(optionsProp.length + 1)
 
     selectOptions.forEach((selectOption, index) => {
-      expect(selectOption).toHaveTextContent(testOptions[index].label)
+      if (index === testOptions.length) {
+        expect(selectOption).toHaveTextContent('10')
+      } else {
+        expect(selectOption).toHaveTextContent(testOptions[index].label!)
+      }
     })
 
     optionsProp.push({
@@ -974,7 +977,7 @@ describe('Form - Field - TreeSelect - Features', () => {
 
     expect(selectOptions[0]).toHaveTextContent('Item IV — Item A › Item 2')
 
-    await wrapper.events.click(wrapper.getByLabelText('Clear Search'))
+    await wrapper.events.click(wrapper.getByLabelText('Clear search'))
 
     expect(filterElement).toHaveValue('')
 
@@ -1161,7 +1164,7 @@ describe('Form - Field - TreeSelect - Accessibility', () => {
       },
     })
 
-    expect(wrapper.getByRole('button')).toHaveAttribute('aria-label', 'Clear Selection')
+    expect(wrapper.getByRole('button')).toHaveAttribute('aria-label', 'Clear selection')
   })
 
   it('supports keyboard navigation', async () => {

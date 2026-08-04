@@ -1,6 +1,6 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
-require_dependency 'tasks/zammad/command.rb'
+require 'tasks/zammad/package_command'
 
 module Tasks
   module Zammad
@@ -8,7 +8,7 @@ module Tasks
       # Package migrations must not be executed in the same process that also executed
       #   Package.install or Package.link, as the codebase is in an inconsistent state.
       # This is enforced by Tasks:Zammad::Command which prevents command chaining.
-      class Precompile < Tasks::Zammad::Command
+      class Precompile < Tasks::Zammad::PackageCommand
 
         def self.description
           'Execute all package related precompilations.'
@@ -20,11 +20,11 @@ module Tasks
           if ::Package.app_package_installation?
             exec_command('zammad run pnpm install --production=false')
             exec_command('zammad run pnpm run generate-setting-types')
-            exec_command('zammad run pnpm run generate-graphql-api')
+            exec_command('ZAMMAD_GRAPHQL_INTROSPECTION=true zammad run pnpm run generate-graphql-api')
           else
             exec_command('pnpm install --production=false')
             exec_command('pnpm run generate-setting-types')
-            exec_command('pnpm run generate-graphql-api')
+            exec_command('ZAMMAD_GRAPHQL_INTROSPECTION=true pnpm run generate-graphql-api')
           end
         end
 

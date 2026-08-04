@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 class Ticket::State < ApplicationModel
   include HasDefaultModelUserRelations
@@ -57,7 +57,7 @@ returns:
   def ensure_defaults
     return if callback_loop
 
-    %w[default_create default_follow_up].each do |default_field|
+    %w[default_create default_follow_up default_close].each do |default_field|
       states_with_default = Ticket::State.where(default_field => true)
       next if states_with_default.one?
 

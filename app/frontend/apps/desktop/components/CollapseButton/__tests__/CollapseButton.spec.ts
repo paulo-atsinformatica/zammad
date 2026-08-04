@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import { renderComponent } from '#tests/support/components/index.ts'
 
@@ -187,9 +187,7 @@ describe('CollapseButton', () => {
       expect(wrapper.getByRole('button')).toHaveClasses([
         'focus-visible:bg-blue-800',
         'active:dark:bg-blue-800',
-        'focus:dark:bg-blue-800',
         'active:bg-blue-800',
-        'focus:bg-blue-800',
         'hover:bg-blue-600',
         'hover:dark:bg-blue-900',
         'text-black',

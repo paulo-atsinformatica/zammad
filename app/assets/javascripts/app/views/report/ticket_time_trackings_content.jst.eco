@@ -1,0 +1,79 @@
+<div class="report-content">
+  <% if @downloadCount > 0: %>
+  <div class="report-download-actions" style="margin-bottom: 12px;">
+    <a class="btn btn--action" href="<%= @downloadUrl %>" target="_blank" data-type="attachment"><%- @Icon('download') %><span><%- @T('Baixar %s registro(s)', @downloadCount) %></span></a>
+  </div>
+  <% end %>
+  <table class="table table--ticket-time-trackings">
+    <colgroup>
+      <col style="width: 140px;">
+      <col>
+      <col>
+      <col>
+      <col>
+      <col>
+      <col>
+      <col>
+      <col>
+    </colgroup>
+    <thead>
+      <tr>
+        <th><%- @T('Ticket') %></th>
+        <th><%- @T('Responsável') %></th>
+        <th><%- @T('Data de abertura') %></th>
+        <th><%- @T('Data de fechamento') %></th>
+        <th><%- @T('Data/Hora de início') %></th>
+        <th><%- @T('Data/Hora de término') %></th>
+        <th><%- @T('Tempo total de atendimento') %></th>
+        <th><%- @T('Tempo do atendimento pausado') %></th>
+        <th><%- @T('Estado atual') %></th>
+      </tr>
+    </thead>
+    <tbody>
+      <% if !@data.entries || @data.entries.length == 0: %>
+      <tr>
+        <td colspan="9"><%- @T('Nenhum registro encontrado') %></td>
+      </tr>
+      <% else: %>
+        <% for item in @data.entries: %>
+          <tr>
+            <td class="js-ticket-cell">#<%= item.ticket?.number %> - <%= item.ticket?.title %></td>
+            <td><%= item.user?.firstname %> <%= item.user?.lastname %></td>
+            <td><%= @formatDate(item.opened_at) %></td>
+            <td><%= @formatDate(item.closed_at) %></td>
+            <td><%= @formatDateTime(item.started_at) %></td>
+            <td><%= @formatDateTime(item.ended_at) %></td>
+            <td><%= @formatDuration(item.total_seconds) %></td>
+            <td><%= @formatDuration(item.paused_seconds) %></td>
+            <% if item.current_state: %>
+              <td><%= item.current_state %></td>
+            <% else: %>
+              <td>-</td>
+            <% end %>
+          </tr>
+        <% end %>
+      <% end %>
+    </tbody>
+  </table>
+  <% if @data.pagination && @data.pagination.total_count > 0: %>
+  <div class="report-pagination">
+    <span class="report-pagination-info">
+      <%- @T('Mostrando') %> <%= (@data.pagination.page - 1) * @data.pagination.per_page + 1 %>-<%= Math.min(@data.pagination.page * @data.pagination.per_page, @data.pagination.total_count) %> <%- @T('de') %> <%= @data.pagination.total_count %> <%- @T('registros') %>
+    </span>
+    <span class="report-pagination-nav">
+      <a href="#" class="js-page-prev btn btn-default btn-sm <%= if @data.pagination.page <= 1 then 'disabled' else '' %>"><%- @T('Anterior') %></a>
+      <span class="report-pagination-page"><%- @T('Página') %> <%= @data.pagination.page %> <%- @T('de') %> <%= @data.pagination.total_pages %></span>
+      <a href="#" class="js-page-next btn btn-default btn-sm <%= if @data.pagination.page >= @data.pagination.total_pages then 'disabled' else '' %>"><%- @T('Próxima') %></a>
+    </span>
+    <span class="report-pagination-per-page">
+      <label><%- @T('Registros por página') %></label>
+      <select class="js-per-page form-control input-sm" style="display:inline-block;width:auto;">
+        <option value="25" <%= if @data.pagination.per_page == 25 then 'selected' else '' %>>25</option>
+        <option value="50" <%= if @data.pagination.per_page == 50 then 'selected' else '' %>>50</option>
+        <option value="100" <%= if @data.pagination.per_page == 100 then 'selected' else '' %>>100</option>
+      </select>
+    </span>
+  </div>
+  <% end %>
+</div>
+

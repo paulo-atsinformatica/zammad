@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import { defineAsyncComponent, type App } from 'vue'
 
@@ -30,7 +30,7 @@ const pluginModules: ImportGlobEagerOutput<FormKitPlugin> = import.meta.glob(
   { eager: true },
 )
 export const mobileFormFieldModules: ImportGlobEagerOutput<FormFieldTypeImportModules> =
-  import.meta.glob('../components/Form/fields/**/index.ts', { eager: true })
+  import.meta.glob('../components/Form/fields/*/index.ts', { eager: true })
 const themeExtensionModules: ImportGlobEagerOutput<FormThemeExtension> = import.meta.glob(
   './theme/global/extensions/*.ts',
   { eager: true },
@@ -82,6 +82,9 @@ export const initializeFormFields = () => {
     input: {
       container: 'p-2',
       inlineContainer: '',
+    },
+    tableMenu: {
+      triggerButton: 'w-7 h-7 flex items-center justify-center bg-blue/80 text-white',
     },
   })
 

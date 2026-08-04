@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 require 'rails_helper'
 
@@ -331,4 +331,5 @@ RSpec.describe Translation do
       expect(described_class.translate_all('en')).to eq({})
     end
   end
+
 end

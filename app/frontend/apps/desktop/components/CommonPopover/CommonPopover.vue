@@ -1,4 +1,4 @@
-<!-- Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/ -->
+<!-- Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/ -->
 
 <script setup lang="ts">
 import {
@@ -13,6 +13,7 @@ import {
   useCurrentElement,
   type MaybeElementRef,
   type VueInstance,
+  unrefElement,
 } from '@vueuse/core'
 import {
   type ComponentPublicInstance,
@@ -26,7 +27,6 @@ import {
   useTemplateRef,
 } from 'vue'
 
-import { useAppName } from '#shared/composables/useAppName.ts'
 import { useOnEmitter } from '#shared/composables/useOnEmitter.ts'
 import { useTrapTab } from '#shared/composables/useTrapTab.ts'
 import { EnumTextDirection } from '#shared/graphql/types.ts'
@@ -35,6 +35,8 @@ import { useLocaleStore } from '#shared/stores/locale.ts'
 import stopEvent from '#shared/utils/events.ts'
 import testFlags from '#shared/utils/testFlags.ts'
 
+import { useAppBreakpoints } from '#desktop/composables/responsiveness/useAppBreakpoints.ts'
+import { useDelayTimings } from '#desktop/composables/useDelayTimings.ts'
 import { useTransitionConfig } from '#desktop/composables/useTransitionConfig.ts'
 
 import { usePopoverInstances } from './usePopoverInstances.ts'
@@ -64,6 +66,8 @@ const emit = defineEmits<{
   close: []
 }>()
 
+const { isSmallScreen } = useAppBreakpoints()
+
 const popoverElement = useTemplateRef('popover')
 
 const showPopover = ref(false)
@@ -84,8 +88,14 @@ const hasDirectionRight = computed(() => {
 
 const locale = useLocaleStore()
 
+const overflowOrientation = ref<Orientation | null>(null)
+
 const autoOrientation = computed(() => {
-  if (props.orientation === 'autoVertical') {
+  if (overflowOrientation.value) return overflowOrientation.value
+
+  // ignore (auto-)Horizontal in favor for autoVertical on small screens
+  // since there is no enough space for left and right placement
+  if (props.orientation === 'autoVertical' || isSmallScreen.value) {
     return hasDirectionUp.value ? 'top' : 'bottom'
   }
 
@@ -101,9 +111,9 @@ const autoOrientation = computed(() => {
   return props.orientation
 })
 
-const verticalOrientation = computed(() => {
-  return autoOrientation.value === 'top' || autoOrientation.value === 'bottom'
-})
+const verticalOrientation = computed(
+  () => autoOrientation.value === 'top' || autoOrientation.value === 'bottom',
+)
 
 const overflowHorizontalPlacement = ref<Placement | null>(null)
 
@@ -111,6 +121,7 @@ whenever(
   () => !showPopover.value,
   () => {
     overflowHorizontalPlacement.value = null
+    overflowOrientation.value = null
   },
 )
 
@@ -119,8 +130,7 @@ const currentPlacement = computed(() => {
 
   if (placement === 'arrowStart' || placement === 'arrowEnd') {
     if (locale.localeData?.dir === EnumTextDirection.Rtl) {
-      if (placement === 'arrowStart') return 'arrowEnd'
-      return 'arrowStart'
+      return placement === 'arrowStart' ? 'arrowEnd' : 'arrowStart'
     }
     return placement
   }
@@ -143,18 +153,7 @@ const PLACEMENT_OFFSET_WITH_ARROW = 30
 const ORIENTATION_OFFSET_WO_ARROW = 6
 const ORIENTATION_OFFSET_WITH_ARROW = 16
 
-const appName = useAppName()
-
 const popoverStyle = computed(() => {
-  if (appName === 'mobile') {
-    return {
-      top: '50%',
-      left: '50%',
-      transform: 'translate(-50%, -50%)',
-      zIndex: props.zIndex,
-    }
-  }
-
   if (!targetElementBounds.value) return { top: 0, left: 0, maxHeight: 0 }
 
   const maxHeight = hasDirectionUp.value
@@ -279,7 +278,8 @@ const { moveNextFocusToTrap } = useTrapTab(popoverElement)
 const { instances } = usePopoverInstances()
 
 const updateOwnerAriaExpandedState = () => {
-  const element = props.owner
+  const element = unrefElement(props.owner)
+
   if (!element) return
 
   if ('ariaExpanded' in element) {
@@ -290,6 +290,7 @@ const updateOwnerAriaExpandedState = () => {
 let removeOnKeyUpEscapeHandler: () => void
 
 const lastActiveElement = ref<HTMLElement>()
+const ownerElement = useCurrentElement(toRef(props, 'owner') as MaybeElementRef<VueInstance>)
 
 const isLastActiveElementOwner = computed(() => lastActiveElement.value === ownerElement.value)
 
@@ -316,19 +317,36 @@ const checkHorizontalOverflow = () => {
     const popoverElementReference = popoverElement.value as HTMLElement
     const popoverRect = popoverElementReference.getBoundingClientRect()
 
-    // Check if overflowing right edge of viewport
-    if (props.placement === 'start' && popoverRect.right > windowSize.width.value) {
-      overflowHorizontalPlacement.value = 'end'
+    // For vertical orientations (top/bottom), check horizontal placement overflow
+    if (verticalOrientation.value) {
+      // Check if overflowing right edge of viewport
+      if (
+        (props.placement === 'start' || props.placement === 'arrowStart') &&
+        popoverRect.right > windowSize.width.value
+      ) {
+        overflowHorizontalPlacement.value = props.placement === 'start' ? 'end' : 'arrowEnd'
+      }
+
+      // Check if overflowing left edge of viewport
+      if ((props.placement === 'end' || props.placement === 'arrowEnd') && popoverRect.left < 0) {
+        overflowHorizontalPlacement.value = props.placement === 'end' ? 'start' : 'arrowStart'
+      }
     }
 
-    // Check if overflowing left edge of viewport
-    if (props.placement === 'end' && popoverRect.left < 0) {
-      overflowHorizontalPlacement.value = 'start'
+    // For horizontal orientations (left/right), check if popover overflows viewport edges
+    if (!verticalOrientation.value) {
+      // When orientation is 'left' and popover overflows left edge, flip to 'right'
+      if (autoOrientation.value === 'left' && popoverRect.left < 0) {
+        overflowOrientation.value = 'right'
+      }
+
+      // When orientation is 'right' and popover overflows right edge, flip to 'left'
+      if (autoOrientation.value === 'right' && popoverRect.right > windowSize.width.value) {
+        overflowOrientation.value = 'left'
+      }
     }
   })
 }
-
-const ownerElement = useCurrentElement(toRef(props, 'owner') as MaybeElementRef<VueInstance>)
 
 const isOwnerHovered = useElementHover(computed(() => ownerElement.value as Element))
 
@@ -380,11 +398,12 @@ const openPopoverWithHoverCheck = () => {
   openPopoverImmediate()
 }
 
-const { durations, timings } = useTransitionConfig()
+const { timings } = useDelayTimings()
+const { transitions } = useTransitionConfig()
 
 const { start: startOpenTimeout, stop: cancelOpenPopover } = useTimeoutFn(
   openPopoverWithHoverCheck,
-  timings.veryShort,
+  timings.value.veryShort,
   { immediate: false },
 )
 
@@ -430,24 +449,33 @@ onMounted(() => {
 useOnEmitter('close-popover', () => {
   if (showPopover.value) closePopover()
 })
+
+// We have certain situation where we don't detect when the positioning is changing
+// For example when the popover was opened via long press in the top header
+// We resize the sidebar but since it is a grid we are changing css values
+// Only changes on the window size and element bounding are detected
+// In this cases we need to trigger a manual update
+useOnEmitter('resize-layout', () => {
+  if (showPopover.value && targetElementBounds.value) closePopover()
+})
 </script>
 
 <template>
   <Teleport to="body">
-    <Transition name="fade" :duration="durations.normal">
+    <Transition :name="transitions.fade">
       <div
         v-if="persistent"
         v-show="showPopover"
         :id="id"
         ref="popover"
         role="region"
-        class="popover fixed flex"
+        class="popover fixed flex print:hidden"
         :class="[classes.base]"
         :style="popoverStyle"
         :aria-labelledby="owner && '$el' in owner ? owner.$el?.id : owner?.id"
         v-bind="$attrs"
       >
-        <div class="overflow-y-auto" :class="{ 'w-full': !noFullWidth }">
+        <div class="max-w-md overflow-y-auto" :class="{ 'w-full': !noFullWidth }">
           <slot />
         </div>
         <div
@@ -461,13 +489,13 @@ useOnEmitter('close-popover', () => {
         :id="id"
         ref="popover"
         role="region"
-        class="popover fixed flex"
+        class="popover fixed flex print:hidden"
         :class="[classes.base]"
         :style="popoverStyle"
         :aria-labelledby="owner && '$el' in owner ? owner.$el?.id : owner?.id"
         v-bind="$attrs"
       >
-        <div class="overflow-y-auto" :class="{ 'w-full': !noFullWidth }">
+        <div class="max-w-md overflow-y-auto" :class="{ 'w-full': !noFullWidth }">
           <slot />
         </div>
         <div

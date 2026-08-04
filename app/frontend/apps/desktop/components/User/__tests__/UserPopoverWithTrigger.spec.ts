@@ -1,17 +1,21 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import { within } from '@testing-library/vue'
+import { flushPromises } from '@vue/test-utils'
+import { computed } from 'vue'
 
 import renderComponent from '#tests/support/components/renderComponent.ts'
 import { mockPermissions } from '#tests/support/mock-permissions.ts'
 
 import { convertToGraphQLId } from '#shared/graphql/utils.ts'
+import QueryHandler from '#shared/server/apollo/handler/QueryHandler.ts'
 import { SYSTEM_USER_ID, SYSTEM_USER_INTERNAL_ID } from '#shared/utils/constants.ts'
 
 import {
   mockUserInfoForPopoverQuery,
   waitForUserInfoForPopoverQueryCalls,
 } from '../UserPopoverWithTrigger/graphql/queries/userInfoForPopover.mocks.ts'
+import UserPopover from '../UserPopoverWithTrigger/UserPopover.vue'
 import UserPopoverWithTrigger, { type Props } from '../UserPopoverWithTrigger.vue'
 
 const dummyUser = {
@@ -65,12 +69,16 @@ const systemUser = {
   },
 }
 
-const renderUserPopover = (props?: Partial<Props>, isAgent = true, isSystemUser = false) => {
+const renderUserPopover = (
+  props?: Partial<Props>,
+  permission = 'ticket.agent',
+  isSystemUser = false,
+) => {
   mockUserInfoForPopoverQuery({
     user: props?.user ?? dummyUser,
   })
 
-  mockPermissions([isAgent ? 'ticket.agent' : 'ticket.customer'])
+  mockPermissions([permission])
 
   return renderComponent(UserPopoverWithTrigger, {
     props: {
@@ -89,13 +97,26 @@ describe('UserPopover', () => {
   })
 
   it('shows a skeleton when user info is not available', async () => {
-    const wrapper = renderUserPopover()
+    vi.useFakeTimers()
 
-    await wrapper.events.hover(wrapper.getByRole('img', { name: `Avatar (${dummyUser.fullname})` }))
+    vi.spyOn(QueryHandler.prototype, 'loadingWithoutCachedResult').mockReturnValue(
+      computed(() => true),
+    )
 
-    const popover = await wrapper.findByRole('region')
-    // :TODO a11y testing
-    expect(within(popover).getAllByRole('progressbar').length).toBe(10)
+    const wrapper = renderComponent(UserPopover, {
+      props: { userAvatar: dummyUser },
+      router: true,
+      form: true,
+    })
+
+    await flushPromises()
+    await vi.advanceTimersByTimeAsync(0)
+
+    expect(wrapper.getAllByRole('progressbar')).toHaveLength(10)
+
+    vi.useRealTimers()
+    vi.resetAllMocks()
+    await vi.dynamicImportSettled()
   })
 
   it('opens and shows the displays a user popover', async () => {
@@ -109,7 +130,7 @@ describe('UserPopover', () => {
     expect(within(popover).getByText(dummyUser.organization.name)).toBeVisible()
   })
 
-  it.todo('displays organization names with remaining count', async () => {
+  it('displays secondary organization names', async () => {
     const secondaryOrganizations = {
       edges: [
         {
@@ -139,34 +160,40 @@ describe('UserPopover', () => {
             name: 'Apple',
           },
         },
+        {
+          node: {
+            id: convertToGraphQLId('Organization', 5),
+            internalId: 5,
+            active: true,
+            vip: false,
+            name: 'Tesla',
+          },
+        },
       ],
-      totalCount: 4,
+      totalCount: 5,
     }
 
-    mockUserInfoForPopoverQuery({
+    const wrapper = renderUserPopover({
       user: {
         ...dummyUser,
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-expect-error
         secondaryOrganizations,
       },
     })
-
-    const wrapper = renderUserPopover()
 
     await wrapper.events.hover(wrapper.getByRole('img', { name: `Avatar (${dummyUser.fullname})` }))
 
     const calls = await waitForUserInfoForPopoverQueryCalls()
 
     expect(calls.at(-1)?.variables).toEqual({
+      secondaryOrganizationsCount: 5,
       userId: dummyUser.id,
     })
 
     const popover = await wrapper.findByRole('region')
 
-    expect(await within(popover).findByText('VW')).toBeVisible()
-    expect(within(popover).getByText('Audi')).toBeVisible()
-    expect(within(popover).getByText('Apple')).toBeVisible()
-
-    expect(within(popover).getByRole('link', { name: '1 more' })).toBeVisible()
+    expect(await within(popover).findByText('Apple')).toBeVisible()
   })
 
   it('renders as link by default', () => {
@@ -201,7 +228,7 @@ describe('UserPopover', () => {
   })
 
   it('does not display popover for customer user', async () => {
-    const wrapper = renderUserPopover(undefined, false)
+    const wrapper = renderUserPopover(undefined, 'ticket.customer')
 
     expect(wrapper.queryByRole('link')).not.toBeInTheDocument()
 
@@ -210,8 +237,16 @@ describe('UserPopover', () => {
     expect(wrapper.queryByRole('region')).not.toBeInTheDocument()
   })
 
+  it('displays popover for admin user', () => {
+    const wrapper = renderUserPopover(undefined, 'admin.user')
+
+    const avatarWrapper = wrapper.getByRole('link')
+
+    expect(avatarWrapper).toHaveAttribute('href', `/users/${dummyUser.internalId}`)
+  })
+
   it('does not display popover for system user', async () => {
-    const wrapper = renderUserPopover(undefined, true, true)
+    const wrapper = renderUserPopover(undefined, 'ticket.agent', true)
 
     expect(wrapper.queryByRole('link')).not.toBeInTheDocument()
 

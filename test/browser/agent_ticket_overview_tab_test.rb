@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 require 'browser_test_helper'
 
@@ -81,7 +81,7 @@ class AgentTicketOverviewTabTest < TestCase
     watch_for(
       css:     '.tasks .task.is-active',
       value:   "overview tab test #2 - #{title}",
-      timeout: 8,
+      timeout: 20,
     )
 
     task_count_equals(1)

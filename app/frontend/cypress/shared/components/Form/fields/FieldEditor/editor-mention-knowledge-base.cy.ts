@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import { mockApolloClient } from '#cy/utils.ts'
 
@@ -8,10 +8,10 @@ import { convertToGraphQLId } from '#shared/graphql/utils.ts'
 
 import { mountEditorWithAttachments } from './utils.ts'
 
-describe('Testing "knowledge base" popup: "??" command', { retries: 2 }, () => {
-  it('inserts a text', () => {
+describe('Testing "knowledge base" popup: "??" command', () => {
+  it('inserts a knowledge base mention', () => {
     const client = mockApolloClient()
-    client.setRequestHandler(KnowledgeBaseAnswerSuggestionsDocument, async () => ({
+    const mock = cy.spy(async () => ({
       data: {
         knowledgeBaseAnswerSuggestions: [
           {
@@ -29,6 +29,9 @@ describe('Testing "knowledge base" popup: "??" command', { retries: 2 }, () => {
         ],
       },
     }))
+
+    client.setRequestHandler(KnowledgeBaseAnswerSuggestionsDocument, mock)
+
     client.setRequestHandler(KnowledgeBaseAnswerSuggestionContentTransformDocument, async () => ({
       data: {
         knowledgeBaseAnswerSuggestionContentTransform: {
@@ -64,11 +67,17 @@ describe('Testing "knowledge base" popup: "??" command', { retries: 2 }, () => {
       .click()
 
     cy.findByRole('textbox')
-      .should('have.text', 'knowledge base answer body')
+      .should('contain.text', 'knowledge base answer body')
       .type('{backspace}{backspace}r')
-      .should('have.text', 'knowledge base answer bor')
+      .should('contain.text', 'knowledge base answer bor')
 
-    cy.findByText('Zammad.png').should('exist')
+    cy.contains('Zammad.png').should('exist')
     cy.findByText('923 KB').should('exist')
+
+    // asserting with `calledWith` is stricter than needed and can fail on unrelated payload expansion.
+    // Prefer `calledWithMatch` to lock only the relevant fields.
+    cy.wrap(mock).should('have.been.calledWithMatch', {
+      query: 'How to c',
+    })
   })
 })

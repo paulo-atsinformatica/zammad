@@ -6,11 +6,14 @@ html,
   height: 100%;
 }
 html {
-  background-color: var(--background-primary);
+  background-color: #480404;
 }
 body,
 html {
   margin: 0;
+  font-family: 'Fira Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: 16px;
+  line-height: 21px;
 }
 #loading-app {
   display: flex;
@@ -42,213 +45,36 @@ html {
 .loading-failed {
   position: relative;
   opacity: 0;
-  color: #fff;
-  font-weight: 600;
+  color: var(--text-contrast);
   width: 175px;
   text-align: center;
   margin-top: -52px;
   transition: opacity 0.5s;
-  font-size: 16px;
-  line-height: 21px;
+  font-weight: 600;
 }
 .loading-failed.active {
   opacity: 1;
 }
+.noscript-message {
+  color: var(--text-contrast);
+  text-align: center;
+  font-weight: 600;
+  margin-top: -52px;
+}
 </style>
 <div id="loading-app">
   <div class="loading-main">
-    <svg class="loading-animation" width="80px" height="68px" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 42 36" shape-rendering="geometricPrecision">
+    <svg class="loading-animation" width="90px" height="35px" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 90 35" shape-rendering="geometricPrecision">
       <style>
-        #logo-s-path18 { animation: logo-s-path18_c_o 2000ms linear infinite normal forwards }
-
-        @keyframes logo-s-path18_c_o {
-          0% { opacity: 0 }
-          65% { opacity: 0 }
-          70% { opacity: 1 }
-          100% { opacity: 1 }
+        @keyframes logo-pulse {
+          0%, 100% { opacity: 1; transform: scale(1); }
+          50% { opacity: 0.7; transform: scale(0.95); }
         }
-
-        #logo-s-path19 { animation: logo-s-path19_c_o 2000ms linear infinite normal forwards }
-
-        @keyframes logo-s-path19_c_o {
-          0% { opacity: 0 }
-          60% { opacity: 0 }
-          65% { opacity: 1 }
-          100% { opacity: 1 }
-        }
-
-        #logo-s-path20 { animation: logo-s-path20_c_o 2000ms linear infinite normal forwards }
-
-        @keyframes logo-s-path20_c_o {
-          0% { opacity: 0 }
-          75% { opacity: 0 }
-          80% { opacity: 1 }
-          100% { opacity: 1 }
-        }
-
-        #logo-s-path21 { animation: logo-s-path21_c_o 2000ms linear infinite normal forwards }
-
-        @keyframes logo-s-path21_c_o {
-          0% { opacity: 0 }
-          80% { opacity: 0 }
-          85% { opacity: 1 }
-          100% { opacity: 1 }
-        }
-
-        #logo-s-path22 { animation: logo-s-path22_c_o 2000ms linear infinite normal forwards }
-
-        @keyframes logo-s-path22_c_o {
-          0% { opacity: 0 }
-          70% { opacity: 0 }
-          75% { opacity: 1 }
-          100% { opacity: 1 }
-        }
-
-        #logo-s-path23 { animation: logo-s-path23_c_o 2000ms linear infinite normal forwards }
-
-        @keyframes logo-s-path23_c_o {
-          0% { opacity: 0 }
-          55% { opacity: 0 }
-          60% { opacity: 1 }
-          100% { opacity: 1 }
-        }
-
-        #logo-s-path24 { animation: logo-s-path24_c_o 2000ms linear infinite normal forwards }
-
-        @keyframes logo-s-path24_c_o {
-          0% { opacity: 0 }
-          50% { opacity: 0 }
-          55% { opacity: 1 }
-          100% { opacity: 1 }
-        }
-
-        #logo-s-path25 { animation: logo-s-path25_c_o 2000ms linear infinite normal forwards }
-
-        @keyframes logo-s-path25_c_o {
-          0% { opacity: 0 }
-          45% { opacity: 0 }
-          50% { opacity: 1 }
-          100% { opacity: 1 }
-        }
-
-        #logo-s-path26 { animation: logo-s-path26_c_o 2000ms linear infinite normal forwards }
-
-        @keyframes logo-s-path26_c_o {
-          0% { opacity: 0 }
-          5% { opacity: 1 }
-          100% { opacity: 1 }
-        }
-
-        #logo-s-path27 { animation: logo-s-path27_c_o 2000ms linear infinite normal forwards }
-
-        @keyframes logo-s-path27_c_o {
-          0% { opacity: 0 }
-          5% { opacity: 0 }
-          10% { opacity: 1 }
-          100% { opacity: 1 }
-        }
-
-        #logo-s-path28 { animation: logo-s-path28_c_o 2000ms linear infinite normal forwards }
-
-        @keyframes logo-s-path28_c_o {
-          0% { opacity: 0 }
-          10% { opacity: 0 }
-          15% { opacity: 1 }
-          100% { opacity: 1 }
-        }
-
-        #logo-s-path29 { animation: logo-s-path29_c_o 2000ms linear infinite normal forwards }
-
-        @keyframes logo-s-path29_c_o {
-          0% { opacity: 0 }
-          20% { opacity: 0 }
-          25% { opacity: 1 }
-          100% { opacity: 1 }
-        }
-
-        #logo-s-path30 { animation: logo-s-path30_c_o 2000ms linear infinite normal forwards }
-
-        @keyframes logo-s-path30_c_o {
-          0% { opacity: 0 }
-          40% { opacity: 0 }
-          45% { opacity: 1 }
-          100% { opacity: 1 }
-        }
-
-        #logo-s-path31 { animation: logo-s-path31_c_o 2000ms linear infinite normal forwards }
-
-        @keyframes logo-s-path31_c_o {
-          0% { opacity: 0 }
-          25% { opacity: 0 }
-          30% { opacity: 1 }
-          100% { opacity: 1 }
-        }
-
-        #logo-s-path32 { animation: logo-s-path32_c_o 2000ms linear infinite normal forwards }
-
-        @keyframes logo-s-path32_c_o {
-          0% { opacity: 0 }
-          30% { opacity: 0 }
-          35% { opacity: 1 }
-          100% { opacity: 1 }
-        }
-
-        #logo-s-path33 { animation: logo-s-path33_c_o 2000ms linear infinite normal forwards }
-
-        @keyframes logo-s-path33_c_o {
-          0% { opacity: 0 }
-          35% { opacity: 0 }
-          40% { opacity: 1 }
-          100% { opacity: 1 }
-        }
-
-        #logo-s-path34 { animation: logo-s-path34_c_o 2000ms linear infinite normal forwards }
-
-        @keyframes logo-s-path34_c_o {
-          0% { opacity: 0 }
-          15% { opacity: 0 }
-          20% { opacity: 1 }
-          100% { opacity: 1 }
+        .loading-animation {
+          animation: logo-pulse 1.5s ease-in-out infinite;
         }
       </style>
-      <g id="logo-u-b-w" opacity="0.38">
-        <path id="logo-s-path1" d="M27.3375,12.6L36.72,9.72l-5.5575,3.5325-3.825-.6525Z" fill="#7a7a7a" fill-rule="evenodd" />
-        <path id="logo-s-path2" d="M33.0525,19.62l-1.89-6.3675L36.72,9.72l-1.665,5.715-2.0025,4.185Z" fill="#979797" fill-rule="evenodd" />
-        <path id="logo-s-path3" d="M39.465,7.9875L38.43,9.72l-3.375,5.715L36.72,9.72l2.745-1.7325Z" fill="#7a7a7a" fill-rule="evenodd" />
-        <path id="logo-s-path4" d="M39.8025,9.1125l-2.61,2.6775L38.43,9.72l1.3725-.6075Z" fill="#8e8e8e" fill-rule="evenodd" />
-        <path id="logo-s-path5" d="M27.9,10.8225l7.6725-.765L30.24,11.7l-2.34-.8775Z" fill="#8e8e8e" fill-rule="evenodd" />
-        <path id="logo-s-path6" d="M28.1925,15.165l2.97-1.9125l1.89,6.3675-.99,2.025-3.87-6.48Z" fill="#7a7a7a" fill-rule="evenodd" />
-        <path id="logo-s-path7" d="M23.76,22.725L22.3425,5.4l9.72,16.245-8.3025,1.08Z" fill="#d5d5d5" fill-rule="evenodd" />
-        <path id="logo-s-path8" d="M19.7325,27.1575L23.76,22.725l8.3025-1.08-12.33,5.5125Z" fill="#8e8e8e" fill-rule="evenodd" />
-        <path id="logo-s-path9" d="M0.1575,35.865l19.575-8.7075L23.76,22.725l-6.39-.6525L0.1575,35.865Z" fill="#d9d9d9" fill-rule="evenodd" />
-        <path id="logo-s-path10" d="M0.9,28.755l10.0575-1.53l3.1275-2.52-1.53-.675L0.9,28.755Z" fill="#b9b9b9" fill-rule="evenodd" />
-        <path id="logo-s-path11" d="M4.5225,20.5425L14.085,24.705l3.285-2.6325-12.8475-1.53Z" fill="#e5e5e5" fill-rule="evenodd" />
-        <path id="logo-s-path12" d="M21.6225,11.6775l-1.215.2025L17.37,22.0725l3.285-2.07.9675-8.325Z" fill="#898989" fill-rule="evenodd" />
-        <path id="logo-s-path13" d="M23.4,18.2475l-2.745,1.755L22.3425,5.4L23.4,18.2475Z" fill="#9e9e9e" fill-rule="evenodd" />
-        <path id="logo-s-path14" d="M13.0275,13.05l8.595-1.3725L22.005,8.28l-8.9775,4.77Z" fill="#4d4d4d" fill-rule="evenodd" />
-        <path id="logo-s-path15" d="M12.105,5.085l7.47,4.5l2.43-1.305.0675-.4725L12.105,5.085Z" fill="#7b7b7b" fill-rule="evenodd" />
-        <path id="logo-s-path16" d="M13.5675,0.18l6.795,7.155l1.71.4725.27-2.4075-8.775-5.22Z" fill="#898989" fill-rule="evenodd" />
-        <path id="logo-s-path17" d="M17.37,22.0725l6.03-3.825.36,4.4775-6.39-.6525Z" fill="#b7b7b7" fill-rule="evenodd" />
-      </g>
-      <g id="logo-u-color">
-        <path id="logo-s-path18" d="M27.3375,12.6L36.72,9.72l-5.5575,3.5325-3.825-.6525Z" opacity="0" fill="#ca2317" fill-rule="evenodd" />
-        <path id="logo-s-path19" d="M33.0525,19.62l-1.89-6.3675L36.72,9.72l-1.665,5.715-2.0025,4.185Z" opacity="0" fill="#e84f83" fill-rule="evenodd" />
-        <path id="logo-s-path20" d="M39.465,7.9875L38.43,9.72l-3.375,5.715L36.72,9.72l2.745-1.7325Z" opacity="0" fill="#ca2317" fill-rule="evenodd" />
-        <path id="logo-s-path21" d="M39.8025,9.1125l-2.61,2.6775L38.43,9.72l1.3725-.6075Z" opacity="0" fill="#e54011" fill-rule="evenodd" />
-        <path id="logo-s-path22" d="M27.9,10.8225l7.6725-.765L30.24,11.7l-2.34-.8775Z" opacity="0" fill="#e54011" fill-rule="evenodd" />
-        <path id="logo-s-path23" d="M28.1925,15.165l2.97-1.9125l1.89,6.3675-.99,2.025-3.87-6.48Z" opacity="0" fill="#ca2317" fill-rule="evenodd" />
-        <path id="logo-s-path24" d="M23.76,22.725L22.3425,5.4l9.72,16.245-8.3025,1.08Z" opacity="0" fill="#b7dff2" fill-rule="evenodd" />
-        <path id="logo-s-path25" d="M19.7325,27.1575L23.76,22.725l8.3025-1.08-12.33,5.5125Z" opacity="0" fill="#e54011" fill-rule="evenodd" />
-        <path id="logo-s-path26" d="M0.1575,35.865l19.575-8.7075L23.76,22.725l-6.39-.6525L0.1575,35.865Z" opacity="0" fill="#ffce33" fill-rule="evenodd" />
-        <path id="logo-s-path27" d="M0.9,28.755l10.0575-1.53l3.1275-2.52-1.53-.675L0.9,28.755Z" opacity="0" fill="#d6b12d" fill-rule="evenodd" />
-        <path id="logo-s-path28" d="M4.5225,20.5425L14.085,24.705l3.285-2.6325-12.8475-1.53Z" opacity="0" fill="#ffde85" fill-rule="evenodd" />
-        <path id="logo-s-path29" d="M21.6225,11.6775l-1.215.2025L17.37,22.0725l3.285-2.07.9675-8.325Z" opacity="0" fill="#009ec6" fill-rule="evenodd" />
-        <path id="logo-s-path30" d="M23.4,18.2475l-2.745,1.755L22.3425,5.4L23.4,18.2475Z" opacity="0" fill="#5eafce" fill-rule="evenodd" />
-        <path id="logo-s-path31" d="M13.0275,13.05l8.595-1.3725L22.005,8.28l-8.9775,4.77Z" opacity="0" fill="#045972" fill-rule="evenodd" />
-        <path id="logo-s-path32" d="M12.105,5.085l7.47,4.5l2.43-1.305.0675-.4725L12.105,5.085Z" opacity="0" fill="#5a8591" fill-rule="evenodd" />
-        <path id="logo-s-path33" d="M13.5675,0.18l6.795,7.155l1.71.4725.27-2.4075-8.775-5.22Z" opacity="0" fill="#009ec6" fill-rule="evenodd" />
-        <path id="logo-s-path34" d="M17.37,22.0725l6.03-3.825.36,4.4775-6.39-.6525Z" opacity="0" fill="#f39804" fill-rule="evenodd" />
-      </g>
+      <path d="m 14.08729,0.420975 -3.0057,5.06409 c 0.73046,2.16577 2.12302,3.80085 4.03605,4.98789 l 2.168,-3.72118 3.26419,5.75614 c 2.15251,0.44418 4.55693,0.63738 7.16051,0.61618 l -7.29205,-12.725 z m 43.73643,-0.13305 -28.23652,0.0826 0.0131,4.72722 10.58813,-0.0334 0.0236,6.81806 a 139.61349,139.61349 0 0 0 6.73747,-1.3381 l -0.0183,-5.50414 10.90761,-0.0305 z m -33.22239,19.36951 2.20013,3.87868 6.85674,-0.0223 -2.46391,-4.29969 c -2.32985,0.25234 -4.52731,0.38409 -6.59296,0.44323 z M 10.42484,18.606695 C 7.79361,18.101065 5.7363,17.507715 4.23813,16.992135 l -1.8969,3.19917 -2.07628,3.42387 7.16361,-0.0217 z m 52.51076,-6.659 c 0,-0.007 0.008,-0.007 0.018,-0.008 -0.0364,-0.11022 -0.0292,-0.117 -0.018,0.008 z m -0.016,11.48329 23.32785,-0.0675 c 2.33084,-0.0113 3.58197,-0.95657 3.75255,-2.85334 l -0.0266,-8.68109 c -0.18339,-1.62255 -1.44738,-2.43098 -3.79896,-2.42163 l -17.64394,0.0534 c -1.91377,0.87359 -3.74272,1.71935 -5.57689,2.47853 0.13446,0.41207 0.88295,2.24096 4.33845,2.40848 l 16.95019,-0.045 0.0163,4.24408 -21.34952,0.0598 z m 27.02275,-23.23403 -5.29523,0.0155 c -3.10596,1.81283 -6.13632,3.47074 -9.07704,4.98341 l 14.38562,-0.0419 z m -42.97678,16.32851 c -2.33078,0.62648 -4.58014,1.15683 -6.74043,1.59593 l 0.0208,5.38039 6.74096,-0.0221 z M 67.24782,0.263145 c -2.92969,0.14212 -4.39374,1.06293 -4.38329,2.76108 l 0.005,3.22552 c 6.56625,-2.02406 12.67934,-4.1882 17.58797,-6.02454 z" fill="#ffffff" fill-rule="evenodd"/>
     </svg>
     <div class="loading-sr-text">
       <%= Translation.translate(local_assigns[:locale], 'Loading…') %>
@@ -256,5 +82,14 @@ html {
     <div class="loading-failed" aria-hidden="true">
       <%= Translation.translate(local_assigns[:locale], 'Loading failed, please try again later.') %>
     </div>
+    <noscript>
+      <style>
+        .loading-animation { animation: none !important; }
+        .loading-animation * { animation: none !important; }
+      </style>
+      <div class="noscript-message">
+        <%= Translation.translate(local_assigns[:locale], 'Turn on JavaScript to use Zammad.') %>
+      </div>
+    </noscript>
   </div>
 </div>

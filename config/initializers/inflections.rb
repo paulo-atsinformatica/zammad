@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+﻿# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 # Be sure to restart your server when you modify this file.
 
@@ -31,4 +31,5 @@ ActiveSupport::Inflector.inflections(:en) do |inflect|
   inflect.acronym 'AI'
   inflect.acronym 'MD5'
   inflect.acronym 'VectorDB'
+  inflect.acronym 'OCR'
 end

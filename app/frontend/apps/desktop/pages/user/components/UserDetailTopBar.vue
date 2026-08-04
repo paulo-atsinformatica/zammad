@@ -1,18 +1,15 @@
-<!-- Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/ -->
+<!-- Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/ -->
 
 <script setup lang="ts">
-import { storeToRefs } from 'pinia'
-import { computed, ref, toRef, type Ref } from 'vue'
+import { useElementSize } from '@vueuse/core'
+import { computed, toRef, useTemplateRef, type Ref } from 'vue'
 
-import { useCopyToClipboard } from '#shared/composables/useCopyToClipboard.ts'
-import { useTouchDevice } from '#shared/composables/useTouchDevice.ts'
 import type { User } from '#shared/graphql/types.ts'
-import { useApplicationStore } from '#shared/stores/application.ts'
 
-import CommonBreadcrumb from '#desktop/components/CommonBreadcrumb/CommonBreadcrumb.vue'
-import CommonButton from '#desktop/components/CommonButton/CommonButton.vue'
-import UserInfo from '#desktop/components/User/UserInfo.vue'
+import { useStickyTopCalculator } from '#desktop/components/Form/fields/FieldEditor/useStickyTopCalculator.ts'
 import { useElementScroll } from '#desktop/composables/useElementScroll.ts'
+import TopBarHeaderCompact from '#desktop/pages/user/components/UserDetailTopBar/TopBarHeaderCompact.vue'
+import TopBarHeaderFull from '#desktop/pages/user/components/UserDetailTopBar/TopBarHeaderFull.vue'
 
 interface Props {
   user: User
@@ -22,104 +19,80 @@ interface Props {
 
 const props = defineProps<Props>()
 
-const breadcrumbItems = computed(() => [
-  // TODO: Adjust breadcrumbs when the navigational mechanism is in place.
+const headerWithDetailsElement = useTemplateRef('header-with-details')
+const headerWithHiddenDetailsElement = useTemplateRef('header-with-hidden-details')
+
+const { height: headerWithDetailsHeight } = useElementSize(headerWithDetailsElement, undefined, {
+  box: 'border-box',
+})
+
+const { height: headerWithHiddenDetailsHeight } = useElementSize(
+  headerWithHiddenDetailsElement,
+  undefined,
   {
-    label: __('User'),
+    box: 'border-box',
   },
-  {
-    label: props.userDisplayName,
-    noOptionLabelTranslation: true,
-  },
-])
+)
 
-const { copyToClipboard } = useCopyToClipboard()
-
-const { config } = storeToRefs(useApplicationStore())
-
-const copyUserDisplayNameToClipboard = () => {
-  copyToClipboard([
-    new ClipboardItem({
-      'text/plain': props.userDisplayName,
-      'text/html': `<a href="${config.value.http_type}://${config.value.fqdn}/desktop/users/${props.user.internalId}">${props.userDisplayName}</a>`,
-    }),
-  ])
-}
-
+const { width } = useElementSize(toRef(props, 'contentContainerElement'))
 const { y } = useElementScroll(toRef(props, 'contentContainerElement') as Ref<HTMLDivElement>)
 
-const isHovering = ref(false)
+const containerWidth = computed(() => (width.value ? `${width.value}px` : 'auto'))
 
-const { isTouchDevice } = useTouchDevice()
+// Show the header earlier to always have it visible
+const NEGATIVE_PADDING = -30
 
-const events = computed(() => {
-  if (isTouchDevice.value)
-    return {
-      touchstart() {
-        isHovering.value = true
-      },
-      touchend() {
-        isHovering.value = false
-      },
-    }
+const compactHeaderOffset = computed(
+  () => y.value - (headerWithDetailsHeight.value + NEGATIVE_PADDING),
+)
 
-  return {
-    mouseenter() {
-      isHovering.value = true
-    },
-    mouseleave() {
-      isHovering.value = false
-    },
-  }
+const hasMeasuredHeaderHeights = computed(
+  () => headerWithDetailsHeight.value > 0 && headerWithHiddenDetailsHeight.value > 0,
+)
+
+// The compact header is stacked above the full header (higher z-index), so once it has fully
+// slid into place it visually covers the full header. Interactivity/a11y exposure is switched
+// over at the exact same point, so exactly one header is ever focusable/clickable/announced.
+const isCompactHeaderVisible = computed(
+  () => hasMeasuredHeaderHeights.value && compactHeaderOffset.value > 0,
+)
+
+const absoluteContainerOffset = computed(
+  () => `${isCompactHeaderVisible.value ? 0 : compactHeaderOffset.value}px`,
+)
+
+const stickyContainerTop = computed(() => {
+  if (y.value < headerWithDetailsHeight.value) return `-${y.value}px`
+  return `-${headerWithDetailsHeight.value}px`
 })
+
+// 7px is needed to compensate some overlap
+useStickyTopCalculator(headerWithHiddenDetailsHeight, { offset: 7 })
 </script>
 
 <template>
-  <header
-    class="absolute top-0 left-0 right-0 z-30 w-full h-17 border-b border-neutral-100 bg-neutral-50 p-3 dark:border-gray-900 dark:bg-gray-500"
+  <TopBarHeaderCompact
+    ref="header-with-hidden-details"
+    class="absolute top-0 right-0 left-0 z-30 bg-neutral-50/80 backdrop-blur-2xs dark:bg-gray-500/80"
+    :inert="!isCompactHeaderVisible"
+    :user="user"
+    :user-display-name="userDisplayName"
+    data-test-id="user-detail-top-bar-clipped-details"
     :style="{
-      transform: `translateY(${y - (137 + 70) > 0 ? 0 : y - (137 + 70)}px)`,
+      transform: `translateY(${absoluteContainerOffset})`,
+      width: containerWidth,
     }"
-    aria-hidden="true"
-    v-on="events"
-  >
-    <div class="flex mx-auto w-full max-w-266">
-      <UserInfo :user="user" size="small" title-size="large" no-link />
-    </div>
-  </header>
-  <header
-    data-test-id="user-detail-top-bar"
-    class="sticky z-30 h-34 border-b border-neutral-100 bg-neutral-50 p-3 dark:border-gray-900 dark:bg-gray-500"
-    :class="{
-      'transition-[top]': isHovering,
-    }"
+  />
+
+  <TopBarHeaderFull
+    ref="header-with-details"
+    class="sticky top-0 right-0 left-0 z-20 w-full min-w-xs bg-neutral-50/80 backdrop-blur-2xs dark:bg-gray-500/80"
+    :inert="isCompactHeaderVisible"
+    :user="user"
+    :user-display-name="userDisplayName"
+    data-test-id="user-detail-top-bar-full-details"
     :style="{
-      top: isHovering ? '0px' : y < 137 ? `-${y}px` : '-137px',
+      top: stickyContainerTop,
     }"
-    v-on="events"
-  >
-    <CommonBreadcrumb :items="breadcrumbItems" size="small" emphasize-last-item>
-      <template #trailing>
-        <CommonButton
-          v-if="userDisplayName"
-          v-tooltip="$t('Copy user display name')"
-          variant="secondary"
-          icon="files"
-          size="small"
-          class="ms-1"
-          @click="copyUserDisplayNameToClipboard"
-        />
-      </template>
-    </CommonBreadcrumb>
-    <div class="flex mx-auto mt-3 w-full max-w-278 h-21">
-      <UserInfo
-        :user="user"
-        size="normal"
-        has-organization-popover
-        title-size="xl"
-        title-class="font-medium"
-        no-link
-      />
-    </div>
-  </header>
+  />
 </template>

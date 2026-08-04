@@ -1,6 +1,10 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 class AI::Provider::OpenAI < AI::Provider
+  include AI::Provider::Concerns::HandlesOpenAIMessages
+  include AI::Provider::Concerns::HasConfigurableModel
+  include AI::Provider::Concerns::HasModelsWithoutTemperatureFallback
+
   OPENAI_API_BASE_URL = 'https://api.openai.com/v1'.freeze
 
   # default model also in app/assets/javascripts/app/lib/app_post/ai_provider/open_ai.coffee
@@ -15,19 +19,73 @@ class AI::Provider::OpenAI < AI::Provider
     'text-embedding-3-small' => 1536
   }.freeze
 
-  def chat(prompt_system:, prompt_user:)
+  EMBEDDING_INPUT_LIMITS = {
+    'text-embedding-3-small' => 8191
+  }.freeze
+
+  def self.ping!(config)
+    response = UserAgent.get(
+      "#{OPENAI_API_BASE_URL}/models",
+      {},
+      {
+        **REQUEST_TIMEOUT_OPTIONS,
+        verify_ssl:   true,
+        bearer_token: config[:token],
+        json:         true,
+        log:          {
+          facility:          'AI::Provider',
+          log_only_on_error: true,
+        },
+      },
+    )
+
+    validate_response!(response)
+
+    nil
+  end
+
+  def self.check_temperature_support!(config)
+    response = UserAgent.post(
+      "#{OPENAI_API_BASE_URL}/chat/completions",
+      {
+        model:       config[:model] || DEFAULT_OPTIONS[:model],
+        messages:    [{ role: 'user', content: 'Hello' }],
+        temperature: DEFAULT_OPTIONS[:temperature],
+        stream:      false,
+        store:       false,
+      },
+      {
+        **REQUEST_TIMEOUT_OPTIONS,
+        verify_ssl:   true,
+        bearer_token: config[:token],
+        json:         true,
+        log:          {
+          facility:          'AI::Provider',
+          log_only_on_error: true,
+        },
+      },
+    )
+
+    return true if response.success?
+
+    data = JSON.parse(response.body)
+    message = data.dig('error', 'message')
+    type = data.dig('error', 'type')
+    param = data.dig('error', 'param')
+    code = data.dig('error', 'code')
+    return false if type == 'invalid_request_error' && param == 'temperature' && code == 'unsupported_value'
+
+    raise message
+  rescue => e
+    raise CheckTemperatureSupportError, e.message
+  end
+
+  private
+
+  def chat(prompt_system:, prompt_user:, prompt_image:)
     request_body = {
-      model:           options[:model],
-      messages:        [
-        {
-          role:    'system',
-          content: prompt_system,
-        },
-        {
-          role:    'user',
-          content: prompt_user,
-        },
-      ],
+      model:           model_for(prompt_image:),
+      messages:        messages_for(prompt_system:, prompt_user:, prompt_image:),
       response_format: {
         type: options[:json_response] ? 'json_object' : 'text'
       },
@@ -42,13 +100,11 @@ class AI::Provider::OpenAI < AI::Provider
       "#{OPENAI_API_BASE_URL}/chat/completions",
       request_body,
       {
-        open_timeout:  4,
-        read_timeout:  60,
-        verify_ssl:    true,
-        bearer_token:  config[:token],
-        total_timeout: 60,
-        json:          true,
-        log:           {
+        **REQUEST_TIMEOUT_OPTIONS,
+        verify_ssl:   true,
+        bearer_token: config[:token],
+        json:         true,
+        log:          {
           facility: 'AI::Provider',
         },
       },
@@ -68,49 +124,15 @@ class AI::Provider::OpenAI < AI::Provider
         input: input,
       },
       {
-        open_timeout:  4,
-        read_timeout:  60,
-        verify_ssl:    true,
-        bearer_token:  config[:token],
-        total_timeout: 60,
-        json:          true,
+        **REQUEST_TIMEOUT_OPTIONS,
+        verify_ssl:   true,
+        bearer_token: config[:token],
+        json:         true,
       },
     )
 
     data = validate_response!(response)
-    data['data'].first['embedding']
-  end
-
-  def self.ping!(config)
-    response = UserAgent.get(
-      "#{OPENAI_API_BASE_URL}/models",
-      {},
-      {
-        open_timeout:  4,
-        read_timeout:  60,
-        verify_ssl:    true,
-        bearer_token:  config[:token],
-        total_timeout: 60,
-        json:          true,
-        log:           {
-          facility:          'AI::Provider',
-          log_only_on_error: true,
-        },
-      },
-    )
-
-    raise AI::Provider::ResponseError, __('API server not accessible') if response.code.to_i != 200
-
-    nil
-  end
-
-  private
-
-  def model_supports_temperature?
-    current_model = options[:model]
-
-    # Check if any model in the list starts with the current model name
-    options[:models_without_temperature].none? { |model_pattern| current_model.start_with?(model_pattern) }
+    data['data'].pluck('embedding')
   end
 
   def specific_metadata

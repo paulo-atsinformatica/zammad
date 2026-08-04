@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 require 'rails_helper'
 
@@ -97,9 +97,8 @@ RSpec.describe 'Keyboard Shortcuts', type: :system do
     context 'for Logout' do
       before do
         visit '/'
-        within :active_content, '.dashboard' do
-          send_keys([:shift, 'l'])
-        end
+        find(:active_content, '.dashboard').click
+        send_keys([:shift, 'l'])
       end
 
       it 'goes to sign in page' do

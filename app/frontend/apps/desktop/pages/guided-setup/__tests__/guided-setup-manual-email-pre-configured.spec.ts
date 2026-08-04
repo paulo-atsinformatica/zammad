@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import { visitView } from '#tests/support/components/visitView.ts'
 import { mockApplicationConfig } from '#tests/support/mock-applicationConfig.ts'
@@ -40,7 +40,7 @@ describe('guided setup manual email notification', () => {
         )
       })
 
-      expect(view.getByText('Email Account')).toBeInTheDocument()
+      expect(view.getByText('Email account')).toBeInTheDocument()
       expect(view.getByText('Email address')).toBeInTheDocument()
     })
   })

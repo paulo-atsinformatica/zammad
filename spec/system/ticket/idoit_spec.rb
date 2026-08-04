@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 require 'rails_helper'
 
@@ -10,6 +10,15 @@ RSpec.describe 'Ticket Handling with i-doit', integration: true, required_envs: 
   before do
     Setting.set('idoit_integration', true)
     Setting.set('idoit_config', { api_token: ENV['IDOIT_API_TOKEN'], endpoint: api_endpoint, client_id: '' })
+
+    # Wait up to 2 minutes for the i-doit container to become fully responsive.
+    # The container may need extra time to initialize its database on first run.
+    wait(120).until do
+      Idoit.verify(ENV['IDOIT_API_TOKEN'], api_endpoint)
+      true
+    rescue
+      false
+    end
   end
 
   def open_idoit_sidebar

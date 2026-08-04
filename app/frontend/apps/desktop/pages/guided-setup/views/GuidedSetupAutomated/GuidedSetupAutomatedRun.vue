@@ -1,4 +1,4 @@
-<!-- Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/ -->
+<!-- Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/ -->
 
 <script setup lang="ts">
 import { computed, ref } from 'vue'
@@ -72,7 +72,7 @@ const statusMessage = computed(() => {
 </script>
 
 <template>
-  <LayoutPublicPage box-size="medium" :title="__('Automated Setup')">
+  <LayoutPublicPage box-size="medium" :title="__('Automated setup')">
     <GuidedSetupStatusMessage v-if="!errors" :message="statusMessage" />
     <CommonAlert v-else variant="danger">{{ errors?.generalErrors[0] }}</CommonAlert>
   </LayoutPublicPage>

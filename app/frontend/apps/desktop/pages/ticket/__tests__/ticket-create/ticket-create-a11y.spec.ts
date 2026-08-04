@@ -1,7 +1,6 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import { waitFor } from '@testing-library/vue'
-import { axe } from 'vitest-axe'
 
 import { visitView } from '#tests/support/components/visitView.ts'
 import { mockApplicationConfig } from '#tests/support/mock-applicationConfig.ts'
@@ -59,9 +58,7 @@ describe('testing tickets create a11y view', () => {
 
     const view = await visitView(`/tickets/create/${uid}`)
 
-    const results = await axe(view.html())
-
-    expect(results).toHaveNoViolations()
+    await expect(view.container).toBeAccessible()
   })
 
   it('has no accessibility violations in customer sidebar', async () => {
@@ -99,9 +96,7 @@ describe('testing tickets create a11y view', () => {
       ).toBeInTheDocument()
     })
 
-    const results = await axe(view.html())
-
-    expect(results).toHaveNoViolations()
+    await expect(view.container).toBeAccessible()
   })
 
   it('has no accessibility violations in organization sidebar', async () => {
@@ -157,9 +152,7 @@ describe('testing tickets create a11y view', () => {
 
     await view.events.click(view.getByLabelText('Organization'))
 
-    const results = await axe(view.html())
-
-    expect(results).toHaveNoViolations()
+    await expect(view.container).toBeAccessible()
   })
 
   it('has no accessibility violations in shared drafts sidebar', async () => {
@@ -206,8 +199,6 @@ describe('testing tickets create a11y view', () => {
       ).toBeInTheDocument()
     })
 
-    const results = await axe(view.html())
-
-    expect(results).toHaveNoViolations()
+    await expect(view.container).toBeAccessible()
   })
 })

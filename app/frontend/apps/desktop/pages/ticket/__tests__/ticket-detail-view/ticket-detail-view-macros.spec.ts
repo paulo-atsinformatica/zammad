@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import { waitFor, within } from '@testing-library/vue'
 import { expect } from 'vitest'
@@ -126,7 +126,7 @@ describe('Ticket detail view macros', () => {
 
     const view = await visitView('/tickets/1')
 
-    const actionMenu = await view.findByLabelText('Additional ticket edit actions')
+    const actionMenu = await view.findByLabelText('Drafts & macros')
 
     await view.events.click(actionMenu)
 
@@ -166,7 +166,7 @@ describe('Ticket detail view macros', () => {
 
     const view = await visitView('/tickets/1')
 
-    const actionMenu = await view.findByLabelText('Additional ticket edit actions')
+    const actionMenu = await view.findByLabelText('Drafts & macros')
 
     await view.events.click(actionMenu)
 
@@ -191,7 +191,7 @@ describe('Ticket detail view macros', () => {
     })
 
     expect(
-      await view.findByRole('button', { name: 'AI Agent User is editing' }),
+      await view.findByRole('button', { name: 'AI agent User is editing' }),
     ).toBeInTheDocument()
   })
 })

@@ -45,7 +45,11 @@ function check_zammad_ready {
 
 function check_postgresql_ready {
   echo 'Checking if PostgreSQL is ready...'
-  until (echo > /dev/tcp/"${POSTGRESQL_HOST}"/"${POSTGRESQL_PORT}") &> /dev/null; do
+
+  # Strip possible surrounding brackets from IPv6 addresses.
+  CLEAN_POSTGRESQL_HOST=${POSTGRESQL_HOST#[}; CLEAN_POSTGRESQL_HOST=${CLEAN_POSTGRESQL_HOST%]}
+
+  until (pg_isready -q -h "$CLEAN_POSTGRESQL_HOST" -p "$POSTGRESQL_PORT"); do
     echo "  waiting for postgresql server to be ready..."
     sleep 1
   done
@@ -57,6 +61,12 @@ if [ "$1" = 'zammad-init' ]; then
   check_postgresql_ready
 
   check_no_restore_running
+
+  # Se config/locales.yml foi sobrescrito por volume (vazio/truncado), restaurar da imagem
+  if [ ! -s config/locales.yml ] || [ "$(wc -c < config/locales.yml 2>/dev/null || echo 0)" -lt 500 ]; then
+    echo "Restoring config/locales.yml from image default..."
+    cp /opt/zammad/default-config/locales.yml config/locales.yml
+  fi
 
   # check if database exists / update to new version
   echo "initialising / updating database..."
@@ -80,8 +90,24 @@ if [ "$1" = 'zammad-init' ]; then
     bundle exec rake db:migrate
 
     echo Synchronizing locales and translations...
-    bundle exec rails r "Locale.sync; Translation.sync"
+    bundle exec rails r "Locale.sync; Translation.any? || Translation.sync"
   fi
+
+  echo "Ensuring pt-br locale and applying translation overrides..."
+  bundle exec rails r "
+    Locale.find_or_create_by!(locale: 'pt-br') do |l|
+      l.name   = 'Português (Brasil) - Portuguese (Brazil)'
+      l.alias  = ''
+      l.active = true
+      l.dir    = 'ltr'
+    end
+    Locale.find_by(locale: 'pt-br')&.update!(active: true)
+    ActiveRecord::Base.transaction do
+      Translation.sync_locale_from_po('pt-br')
+    end
+    require Rails.root.join('lib', 'translation_overrides_pt_br')
+    TranslationOverridesPtBr.apply
+  "
 
   # es config
   echo "changing settings..."

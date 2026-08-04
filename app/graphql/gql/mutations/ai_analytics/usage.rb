@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 module Gql::Mutations
   class AIAnalytics::Usage < BaseMutation
@@ -11,8 +11,8 @@ module Gql::Mutations
 
     def resolve(ai_analytics_run:, input:)
       usage = Service::AI::Analytics::UpsertUsage
-        .new(context.current_user, ai_analytics_run, **input)
-        .execute
+        .with_current_user(context.current_user)
+        .execute(ai_analytics_run, **input)
 
       {
         usage:,

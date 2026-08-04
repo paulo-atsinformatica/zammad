@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 require 'rails_helper'
 
@@ -37,7 +37,8 @@ RSpec.describe 'Integration PGP', :aggregate_failures, authenticated_as: :user, 
             'name'            => pgp_key.name,
             'email_addresses' => pgp_key.email_addresses,
             'expires_at'      => pgp_key.expires_at,
-            'secret'          => false
+            'secret'          => false,
+            'passphrase'      => SensitiveParamsHelper::SENSITIVE_MASK,
           )
         end
       end
@@ -65,7 +66,7 @@ RSpec.describe 'Integration PGP', :aggregate_failures, authenticated_as: :user, 
           let(:params) { 'secret=true' }
 
           it 'returns an error' do
-            expect(response).to have_http_status(:unprocessable_entity)
+            expect(response).to have_http_status(:unprocessable_content)
           end
         end
       end
@@ -107,7 +108,8 @@ RSpec.describe 'Integration PGP', :aggregate_failures, authenticated_as: :user, 
             'name'            => pgp_key.name,
             'email_addresses' => pgp_key.email_addresses,
             'expires_at'      => pgp_key.expires_at,
-            'secret'          => false
+            'secret'          => false,
+            'passphrase'      => SensitiveParamsHelper::SENSITIVE_MASK,
           )
         end
       end
@@ -160,7 +162,7 @@ RSpec.describe 'Integration PGP', :aggregate_failures, authenticated_as: :user, 
             end
 
             it 'returns an error' do
-              expect(response).to have_http_status(:unprocessable_entity)
+              expect(response).to have_http_status(:unprocessable_content)
             end
           end
 
@@ -170,7 +172,7 @@ RSpec.describe 'Integration PGP', :aggregate_failures, authenticated_as: :user, 
             end
 
             it 'returns an error' do
-              expect(response).to have_http_status(:unprocessable_entity)
+              expect(response).to have_http_status(:unprocessable_content)
             end
           end
 

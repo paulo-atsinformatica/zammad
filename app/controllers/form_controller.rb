@@ -1,7 +1,7 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 class FormController < ApplicationController
-  prepend_before_action -> { authorize! }, only: %i[configuration submit]
+  prepend_before_action -> { authorize! }, only: %i[configuration submit captcha_challenge]
 
   skip_before_action :verify_csrf_token
   before_action :cors_preflight_check
@@ -18,9 +18,10 @@ class FormController < ApplicationController
     endpoint = "#{http_type}://#{fqdn}#{api_path}/form_submit"
 
     result = {
-      enabled:  Setting.get('form_ticket_create'),
-      endpoint: endpoint,
-      token:    token_gen(params[:fingerprint])
+      enabled:         Setting.get('form_ticket_create'),
+      endpoint:        endpoint,
+      token:           token_gen(params[:fingerprint]),
+      spam_protection: FormSpamProtection.frontend_config,
     }
 
     if authorized?(policy_record, :test?)
@@ -34,105 +35,38 @@ class FormController < ApplicationController
     return if !fingerprint_exists?
     return if !token_valid?(params[:token], params[:fingerprint])
 
-    # validate input
-    errors = {}
-    if params[:name].blank?
-      errors['name'] = 'required'
-    end
-    if params[:title].blank?
-      errors['title'] = 'required'
-    end
-    if params[:body].blank?
-      errors['body'] = 'required'
-    end
+    submission = spam_protection_submission
 
-    if params[:email].blank?
-      errors['email'] = 'required'
-    else
-      begin
-        email_address_validation = EmailAddressValidation.new(params[:email])
-        if !email_address_validation.valid?(check_mx: true)
-          errors['email'] = 'invalid'
-        end
-      rescue => e
-        message = e.to_s
-        Rails.logger.info "Can't verify email #{params[:email]}: #{message}"
-
-        # ignore 450, graylistings
-        errors['email'] = message if message.exclude?('450')
-      end
-    end
-
-    if errors.present?
-      render json: {
-        errors: errors
-      }, status: :ok
+    # Stateless checks (honeypot) first: reject obvious bots before the
+    # (potentially expensive) field validation, and without consuming anything.
+    if !FormSpamProtection.verify_request(submission)
+      render json: spam_protection_error, status: :ok
       return
     end
 
-    name = params[:name].strip
-    email = params[:email].strip.downcase
-
-    customer = User.find_by(email: email)
-    if !customer
-      role_ids = Role.signup_role_ids
-      customer = User.create(
-        firstname:     name,
-        lastname:      '',
-        email:         email,
-        active:        true,
-        role_ids:      role_ids,
-        updated_by_id: 1,
-        created_by_id: 1,
-      )
+    if (errors = validate_params) && errors.present?
+      render json: { errors: }, status: :ok
+      return
     end
 
-    ticket = nil
+    # Verify the single-use CAPTCHA only after the rest of the form is valid, so an
+    # invalid field does not consume a solved challenge and break the next attempt.
+    if !FormSpamProtection.verify_challenge(submission)
+      render json: spam_protection_error, status: :ok
+      return
+    end
 
-    # set current user
-    UserInfo.current_user_id = customer.id
-    ApplicationHandleInfo.in_context('form') do # rubocop:disable Metrics/BlockLength
-      group = Group.find_by(id: Setting.get('form_ticket_create_group_id'))
-      if !group
-        group = Group.where(active: true).first
-        if !group
-          group = Group.first
+    customer = fetch_customer
+
+    ticket = UserInfo.with_user_id(customer.id) do
+      if Setting.get('form_allowed_params').blank?
+        ApplicationHandleInfo.in_context('form') do
+          create_ticket(customer)
         end
-      end
-      ticket = Ticket.create!(
-        group_id:    group.id,
-        customer_id: customer.id,
-        title:       params[:title],
-        preferences: {
-          form: {
-            remote_ip:       request.remote_ip,
-            fingerprint_md5: Digest::MD5.hexdigest(params[:fingerprint]),
-          }
-        }
-      )
-      article = Ticket::Article.create!(
-        ticket_id: ticket.id,
-        type_id:   Ticket::Article::Type.find_by(name: 'web').id,
-        sender_id: Ticket::Article::Sender.find_by(name: 'Customer').id,
-        body:      params[:body],
-        subject:   params[:title],
-        internal:  false,
-      )
-
-      params[:file]&.each do |file|
-        Store.create!(
-          object:      'Ticket::Article',
-          o_id:        article.id,
-          data:        file.read,
-          filename:    file.original_filename,
-          preferences: {
-            'Mime-Type' => file.content_type,
-          }
-        )
+      else
+        create_ticket(customer)
       end
     end
-
-    UserInfo.current_user_id = 1
 
     result = {
       ticket: {
@@ -141,6 +75,17 @@ class FormController < ApplicationController
       }
     }
     render json: result, status: :ok
+  end
+
+  # Serves a fresh, signed challenge for the configured CAPTCHA provider (e.g. ALTCHA)
+  # for the widget to fetch and solve. Providers whose challenges come from their own
+  # service (Turnstile, hCaptcha, …) issue no challenge here, so this returns 404.
+  def captcha_challenge
+    challenge = FormSpamProtection::Captcha.configured_provider&.challenge
+
+    return head :not_found if challenge.nil?
+
+    render json: challenge, status: :ok
   end
 
   private
@@ -197,10 +142,109 @@ class FormController < ApplicationController
     true
   end
 
+  def spam_protection_submission
+    FormSpamProtection::Submission.new(params:, request:)
+  end
+
+  def spam_protection_error
+    { errors: { spam: __('Your submission could not be verified. Please make sure you completed any verification challenge and try again.') } }
+  end
+
   def fingerprint_exists?
     return true if params[:fingerprint].present? && params[:fingerprint].length > 30
 
     Rails.logger.info "The required parameter 'fingerprint' is missing or invalid."
     raise Exceptions::Forbidden
+  end
+
+  def validate_params
+    errors = {}
+
+    if params[:name].blank?
+      errors['name'] = 'required'
+    end
+    if params[:title].blank?
+      errors['title'] = 'required'
+    end
+    if params[:body].blank?
+      errors['body'] = 'required'
+    end
+
+    if params[:email].blank?
+      errors['email'] = 'required'
+    else
+      begin
+        email_address_validation = EmailAddressValidation.new(params[:email])
+        if !email_address_validation.valid?(check_mx: true)
+          errors['email'] = 'invalid'
+        end
+      rescue => e
+        message = e.to_s
+        Rails.logger.info "Can't verify email #{params[:email]}: #{message}"
+
+        # ignore 450, graylistings
+        errors['email'] = message if message.exclude?('450')
+      end
+    end
+
+    errors
+  end
+
+  def fetch_customer
+    name  = params[:name].strip
+    email = params[:email].strip.downcase
+
+    User.create_with(
+      firstname:     name,
+      lastname:      '',
+      active:        true,
+      updated_by_id: 1,
+      created_by_id: 1,
+    ).find_or_create_by(email:)
+  end
+
+  def create_ticket(customer)
+    group = Group.find_by(id: Setting.get('form_ticket_create_group_id')) || Group.where(active: true).first || Group.first
+
+    ticket = Ticket.create!(
+      group_id:    group.id,
+      customer_id: customer.id,
+      preferences: {
+        form: {
+          remote_ip:       request.remote_ip,
+          fingerprint_md5: Digest::MD5.hexdigest(params[:fingerprint]),
+        }
+      },
+      **ticket_attributes
+    )
+
+    article = Ticket::Article.create!(
+      ticket_id: ticket.id,
+      type_id:   Ticket::Article::Type.find_by(name: 'web').id,
+      sender_id: Ticket::Article::Sender.find_by(name: 'Customer').id,
+      body:      params[:body],
+      subject:   params[:title],
+      internal:  false,
+    )
+
+    params[:file]&.each do |file|
+      Store.create!(
+        object:      'Ticket::Article',
+        o_id:        article.id,
+        data:        file.read,
+        filename:    file.original_filename,
+        preferences: {
+          'Mime-Type' => file.content_type,
+        }
+      )
+    end
+
+    ticket
+  end
+
+  def ticket_attributes
+    attrs = [:title] + Setting.get('form_allowed_params')
+
+    params.permit!.slice(*attrs)
   end
 end

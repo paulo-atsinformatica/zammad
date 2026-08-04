@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 require 'rails_helper'
 
@@ -44,6 +44,30 @@ RSpec.describe Cti::CallerId do
       end
     end
 
+    context 'for strings containing a phone number with forward slash separator' do
+      it 'returns the number in an array' do
+        expect(described_class.extract_numbers('030/1234567')).to eq(['49301234567'])
+      end
+
+      it 'handles forward slash with country code' do
+        expect(described_class.extract_numbers('+49 30/123456')).to eq(['4930123456'])
+      end
+
+      it 'handles forward slash combined with hyphen' do
+        expect(described_class.extract_numbers('030/1234567-0')).to eq(['493012345670'])
+      end
+    end
+
+    context 'for strings containing date-formatted values' do
+      it 'does not extract a date with slashes as a phone number' do
+        expect(described_class.extract_numbers('12/12/2024')).to be_empty
+      end
+
+      it 'does not extract a date embedded in text as a phone number' do
+        expect(described_class.extract_numbers('Ticket erstellt am 12/12/2024 um 10:00 Uhr')).to be_empty
+      end
+    end
+
     context 'for strings containing US-formatted numbers' do
       it 'returns the numbers in an array correctly' do
         expect(described_class.extract_numbers(<<~INPUT.chomp)).to eq(%w[19494310000 19494310001])
@@ -66,6 +90,14 @@ RSpec.describe Cti::CallerId do
 
     it 'strips hyphens' do
       expect(described_class.normalize_number('1-888-407-4747')).to eq('18884074747')
+    end
+
+    it 'strips forward slashes' do
+      expect(described_class.normalize_number('030/1234567')).to eq('49301234567')
+    end
+
+    it 'returns nil for inputs with multiple forward slashes (date-like)' do
+      expect(described_class.normalize_number('12/12/2024')).to be_nil
     end
 
     it 'strips leading pluses' do
@@ -215,40 +247,6 @@ RSpec.describe Cti::CallerId do
           expect { described_class.rebuild }
             .not_to change { described_class.exists?(caller_id: '49123456') }
         end
-      end
-    end
-  end
-
-  describe '.maybe_add' do
-    let(:attributes) { attributes_for(:caller_id) }
-
-    it 'wraps .find_or_initialize_by (passing only five defining attributes)' do
-      expect(described_class)
-        .to receive(:find_or_initialize_by)
-        .with(attributes.slice(:caller_id, :level, :object, :o_id, :user_id))
-        .and_call_original
-
-      described_class.maybe_add(attributes)
-    end
-
-    context 'if no matching record found' do
-      it 'adds given #comment attribute' do
-        expect { described_class.maybe_add(attributes.merge(comment: 'foo')) }
-          .to change(described_class, :count).by(1)
-
-        expect(described_class.last.comment).to eq('foo')
-      end
-    end
-
-    context 'if matching record found' do
-      let(:attributes) { caller_id.attributes.symbolize_keys }
-      let(:caller_id) { create(:caller_id) }
-
-      it 'ignores given #comment attribute' do
-        expect(described_class.maybe_add(attributes.merge(comment: 'foo')))
-          .to eq(caller_id)
-
-        expect(caller_id.comment).to be_blank
       end
     end
   end

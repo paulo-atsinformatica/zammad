@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import { controlledComputed } from '@vueuse/shared'
 
@@ -10,6 +10,8 @@ import { useSessionStore } from '#shared/stores/session.ts'
 import { useTicketInformation } from './useTicketInformation.ts'
 
 import type { Ref } from 'vue'
+
+export const ARTICLE_PAGE_SIZE = 100
 
 interface ArticleRow {
   type: 'article-bubble'
@@ -99,10 +101,12 @@ export const useTicketArticleRows = (articles: Ref<TicketArticle[]>, totalCount:
       }
       // after "description" (always first) article is added, add "more" button
       if (index === 0 && needMoreButton) {
+        const remainingCount = totalCount.value - articles.value.length
+
         rows.push({
           type: 'more',
           key: 'more',
-          count: totalCount.value - articles.value.length,
+          count: remainingCount > ARTICLE_PAGE_SIZE ? ARTICLE_PAGE_SIZE : remainingCount,
         })
       }
       const next = articles.value[index + 1]

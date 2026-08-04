@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 require 'rails_helper'
 
@@ -20,6 +20,8 @@ RSpec.describe 'Manage > Integration > Icinga', type: :system do
         select icinga_auto_close,	from: 'icinga_auto_close'
         click_on 'Submit'
       end
+
+      wait_for_setting('icinga_sender', icinga_sender)
     end
 
     shared_examples 'showing set config' do

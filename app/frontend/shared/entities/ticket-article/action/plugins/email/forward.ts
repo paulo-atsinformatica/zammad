@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import { getAttachmentLinks } from '#shared/composables/getAttachmentLinks.ts'
 import type { TicketArticle, TicketById } from '#shared/entities/ticket/types.ts'
@@ -74,11 +74,11 @@ export const forwardEmail = async (
       },
       config.api_path,
     )
-    return {
-      ...file,
+
+    return Object.assign(file, {
       preview: previewUrl,
       inline: inlineUrl,
-    }
+    })
   })
   const quotedHeader =
     config.ui_ticket_zoom_article_email_full_quote_header && result

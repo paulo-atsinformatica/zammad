@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import { visitView } from '#tests/support/components/visitView.ts'
 import { mockApplicationConfig } from '#tests/support/mock-applicationConfig.ts'
@@ -17,15 +17,15 @@ describe('ticket create view - apply template', () => {
     mockPermissions(['ticket.agent'])
   })
 
-  it('renders no "Apply Template" button', async () => {
+  it('renders no "Apply template" button', async () => {
     mockTemplatesQuery({ templates: [] })
 
     const view = await visitView('/ticket/create')
 
-    expect(view.queryByRole('button', { name: 'Apply Template' })).not.toBeInTheDocument()
+    expect(view.queryByRole('button', { name: 'Apply template' })).not.toBeInTheDocument()
   })
 
-  it('renders the "Apply Template" button and can apply the', async () => {
+  it('renders the "Apply template" button and can apply the', async () => {
     mockTemplatesQuery({
       templates: [
         { id: '1', name: 'template1' },
@@ -36,7 +36,7 @@ describe('ticket create view - apply template', () => {
     const view = await visitView('/ticket/create')
 
     const applyTemplateButton = view.getByRole('button', {
-      name: 'Apply Template',
+      name: 'Apply template',
     })
     expect(applyTemplateButton).toBeInTheDocument()
 

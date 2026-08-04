@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 require 'rails_helper'
 require 'system/apps/mobile_old/examples/core_workflow_examples'
@@ -172,9 +172,7 @@ RSpec.describe 'Mobile > Search > User > Edit', app: :mobile, authenticated_as: 
 
       find_button('Cancel').click
 
-      within '[role=alert]' do
-        expect(page).to have_text('Are you sure? You have unsaved changes that will get lost.')
-      end
+      expect(page).to have_text('Are you sure? You have unsaved changes that will get lost.')
     end
 
     context 'when user is email-less' do

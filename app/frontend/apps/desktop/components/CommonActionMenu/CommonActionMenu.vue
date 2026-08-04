@@ -1,7 +1,8 @@
-<!-- Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/ -->
+<!-- Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/ -->
 
 <script setup lang="ts">
 import { computed, toRefs } from 'vue'
+import { useRouter } from 'vue-router'
 
 import type { Sizes } from '#shared/components/CommonIcon/types.ts'
 import type { ObjectLike } from '#shared/types/utils.ts'
@@ -50,8 +51,10 @@ const { filteredMenuItems, singleMenuItemPresent, singleMenuItem } = usePopoverM
   { provides: true },
 )
 
-const entityId = computed(() => props.entity?.id || getUuid())
-const menuId = computed(() => `popover-${entityId.value}`)
+// Generated per component instance instead of derived from the entity, so
+// the same entity rendered in multiple places (e.g. compact/full headers) never ends up with duplicate DOM ids.
+const instanceId = getUuid()
+const menuId = computed(() => `popover-${instanceId}`)
 
 const singleActionAriaLabel = computed(() => {
   if (typeof singleMenuItem.value?.ariaLabel === 'function') {
@@ -85,6 +88,8 @@ const variantClasses = computed(() => {
   if (singleMenuItem.value?.variant === 'danger') return 'text-red-500!'
   return 'text-stone-200! dark:text-neutral-500!'
 })
+
+const router = useRouter()
 </script>
 
 <template>
@@ -93,7 +98,7 @@ const variantClasses = computed(() => {
       <CommonLink
         v-if="singleMenuItem?.link"
         v-tooltip="$t(singleActionAriaLabel)"
-        class="focus-visible-app-default flex"
+        class="flex focus-visible-app-default"
         :aria-label="$t(singleActionAriaLabel)"
         :disabled="disabled"
         :link="singleMenuItem.link"
@@ -115,16 +120,17 @@ const variantClasses = computed(() => {
         :aria-label="$t(singleActionAriaLabel)"
         :icon="singleMenuItem?.icon"
         :icon-class="singleMenuItem?.iconClass"
-        @click="singleMenuItem?.onClick?.(props.entity as ObjectLike)"
+        @click="singleMenuItem?.onClick?.(props.entity as ObjectLike, router)"
       />
     </template>
 
     <template v-else>
       <CommonButton
-        :id="`action-menu-${entityId}`"
+        :id="`action-menu-${instanceId}`"
         ref="popoverTarget"
-        :aria-label="$t(customMenuButtonLabel || 'Action menu button')"
+        v-tooltip="customMenuButtonLabel || $t('Action menu button')"
         aria-haspopup="true"
+        :aria-expanded="popoverIsOpen"
         :aria-controls="popoverIsOpen ? menuId : undefined"
         :disabled="disabled"
         class="outline-offset-0!"

@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 require 'browser_test_helper'
 
@@ -41,7 +41,7 @@ class AdminDragDropToNewGroupTest < TestCase
   def add_group
     name = "dndgroup-#{SecureRandom.uuid}"
 
-    click(css: '.user-menu a[title=Admin')
+    click(css: '.user-menu a[title="Administration"]')
     click(css: '.content.active a[href="#manage/groups"]')
     click(css: '.content.active a[data-type="new"]')
 

@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 class Checklist < ApplicationModel
   include HasDefaultModelUserRelations
@@ -99,14 +99,14 @@ class Checklist < ApplicationModel
 
   def self.create_from_template!(ticket, template)
     if !template.active
-      raise Exceptions::UnprocessableEntity, __('Checklist template must be active to use as a checklist starting point.')
+      raise Exceptions::UnprocessableContent, __('Checklist template must be active to use as a checklist starting point.')
     end
 
     ActiveRecord::Base.transaction do
       Checklist.create!(name: template.name, ticket:)
         .tap do |checklist|
           sorted_item_ids = template
-            .items
+            .sorted_items
             .map { |elem| checklist.items.create!(text: elem.text, initial_clone: true) }
             .pluck(:id)
 

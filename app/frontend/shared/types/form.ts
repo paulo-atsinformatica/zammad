@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import type { ImportGlobEagerOutput } from './utils.ts'
 import type { FormKitTypeDefinition } from '@formkit/core'
@@ -45,6 +45,7 @@ export interface FormDefaultProps {
   labelPlaceholder?: string[]
   internal?: boolean
   disabled?: boolean
+  formUpdaterValueChange?: boolean
 }
 
 export type FormUpdaterTrigger =

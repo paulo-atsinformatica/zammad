@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 class SecureMailing::SMIME::Incoming < SecureMailing::Backend::HandlerIncoming
   EXPRESSION_MIME      = %r{application/(x-pkcs7|pkcs7)-mime}i
@@ -91,6 +91,13 @@ class SecureMailing::SMIME::Incoming < SecureMailing::Backend::HandlerIncoming
       operation: :sign,
       comment:   comment,
       success:   success,
+    )
+  rescue OpenSSL::PKCS7::PKCS7Error => e
+    Rails.logger.error "Error while verifying mail with S/MIME signature: #{e}"
+    set_article_preferences(
+      operation: :sign,
+      comment:   __('Error while verifying signature, please contact your administrator.'),
+      success:   false,
     )
   end
 

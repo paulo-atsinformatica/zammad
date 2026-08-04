@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 require 'rails_helper'
 
@@ -85,7 +85,9 @@ RSpec.describe 'Desktop > Ticket > Edit', app: :desktop_view, authenticated_as: 
       #
       # Title
       #
-      find('[aria-label="Edit ticket title"]').click
+      within '[data-test-id="ticket-detail-top-bar-full-details"]' do
+        find('[aria-label="Edit ticket title"]').click
+      end
       wait.until { page.has_css?('button[aria-label="Save changes"]') }
       send_keys ' changed', :enter
       wait_for_gql('shared/entities/ticket/graphql/mutations/titleUpdate.graphql', number: 1)
@@ -112,7 +114,7 @@ RSpec.describe 'Desktop > Ticket > Edit', app: :desktop_view, authenticated_as: 
       expect(ticket.reload.state.name).to eq('closed')
 
       within '#user-taskbar-tabs' do
-        expect(page).to have_css("a[href=\"/desktop/tickets/#{ticket.id}\"] svg[aria-label=\"check-circle-outline\"]")
+        expect(page).to have_css("a[href=\"/desktop/tickets/#{ticket.id}\"] svg[aria-label=\"closed\"]")
       end
 
       # Issue with underlying apis
@@ -129,15 +131,15 @@ RSpec.describe 'Desktop > Ticket > Edit', app: :desktop_view, authenticated_as: 
       #       expect(page).to have_no_css('label', text: 'Select field')
       #
       #       within '#user-taskbar-tabs' do
-      #         expect(page).to have_text("Test initial changed\nReceived Call")
+      #         expect(page).to have_text("Test initial changed\nReceived call")
       #
       #         o1 = find('li.draggable', text: 'Test initial changed')
-      #         o2 = find('li.draggable', text: 'Received Call')
+      #         o2 = find('li.draggable', text: 'Received call')
       #         o1.drag_to(o2)
       #
       #         wait_for_gql('apps/desktop/entities/user/current/graphql/mutations/userCurrentTaskbarItemListPrio.graphql')
       #
-      #         expect(page).to have_text("Received Call\nTest initial changed")
+      #         expect(page).to have_text("Received call\nTest initial changed")
       #       end
 
       #       logout
@@ -145,7 +147,7 @@ RSpec.describe 'Desktop > Ticket > Edit', app: :desktop_view, authenticated_as: 
       #       login(username: agent.login, password: 'test')
 
       #       within '#user-taskbar-tabs' do
-      #         expect(page).to have_text("Received Call\nTest initial changed")
+      #         expect(page).to have_text("Received call\nTest initial changed")
       #       end
     end
   end

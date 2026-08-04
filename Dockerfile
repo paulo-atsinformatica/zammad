@@ -1,8 +1,8 @@
 # syntax=docker/dockerfile:1
 # check=error=true
 
-ARG RUBY_VERSION=3.4.7
-ARG NODE_VERSION=22
+ARG RUBY_VERSION=3.4.9
+ARG NODE_VERSION=24
 
 FROM docker.io/library/ruby:$RUBY_VERSION-slim-trixie AS base
 
@@ -17,11 +17,14 @@ ENV RAILS_ENV="production" \
     RAILS_LOG_TO_STDOUT="true"
 
 # Install base packages
-# Add official PostgreSQL apt repository to not depend on Debian's version. https://www.postgresql.org/download/linux/debian/ \
+# Add official PostgreSQL apt repository to not depend on Debian's version.
+#   https://www.postgresql.org/download/linux/debian/
+# Use `postgresql-client` meta-package to have the latest `pg_dump` that works even with the latest PostgreSQL versions.
+#   https://github.com/zammad/zammad/issues/6009
 RUN apt-get update -qq && \
     apt-get install -y postgresql-common && \
     /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y && \
-    apt-get install --no-install-recommends -y curl libimlib2 libpq5 nginx gnupg postgresql-client-17 && \
+    apt-get install --no-install-recommends -y curl libimlib2 libpq5 nginx gnupg postgresql-client && \
     rm -rf /var/lib/apt/lists /var/cache/apt/archives
 
 # Throw-away stage to get the node binary
@@ -52,12 +55,17 @@ COPY --from=node /usr/local/lib/node_modules /usr/local/lib/node_modules
 COPY --from=node /usr/local/bin /usr/local/bin
 
 # Install node modules
-COPY package.json pnpm-lock.yaml ./
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY .eslint-plugin-zammad/package.json .eslint-plugin-zammad/pnpm-lock.yaml .eslint-plugin-zammad/lib/ .eslint-plugin-zammad/
 RUN pnpm install --frozen-lockfile
 
 # Copy application code
 COPY . .
+
+# Garantir que config/locales.yml está completo (evita cache com arquivo truncado)
+RUN test -f config/locales.yml && test $(wc -c < config/locales.yml) -gt 500 || (echo "ERROR: config/locales.yml missing or too small"; exit 1)
+# Cópia para restaurar em runtime se um volume sobrescrever config/
+RUN mkdir -p /opt/zammad/default-config && cp config/locales.yml /opt/zammad/default-config/locales.yml
 
 # Append build information to the Zammad VERSION.
 RUN if [ -z "${COMMIT_SHA}" ]; then \
@@ -81,8 +89,16 @@ RUN bundle exec bootsnap precompile --gemfile app/ lib/
 # Final stage for app image
 FROM base
 
+# Ensure latest patches are applied.
+RUN apt-get update -qq && \
+    apt-get upgrade -y && \
+    rm -rf /var/lib/apt/lists /var/cache/apt/archives
+
+# ZAMMAD_DOCKER is used by Zammad to take decisions for containerized environments,
+#   e.g. hiding the package management interface because installed packages do not persist.
 # Application variables with defaults matching the Zammad docker stack.
-ENV POSTGRESQL_DB=zammad_production \
+ENV ZAMMAD_DOCKER=true \
+    POSTGRESQL_DB=zammad_production \
     POSTGRESQL_HOST=zammad-postgresql \
     POSTGRESQL_PORT=5432 \
     POSTGRESQL_USER=zammad \
@@ -105,6 +121,18 @@ RUN mkdir -p "/opt/zammad/storage" "/opt/zammad/tmp" && \
 # Copy built artifacts: gems, application
 COPY --chown=1000:1000 --from=build "${BUNDLE_PATH}" "${BUNDLE_PATH}"
 COPY --chown=1000:1000 --from=build /opt/zammad /opt/zammad
+
+# Remove Ruby default/bundled gems that are superseded by Bundler-managed versions from Gemfile.lock
+#   to avoid false positives in container vulnerability scanners.
+#   https://github.com/zammad/zammad/issues/6258
+RUN ruby script/build/remove_superseded_system_gems.rb
+
+# Expose the Bundler-managed gems to RubyGems via a stable path (the real directory name
+#   depends on the Ruby ABI version), so CLI tools like irb and rake also work outside of `bundle exec`.
+RUN ln -s "${BUNDLE_PATH}/ruby/$(ruby -e 'print RbConfig::CONFIG[%q(ruby_version)]')" "${BUNDLE_PATH}/ruby/current"
+ENV GEM_PATH="${BUNDLE_PATH}/ruby/current" \
+    PATH="${BUNDLE_PATH}/ruby/current/bin:${PATH}"
+
 # Backwards compatibility for older images that used /docker-entrypoint.sh
 RUN ln -s "/opt/zammad/bin/docker-entrypoint" /docker-entrypoint.sh
 

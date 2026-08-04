@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import { cloneDeep } from 'lodash-es'
 
@@ -99,7 +99,10 @@ export const useOnlineNotificationActions = () => {
     const clonedQueryCache = cloneDeep(existingQueryCache)
 
     clonedQueryCache.onlineNotifications.edges.forEach(({ node }) => {
-      if ((node.metaObject as OnlineNotification['metaObject'])?.id === id) {
+      if (
+        (node.metaObject as OnlineNotification['metaObject'])?.id === id ||
+        (node as OnlineNotification)?.id === id
+      ) {
         node.seen = true
       }
     })

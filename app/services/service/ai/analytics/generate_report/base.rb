@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 class Service::AI::Analytics::GenerateReport::Base < Service::Base
   RESULT_SIZE = 10_000
@@ -16,8 +16,6 @@ class Service::AI::Analytics::GenerateReport::Base < Service::Base
   # @param scope [ActiveRecord::Relation<AI::Analytics::Run>]
   # @param format [Symbol] :json or :xlsx
   def initialize(scope: AI::Analytics::Run.all, format: :json)
-    super()
-
     @scope  = scope
     @format = format.to_sym
   end
@@ -55,11 +53,10 @@ class Service::AI::Analytics::GenerateReport::Base < Service::Base
 
   def query_records(&)
     base_scope
-      .reorder(id: :desc)
-      .in_batches(of: BATCH_SIZE)
+      .in_batches(of: BATCH_SIZE, order: :desc)
       .take(RESULT_SIZE / BATCH_SIZE)
       .each do |batch|
-        enrich_batch(batch).each(&)
+        enrich_batch(batch).reorder(id: :desc).each(&)
       end
   end
 

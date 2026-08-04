@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import fs from 'fs'
 import path from 'path'
@@ -6,14 +6,13 @@ import path from 'path'
 import { defineConfigWithVueTs, vueTsConfigs } from '@vue/eslint-config-typescript'
 import { globalIgnores } from 'eslint/config'
 // @ts-ignore
-import importPlugin from 'eslint-plugin-import'
+import importPlugin from 'eslint-plugin-import-x'
+import eslintConfigPrettier from 'eslint-config-prettier'
 import oxlint from 'eslint-plugin-oxlint'
 import pluginSecurity from 'eslint-plugin-security'
 import pluginVue from 'eslint-plugin-vue'
 import vuejsAccesibility from 'eslint-plugin-vuejs-accessibility'
 import zammad from 'eslint-plugin-zammad/lib/index.js'
-import prettier from 'eslint-plugin-prettier/recommended'
-import prettierVueConfig from '@vue/eslint-config-prettier'
 
 const mobilePagesDir = path.resolve(__dirname, 'app/frontend/apps/mobile/pages')
 const mobilePagesFolder = fs.readdirSync(mobilePagesDir)
@@ -29,6 +28,7 @@ export default defineConfigWithVueTs(
   globalIgnores([
     'app/frontend/**/graphql/**/*.ts',
     '!app/frontend/tests/graphql/**/*.ts',
+    'app/frontend/shared/graphql/schema-types.ts',
     'app/frontend/shared/graphql/types.ts',
     'app/frontend/shared/types/config.ts',
     'tmp/**/*',
@@ -37,7 +37,7 @@ export default defineConfigWithVueTs(
     'app/frontend/build/mocksGraphqlPlugin.js',
     '.eslint-plugin-zammad/lib/index.js',
     '.eslint-plugin-zammad/tests/**/*.js',
-    'public/assets/tests/*.js',
+    'public/assets/tests/**/*.js',
   ]),
 
   // Base Vue and TypeScript configs - these handle parsing automatically
@@ -78,7 +78,7 @@ export default defineConfigWithVueTs(
       'vue/v-bind-style': ['error', 'shorthand'],
       'vue/v-on-style': ['error', 'shorthand'],
       'vue/v-slot-style': ['error', 'shorthand'],
-      'vue/custom-event-name-casing': ['error', 'kebab-case'],
+      'vue/custom-event-name-casing': ['error', 'kebab-case', { ignores: ['/^update:/'] }],
       'vue/attribute-hyphenation': 'error',
     },
   },
@@ -141,6 +141,11 @@ export default defineConfigWithVueTs(
           pathGroups: [
             {
               pattern: '#tests/**',
+              group: 'internal',
+              position: 'before',
+            },
+            {
+              pattern: '#cy/**',
               group: 'internal',
               position: 'before',
             },
@@ -263,13 +268,5 @@ export default defineConfigWithVueTs(
   },
   ...oxlint.buildFromOxlintConfigFile('./.oxlintrc.json'),
 
-  prettier,
-  prettierVueConfig,
-
-  {
-    name: 'app/prettier',
-    rules: {
-      'prettier/prettier': ['error'],
-    },
-  },
+  eslintConfigPrettier,
 )

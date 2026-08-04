@@ -1,7 +1,9 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 module HasRichText
   extend ActiveSupport::Concern
+
+  include HasExcerpt
 
   included do
     class_attribute :has_rich_text_attributes
@@ -30,6 +32,16 @@ Checks if file is used inline
 
   def self.attachment_inline?(store_object)
     store_object.preferences&.dig('Content-Disposition') == 'inline'
+  end
+
+  def attributes_with_association_ids
+    attrs = super
+
+    self.class.has_rich_text_attributes.each do |attr|
+      attrs[attr.to_s] = send(:"#{attr}_with_urls")
+    end
+
+    attrs
   end
 
   private
@@ -69,16 +81,6 @@ Checks if file is used inline
     end
   end
 
-  def attributes_with_association_ids
-    attrs = super
-
-    self.class.has_rich_text_attributes.each do |attr|
-      attrs[attr.to_s] = send(:"#{attr}_with_urls")
-    end
-
-    attrs
-  end
-
   def has_rich_text_pickup_attachments # rubocop:disable Naming/PredicatePrefix
     return if form_id.blank?
 
@@ -107,6 +109,7 @@ Checks if file is used inline
         define_method :"#{attr}_with_urls" do
           HasRichText.insert_urls(send(attr), attachments)
         end
+        has_excerpt attr
       end
     end
   end

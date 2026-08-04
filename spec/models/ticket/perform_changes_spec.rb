@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 require 'rails_helper'
 require 'models/concerns/can_perform_changes_examples'
@@ -26,7 +26,7 @@ RSpec.describe 'Ticket::PerformChanges', :aggregate_failures do
 
       it 'raises an error' do
         expect { object.perform_changes(performable, 'trigger', object, User.first) }
-          .to raise_error(RuntimeError, 'The given trigger contains invalid attributes, stopping!')
+          .to raise_error(RuntimeError, 'The given trigger contains invalid attributes: foobar, stopping!')
       end
     end
 
@@ -224,6 +224,35 @@ RSpec.describe 'Ticket::PerformChanges', :aggregate_failures do
       it 'removes the tags' do
         expect { object.perform_changes(performable, 'trigger', object, user.id) }
           .to change { object.reload.tag_list }.to([])
+      end
+
+      it 'schedules a search index update job' do
+        allow(SearchIndexBackend).to receive(:enabled?).and_return(true)
+
+        expect do
+          Transaction.execute do
+            object.perform_changes(performable, 'trigger', object, user.id)
+          end
+        end
+          .to have_enqueued_job(SearchIndexJob).with('Ticket', object.id)
+      end
+    end
+
+    context 'with replace' do
+      let(:tag_operator) { 'replace' }
+
+      before do
+        Transaction.execute do
+          object
+          %w[tag0 tag1].each { |tag| object.tag_add(tag, 1) }
+        end
+
+        perform_enqueued_jobs
+      end
+
+      it 'replaces the tags' do
+        expect { object.perform_changes(performable, 'trigger', object, user.id) }
+          .to change { object.reload.tag_list }.to(%w[tag1 tag2])
       end
 
       it 'schedules a search index update job' do
@@ -634,16 +663,55 @@ RSpec.describe 'Ticket::PerformChanges', :aggregate_failures do
       }
     end
 
+    before do
+      allow(IPSocket)
+        .to receive(:getaddress)
+        .with('api.example.com')
+        .and_return('8.8.8.8')
+    end
+
     it 'schedules the webhooks notification job' do
       expect { object.perform_changes(trigger, 'trigger', context_data, 1) }.to have_enqueued_job(TriggerWebhookJob).with(
         trigger,
         object,
         nil,
+        webhook_id:     webhook.id,
         changes:        { 'State' => %w[open closed] },
         user_id:        1,
         execution_type: 'trigger',
         event_type:     'info',
       )
+    end
+
+    context 'with multiple webhooks' do
+      let(:other_webhook) { create(:webhook, endpoint: 'http://api.example.com/webhook', signature_token: '53CR3t') }
+      let(:trigger) do
+        create(:trigger,
+               perform: {
+                 'notification.webhook' => { 'webhook_id' => [webhook.id.to_s, other_webhook.id.to_s] }
+               })
+      end
+
+      it 'schedules exactly one notification job per webhook' do
+        expect { object.perform_changes(trigger, 'trigger', context_data, 1) }
+          .to have_enqueued_job(TriggerWebhookJob).with(trigger, object, nil, hash_including(webhook_id: webhook.id)).once
+          .and have_enqueued_job(TriggerWebhookJob).with(trigger, object, nil, hash_including(webhook_id: other_webhook.id)).once
+          .and have_enqueued_job(TriggerWebhookJob).exactly(2).times
+      end
+    end
+
+    context 'with the same webhook configured under mixed id types' do
+      let(:trigger) do
+        create(:trigger,
+               perform: {
+                 'notification.webhook' => { 'webhook_id' => [webhook.id, webhook.id.to_s] }
+               })
+      end
+
+      it 'schedules only one notification job' do
+        expect { object.perform_changes(trigger, 'trigger', context_data, 1) }
+          .to have_enqueued_job(TriggerWebhookJob).with(trigger, object, nil, hash_including(webhook_id: webhook.id)).once
+      end
     end
   end
 
@@ -676,6 +744,32 @@ RSpec.describe 'Ticket::PerformChanges', :aggregate_failures do
           execution_type: 'trigger',
           event_type:     'info',
         )
+    end
+
+    context 'with multiple AI agents' do
+      let(:other_ai_agent) { create(:ai_agent) }
+      let(:trigger) do
+        create(:trigger,
+               perform: {
+                 'ai.ai_agent' => { 'ai_agent_id' => [ai_agent.id.to_s, other_ai_agent.id.to_s] }
+               })
+      end
+
+      it 'schedules exactly one AI agent job per agent' do
+        expect { object.perform_changes(trigger, 'trigger', context_data, 1) }
+          .to have_enqueued_job(TriggerAIAgentJob).with(ai_agent, object, nil, anything).once
+          .and have_enqueued_job(TriggerAIAgentJob).with(other_ai_agent, object, nil, anything).once
+          .and have_enqueued_job(TriggerAIAgentJob).exactly(2).times
+      end
+    end
+
+    context 'when the configured AI agent is inactive' do
+      before { ai_agent.update!(active: false) }
+
+      it 'schedules no AI agent job' do
+        expect { object.perform_changes(trigger, 'trigger', context_data, 1) }
+          .not_to have_enqueued_job(TriggerAIAgentJob)
+      end
     end
   end
 

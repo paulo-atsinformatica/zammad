@@ -1,4 +1,4 @@
-<!-- Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/ -->
+<!-- Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/ -->
 
 <script setup lang="ts">
 import { computed, toRef } from 'vue'
@@ -13,6 +13,8 @@ import { useFilePreviewViewer } from '#desktop/composables/useFilePreviewViewer.
 import type { TicketSidebarContentProps } from '#desktop/pages/ticket/types/sidebar.ts'
 
 import TicketSidebarContent from '../TicketSidebarContent.vue'
+
+import TicketSidebarAttachmentContentSkeleton from './TicketSidebarAttachmentContentSkeleton.vue'
 
 interface Props extends TicketSidebarContentProps {
   ticketAttachments: Attachment[]
@@ -37,6 +39,10 @@ const { showPreview } = useFilePreviewViewer(computed(() => attachmentsWithUrls.
     :icon="sidebarPlugin.icon"
   >
     <CommonLoader :loading="loading">
+      <template #skeleton>
+        <TicketSidebarAttachmentContentSkeleton />
+      </template>
+
       <div
         v-if="ticketAttachments && ticketAttachments.length > 0"
         class="flex flex-col rounded-lg bg-blue-200 p-1 text-gray-100 dark:bg-gray-700 dark:text-neutral-400"
@@ -47,7 +53,6 @@ const { showPreview } = useFilePreviewViewer(computed(() => attachmentsWithUrls.
           :download-url="attachment.downloadUrl"
           :preview-url="attachment.preview"
           :file="attachment"
-          :no-preview="!$c.ui_ticket_zoom_attachments_preview"
           no-remove
           @preview="($event, type) => showPreview(type, attachment)"
         />

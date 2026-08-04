@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import type { NotificationTypes } from '#shared/components/CommonNotifications/index.ts'
 import type { PageInfo } from '#shared/graphql/types.ts'
@@ -49,11 +49,12 @@ export type OperationMutationOptions<TResult, TVariables> =
   | ReactiveFunction<UseMutationOptions<TResult, TVariables>>
 
 export type OperationMutationFunction<
-  TResult = OperationMutationResult,
   // oxlint-disable-next-line no-explicit-any
-  TVariables = any,
+  TResult = any,
+  // oxlint-disable-next-line no-explicit-any
+  TVariables extends OperationVariables = any,
 > = (
-  options: OperationMutationOptions<TResult, TVariables>,
+  options?: OperationMutationOptions<TResult, TVariables>,
 ) => UseMutationReturn<TResult, TVariables>
 
 export type OperationQueryFunction<

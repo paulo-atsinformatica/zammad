@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 require 'rails_helper'
 
@@ -13,6 +13,17 @@ RSpec.describe MonitoringHelper::HealthChecker::AIProviderAccessible, integratio
 
       it 'reports no issue' do
         expect(instance.check_health.issues).to be_blank
+      end
+    end
+
+    context 'when AI integration is enabled but provider is not configured' do
+      before do
+        Setting.set('ai_provider', true, validate: false)
+        Setting.set('ai_provider_config', {})
+      end
+
+      it 'reports a configuration issue' do
+        expect(instance.check_health.issues.first).to match('The AI provider is not configured.')
       end
     end
 

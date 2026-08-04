@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import type { RouteRecordRaw } from 'vue-router'
 
@@ -19,6 +19,7 @@ const route: RouteRecordRaw[] = [
       icon: 'all-tickets',
       requiredPermission: ['ticket.agent', 'ticket.customer'],
       level: 1,
+      order: 200,
       pageKey: 'ticket-overviews',
       permanentItem: true,
     },

@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 Permission.create_if_not_exists(
   name:        'admin',
@@ -38,7 +38,7 @@ Permission.create_if_not_exists(
 )
 Permission.create_if_not_exists(
   name:        'admin.text_module',
-  label:       __('Text modules'),
+  label:       __('Text Modules'),
   description: __('Manage text modules of your system.'),
   preferences: { prio: 1060 }
 )
@@ -101,6 +101,13 @@ Permission.create_if_not_exists(
   label:       __('Report Profiles'),
   description: __('Manage report profiles of your system.'),
   preferences: { prio: 1160 }
+)
+# Customização ATS: configuração dos modelos de relatório personalizado.
+Permission.create_if_not_exists(
+  name:        'admin.custom_report',
+  label:       __('Custom Reports'),
+  description: __('Manage custom reports of your system.'),
+  preferences: { prio: 1161 }
 )
 Permission.create_if_not_exists(
   name:        'admin.time_accounting',
@@ -181,6 +188,18 @@ Permission.create_if_not_exists(
   preferences: { prio: 1290 }
 )
 Permission.create_if_not_exists(
+  name:        'admin.beta_ui',
+  label:       'BETA UI',
+  description: __('Manage BETA UI settings of your system.'),
+  preferences: {
+    prio:    1295,
+    setting: {
+      name:  'ui_desktop_beta_switch_admin_menu',
+      value: true,
+    },
+  },
+)
+Permission.create_if_not_exists(
   name:        'admin.branding',
   label:       __('Branding'),
   description: __('Manage branding settings of your system.'),
@@ -239,6 +258,15 @@ Permission.create_if_not_exists(
   label:       __('AI Agents'),
   description: __('Manage AI agents of your system.'),
   preferences: { prio: 1336 }
+)
+# Temporarily disabled - to be re-enabled via migration once the related
+# auditing/duplicate-detection UX is in place.
+Permission.create_if_not_exists(
+  name:        'admin.ai_assistance_kb_answer_from_ticket_generation',
+  label:       __('AI Knowledge Base Answers'),
+  description: __('Manage AI generation of knowledge base answers from tickets.'),
+  preferences: { prio: 1337 },
+  active:      false,
 )
 Permission.create_if_not_exists(
   name:        'admin.integration',
@@ -313,6 +341,12 @@ Permission.create_if_not_exists(
   preferences: { prio: 1450 }
 )
 Permission.create_if_not_exists(
+  name:        'admin.audit_log',
+  label:       __('Audit Logs'),
+  description: __('Manage audit logs of your system.'),
+  preferences: { prio: 1455 }
+)
+Permission.create_if_not_exists(
   name:        'admin.system_report',
   label:       __('System Report'),
   description: __('Manage system report of your system.'),
@@ -383,6 +417,43 @@ Permission.create_if_not_exists(
   preferences: { prio: 1540 }
 )
 Permission.create_if_not_exists(
+  name:        'report.pause_indicators',
+  label:       __('Pause Indicators'),
+  description: __('Access to the Pause Indicators report.'),
+  preferences: { prio: 1541 }
+)
+Permission.create_if_not_exists(
+  name:        'report.user_pauses',
+  label:       __('User Pauses Report'),
+  description: __('Access to the User Pauses report.'),
+  preferences: { prio: 1542 }
+)
+Permission.create_if_not_exists(
+  name:        'report.ticket_time_trackings',
+  label:       __('Ticket Time Trackings Report'),
+  description: __('Access to the Ticket Time Trackings report.'),
+  preferences: { prio: 1543 }
+)
+# Customização ATS: relatório personalizado.
+#
+# Estas (e as de user.* / ticket.time_tracking abaixo) também são criadas por
+# migration, mas a migration tem guard `return if !Setting.exists?(name:
+# 'system_init_done')` e portanto NÃO roda em instalação nova. Sem estarem aqui,
+# uma instância recém-criada fica sem as permissões e as funcionalidades ATS
+# simplesmente não aparecem na interface.
+Permission.create_if_not_exists(
+  name:        'report.custom',
+  label:       __('Custom Report'),
+  description: __('Create and generate custom reports. Results always respect the group and object permissions of the user generating them.'),
+  preferences: { prio: 1544 }
+)
+Permission.create_if_not_exists(
+  name:        'report.custom.group',
+  label:       __('Share Custom Report With Group'),
+  description: __('Save custom reports visible to the members of a group.'),
+  preferences: { prio: 1545 }
+)
+Permission.create_if_not_exists(
   name:        'ticket',
   label:       __('Ticket'),
   description: __('Access to the ticket interface.'),
@@ -406,6 +477,33 @@ Permission.create_if_not_exists(
   description:  __('Access tickets as customer.'),
   allow_signup: true,
   preferences:  { prio: 1570 }
+)
+# Customização ATS: controle de tempo de atendimento no ticket. Sem esta
+# permissão o player não é renderizado no ticket zoom.
+Permission.create_if_not_exists(
+  name:        'ticket.time_tracking',
+  label:       __('Ticket Time Tracking'),
+  description: __('Track time spent on tickets.'),
+  preferences: { prio: 1565 }
+)
+# Customização ATS: controle de pausas e time tracking automático.
+Permission.create_if_not_exists(
+  name:        'user',
+  label:       __('User features'),
+  description: __('User-specific features and controls.'),
+  preferences: { prio: 3000 }
+)
+Permission.create_if_not_exists(
+  name:        'user.pause_control',
+  label:       __('Pause Control'),
+  description: __('Allow user to manage pause states (online, offline, pause).'),
+  preferences: { prio: 3010 }
+)
+Permission.create_if_not_exists(
+  name:        'user.ticket_time_tracking',
+  label:       __('Ticket Time Tracking'),
+  description: __('Allow automatic time tracking on tickets.'),
+  preferences: { prio: 3020 }
 )
 Permission.create_if_not_exists(
   name:         'user_preferences',
@@ -530,6 +628,13 @@ admin.permission_grant('user_preferences')
 admin.permission_grant('admin')
 admin.permission_grant('report')
 admin.permission_grant('knowledge_base.editor')
+# Customização ATS: mesmas concessões que as migrations fazem, replicadas aqui
+# porque em instalação nova as migrations saem pelo guard de system_init_done.
+# Compartilhar relatório em nível de grupo ou global fica só com Admin por
+# padrão, para ninguém expor relatório de todo mundo sem querer.
+admin.permission_grant('ticket.time_tracking')
+admin.permission_grant('report.custom')
+admin.permission_grant('report.custom.group')
 
 agent = Role.find_by(name: 'Agent')
 agent.permission_grant('user_preferences')
@@ -537,6 +642,11 @@ agent.permission_grant('ticket.agent')
 agent.permission_grant('chat.agent')
 agent.permission_grant('cti.agent')
 agent.permission_grant('knowledge_base.reader')
+# Customização ATS
+agent.permission_grant('ticket.time_tracking')
+agent.permission_grant('user.pause_control')
+agent.permission_grant('user.ticket_time_tracking')
+agent.permission_grant('report.custom')
 
 customer = Role.find_by(name: 'Customer')
 customer.permission_grant('user_preferences.password')

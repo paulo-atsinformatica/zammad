@@ -1,6 +1,6 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
-import { defineAsyncComponent, type App } from 'vue'
+import { type App } from 'vue'
 
 import { initializeFileClasses } from '#shared/components/Form/fields/FieldFile/initializeFileClasses.ts'
 import { initializeToggleClasses } from '#shared/components/Form/fields/FieldToggle/initializeToggleClasses.ts'
@@ -19,6 +19,8 @@ import type {
 } from '#shared/types/form.ts'
 import type { ImportGlobEagerOutput } from '#shared/types/utils.ts'
 
+import FieldEditorActionBar from '#desktop/components/Form/fields/FieldEditor/FieldEditorActionBar.vue'
+import FieldEditorActionMenu from '#desktop/components/Form/fields/FieldEditor/FieldEditorActionMenu.vue'
 import FieldEditorSuggestionList from '#desktop/components/Form/fields/FieldEditor/FieldEditorSuggestionList.vue'
 
 import { getCoreDesktopClasses } from './theme/global/getCoreDesktopClasses.ts'
@@ -30,7 +32,7 @@ const pluginModules: ImportGlobEagerOutput<FormKitPlugin> = import.meta.glob(
   { eager: true },
 )
 export const desktopFormFieldModules: ImportGlobEagerOutput<FormFieldTypeImportModules> =
-  import.meta.glob('../components/Form/fields/**/index.ts', { eager: true })
+  import.meta.glob('../components/Form/fields/*/index.ts', { eager: true })
 const themeExtensionModules: ImportGlobEagerOutput<FormThemeExtension> = import.meta.glob(
   './theme/global/extensions/*.ts',
   { eager: true },
@@ -57,13 +59,13 @@ export const initializeFormFields = () => {
   })
 
   initializeFieldLinkClasses({
-    container: 'formkit-link',
-    base: 'ms-3 mb-2.5',
-    link: 'hover:rounded-xs hover:outline hover:outline-1 hover:outline-offset-1 hover:outline-blue-600 dark:hover:outline-blue-900',
+    container: 'formkit-link min-h-10 flex items-center',
+    base: 'ms-2',
+    link: 'w-min h-min min-h-min shrink-0 flex-nowrap items-center justify-center gap-x-1 border-0 font-normal shadow-none transition-transform duration-200 hover:outline-1 hover:outline-offset-1 hover:outline-blue-600 focus:outline-0 focus:hover:outline-1 focus-visible:outline-1 focus-visible:outline-offset-1 focus-visible:outline-blue-800 focus:active:scale-[95%] dark:hover:outline-blue-900 text-blue-800 hover:text-blue-850 dark:hover:text-blue-600 p-2 rounded-lg',
   })
 
   initializeFormGroupClasses({
-    container: 'form-group grid grid-cols-2 gap-y-2.5 gap-x-3',
+    container: 'form-group @container grid h-full grid-cols-2 gap-y-2.5 gap-x-3',
     help: 'text-xs',
     dirtyMark: 'form-group-mark-dirty',
     bottomMargin: 'mb-4 last:mb-0',
@@ -86,18 +88,19 @@ export const initializeFormFields = () => {
       },
     },
     input: {
-      container: 'px-2.5 py-2',
+      container:
+        'px-2.5 py-2 formkit-invalid:outline formkit-invalid:outline-1 formkit-invalid:-outline-offset-1 formkit-errors:-outline-offset-1  formkit-invalid:outline-red-500 formkit-errors:outline formkit-errors:outline-1 formkit-errors:outline-red-500 formkit-warning:outline-1 formkit-warning:outline-yellow-600! formkit-warning:-outline-offset-1 ',
       inlineContainer: 'px-1.5! py-1!',
+    },
+    tableMenu: {
+      triggerButton:
+        'w-6 h-6 flex items-center justify-center bg-blue-800/80 text-black dark:text-white',
     },
   })
 
   initializeEditorComponents({
-    actionBar: defineAsyncComponent(
-      () => import('#desktop/components/Form/fields/FieldEditor/FieldEditorActionBar.vue'),
-    ),
-    actionMenu: defineAsyncComponent(
-      () => import('#desktop/components/Form/fields/FieldEditor/FieldEditorActionMenu.vue'),
-    ),
+    actionBar: FieldEditorActionBar,
+    actionMenu: FieldEditorActionMenu,
     suggestionList: FieldEditorSuggestionList,
   })
 

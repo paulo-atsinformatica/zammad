@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import { noop } from 'lodash-es'
 import { computed, type ComputedRef, nextTick, type Ref } from 'vue'
@@ -69,15 +69,7 @@ export const useArticleDataHandler = (
     })
   }
 
-  const articleLoading = articlesQuery.loading()
-
-  const isLoadingArticles = computed(() => {
-    // Return already true when a article result already exists from the cache, also
-    // when maybe a loading is in progress(because of cache + network).
-    if (articleData.value !== undefined) return false
-
-    return articleLoading.value
-  })
+  const isLoadingArticles = articlesQuery.loadingWithoutCachedResult()
 
   const adjustPageInfoAfterDeletion = (nextEndCursorEdge?: Maybe<string>) => {
     const newPageInfo: Pick<PageInfo, 'startCursor' | 'endCursor'> = {}

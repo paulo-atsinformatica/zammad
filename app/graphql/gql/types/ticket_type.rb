@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 module Gql::Types
   class TicketType < BaseObject
@@ -77,6 +77,7 @@ module Gql::Types
       field :referencing_checklist_tickets, [Gql::Types::TicketType, { null: false }], description: 'Returns (only accessible) other tickets which reference the current ticket'
       field :external_references, Gql::Types::TicketExternalReferencesType, null: true, description: 'Returns links to external services'
       field :ai_agent_running, Boolean, description: 'Returns true if an AI agent is running for this ticket'
+      field :ai_summary_enabled, Boolean, description: 'Returns true if the AI summary is enabled for this ticket'
     end
 
     internal_fields do
@@ -153,6 +154,12 @@ module Gql::Types
       output.compact_blank.presence
     end
 
+    def ai_summary_enabled
+      Service::Ticket::AIAssistance::SummaryEnabled
+        .with_current_user(context.current_user)
+        .execute(ticket: @object)
+    end
+
     private
 
     def ticket_is_escalating?
@@ -180,8 +187,8 @@ module Gql::Types
 
     def time_accounting_type_sum(type_id, entries)
       [
-        name:      time_accounting_types[type_id] || __('None'),
-        time_unit: entries.inject(0) { |sum, entry| sum + entry.time_unit },
+        { name:      time_accounting_types[type_id] || __('None'),
+          time_unit: entries.inject(0) { |sum, entry| sum + entry.time_unit } },
       ]
     end
 

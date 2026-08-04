@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import { flushPromises } from '@vue/test-utils'
 import { createPinia, setActivePinia, storeToRefs } from 'pinia'
@@ -150,15 +150,6 @@ describe('useThemeStore', () => {
   })
 
   describe('isDarkMode', () => {
-    it.todo('returns true when user prefers dark media theme', async () => {
-      // :TODO mock media theme does not update preferredColorScheme
-      mockMediaTheme(EnumAppearanceTheme.Dark)
-
-      const { isDarkMode } = useThemeStore()
-
-      expect(isDarkMode).toBe(true)
-    })
-
     it('returns false when user prefers light media theme', async () => {
       mockMediaTheme(EnumAppearanceTheme.Light)
 

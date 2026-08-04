@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import {
   getTestRouter,
@@ -66,7 +66,7 @@ it('can update a password', async () => {
 
   const view = await visitView('/reset-password/verify/123')
 
-  expect(await view.findByRole('button', { name: 'Cancel & Go Back' })).toBeInTheDocument()
+  expect(await view.findByRole('button', { name: 'Cancel & go back' })).toBeInTheDocument()
 
   const [imprint, privacy] = publicLinks
 

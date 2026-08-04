@@ -1,4 +1,4 @@
-<!-- Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/ -->
+<!-- Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/ -->
 
 <script setup lang="ts">
 import { computed, ref, watchEffect } from 'vue'
@@ -30,8 +30,10 @@ const organizationId = computed(() => ticket.value?.organization?.id)
 
 const {
   organization,
+  organizationMembers,
   organizationQuery,
-  loading: organizationLoading,
+  loading,
+  loadingWithoutCachedResult,
   objectAttributes,
   fetchMoreMembers,
 } = useOrganizationDetail(organizationId, 3, 100, errorCallback)
@@ -42,7 +44,7 @@ organizationQuery.onError((apolloError) => {
 })
 
 watchEffect(() => {
-  updateRefetchingStatus(organizationLoading.value && organization.value != null)
+  updateRefetchingStatus(loading.value && organization.value != null)
 })
 
 const { openEditOrganizationDialog } = useOrganizationEdit()
@@ -52,7 +54,7 @@ const ticketsData = computed(() => getTicketData(organization.value))
 </script>
 
 <template>
-  <CommonLoader :loading="!organization && organizationLoading" :error="error">
+  <CommonLoader :loading="loadingWithoutCachedResult" :error="error">
     <div v-if="organization" class="mb-3 flex items-center gap-3">
       <CommonOrganizationAvatar size="normal" :entity="organization" />
       <h2 class="text-lg font-medium">
@@ -73,14 +75,14 @@ const ticketsData = computed(() => getTicketData(organization.value))
           transparent-background
           @click="openEditOrganizationDialog(organization!)"
         >
-          {{ $t('Edit Organization') }}
+          {{ $t('Edit organization') }}
         </CommonButton>
       </template>
     </ObjectAttributes>
 
     <OrganizationMembersList
-      :organization="organization"
-      :disable-show-more="organizationLoading"
+      :members="organizationMembers"
+      :disable-show-more="loading"
       @load-more="fetchMoreMembers()"
     />
 

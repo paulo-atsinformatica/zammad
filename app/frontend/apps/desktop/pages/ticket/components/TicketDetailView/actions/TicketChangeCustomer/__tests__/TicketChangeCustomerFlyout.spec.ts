@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import '#tests/graphql/builders/mocks.ts'
 
@@ -28,7 +28,7 @@ describe('TicketChangeCustomerFlyout', () => {
       router: true,
     })
 
-    expect(wrapper.getByRole('heading', { name: 'Change Customer', level: 2 })).toBeInTheDocument()
+    expect(wrapper.getByRole('heading', { name: 'Change customer', level: 2 })).toBeInTheDocument()
 
     expect(wrapper.getByIconName('user')).toBeInTheDocument()
 

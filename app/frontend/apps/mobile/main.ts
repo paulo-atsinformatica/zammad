@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import { createApp } from 'vue'
 
@@ -6,6 +6,7 @@ import '#mobile/styles/main.css'
 
 import { initializeAppName } from '#shared/composables/useAppName.ts'
 import { useForceDesktop } from '#shared/composables/useForceDesktop.ts'
+import { initializeDefaultObjectAttributes } from '#shared/entities/object-attributes/composables/useObjectAttributes.ts'
 import initializeGlobalComponents from '#shared/initializer/globalComponents.ts'
 import initializeGlobalProperties from '#shared/initializer/globalProperties.ts'
 import initializeStoreSubscriptions from '#shared/initializer/storeSubscriptions.ts'
@@ -25,7 +26,7 @@ import { initializeMobileVisuals } from '#mobile/initializer/mobileVisuals.ts'
 import initializeRouter from '#mobile/router/index.ts'
 import initializeApolloClient from '#mobile/server/apollo/index.ts'
 
-import App from './AppMobile.vue'
+import AppMobile from './AppMobile.vue'
 import { ensureAfterAuth } from './pages/authentication/after-auth/composable/useAfterAuthPlugins.ts'
 
 const { forceDesktopLocalStorage } = useForceDesktop()
@@ -35,7 +36,7 @@ const { forceDesktopLocalStorage } = useForceDesktop()
 if (forceDesktopLocalStorage.value) window.location.href = '/'
 
 export default async function mountApp(): Promise<void> {
-  const app = createApp(App)
+  const app = createApp(AppMobile)
   initializeAppName('mobile')
 
   // Remember the current created app.
@@ -55,9 +56,10 @@ export default async function mountApp(): Promise<void> {
   initializeGlobalComponentStyles()
   initializeGlobalComponents(app)
   initializeGlobalProperties(app)
-  initializeGlobalDirectives(app)
   initializeMobileVisuals()
   initializeStoreSubscriptions()
+
+  initializeGlobalDirectives(app)
 
   const session = useSessionStore()
   const authentication = useAuthenticationStore()
@@ -74,6 +76,11 @@ export default async function mountApp(): Promise<void> {
   if (session.id) {
     authentication.authenticated = true
     initalizeAfterSessionCheck.push(session.getCurrentUser())
+
+    // Pre-warm the default object-attribute queries in parallel with the
+    // current-user and config requests, so the cache is hot by the time the
+    // first form mounts and asks for them.
+    initializeDefaultObjectAttributes()
   }
 
   await Promise.all(initalizeAfterSessionCheck)

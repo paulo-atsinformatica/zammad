@@ -1,17 +1,25 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 require 'rails_helper'
 
 RSpec.describe TriggerWebhookJob, type: :job do
 
-  let(:endpoint) { 'http://api.example.com/webhook' }
-  let(:token)    { 's3cr3t-t0k3n' }
-  let(:webhook)  { create(:webhook, endpoint: endpoint, signature_token: token) }
+  let(:endpoint)    { 'http://api.example.com/webhook' }
+  let(:resolved_ip) { '8.8.8.8' }
+  let(:token)       { 's3cr3t-t0k3n' }
+  let(:webhook)     { build(:webhook, endpoint: endpoint, signature_token: token).tap { it.save(validate: false) } }
   let(:trigger) do
     create(:trigger,
            perform: {
              'notification.webhook' => { 'webhook_id' => webhook.id }
            })
+  end
+
+  before do
+    allow(IPSocket)
+      .to receive(:getaddress)
+      .with('api.example.com')
+      .and_return(resolved_ip)
   end
 
   context 'when serialized model argument gets deleted' do
@@ -104,6 +112,8 @@ RSpec.describe TriggerWebhookJob, type: :job do
     let(:response_headers) { {} }
 
     before do
+      allow(Rails.logger).to receive(:error)
+
       stub_request(:post, endpoint).to_return(headers: response_headers, status: response_status, body: response_body)
 
       perform
@@ -247,7 +257,7 @@ RSpec.describe TriggerWebhookJob, type: :job do
         predefined_payload = Service::Template::Interpolation::Interpolator::Webhook::Track::PreDefinedWebhook.payload('Mattermost')
 
         # Use the new interpolation service
-        interpolator = Service::Template::Interpolation::Interpolator::Webhook.new(
+        interpolator = Service::Template::Interpolation::Interpolator::Webhook.new( # rubocop:disable Zammad/ForbidCallingServiceDirectly
           template:                       predefined_payload,
           tracks:                         tracks,
           additional_track_generate_data: data,
@@ -276,7 +286,7 @@ RSpec.describe TriggerWebhookJob, type: :job do
 
       context 'with customized payload' do
         let(:customized_payload) { true }
-        let(:custom_payload)     { '{"ticket":"#{ticket.title}"}' }
+        let(:custom_payload)     { '{"ticket":"#{ticket.title}"}' } # rubocop:disable Lint/InterpolationCheck
         let(:payload) do
           {
             ticket: ticket.title,
@@ -353,6 +363,74 @@ RSpec.describe TriggerWebhookJob, type: :job do
         it 'uses the endpoint as-is' do
           expect(WebMock).to have_requested(:post, endpoint)
         end
+      end
+    end
+
+    context 'with multiple webhooks configured and an explicit webhook_id' do
+      subject(:perform) do
+        described_class.perform_now(
+          trigger,
+          ticket,
+          article,
+          webhook_id:     other_webhook.id,
+          changes:        nil,
+          user_id:        nil,
+          execution_type: nil,
+          event_type:     nil,
+        )
+      end
+
+      let(:other_endpoint) { 'http://api.example.com/other-webhook' }
+      let(:other_webhook)  { build(:webhook, endpoint: other_endpoint, signature_token: token).tap { it.save(validate: false) } }
+      let(:trigger) do
+        create(:trigger,
+               perform: {
+                 'notification.webhook' => { 'webhook_id' => [webhook.id.to_s, other_webhook.id.to_s] }
+               })
+      end
+
+      before do
+        stub_request(:post, other_endpoint).to_return(headers: response_headers, status: response_status, body: response_body)
+        perform
+      end
+
+      it 'requests only the explicitly passed webhook', :aggregate_failures do
+        expect(WebMock).to have_requested(:post, other_endpoint)
+        expect(WebMock).not_to have_requested(:post, endpoint)
+      end
+    end
+
+    context 'without an explicit webhook_id (legacy job enqueued before multi-webhook change)' do
+      it 'falls back to the webhook configured in the trigger' do
+        expect(WebMock).to have_requested(:post, endpoint)
+      end
+
+      context 'when the trigger stores the webhook id as an array' do
+        let(:trigger) do
+          create(:trigger,
+                 perform: {
+                   'notification.webhook' => { 'webhook_id' => [webhook.id.to_s] }
+                 })
+        end
+
+        it 'falls back to the first configured webhook' do
+          expect(WebMock).to have_requested(:post, endpoint)
+        end
+      end
+    end
+
+    context 'when endpoint is unsafe' do
+      let(:resolved_ip) { '1' }
+
+      it 'logs an error' do
+        expect(Rails.logger)
+          .to have_received(:error)
+          .with("Can't execute Webhook with ID #{webhook.id} for Trigger '#{trigger.name}' with ID #{trigger.id}: Could not ensure safety of the hostname: api.example.com")
+      end
+
+      it 'does not perform the request' do
+        expect(WebMock)
+          .not_to have_requested(:post, endpoint)
       end
     end
   end

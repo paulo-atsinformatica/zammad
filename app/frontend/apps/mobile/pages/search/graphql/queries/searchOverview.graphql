@@ -1,11 +1,8 @@
-query search(
-  $search: String!
-  $onlyIn: EnumSearchableModels!
-  $limit: Int = 30
-) {
+query search($search: String!, $onlyIn: EnumSearchableModels!, $limit: Int = 30) {
   search(search: $search, onlyIn: $onlyIn, limit: $limit) {
     totalCount
     items {
+      __typename
       ... on Ticket {
         id
         internalId

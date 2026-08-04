@@ -1,4 +1,4 @@
-<!-- Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/ -->
+<!-- Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/ -->
 
 <script setup lang="ts">
 import { onBeforeUnmount, onMounted, useTemplateRef } from 'vue'
@@ -68,16 +68,7 @@ onBeforeUnmount(() => {
     />
   </div>
 
-  <!-- NB: --top-header-height is used for the editor action bar sticky calculation. -->
-  <!--   +7 * --spacing  => sidebar header height -->
-  <!--   +3 * --spacing  => sidebar content padding -->
-  <!--   -14 * --spacing => bottom bar height -->
-  <!--   +3px => border + offset + outline -->
-  <div
-    ref="scroll-container"
-    class="flex h-full flex-col gap-3 overflow-y-auto p-3"
-    :style="{ '--top-header-height': 'calc(var(--spacing) * (7 + 3 - 14) + 3px)' }"
-  >
+  <div ref="scroll-container" class="flex h-full flex-col gap-3 overflow-y-auto p-3">
     <slot />
   </div>
 </template>

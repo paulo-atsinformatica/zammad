@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 class SecureMailing::PGP::Outgoing < SecureMailing::Backend::HandlerOutgoing
   def type
@@ -13,7 +13,7 @@ class SecureMailing::PGP::Outgoing < SecureMailing::Backend::HandlerOutgoing
     construct_signed_mail
   rescue => e
     log('sign', 'failed', e.message)
-    raise
+    raise SigningError, e.message
   end
 
   def encrypt(data)

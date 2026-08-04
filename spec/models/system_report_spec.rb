@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 require 'rails_helper'
 
@@ -49,6 +49,7 @@ RSpec.describe SystemReport, current_user_id: 1, type: :model do
           'proxy_no',
           'core_workflow_ajax_mode',
           'ui_user_organization_selector_with_email',
+          'user_name_format',
           'ui_ticket_zoom_article_email_full_quote',
           'ui_ticket_zoom_article_email_full_quote_header',
           'ui_ticket_zoom_attachments_preview',
@@ -149,12 +150,12 @@ RSpec.describe SystemReport, current_user_id: 1, type: :model do
           '0006_postmaster_filter_auto_response_check',
           '0007_postmaster_filter_follow_up_check',
           '0008_postmaster_filter_follow_up_merged',
-          '0009_postmaster_filter_follow_up_assignment',
+          '0009_postmaster_filter_out_of_office_check',
+          '0010_postmaster_filter_follow_up_assignment',
           '0011_postmaster_sender_based_on_reply_to',
           '0018_postmaster_import_archive',
           '0014_postmaster_filter_own_notification_loop_detection',
           '0015_postmaster_filter_identify_session_user',
-          '0030_postmaster_filter_out_of_office_check',
           '0200_postmaster_filter_follow_up_possible_check',
           '0900_postmaster_filter_bounce_follow_up_check',
           '0950_postmaster_filter_bounce_delivery_permanent_failed',
@@ -218,7 +219,9 @@ RSpec.describe SystemReport, current_user_id: 1, type: :model do
           'Stats::TicketReopen',
           'ui_ticket_add_article_hint',
           'smime_integration',
+          'smime_sign_system_notifications',
           'pgp_integration',
+          'pgp_sign_system_notifications',
           'datepicker_show_calendar_weeks',
           'two_factor_authentication_method_security_keys',
           'two_factor_authentication_method_authenticator_app',
@@ -230,9 +233,20 @@ RSpec.describe SystemReport, current_user_id: 1, type: :model do
           'ui_desktop_beta_switch',
           'ai_assistance_text_tools',
           'ai_assistance_ticket_summary',
+          'ai_assistance_ticket_summary_selector',
           'ai_assistance_text_tools_fixed_instructions',
+          'ai_assistance_kb_answer_from_ticket_generation',
           'ai_provider',
           'ui_richtext_bubble_menu',
+          'ui_desktop_beta_switch_admin_menu',
+          'ui_desktop_beta_switch_role_ids',
+          'form_allowed_params',
+          'vectordb_enabled',
+          'vectordb_knowledge_base_category_ids',
+          'vectordb_knowledge_base_chunking_strategy',
+          'form_ticket_create_honeypot',
+          'form_ticket_create_captcha_provider',
+          'kb_self_hosted_video_servers'
         ]
       end
 

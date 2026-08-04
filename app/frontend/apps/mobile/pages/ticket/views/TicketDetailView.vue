@@ -1,4 +1,4 @@
-<!-- Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/ -->
+<!-- Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/ -->
 
 <script setup lang="ts">
 import { cloneDeep, noop } from 'lodash-es'
@@ -16,15 +16,17 @@ import {
   useNotifications,
 } from '#shared/components/CommonNotifications/index.ts'
 import Form from '#shared/components/Form/Form.vue'
-import type { FormSubmitData, FormValues } from '#shared/components/Form/types.ts'
+import type { FormSubmitData } from '#shared/components/Form/types.ts'
 import { useForm } from '#shared/components/Form/useForm.ts'
 import { useConfirmation } from '#shared/composables/useConfirmation.ts'
 import { useOnlineNotificationSeen } from '#shared/composables/useOnlineNotification/useOnlineNotificationSeen.ts'
+import { useTicketArticleReplyAction } from '#shared/entities/ticket/composables/useTicketArticleReplyAction.ts'
 import { useTicketEdit } from '#shared/entities/ticket/composables/useTicketEdit.ts'
 import { useTicketEditForm } from '#shared/entities/ticket/composables/useTicketEditForm.ts'
 import { useTicketView } from '#shared/entities/ticket/composables/useTicketView.ts'
 import { TicketUpdatesDocument } from '#shared/entities/ticket/graphql/subscriptions/ticketUpdates.api.ts'
 import type { TicketUpdateFormData } from '#shared/entities/ticket/types.ts'
+import type { AppSpecificTicketArticleType } from '#shared/entities/ticket-article/action/plugins/types.ts'
 import { useErrorHandler } from '#shared/errors/useErrorHandler.ts'
 import UserError from '#shared/errors/UserError.ts'
 import type {
@@ -86,16 +88,19 @@ const formVisible = computed(() => formLocation.value !== 'body')
 
 const { form, canSubmit, isDirty, formSubmit, formReset } = useForm()
 
-const { initialTicketValue, isTicketFormGroupValid, editTicket } = useTicketEdit(ticket, form)
+const { initialTicketValue, isTicketFormGroupValid, editTicket, buildTicketResetValues } =
+  useTicketEdit(ticket, form)
 
 const {
   currentArticleType,
   ticketSchema,
   articleSchema,
+  currentSchemaArticleType,
   securityIntegration,
   isTicketEditable,
   articleTypeHandler,
   articleTypeSelectHandler,
+  additionalAddArticleNotes,
 } = useTicketEditForm(ticket, form)
 
 const needSpaceForSaveBanner = computed(() => isTicketEditable.value && isDirty.value)
@@ -161,10 +166,14 @@ const saveTicketForm = async (formData: FormSubmitData<TicketUpdateFormData>) =>
       newTicketArticlePresent.value = false
 
       return {
-        reset: (values: FormSubmitData<TicketUpdateFormData>, formNodeValues: FormValues) => {
+        reset: () => {
           nextTick(() => {
             closeArticleReplyDialog().then(() => {
-              formReset({ values: { ticket: formNodeValues.ticket } })
+              if (!ticket.value) return
+
+              // Seed the ticket group from the persisted entity, so server-side
+              // changes (e.g. the automatic new->open transition) are reflected.
+              formReset({ object: ticket.value, values: buildTicketResetValues(ticket.value) })
             })
           })
         },
@@ -174,7 +183,7 @@ const saveTicketForm = async (formData: FormSubmitData<TicketUpdateFormData>) =>
     if (errors instanceof UserError) {
       notify({
         id: 'ticket-update-error',
-        message: errors.generalErrors[0],
+        message: errors.getFirstErrorMessage(),
         type: NotificationTypes.Error,
       })
     }
@@ -193,6 +202,8 @@ const isFormValid = computed(() => {
 const showArticleReplyDialog = () => {
   return openArticleReplyDialog({ updateFormLocation })
 }
+
+const { openReplyForm } = useTicketArticleReplyAction(form, showArticleReplyDialog)
 
 const { liveUserList } = useTicketLiveUser(
   toRef(() => props.internalId),
@@ -280,7 +291,17 @@ const ticketEditSchemaData = reactive({
   securityIntegration,
   newTicketArticleRequested,
   newTicketArticlePresent,
-  currentArticleType,
+  currentArticleType: currentSchemaArticleType,
+  existingAdditionalAddArticleNotes: () => {
+    return Object.keys(additionalAddArticleNotes.value).length > 0
+  },
+  getAdditionalAddArticleNote: (articleType?: AppSpecificTicketArticleType) => {
+    if (!articleType) return undefined
+
+    const accessor = `${articleType.value}-${articleType.internal ? 'internal' : 'public'}`
+
+    return additionalAddArticleNotes.value[accessor]
+  },
 })
 
 const { isOpened: commonSelectOpened } = useCommonSelect()
@@ -348,7 +369,7 @@ const showBottomBanner = computed(() => {
       :can-save="isTicketEditable && isDirty"
       :can-scroll-down="showScrollDown"
       :hidden="!showBottomBanner"
-      @reply="showArticleReplyDialog"
+      @reply="openReplyForm({ articleType: isTicketAgent ? 'note' : 'web' })"
       @save="submitForm"
     />
   </Teleport>

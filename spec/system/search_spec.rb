@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 require 'rails_helper'
 
@@ -32,7 +32,7 @@ RSpec.describe 'Search', authenticated_as: :authenticate, searchindex: true, typ
     click_on 'Show Search Details'
 
     within '#navigation .tasks a[data-key=Search]' do
-      expect(page).to have_content '"Welcome"'
+      expect(page).to have_text '"Welcome"'
     end
   end
 
@@ -96,25 +96,25 @@ RSpec.describe 'Search', authenticated_as: :authenticate, searchindex: true, typ
 
       it 'has group label' do
         within '.bulkAction .bulkAction-form' do
-          expect(page).to have_content 'GROUP'
+          expect(page).to have_text 'GROUP'
         end
       end
 
       it 'has owner label' do
         within '.bulkAction .bulkAction-form' do
-          expect(page).to have_content 'OWNER'
+          expect(page).to have_text 'OWNER'
         end
       end
 
       it 'has state label' do
         within '.bulkAction .bulkAction-form' do
-          expect(page).to have_content 'STATE'
+          expect(page).to have_text 'STATE'
         end
       end
 
       it 'has priority label' do
         within '.bulkAction .bulkAction-form' do
-          expect(page).to have_content 'PRIORITY'
+          expect(page).to have_text 'PRIORITY'
         end
       end
     end
@@ -433,7 +433,9 @@ RSpec.describe 'Search', authenticated_as: :authenticate, searchindex: true, typ
       end
 
       it 'does switch search results properly' do
-        page.find('.js-search').fill_in(with: '"Testing Ticket 1"')
+        # clear: :backspace paces the clear+type sequence more naturally - the default
+        #   clear strategy has occasionally dropped the first typed character here.
+        page.find('.js-search').fill_in(with: '"Testing Ticket 1"', fill_options: { clear: :backspace })
         expect(page.find('.js-tableBody')).to have_text('Testing Ticket 1')
         expect(page.find('.js-tableBody')).to have_no_text('Testing Ticket 2')
         expect(current_url).to include('Testing%20Ticket%201')
@@ -482,6 +484,21 @@ RSpec.describe 'Search', authenticated_as: :authenticate, searchindex: true, typ
         expect(page.find('.js-tableBody')).to have_no_text('Testing Ticket 1')
         expect(current_url).to include('Testing%20Ticket%202')
       end
+    end
+  end
+
+  describe 'Sidebar gets stuck with "no match" when pressing enter too quickly #4786' do
+    let(:agent)             { create(:agent, groups: Group.all) }
+    let(:authenticate_user) { agent }
+
+    it 'does not leave a stale "no match" banner in the sidebar' do
+      find('#global-search').send_keys('zzqqxxwwvvuu', :enter)
+
+      within '.detail-search' do
+        expect(page).to have_css('.js-content table.table--placeholder')
+      end
+
+      expect(page).to have_no_css('.search.open')
     end
   end
 
@@ -627,9 +644,8 @@ RSpec.describe 'Search', authenticated_as: :authenticate, searchindex: true, typ
         find('.js-search').fill_in with: 'Nicole'
       end
 
-      within('.table-column-head', text: 'TITLE') do
-        expect(page).to have_no_css('.table-sort-arrow')
-      end
+      expect(page).to have_css('.table-column-head', text: 'TITLE')
+      expect(page).to have_no_css('.table-column-head .table-sort-arrow')
     end
 
     it 'when changing search query after navigation away-and-back clear sorting' do
@@ -641,9 +657,8 @@ RSpec.describe 'Search', authenticated_as: :authenticate, searchindex: true, typ
         find('.js-search').fill_in with: 'Nicole'
       end
 
-      within('.table-column-head', text: 'TITLE') do
-        expect(page).to have_no_css('.table-sort-arrow')
-      end
+      expect(page).to have_css('.table-column-head', text: 'TITLE')
+      expect(page).to have_no_css('.table-column-head .table-sort-arrow')
     end
   end
 
@@ -665,19 +680,19 @@ RSpec.describe 'Search', authenticated_as: :authenticate, searchindex: true, typ
       it 'does find the ticket' do
         fill_in id: 'global-search', with: ticket.title
 
-        expect(page.find('.global-search-menu')).to have_content(ticket.title)
+        expect(page.find('.global-search-menu')).to have_text(ticket.title)
       end
 
       it 'does not find the customer' do
         fill_in id: 'global-search', with: customer.firstname
 
-        expect(page.find('.global-search-menu')).to have_no_content(customer.firstname)
+        expect(page.find('.global-search-menu')).to have_no_text(customer.firstname)
       end
 
       it 'does not find the organization' do
         fill_in id: 'global-search', with: organization.name
 
-        expect(page.find('.global-search-menu')).to have_no_content(organization.name)
+        expect(page.find('.global-search-menu')).to have_no_text(organization.name)
       end
     end
 
@@ -688,19 +703,19 @@ RSpec.describe 'Search', authenticated_as: :authenticate, searchindex: true, typ
       it 'does find the ticket' do
         fill_in id: 'global-search', with: ticket.title
 
-        expect(page.find('.global-search-menu')).to have_content(ticket.title)
+        expect(page.find('.global-search-menu')).to have_text(ticket.title)
       end
 
       it 'does find the customer' do
         fill_in id: 'global-search', with: customer.firstname
 
-        expect(page.find('.global-search-menu')).to have_content(customer.firstname)
+        expect(page.find('.global-search-menu')).to have_text(customer.firstname)
       end
 
       it 'does find the organization' do
         fill_in id: 'global-search', with: organization.name
 
-        expect(page.find('.global-search-menu')).to have_content(organization.name)
+        expect(page.find('.global-search-menu')).to have_text(organization.name)
       end
     end
 
@@ -711,19 +726,19 @@ RSpec.describe 'Search', authenticated_as: :authenticate, searchindex: true, typ
       it 'does not find the ticket' do
         fill_in id: 'global-search', with: ticket.title
 
-        expect(page.find('.global-search-menu')).to have_no_content(ticket.title)
+        expect(page.find('.global-search-menu')).to have_no_text(ticket.title)
       end
 
       it 'does find the customer' do
         fill_in id: 'global-search', with: customer.firstname
 
-        expect(page.find('.global-search-menu')).to have_content(customer.firstname)
+        expect(page.find('.global-search-menu')).to have_text(customer.firstname)
       end
 
       it 'does find the organization' do
         fill_in id: 'global-search', with: organization.name
 
-        expect(page.find('.global-search-menu')).to have_content(organization.name)
+        expect(page.find('.global-search-menu')).to have_text(organization.name)
       end
     end
   end

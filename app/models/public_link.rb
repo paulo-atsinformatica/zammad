@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 class PublicLink < ApplicationModel
   include HasDefaultModelUserRelations
@@ -6,9 +6,12 @@ class PublicLink < ApplicationModel
   include CanSelector
   include CanSearch
 
-  include CanPriorization
   include ChecksClientNotification
+  include HasAuditLogs
+  include CanPriorization
   include PublicLink::TriggersSubscriptions
+
+  self.audit_log_name_attribute = :title
 
   AVAILABLE_SCREENS = %w[login signup password_reset].freeze
 
@@ -28,7 +31,7 @@ class PublicLink < ApplicationModel
     return true if link.blank?
 
     uri = URI.parse(link)
-    raise Exceptions::UnprocessableEntity, "Invalid link '#{link}'." if !uri.is_a?(URI::HTTP)
+    raise Exceptions::UnprocessableContent, "Invalid link '#{link}'." if !uri.is_a?(URI::HTTP)
 
     true
   end

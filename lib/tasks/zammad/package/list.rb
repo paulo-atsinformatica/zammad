@@ -1,19 +1,20 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
-require_dependency 'tasks/zammad/command.rb'
+require 'tasks/zammad/package_command'
 
 module Tasks
   module Zammad
     module Package
-      class List < Tasks::Zammad::Command
+      class List < Tasks::Zammad::PackageCommand
 
         def self.description
           'List all installed Zammad addon packages'
         end
 
         def self.task_handler
-          ::Package.all.each do |package|
-            puts package.name.ljust(20) + package.vendor.ljust(20) + package.version
+          puts "#{'Name'.ljust(50)}#{'Vendor'.ljust(20)}Version"
+          ::Package.all.sort_by(&:name).each do |package|
+            puts package.name.ljust(50) + package.vendor.ljust(20) + package.version
           end
         end
 

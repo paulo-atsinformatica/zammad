@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import { within } from '@testing-library/vue'
 
@@ -31,12 +31,12 @@ const dummyOrganization = {
   active: true,
 }
 
-const renderOrganizationPopover = (props?: Partial<Props>, isAgent = true) => {
+const renderOrganizationPopover = (props?: Partial<Props>, permission = 'ticket.agent') => {
   mockOrganizationInfoForPopoverQuery({
     organization: props?.organization ?? dummyOrganization,
   })
 
-  mockPermissions([isAgent ? 'ticket.agent' : 'ticket.customer'])
+  mockPermissions([permission])
 
   return renderComponent(OrganizationPopoverWithTrigger, {
     props: {
@@ -52,17 +52,6 @@ describe('OrganizationPopover', () => {
   it('displays the organization avatar by default', () => {
     const wrapper = renderOrganizationPopover()
     expect(wrapper.getByRole('img', { name: `Avatar (${dummyOrganization.name})` })).toBeVisible()
-  })
-
-  it('shows a skeleton when user info is not available', async () => {
-    const wrapper = renderOrganizationPopover()
-
-    await wrapper.events.hover(
-      wrapper.getByRole('img', { name: `Avatar (${dummyOrganization.name})` }),
-    )
-
-    const popover = await wrapper.findByRole('region')
-    expect(within(popover).getAllByRole('progressbar').length).toBe(10)
   })
 
   it('displays the organization popover on hover', async () => {
@@ -86,10 +75,7 @@ describe('OrganizationPopover', () => {
 
     const avatarWrapper = wrapper.getByRole('link')
 
-    expect(avatarWrapper).toHaveAttribute(
-      'href',
-      `/organization/profile/${dummyOrganization.internalId}`,
-    )
+    expect(avatarWrapper).toHaveAttribute('href', `/organizations/${dummyOrganization.internalId}`)
   })
 
   it('disables link navigation when noLink is true', () => {
@@ -116,8 +102,16 @@ describe('OrganizationPopover', () => {
     expect(avatarWrapper).toHaveClass(customClass)
   })
 
+  it('displays popover for admin user', async () => {
+    const wrapper = renderOrganizationPopover(undefined, 'admin.organization')
+
+    const avatarWrapper = wrapper.getByRole('link')
+
+    expect(avatarWrapper).toHaveAttribute('href', `/organizations/${dummyOrganization.internalId}`)
+  })
+
   it('does not display popover for customer user', async () => {
-    const wrapper = renderOrganizationPopover(undefined, false)
+    const wrapper = renderOrganizationPopover(undefined, 'ticket.customer')
 
     expect(wrapper.queryByRole('link')).not.toBeInTheDocument()
 

@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import { waitFor } from '@testing-library/vue'
 
@@ -12,12 +12,15 @@ import { TwoFactorMethodInitiateAuthenticationDocument } from '#shared/graphql/m
 import { ApplicationConfigDocument } from '#shared/graphql/queries/applicationConfig.api.ts'
 import { ConfigUpdatesDocument } from '#shared/graphql/subscriptions/configUpdates.api.ts'
 import type { TwoFactorMethodInitiateAuthenticationMutation } from '#shared/graphql/types.ts'
+import type { DeepPartial } from '#shared/types/utils.ts'
 import { createDeferred } from '#shared/utils/helpers.ts'
 
 import LoginTwoFactor from '../LoginTwoFactor.vue'
 
 const prepareInitialData = (
-  data: TwoFactorMethodInitiateAuthenticationMutation['twoFactorMethodInitiateAuthentication'],
+  data: DeepPartial<
+    TwoFactorMethodInitiateAuthenticationMutation['twoFactorMethodInitiateAuthentication']
+  >,
 ) => {
   mockGraphQLApi(TwoFactorMethodInitiateAuthenticationDocument).willResolve({
     twoFactorMethodInitiateAuthentication: {

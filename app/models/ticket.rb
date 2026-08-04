@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 class Ticket < ApplicationModel
   include CanBeImported
@@ -24,6 +24,7 @@ class Ticket < ApplicationModel
   include Ticket::TriggersSubscriptions
   include Ticket::ChecksReopenAfterCertainTime
   include Ticket::Checklists
+  include Ticket::HasDailyEventLocks
 
   include ::Ticket::Escalation
   include ::Ticket::Subject
@@ -37,7 +38,7 @@ class Ticket < ApplicationModel
   store :preferences
   after_initialize :check_defaults, if: :new_record?
   before_create  :check_generate, :check_defaults, :check_title, :set_default_state, :set_default_priority
-  before_update  :check_defaults, :check_title, :reset_pending_time, :check_owner_active
+  before_update  :check_defaults, :check_title, :reset_pending_time, :check_owner_active, :end_time_tracking_on_close, :end_time_tracking_on_owner_change
 
   # This must be loaded late as it depends on the internal before_create and before_update handlers of ticket.rb.
   include Ticket::SetsLastOwnerUpdateTime
@@ -89,7 +90,9 @@ class Ticket < ApplicationModel
   search_index_attributes_relevant :organization_id,
                                    :group_id,
                                    :state_id,
-                                   :priority_id
+                                   :priority_id,
+                                   :customer_id,
+                                   :owner_id
 
   history_attributes_ignored :create_article_type_id,
                              :create_article_sender_id,
@@ -107,6 +110,8 @@ class Ticket < ApplicationModel
 
   has_many      :articles, -> { reorder(:created_at, :id) }, class_name: 'Ticket::Article', after_add: :cache_update, after_remove: :cache_update, dependent: :destroy, inverse_of: :ticket
   has_many      :ticket_time_accounting, class_name: 'Ticket::TimeAccounting', dependent: :destroy, inverse_of: :ticket
+  has_many      :ticket_time_trackings, class_name: 'TicketTimeTracking', dependent: :destroy
+  has_one       :active_time_tracking, -> { where(is_active: true) }, class_name: 'TicketTimeTracking'
   has_many      :mentions,               as: :mentionable, dependent: :destroy
   has_one       :shared_draft,           class_name: 'Ticket::SharedDraftZoom', inverse_of: :ticket, dependent: :destroy
   belongs_to    :state,                  class_name: 'Ticket::State', optional: true
@@ -349,10 +354,10 @@ returns
     # prevent cross merging tickets
     target_ticket = Ticket.find_by(id: data[:ticket_id])
     raise 'no target ticket given' if !target_ticket
-    raise Exceptions::UnprocessableEntity, __('It is not possible to merge into an already merged ticket.') if target_ticket.state.state_type.name == 'merged'
+    raise Exceptions::UnprocessableContent, __('It is not possible to merge into an already merged ticket.') if target_ticket.state.state_type.name == 'merged'
 
     # check different ticket ids
-    raise Exceptions::UnprocessableEntity, __('A ticket cannot be merged into itself.') if id == target_ticket.id
+    raise Exceptions::UnprocessableContent, __('A ticket cannot be merged into itself.') if id == target_ticket.id
 
     # update articles
     Transaction.execute context: 'merge' do
@@ -764,5 +769,62 @@ returns a hex color code
     # else set the owner of the ticket to the default user as unassigned
     self.owner_id = 1
     true
+  end
+
+  def end_time_tracking_on_close
+    return true if !will_save_change_to_attribute?('state_id')
+    return true if state_id.blank?
+
+    new_state = Ticket::State.find_by(id: state_id)
+    return true if new_state.blank?
+
+    state_type = Ticket::StateType.lookup(id: new_state.state_type_id)
+    return true if state_type.blank?
+
+    if state_type.name == 'closed'
+      active_time_tracking&.pause_and_deactivate!
+    end
+
+    true
+  end
+
+  # Encerra a contagem de quem deixou de ser dono, tanto ao transferir para outro
+  # atendente quanto ao remover o proprietário.
+  #
+  # A versão anterior (end_time_tracking_on_unassign) nunca disparava: checava
+  # `owner_id.present?`, mas no Zammad "sem proprietário" é o id 1 ("Ninguém"),
+  # não nil — a condição era sempre verdadeira e o método voltava antes de
+  # encerrar. Também não cobria a troca para outro dono, só a remoção.
+  #
+  # Encerra em vez de pausar: quem não é mais dono não deve retomar aquele
+  # intervalo. O tempo trabalhado fica registrado e fechado, que é o que o
+  # relatório por atendente precisa.
+  def end_time_tracking_on_owner_change
+    return true if !will_save_change_to_attribute?('owner_id')
+
+    previous_owner_id = changes_to_save['owner_id'].first
+    return true if previous_owner_id.blank?
+    return true if previous_owner_id == 1
+
+    TicketTimeTracking
+      .where(ticket_id: id, user_id: previous_owner_id, ended_at: nil)
+      .find_each { |tracking| end_time_tracking_of(tracking) }
+
+    true
+  end
+
+  def end_time_tracking_of(tracking)
+    tracking.end!
+
+    # O indicador da barra lateral lê este campo; sem limpar, seguiria apontando
+    # um ticket que a pessoa não atende mais.
+    user = tracking.user
+    return if user.blank?
+    return if user.current_active_ticket_id != id
+
+    user.update!(current_active_ticket_id: nil)
+  rescue => e
+    # Uma contagem que não fecha não pode impedir a gravação do ticket.
+    Rails.logger.error "Could not end time tracking #{tracking.id} after owner change on ticket #{id}: #{e.message}"
   end
 end

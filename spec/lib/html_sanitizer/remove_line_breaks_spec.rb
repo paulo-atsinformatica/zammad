@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 require 'rails_helper'
 
@@ -27,6 +27,27 @@ RSpec.describe HtmlSanitizer::RemoveLineBreaks do
     describe 'does not remove newlines in other elements' do
       let(:input)  { "<div>test<output>a\n</output></div>" }
       let(:target) { "<div>test<output>a\n</output></div>" }
+
+      it { is_expected.to match target }
+    end
+
+    describe 'keeps spans with styling (#6251)' do
+      let(:input)  { '<div>test<span style="color: #ff0000;">red</span></div>' }
+      let(:target) { '<div>test<span style="color: #ff0000;">red</span></div>' }
+
+      it { is_expected.to match target }
+    end
+
+    describe 'keeps spans with classes' do
+      let(:input)  { '<div>test<span class="js-signatureMarker">marker</span></div>' }
+      let(:target) { '<div>test<span class="js-signatureMarker">marker</span></div>' }
+
+      it { is_expected.to match target }
+    end
+
+    describe 'keeps empty signature marker spans' do
+      let(:input)  { '<div>test<span class="js-signatureMarker"></span></div>' }
+      let(:target) { '<div>test<span class="js-signatureMarker"></span></div>' }
 
       it { is_expected.to match target }
     end

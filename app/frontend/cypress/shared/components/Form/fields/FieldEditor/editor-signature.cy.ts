@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import { getNode } from '@formkit/core'
 
@@ -35,7 +35,7 @@ const SIGNATURE =
   '<strong>Signature</strong><div>Context</div><br>---<br><em>Phone: +1234556778</em>'
 
 const PARSED_SIGNATURE =
-  '<p dir="auto"><strong>Signature</strong></p><p dir="auto">Context</p><p dir="auto"><br dir="auto">---<br dir="auto"><em>Phone: +1234556778</em></p>'
+  '<p dir="auto"><strong>Signature</strong></p><p dir="auto">Context</p><p dir="auto"><br dir="auto">---<em>Phone: +1234556778</em></p>'
 
 const WRAPPED_SIGNATURE = (id: string, str: string) => {
   return `<div data-signature="true" dir="auto" class="signature" data-signature-id="${id}">${str}</div>`
@@ -52,17 +52,16 @@ describe('correctly adds signature', { retries: 2 }, () => {
         .shouldHaveNormalizedHtml(`${BREAK_HTML}`)
         .then(() => {
           context.addSignature({
-            body: SIGNATURE,
-            id: 1,
+            renderedBody: SIGNATURE,
+            internalId: 1,
           })
           cy.findByRole('textbox')
             .shouldHaveNormalizedHtml(
-              `${BREAK_HTML}${BREAK_HTML}${WRAPPED_SIGNATURE('1', PARSED_SIGNATURE)}${BREAK_HTML}`,
+              `${BREAK_HTML}${WRAPPED_SIGNATURE('1', PARSED_SIGNATURE)}${BREAK_HTML}`,
             )
             .then(() => {
               context.removeSignature()
-              // FIXME: Try to address the extra line break issue when removing signature.
-              cy.findByRole('textbox').shouldContainNormalizedHtml(`${BREAK_HTML}${BREAK_HTML}`)
+              cy.findByRole('textbox').shouldContainNormalizedHtml(`${BREAK_HTML}`)
             })
         })
     })
@@ -77,8 +76,8 @@ describe('correctly adds signature', { retries: 2 }, () => {
       .then(resolveContext)
       .then((context) => {
         context.addSignature({
-          body: SIGNATURE,
-          id: 2,
+          renderedBody: SIGNATURE,
+          internalId: 2,
         })
         cy.findByRole('textbox').shouldContainNormalizedHtml(
           `<p dir="auto">${ORIGINAL_TEXT}</p>${BREAK_HTML}${WRAPPED_SIGNATURE(
@@ -99,11 +98,43 @@ describe('correctly adds signature', { retries: 2 }, () => {
       })
   })
 
+  it('does not add extra blank line on remove+re-add cycle', () => {
+    mountEditor()
+
+    cy.findByRole('textbox').type(ORIGINAL_TEXT)
+
+    cy.findByRole('textbox')
+      .then(resolveContext)
+      .then((context) => {
+        // First add
+        context.addSignature({ renderedBody: SIGNATURE, internalId: 4 })
+
+        cy.findByRole('textbox')
+          .shouldHaveNormalizedHtml(
+            `<p dir="auto">${ORIGINAL_TEXT}</p>${BREAK_HTML}${WRAPPED_SIGNATURE('4', PARSED_SIGNATURE)}${BREAK_HTML}`,
+          )
+          .then(() => {
+            // Remove (simulates switching to a group without a signature)
+            context.removeSignature()
+
+            // Re-add (simulates switching back to a group with a signature)
+            context.addSignature({ renderedBody: SIGNATURE, internalId: 4 })
+
+            // Must be identical to the first-add result — no extra blank line
+            cy.findByRole('textbox').shouldHaveNormalizedHtml(
+              `<p dir="auto">${ORIGINAL_TEXT}</p>${BREAK_HTML}${WRAPPED_SIGNATURE('4', PARSED_SIGNATURE)}${BREAK_HTML}`,
+            )
+          })
+      })
+  })
+
   it('add signature before marker', () => {
-    const originalBody = html`<p dir="auto" data-marker="signature-before"></p>
+    const originalBody = html`
+      <p dir="auto" data-marker="signature-before"></p>
       <blockquote type="cite">
         <p dir="auto">Subject: Welcome to Zammad!</p>
-      </blockquote>`
+      </blockquote>
+    `
 
     mountEditor({
       value: originalBody,
@@ -113,8 +144,8 @@ describe('correctly adds signature', { retries: 2 }, () => {
       .then(resolveContext)
       .then((context) => {
         context.addSignature({
-          body: SIGNATURE,
-          id: 3,
+          renderedBody: SIGNATURE,
+          internalId: 3,
         })
       })
 
@@ -136,5 +167,72 @@ describe('correctly adds signature', { retries: 2 }, () => {
     cy.findByRole('textbox').shouldContainNormalizedHtml(
       `<p dir="auto">text</p><p dir="auto" data-marker=`,
     )
+  })
+
+  it('respects explicit position when upserting existing signature', () => {
+    mountEditor()
+
+    cy.findByRole('textbox')
+      .then(resolveContext)
+      .then((context) => {
+        context.addSignature({ renderedBody: SIGNATURE, internalId: 5 })
+      })
+
+    cy.findByRole('textbox').click().type('{moveToEnd}')
+
+    cy.findByRole('textbox')
+      .then(resolveContext)
+      .then((context) => {
+        context.addSignature({ renderedBody: SIGNATURE, internalId: 5, position: 1 })
+      })
+
+    cy.findByRole('textbox').type('typed')
+
+    cy.findByRole('textbox').shouldContainNormalizedHtml(
+      '<p dir="auto">typed</p><div data-signature',
+    )
+  })
+
+  it('adds new top-level signature when quoted content already contains a signature', () => {
+    // Simulate replying to an email that already contains a signature in its quoted content.
+    // The signature inside the blockquote must NOT prevent the new signature from being added.
+    const originalBody = html`
+      <p dir="auto" data-marker="signature-before"></p>
+      <blockquote type="cite">
+        <p dir="auto">Previous email content</p>
+        <div data-signature="true" data-signature-id="1">Old Signature In Quote</div>
+      </blockquote>
+    `
+
+    mountEditor({
+      value: originalBody,
+    })
+
+    cy.findByRole('textbox')
+      .then(resolveContext)
+      .then((context) => {
+        context.addSignature({
+          renderedBody: SIGNATURE,
+          internalId: 1,
+        })
+      })
+
+    // New signature should be added at the top level (before blockquote)
+    cy.findByRole('textbox').shouldContainNormalizedHtml(`${BREAK_HTML}<div data-signature=`)
+
+    // Quoted content (including old signature inside) should be unchanged
+    cy.findByRole('textbox').shouldContainNormalizedHtml('<p dir="auto">Previous email content</p>')
+
+    cy.findByRole('textbox')
+      .then(resolveContext)
+      .then((context) => {
+        context.removeSignature()
+      })
+
+    // After removeSignature, only the top-level signature is removed; blockquote content remains
+    cy.findByRole('textbox').shouldContainNormalizedHtml(
+      '<p dir="auto" data-marker="signature-before">',
+    )
+    cy.findByRole('textbox').shouldContainNormalizedHtml('<p dir="auto">Previous email content</p>')
   })
 })

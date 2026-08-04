@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 module CreatesTicketArticles # rubocop:disable Metrics/ModuleLength
   extend ActiveSupport::Concern
@@ -12,7 +12,7 @@ module CreatesTicketArticles # rubocop:disable Metrics/ModuleLength
     subtype = params.delete(:subtype)
 
     # check min. params
-    raise Exceptions::UnprocessableEntity, __("Need at least an 'article body' field.") if params[:body].nil?
+    raise Exceptions::UnprocessableContent, __("Need at least an 'article body' field.") if params[:body].nil?
 
     # fill default values
     if params[:type_id].blank? && params[:type].blank?
@@ -42,6 +42,10 @@ module CreatesTicketArticles # rubocop:disable Metrics/ModuleLength
       end
       clean_params.delete(:type)
       clean_params[:internal] = false
+    end
+
+    if Ticket::Article::Type.lookup(id: clean_params[:type_id])&.name == 'email' && ticket.group.email_address.blank?
+      raise Exceptions::UnprocessableContent, __('This group has no email address configured for outgoing communication.')
     end
 
     article                                    = Ticket::Article.new(clean_params)
@@ -121,7 +125,7 @@ module CreatesTicketArticles # rubocop:disable Metrics/ModuleLength
       required_keys.each do |key|
         next if attachment[key]
 
-        raise Exceptions::UnprocessableEntity, "Attachment needs '#{key}' param for attachment with index '#{index}'"
+        raise Exceptions::UnprocessableContent, "Attachment needs '#{key}' param for attachment with index '#{index}'"
       end
 
       preferences = {}
@@ -136,7 +140,7 @@ module CreatesTicketArticles # rubocop:disable Metrics/ModuleLength
         base64_data = attachment[:data].gsub(%r{[\r\n]}, '')
         attachment_data = Base64.strict_decode64(base64_data)
       rescue ArgumentError
-        raise Exceptions::UnprocessableEntity, "Invalid base64 for attachment with index '#{index}'"
+        raise Exceptions::UnprocessableContent, "Invalid base64 for attachment with index '#{index}'"
       end
 
       attachments << {

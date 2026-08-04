@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import { cloneDeep, keyBy } from 'lodash-es'
 import { computed, ref, type Ref, watch } from 'vue'
@@ -7,7 +7,10 @@ import type { SelectOption, SelectValue } from '#shared/components/CommonSelect/
 import useValue from '#shared/components/Form/composables/useValue.ts'
 import type { AutoCompleteOption } from '#shared/components/Form/fields/FieldAutocomplete/types'
 import type { SelectOptionSorting } from '#shared/components/Form/fields/FieldSelect/types.ts'
-import type { FlatSelectOption } from '#shared/components/Form/fields/FieldTreeSelect/types.ts'
+import type {
+  FlatSelectOption,
+  TreeSelectOption,
+} from '#shared/components/Form/fields/FieldTreeSelect/types.ts'
 import type { FormFieldContext } from '#shared/components/Form/types/field.ts'
 import { i18n } from '#shared/i18n.ts'
 
@@ -25,6 +28,7 @@ const useSelectOptions = <T extends SelectOption[] | FlatSelectOption[] | AutoCo
       complexValue?: boolean
     }>
   >,
+  appendedTreeOptions?: Ref<TreeSelectOption[]>,
 ) => {
   const dialog = ref<HTMLElement>()
 
@@ -55,11 +59,10 @@ const useSelectOptions = <T extends SelectOption[] | FlatSelectOption[] | AutoCo
           ? variant.heading || ''
           : i18n.t(variant.heading, ...(variant.headingPlaceholder || []))
 
-      return {
-        ...option,
+      return Object.assign(option, {
         label,
         heading,
-      }
+      })
     })
   })
 
@@ -115,10 +118,13 @@ const useSelectOptions = <T extends SelectOption[] | FlatSelectOption[] | AutoCo
       (optionValueLookup.value[selectedValue] as FlatSelectOption).parents) ||
     []
 
-  const getSelectedOptionFullPath = (selectedValue: string | number) =>
+  const getSelectedOptionParentsPath = (selectedValue: string | number) =>
     getSelectedOptionParents(selectedValue)
       .map((parentValue) => `${getSelectedOptionLabel(parentValue)} \u203A `)
-      .join('') +
+      .join('')
+
+  const getSelectedOptionFullPath = (selectedValue: string | number) =>
+    getSelectedOptionParentsPath(selectedValue) +
     (getSelectedOptionLabel(selectedValue) || i18n.t('%s (unknown)', selectedValue.toString()))
 
   const valueBuilder = (option: SelectOption): AllowedSelectValue => {
@@ -132,14 +138,36 @@ const useSelectOptions = <T extends SelectOption[] | FlatSelectOption[] | AutoCo
     }
 
     const selectedValues = cloneDeep(currentValue.value) || []
-    const optionIndex = selectedValues.indexOf(option.value)
+
+    const optionIndex = selectedValues.findIndex((selectedValue: AllowedSelectValue) => {
+      if (typeof selectedValue === 'object' && selectedValue !== null && 'value' in selectedValue) {
+        return selectedValue.value === option.value
+      }
+
+      return selectedValue === option.value
+    })
+
     if (optionIndex !== -1) selectedValues.splice(optionIndex, 1)
     else selectedValues.push(valueBuilder(option))
+
     selectedValues.sort(
-      (a: string | number, b: string | number) =>
-        sortedOptions.value.findIndex((option) => option.value === a) -
-        sortedOptions.value.findIndex((option) => option.value === b),
+      (a: AllowedSelectValue, b: AllowedSelectValue) =>
+        sortedOptions.value.findIndex((option) => {
+          if (typeof a === 'object' && a !== null && 'value' in a) {
+            return a.value === option.value
+          }
+
+          return a === option.value
+        }) -
+        sortedOptions.value.findIndex((option) => {
+          if (typeof b === 'object' && b !== null && 'value' in b) {
+            return b.value === option.value
+          }
+
+          return b === option.value
+        }),
     )
+
     context.value.node.input(selectedValues)
   }
 
@@ -210,6 +238,86 @@ const useSelectOptions = <T extends SelectOption[] | FlatSelectOption[] | AutoCo
     // Remember current optionValueLookup in node context.
     context.value.optionValueLookup = optionValueLookup
 
+    // Navigate and insert into tree structure, parsing hierarchical values like "Example::Level1::Deeper"
+    const appendToTree = (value: SelectValue, label: string | undefined): void => {
+      if (!appendedTreeOptions) return
+
+      if (typeof value !== 'string' || !value.includes('::') || !label) {
+        appendedTreeOptions.value.push({ value, label })
+        return
+      }
+
+      // Split into parts and navigate/create tree structure
+      const parts = value.split('::')
+      let currentLevel = appendedTreeOptions.value
+
+      // Navigate through parent nodes, creating them if needed
+      for (let i = 0; i < parts.length - 1; i++) {
+        const parentValue = parts.slice(0, i + 1).join('::')
+        const parentLabel = parts[i]
+
+        // Find or create parent node
+        let parentNode = currentLevel.find((opt) => opt.value === parentValue)
+        if (!parentNode) {
+          parentNode = { value: parentValue, label: parentLabel, children: [] }
+          currentLevel.push(parentNode)
+        }
+
+        // Ensure children array exists
+        if (!parentNode.children) {
+          parentNode.children = []
+        }
+
+        // Move to next level
+        currentLevel = parentNode.children
+      }
+
+      // Add the final leaf node
+      currentLevel.push({ value, label })
+    }
+
+    // Add helper function to allow features to dynamically add missing options
+    context.value.addMissingOption = (value: SelectValue, label?: string): void => {
+      // Check if option already exists to prevent duplicates
+      if (optionValueLookup.value[value.toString()] !== undefined) {
+        return
+      }
+
+      // Tree select: auto-parse hierarchical values (e.g., "Support::L2::Incident")
+      if (appendedTreeOptions) {
+        appendToTree(value as string, label)
+        return
+      }
+
+      // Flat select: simple append
+      appendedOptions.value.push({ value, label } as T[number])
+    }
+
+    // Remove a previously appended missing option by value (counterpart to addMissingOption).
+    context.value.removeMissingOption = (value: SelectValue): void => {
+      if (appendedTreeOptions) {
+        // Remove the value from the tree, pruning parent nodes that become childless.
+        const removeFromTree = (nodes: TreeSelectOption[]): TreeSelectOption[] =>
+          nodes.reduce<TreeSelectOption[]>((result, opt) => {
+            const filteredChildren = opt.children ? removeFromTree(opt.children) : undefined
+
+            if (opt.value === value && (!filteredChildren || filteredChildren.length === 0)) {
+              return result
+            }
+
+            result.push({ ...opt, children: filteredChildren })
+            return result
+          }, [])
+
+        appendedTreeOptions.value = removeFromTree(appendedTreeOptions.value)
+        return
+      }
+
+      appendedOptions.value = appendedOptions.value.filter(
+        (opt: SelectOption | FlatSelectOption) => opt.value !== value,
+      ) as T
+    }
+
     // TODO: Workaround for empty string, because currently the "nulloption" exists also for multiselect fields (#4513).
     if (context.value.multiple) {
       watch(
@@ -233,28 +341,38 @@ const useSelectOptions = <T extends SelectOption[] | FlatSelectOption[] | AutoCo
     //   - non-existent values are not supposed to be rejected
     //   - we have a current value
     //   - we have a list of historical options
-    if (!context.value.rejectNonExistentValues && hasValue.value && historicalOptions) {
-      appendedOptions.value = valueContainer.value.reduce(
-        (accumulator: SelectOption[], value: SelectValue) => {
-          const label = historicalOptions[value.toString()]
-          // Make sure the options are not duplicated!
-          if (label && !options.value.some((option) => option.value === value)) {
-            accumulator.push({ value, label })
-          }
-          // TODO: Workaround, because currently the "nulloption" exists also for multiselect fields (#4513).
-          else if (
-            context.value.multiple &&
-            !label &&
-            value === '' &&
-            !options.value.some((option) => option.value === value)
-          ) {
-            accumulator.unshift({ value, label: '-' })
-          }
+    if (!context.value.rejectNonExistentValues && hasValue.value) {
+      if (appendedTreeOptions) {
+        // Tree select mode: always append unknown values (label from historicalOptions or undefined)
+        valueContainer.value.forEach((value: SelectValue) => {
+          if (optionValueLookup.value[value.toString()] === undefined) {
+            const label = historicalOptions?.[value.toString()]
 
-          return accumulator
-        },
-        [],
-      )
+            appendToTree(value, label)
+          }
+        })
+      } else {
+        // Flat select mode: build options array using reduce
+        appendedOptions.value = valueContainer.value.reduce(
+          (accumulator: SelectOption[], value: SelectValue) => {
+            if (optionValueLookup.value[value.toString()] !== undefined) {
+              return accumulator
+            }
+
+            // TODO: Workaround, because currently the "nulloption" exists also for multiselect fields (#4513).
+            if (context.value.multiple && value === '') {
+              accumulator.unshift({ value, label: '-' })
+              return accumulator
+            }
+
+            const label = historicalOptions?.[value.toString()]
+            accumulator.push({ value, label })
+
+            return accumulator
+          },
+          [],
+        )
+      }
     }
 
     // Reject non-existent or disabled option values during the initialization phase (note that
@@ -264,6 +382,20 @@ const useSelectOptions = <T extends SelectOption[] | FlatSelectOption[] | AutoCo
     // Set up a watcher that clears a missing option value or disabled options on subsequent mutations
     //  of the options prop (in this case, the dedicated "rejectNonExistentValues" flag is ignored).
     watch(options, () => handleValuesForNonExistingOrDisabledOptions())
+
+    // Remove appended options that now exist in real options (to prevent duplicates after formUpdater).
+    // For the tree select situation we are handling this in the "useFlatSelectOptions" composable, because here we have
+    // the easier the base tree structure available, which we need for the correct handling.
+    watch(options, (newOptions) => {
+      if (!newOptions) return
+
+      if (appendedOptions.value.length > 0) {
+        appendedOptions.value = appendedOptions.value.filter(
+          (appendedOpt: SelectOption | FlatSelectOption) =>
+            !newOptions.some((opt) => opt.value === appendedOpt.value),
+        )
+      }
+    })
   }
 
   return {
@@ -278,6 +410,7 @@ const useSelectOptions = <T extends SelectOption[] | FlatSelectOption[] | AutoCo
     getSelectedOptionLabel,
     getSelectedOptionStatus,
     getSelectedOptionParents,
+    getSelectedOptionParentsPath,
     getSelectedOptionFullPath,
     selectOption,
     getDialogFocusTargets,

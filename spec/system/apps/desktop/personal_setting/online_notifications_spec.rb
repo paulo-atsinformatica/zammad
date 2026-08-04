@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 require 'rails_helper'
 
@@ -32,11 +32,7 @@ RSpec.describe 'Desktop > Ticket > Online Notifications', app: :desktop_view, au
         expect(page).to have_text("#{agent_b.fullname} updated ticket")
         click_on 'mark all as read'
         wait_for_mutation('onlineNotificationMarkAllAsSeen')
-      end
 
-      find('button[aria-label="Show notifications"]').click
-
-      within('[role="region"]') do
         expect(page).to have_css('a', text: "#{agent_b.fullname} updated ticket", style: { opacity: '0.3' })
       end
 
@@ -49,7 +45,7 @@ RSpec.describe 'Desktop > Ticket > Online Notifications', app: :desktop_view, au
       find('label', text: 'New ticket - All tickets').click
       find('label', text: 'Ticket update - All tickets').click
 
-      click_on 'Save Notifications'
+      click_on 'Save notifications'
 
       wait_for_mutation('userCurrentNotificationPreferencesUpdate', number: 1)
 

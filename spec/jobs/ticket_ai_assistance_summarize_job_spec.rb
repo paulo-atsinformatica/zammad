@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 require 'rails_helper'
 
@@ -6,10 +6,11 @@ RSpec.describe TicketAIAssistanceSummarizeJob, type: :job do
   describe '#perform' do
     let(:ticket)          { create(:ticket) }
     let(:locale)          { 'en' }
+    let(:current_user)    { create(:agent) }
     let(:regeneration_of) { nil }
 
     def perform
-      described_class.perform_now(ticket, locale, regeneration_of: nil)
+      described_class.perform_now(ticket, locale, current_user:, regeneration_of: nil)
     end
 
     before do
@@ -23,19 +24,17 @@ RSpec.describe TicketAIAssistanceSummarizeJob, type: :job do
       let(:ai_analytics_run) { nil }
 
       before do
-        allow_any_instance_of(Service::Ticket::AIAssistance::Summarize)
+        allow(Service::Ticket::AIAssistance::Summarize)
           .to receive(:execute)
           .and_return(service_result)
       end
 
       it 'forwards given arguments to Summarize service' do
-        allow(Service::Ticket::AIAssistance::Summarize).to receive(:new).and_call_original
-
         perform
 
         expect(Service::Ticket::AIAssistance::Summarize)
-          .to have_received(:new)
-          .with(ticket:, locale:, regeneration_of:)
+          .to have_received(:execute)
+          .with(ticket:, locale:, current_user:, regeneration_of:)
       end
 
       context 'when return is nil' do
@@ -92,7 +91,7 @@ RSpec.describe TicketAIAssistanceSummarizeJob, type: :job do
 
     context 'when error is raised' do
       before do
-        allow_any_instance_of(Service::Ticket::AIAssistance::Summarize)
+        allow(Service::Ticket::AIAssistance::Summarize)
           .to receive(:execute)
           .and_raise(StandardError, 'Something went wrong')
       end
@@ -115,7 +114,7 @@ RSpec.describe TicketAIAssistanceSummarizeJob, type: :job do
           .to have_received(:broadcast)
           .with({
                   event: 'ticket::summary::update',
-                  data:  { ticket_id: ticket.id, locale:, error: true }
+                  data:  { ticket_id: ticket.id, error: true, ai_analytics_run_id: nil }
                 })
       end
     end

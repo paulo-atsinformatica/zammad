@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import { mockGraphQLResult, waitForGraphQLMockCalls } from '#tests/graphql/builders/mocks.ts'
 import type { ExtendedRenderResult } from '#tests/support/components/renderComponent.ts'
@@ -51,7 +51,7 @@ it('can reset a password and try again', async () => {
 
   const view = await visitView('/reset-password')
 
-  expect(await view.findByRole('button', { name: 'Cancel & Go Back' })).toBeInTheDocument()
+  expect(await view.findByRole('button', { name: 'Cancel & go back' })).toBeInTheDocument()
 
   const [imprint, privacy] = publicLinks
 

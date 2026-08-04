@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 class PerformChanges::Action::AttributeUpdates < PerformChanges::Action
   def self.phase
@@ -32,6 +32,8 @@ class PerformChanges::Action::AttributeUpdates < PerformChanges::Action
   end
 
   def change_attribute(key, value, object_attribute)
+    return false if context_data.is_a?(Hash) && context_data[:skip_blank_attribute_values] && value['value'].blank?
+
     exchange_user_id(value)
     template_value(value)
 
@@ -41,7 +43,8 @@ class PerformChanges::Action::AttributeUpdates < PerformChanges::Action
   end
 
   def valid_attributes!
-    raise "The given #{origin} contains invalid attributes, stopping!" if execution_data.keys.any? { |key| !attribute_valid?(key) }
+    invalid_attributes = execution_data.keys.reject { |key| attribute_valid?(key) }
+    raise "The given #{origin} contains invalid attributes: #{invalid_attributes.join(', ')}, stopping!" if invalid_attributes.any?
 
     true
   end
@@ -69,23 +72,44 @@ class PerformChanges::Action::AttributeUpdates < PerformChanges::Action
   def tags(value)
     return if record.class.included_modules.exclude?(HasTags)
 
-    tags = value['value'].split(',')
+    tags = normalized_tags(value['value'])
     return if tags.blank?
 
     operator = tags_operator(value)
     return if operator.blank?
 
-    tags.each do |tag|
-      record.send(:"tag_#{operator}", tag, user_id || 1, sourceable: performable)
+    case operator
+    when 'replace'
+      record.tag_update(tags, user_id || 1, sourceable: performable)
+    when 'add', 'remove'
+      tags.each do |tag|
+        record.send(:"tag_#{operator}", tag, user_id || 1, sourceable: performable)
+      end
     end
 
     nil
   end
 
+  def normalized_tags(raw_value)
+    tags = case raw_value
+           when Array
+             raw_value
+           when String
+             raw_value.split(',')
+           else
+             []
+           end
+
+    tags
+      .map { |tag| tag.to_s.strip }
+      .compact_blank
+      .uniq
+  end
+
   def tags_operator(value)
     operator = value['operator']
 
-    if %w[add remove].exclude?(operator)
+    if %w[add remove replace].exclude?(operator)
       Rails.logger.error "Unknown tags operator #{value['operator']}"
       return
     end

@@ -1,8 +1,7 @@
-<!-- Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/ -->
+<!-- Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/ -->
 
 <script setup lang="ts">
-import { storeToRefs } from 'pinia'
-import { nextTick, shallowRef, toRef, ref, defineAsyncComponent, watch, computed } from 'vue'
+import { nextTick, shallowRef, toRef, ref, defineAsyncComponent, watch } from 'vue'
 
 import useEditorActionHelper from '#shared/components/Form/fields/FieldEditor/composables/useEditorActionHelper.ts'
 import type {
@@ -108,7 +107,7 @@ const handleSubMenuClick = () => {
 
 const showAiAssistantTextToolsLoadingBanner = ref(false)
 
-const { config } = storeToRefs(useApplicationStore())
+const config = toRef(useApplicationStore(), 'config')
 
 const { zIndex } = useFieldEditorOptions()
 
@@ -119,21 +118,11 @@ watch(
     hideActionBarLocally.value = !!showLoader
   },
 )
-
-const inlineStyle = computed(() => {
-  if (!props.isInlineMode) return {}
-
-  return {
-    '--top-header-height': '0',
-    top: '-4.5px', // needed to offset the negative vertical margin of the inline editor
-  }
-})
 </script>
 
 <template>
   <div
     class="sticky top-(--top-header-height) z-30 -order-1 border-x border-t border-blue-200 bg-neutral-50 ltr:left-0 rtl:right-0 dark:border-gray-700 dark:bg-gray-500"
-    :style="inlineStyle"
   >
     <ActionToolbar
       v-show="!hideActionBarLocally"
@@ -172,7 +161,7 @@ const inlineStyle = computed(() => {
           <CommonPopoverMenuItem
             v-for="action in subMenuPopoverContent"
             :key="action.id"
-            class="focus-visible-app-default hover:bg-blue-600 active:bg-blue-800! active:**:text-white! hover:dark:bg-blue-900 last:rounded-b-[calc(var(--radius-lg)+3px)] first:rounded-t-[calc(var(--radius-lg)+3px)] flex grow p-2.5 focus-visible:-outline-offset-1!"
+            class="flex grow p-2.5 focus-visible-app-default first:rounded-t-[calc(var(--radius-lg)+3px)] last:rounded-b-[calc(var(--radius-lg)+3px)] hover:bg-blue-600 focus-visible:-outline-offset-1! active:bg-blue-800! active:**:text-white! hover:dark:bg-blue-900"
             :class="{
               'bg-blue-800! **:text-white!': isActive(action.name, action.attributes),
             }"

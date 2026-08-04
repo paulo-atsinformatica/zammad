@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import { getByAltText, queryByAltText, waitFor } from '@testing-library/vue'
 import { flushPromises } from '@vue/test-utils'
@@ -9,14 +9,26 @@ import { mockApplicationConfig } from '#tests/support/mock-applicationConfig.ts'
 import { mockUserCurrent } from '#tests/support/mock-userCurrent.ts'
 
 import { convertToGraphQLId } from '#shared/graphql/utils.ts'
+import { i18n } from '#shared/i18n.ts'
 import { waitForAnimationFrame } from '#shared/utils/helpers.ts'
 import { isStandalone } from '#shared/utils/pwa.ts'
 
-import { routes } from '#mobile/router/index.ts'
-
 import ArticleBubble from '../ArticleBubble.vue'
 
-const mainRoutes = routes.at(-1)?.children || []
+// Importing the real router index triggers import.meta.glob({ eager: true }), which
+// pulls in all page route files. Those route files contain lazy component factories
+// that can fire during Vitest environment teardown, causing EnvironmentTeardownError
+// for modules that are already gone. The tests here never render any child views —
+// they only assert router.push calls and need /ticket/zoom/:id to resolve as a
+// known route (not the Error catch-all) for useHtmlLinks link-resolution logic.
+const mainRoutes = [
+  {
+    path: 'tickets/:internalId(\\d+)',
+    alias: ['/ticket/:internalId(\\d+)', '/ticket/zoom/:internalId(\\d+)'],
+    name: 'TicketDetailView',
+    component: { template: '<div></div>' },
+  },
+]
 
 const renderArticleBubble = (props = {}) => {
   return renderComponent(ArticleBubble, {
@@ -63,13 +75,18 @@ describe('component for displaying text article', () => {
     })
 
     mockApplicationConfig({
-      ui_ticket_zoom_attachments_preview: true,
       api_path: '/api',
-      'active_storage.web_image_content_types': [
+      'active_storage.content_types_allowed_inline': [
+        'image/webp',
+        'image/avif',
         'image/png',
-        'image/jpeg',
-        'image/jpg',
         'image/gif',
+        'image/jpeg',
+        'image/tiff',
+        'image/bmp',
+        'image/vnd.adobe.photoshop',
+        'image/vnd.microsoft.icon',
+        'image/jpg',
       ],
     })
   })
@@ -159,12 +176,14 @@ describe('component for displaying text article', () => {
     const html = String.raw
 
     const view = renderArticleBubble({
-      content: html`<div>
-        Text
+      content: html`
         <div>
-          <div data-test-id="signature" data-signature="true">Signature</div>
+          Text
+          <div>
+            <div data-test-id="signature" data-signature="true">Signature</div>
+          </div>
         </div>
-      </div>`,
+      `,
     })
 
     const content = view.getByTestId('article-content')
@@ -217,6 +236,48 @@ describe('component for displaying text article', () => {
     })
 
     expect(view.container).toHaveTextContent(sample)
+  })
+
+  describe('bodyRenderingError', () => {
+    afterEach(() => {
+      i18n.setTranslationMap(new Map())
+    })
+
+    const errorMsg =
+      'This message cannot be displayed due to HTML processing issues. Download the raw message below and open it via an Email client if you still wish to view it.'
+
+    it('displays the error message when bodyRenderingError is true', () => {
+      const view = renderArticleBubble({
+        content: errorMsg,
+        contentType: 'text/html',
+        bodyRenderingError: true,
+      })
+
+      expect(view.getByText(errorMsg)).toBeInTheDocument()
+    })
+
+    it('translates the error message according to the active locale', () => {
+      i18n.setTranslationMap(
+        new Map([
+          [
+            errorMsg,
+            'Diese Nachricht kann aufgrund von HTML-Verarbeitungsproblemen nicht angezeigt werden.',
+          ],
+        ]),
+      )
+
+      const view = renderArticleBubble({
+        content: errorMsg,
+        contentType: 'text/html',
+        bodyRenderingError: true,
+      })
+
+      expect(
+        view.getByText(
+          'Diese Nachricht kann aufgrund von HTML-Verarbeitungsproblemen nicht angezeigt werden.',
+        ),
+      ).toBeInTheDocument()
+    })
   })
 
   it('renders attachments', () => {

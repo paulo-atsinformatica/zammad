@@ -1,4 +1,4 @@
-<!-- Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/ -->
+<!-- Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/ -->
 
 <script setup lang="ts">
 import { computed, watch } from 'vue'
@@ -27,6 +27,7 @@ import type { TwoFactorConfigurationType } from '#desktop/components/TwoFactor/t
 import { useConfigurationTwoFactor } from '#desktop/entities/two-factor-configuration/composables/useConfigurationTwoFactor.ts'
 
 import { useBreadcrumb } from '../composables/useBreadcrumb.ts'
+import { usePersonalSettingTabs } from '../composables/usePersonalSettingTabs.ts'
 
 defineOptions({
   beforeRouteEnter() {
@@ -69,7 +70,7 @@ watch(hasEnabledMethods, (newValue) => {
   )
 })
 
-const { breadcrumbItems } = useBreadcrumb(__('Two-factor Authentication'))
+const { breadcrumbItems } = useBreadcrumb(__('Two-factor authentication'))
 
 const twoFactorConfigurationFlyout = useFlyout({
   name: 'two-factor-flyout',
@@ -182,10 +183,17 @@ const actions = computed<MenuItem[]>(() => [
     onClick: (entity) => submitTwoFactorMethodRemoval(entity),
   },
 ])
+
+const { tabs, activeTab } = usePersonalSettingTabs()
 </script>
 
 <template>
-  <LayoutContent :breadcrumb-items="breadcrumbItems" width="narrow">
+  <LayoutContent
+    :active-tab="activeTab"
+    :tabs="tabs"
+    :breadcrumb-items="breadcrumbItems"
+    width="narrow"
+  >
     <div class="flex flex-col gap-2.5">
       <div>
         <CommonLabel class="mb-1.5">{{ $t('Available methods') }}</CommonLabel>
@@ -251,7 +259,7 @@ const actions = computed<MenuItem[]>(() => [
             size="medium"
             @click="openTwoFactorConfigurationFlyout('recovery_codes')"
           >
-            {{ hasRecoveryCodes ? $t('Regenerate Recovery Codes') : $t('Generate Recovery Codes') }}
+            {{ hasRecoveryCodes ? $t('Regenerate recovery codes') : $t('Generate recovery codes') }}
           </CommonButton>
         </div>
       </template>

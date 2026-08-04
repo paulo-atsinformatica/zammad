@@ -1,4 +1,4 @@
-<!-- Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/ -->
+<!-- Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/ -->
 
 <script setup lang="ts">
 import { toRef, useTemplateRef } from 'vue'
@@ -77,7 +77,7 @@ setupMissingOrDisabledOptionHandling()
         aria-haspopup="dialog"
         :aria-expanded="expanded"
         :name="context.node.name"
-        class="formkit-disabled:pointer-events-none flex grow items-center focus:outline-hidden"
+        class="flex grow items-center focus:outline-hidden formkit-disabled:pointer-events-none"
         :aria-labelledby="`label-${context.id}`"
         :aria-disabled="context.disabled"
         :data-multiple="context.multiple"
@@ -121,8 +121,8 @@ setupMissingOrDisabledOptionHandling()
         </div>
         <CommonIcon
           v-if="context.clearable && hasValue && !context.disabled"
-          :aria-label="i18n.t('Clear Selection')"
-          class="text-gray absolute -mt-5 shrink-0 ltr:right-2 rtl:left-2"
+          :aria-label="i18n.t('Clear selection')"
+          class="absolute -mt-5 shrink-0 text-gray ltr:right-2 rtl:left-2"
           name="close-small"
           size="base"
           role="button"

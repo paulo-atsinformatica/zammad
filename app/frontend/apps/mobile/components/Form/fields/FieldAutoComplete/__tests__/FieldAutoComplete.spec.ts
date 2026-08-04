@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import { getNode } from '@formkit/core'
 import { FormKit } from '@formkit/vue'
@@ -74,7 +74,6 @@ const mockQueryResult = (input: { query: string; limit: number }): AutocompleteS
 
 const wrapperParameters = {
   form: true,
-  formField: true,
   router: true,
   dialog: true,
   store: true,
@@ -203,7 +202,7 @@ describe('Form - Field - AutoComplete - Query', () => {
     expect(selectOptions).toHaveLength(1)
     expect(selectOptions[0]).toHaveTextContent(testOptions[0].label)
 
-    await wrapper.events.click(wrapper.getByLabelText('Clear Search'))
+    await wrapper.events.click(wrapper.getByLabelText('Clear search'))
 
     expect(filterElement).toHaveValue('')
 
@@ -310,7 +309,7 @@ describe('Form - Field - AutoComplete - Query', () => {
 
     expect(emittedInput[0][0]).toStrictEqual([testOptions[0].value, testOptions[2].value])
 
-    await wrapper.events.click(wrapper.getByLabelText('Clear Search'))
+    await wrapper.events.click(wrapper.getByLabelText('Clear search'))
 
     selectOptions = wrapper.getAllByRole('option')
 
@@ -364,6 +363,7 @@ describe('Form - Field - AutoComplete - Query', () => {
       ...wrapperParameters,
       props: {
         ...testProps,
+        options: testOptions,
         name: 'autocomplete',
         id: 'autocomplete',
         multiple: true,
@@ -374,13 +374,6 @@ describe('Form - Field - AutoComplete - Query', () => {
 
     await wrapper.events.click(wrapper.getByLabelText('Select…'))
 
-    const filterElement = wrapper.getByRole('searchbox')
-
-    expect(filterElement).toBeInTheDocument()
-
-    expect(wrapper.queryByText('Start typing to search…')).toBeInTheDocument()
-
-    await wrapper.events.type(filterElement, 'item')
     const selectOptions = wrapper.getAllByRole('option')
 
     expect(selectOptions).toHaveLength(3)
@@ -825,14 +818,14 @@ describe('Form - Field - AutoComplete - Features', () => {
     expect(selectOptions[0]).toHaveTextContent('Item D')
   })
 
-  it('supports validation of filter input', async () => {
+  it('offers the unknown filter value only when it passes the validator', async () => {
     const wrapper = renderComponent(FormKit, {
       ...wrapperParameters,
       props: {
         ...testProps,
         allowUnknownValues: true,
         debounceInterval: 0,
-        filterInputValidation: 'starts_with:#',
+        filterValueValidator: (filter: string) => filter.startsWith('#'),
       },
     })
 
@@ -842,15 +835,12 @@ describe('Form - Field - AutoComplete - Features', () => {
 
     await wrapper.events.type(filterElement, 'foo')
 
-    expect(wrapper.queryByText(`This field doesn't start with "#".`)).toBeInTheDocument()
-
+    // Invalid value is not offered as an unknown option.
     expect(wrapper.queryByText('No results found')).toBeInTheDocument()
 
     await wrapper.events.clear(filterElement)
 
     await wrapper.events.type(filterElement, '#foo')
-
-    expect(wrapper.queryByText(`This field doesn't start with "#".`)).not.toBeInTheDocument()
 
     const selectOptions = await wrapper.findAllByRole('option')
 
@@ -999,7 +989,7 @@ describe('Form - Field - AutoComplete - Accessibility', () => {
       },
     })
 
-    expect(wrapper.getByRole('button')).toHaveAttribute('aria-label', 'Clear Selection')
+    expect(wrapper.getByRole('button')).toHaveAttribute('aria-label', 'Clear selection')
   })
 
   it('supports keyboard navigation', async () => {

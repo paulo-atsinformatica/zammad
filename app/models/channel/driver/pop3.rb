@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 require 'net/pop'
 
@@ -86,6 +86,8 @@ class Channel::Driver::Pop3 < Channel::Driver::BaseEmailInbound
       @pop.enable_ssl(ssl_verify ? OpenSSL::SSL::VERIFY_PEER : OpenSSL::SSL::VERIFY_NONE)
     end
     @pop.start(options[:user], options[:password])
+  rescue => e
+    raise e.exception(humanized_error_message(e, options))
   end
 
   def messages_iterator(_keep_on_server, _options, reverse: false)
@@ -161,5 +163,9 @@ class Channel::Driver::Pop3 < Channel::Driver::BaseEmailInbound
       'X-Zammad-Ignore'      => mail.include?('X-Zammad-Verify: true') ? 'true' : 'false',
       'X-Zammad-Verify-Time' => mail.match(%r{X-Zammad-Verify-Time:\s(.+?)\s})&.captures&.first,
     }.with_indifferent_access
+  end
+
+  def authentication_error_class
+    Net::POPAuthenticationError
   end
 end

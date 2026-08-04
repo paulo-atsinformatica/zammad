@@ -1,8 +1,10 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 class AI::Analytics::Usage < ApplicationModel
   belongs_to :ai_analytics_run, class_name: 'AI::Analytics::Run', inverse_of: :usages
   belongs_to :user
+
+  scope :since_reset, ->(date) { date ? where(created_at: date..) : all }
 
   validates :ai_analytics_run_id, uniqueness: { scope: :user_id }
   validate :validate_rating_changing

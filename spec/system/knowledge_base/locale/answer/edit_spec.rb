@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 require 'rails_helper'
 
@@ -49,6 +49,24 @@ RSpec.describe 'Knowledge Base Locale Answer Edit', type: :system do
       click_on 'Edit'
 
       expect(page).to have_css("img[src='/api/v1/attachments/#{draft_answer.reload.translations.first.content.attachments.first.id}']")
+    end
+
+    it 'does not persist resize-shim scaffolding when an image is clicked before saving (#6227)' do
+      visit "#knowledge_base/#{knowledge_base.id}/locale/#{primary_locale.system_locale.locale}/answer/#{draft_answer.id}/edit"
+
+      find('a[data-action="insert_image"]').click
+
+      within('.popover-content') do
+        find('input[name="link"]', visible: :all).set(Rails.root.join('spec/fixtures/files/image/squares2.png'))
+        find('[type=submit]').click
+      end
+
+      page.execute_script("jQuery('[contenteditable=true] img').trigger('click')")
+      expect(page).to have_css('.enableObjectResizingShim img')
+
+      value = page.evaluate_script("jQuery('[contenteditable=true]').ceg()")
+      expect(value).to include('<img')
+      expect(value).not_to include('enableObjectResizingShim')
     end
   end
 

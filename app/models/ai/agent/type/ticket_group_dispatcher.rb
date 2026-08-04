@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 class AI::Agent::Type::TicketGroupDispatcher < AI::Agent::Type
 
@@ -12,23 +12,23 @@ class AI::Agent::Type::TicketGroupDispatcher < AI::Agent::Type
 
   def form_schema
     [
-      step:   'instruction_context',
-      help:   __('Choose which groups will be considered for dispatching tickets. If you want to limit it to specific groups, please select at least two below. Make sure the groups have clear names and optional descriptions, as that would comprise the context provided to the AI agent.'),
-      fields: [
-        {
-          name:                    'definition::instruction_context::object_attributes::group_id',
-          display:                 '',
-          tag:                     'object_attribute_options_context',
+      { step:   'instruction_context',
+        help:   __('Choose which groups will be considered for dispatching tickets. If you want to limit it to specific groups, please select at least two below. Make sure the groups have clear names and optional descriptions, as that would comprise the context provided to the AI agent.'),
+        fields: [
+          {
+            name:                    'definition::instruction_context::object_attributes::group_id',
+            display:                 '',
+            tag:                     'object_attribute_options_context',
 
-          limit_label:             __('Limit groups and provide optional descriptions'),
-          limit_description:       __('All groups will be considered for dispatching tickets.'),
-          table_label:             __('Available Groups'),
-          show_description:        true,
+            limit_label:             __('Limit groups and provide optional descriptions'),
+            limit_description:       __('All groups will be considered for dispatching tickets.'),
+            table_label:             __('Available Groups'),
+            show_description:        true,
 
-          object_attribute_name:   'group_id',
-          object_attribute_object: 'Ticket',
-        },
-      ],
+            object_attribute_name:   'group_id',
+            object_attribute_object: 'Ticket',
+          },
+        ] },
     ]
   end
 
@@ -47,8 +47,8 @@ class AI::Agent::Type::TicketGroupDispatcher < AI::Agent::Type
 
 - Ignore irrelevant information (e.g. personal anecdotes, small talk, signatures, out-of-office notifications).
 - Exclude segments that don't contribute any meaningful content (e.g. greetings, farewells).
-- Do not insert personal opinions about the conversation or elaborate on the answer.
-- Do not explain your given answer.
+- Never insert personal opinions about the conversation or elaborate on the answer.
+- Never explain your given answer.
 - Only answer with the value in the \"group_id\" field inside the JSON structure."
   end
 

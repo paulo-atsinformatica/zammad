@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 class GraphqlController < ApplicationController
   # Handled in the GraphQL processing, not on controller level.
@@ -18,6 +18,8 @@ class GraphqlController < ApplicationController
     end
 
     render json: single_query
+  rescue GraphqlValidations::Error => e
+    render json: { errors: [{ message: e.message }] }, status: :unprocessable_content
   rescue => e
     raise e if !Rails.env.development?
 
@@ -48,9 +50,10 @@ class GraphqlController < ApplicationController
 
   def context
     # context must be kept in sync with GraphqlChannel!
+    token = current_user_on_behalf ? nil : @_token
     {
       sid:             session.id,
-      current_user:    current_user,
+      current_user:    current_user && UserContext.new(current_user, token),
       current_user_id: current_user&.id,
       # :controller is used by login/logout mutations and MUST NOT be used otherwise.
       controller:      self,

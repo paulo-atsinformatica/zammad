@@ -1,9 +1,8 @@
-<!-- Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/ -->
+<!-- Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/ -->
 
 <script setup lang="ts">
 import { isEqual } from 'lodash-es'
-import { storeToRefs } from 'pinia'
-import { reactive, computed, watch } from 'vue'
+import { reactive, computed, watch, toRef } from 'vue'
 
 import {
   NotificationTypes,
@@ -26,11 +25,12 @@ import CommonButton from '#desktop/components/CommonButton/CommonButton.vue'
 import LayoutContent from '#desktop/components/layout/LayoutContent.vue'
 
 import { useBreadcrumb } from '../composables/useBreadcrumb.ts'
+import { usePersonalSettingTabs } from '../composables/usePersonalSettingTabs.ts'
 import { useUserCurrentOutOfOfficeMutation } from '../graphql/mutations/userCurrentOutOfOffice.api.ts'
 
 import type { OutOfOfficeFormData } from '../types/out-of-office.ts'
 
-const { user } = storeToRefs(useSessionStore())
+const user = toRef(useSessionStore(), 'user')
 
 const { form, isDisabled, onChangedField, formReset, values, isDirty } = useForm()
 
@@ -119,7 +119,7 @@ onChangedField('enabled', (newValue: FormFieldValue) => {
   Object.assign(formChangeFields, buildFormChangesHash(!!newValue))
 })
 
-const { breadcrumbItems } = useBreadcrumb(__('Out of Office'))
+const { breadcrumbItems } = useBreadcrumb(__('Out of office'))
 
 const formDataToInput = (formData: FormSubmitData<OutOfOfficeFormData>): OutOfOfficeInput => {
   const replacementId = formData.replacement_id
@@ -141,12 +141,12 @@ const showSuccessNotification = () => {
   notify({
     id: 'out-of-office-saved',
     type: NotificationTypes.Success,
-    message: __('Out of Office settings have been saved successfully'),
+    message: __('Out of office settings have been saved successfully'),
   })
 }
 
 const outOfOfficeMutation = new MutationHandler(useUserCurrentOutOfOfficeMutation(), {
-  errorNotificationMessage: __('Out of Office settings could not be saved.'),
+  errorNotificationMessage: __('Out of office settings could not be saved.'),
 })
 
 const submitForm = async (formData: FormSubmitData<OutOfOfficeFormData>) => {
@@ -154,10 +154,17 @@ const submitForm = async (formData: FormSubmitData<OutOfOfficeFormData>) => {
     .send({ input: formDataToInput(formData) })
     .then(() => showSuccessNotification)
 }
+
+const { tabs, activeTab } = usePersonalSettingTabs()
 </script>
 
 <template>
-  <LayoutContent :breadcrumb-items="breadcrumbItems" width="narrow">
+  <LayoutContent
+    :active-tab="activeTab"
+    :tabs="tabs"
+    :breadcrumb-items="breadcrumbItems"
+    width="narrow"
+  >
     <div class="mb-4">
       <Form
         ref="form"
@@ -170,7 +177,7 @@ const submitForm = async (formData: FormSubmitData<OutOfOfficeFormData>) => {
         <template #after-fields>
           <div class="mt-5 flex items-center justify-end gap-2">
             <CommonButton variant="submit" type="submit" size="medium" :disabled="isDisabled">
-              {{ $t('Save Out of Office') }}
+              {{ $t('Save out of office') }}
             </CommonButton>
           </div>
         </template>

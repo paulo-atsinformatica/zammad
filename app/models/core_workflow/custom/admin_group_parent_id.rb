@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 class CoreWorkflow::Custom::AdminGroupParentId < CoreWorkflow::Custom::Backend
   def saved_attribute_match?
@@ -10,18 +10,18 @@ class CoreWorkflow::Custom::AdminGroupParentId < CoreWorkflow::Custom::Backend
   end
 
   def perform
-    result('remove_option', 'parent_id', invalid_groups.map { |x| x.id.to_s })
+    result('remove_option', 'parent_id', invalid_group_ids.map(&:to_s))
   end
 
   private
 
-  def invalid_groups
-    invalid_saved_groups | Group.all_max_depth
+  def invalid_group_ids
+    invalid_saved_group_ids | Group.unselectable_as_parent.pluck(:id)
   end
 
-  def invalid_saved_groups
+  def invalid_saved_group_ids
     return [] if saved_only.blank?
 
-    [saved_only] | saved_only.all_children
+    [saved_only.id] | saved_only.all_children.pluck(:id)
   end
 end

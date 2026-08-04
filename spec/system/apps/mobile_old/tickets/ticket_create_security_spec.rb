@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 require 'rails_helper'
 require 'system/apps/mobile_old/examples/article_security_examples'
@@ -26,7 +26,7 @@ RSpec.describe 'Mobile > Ticket > Create with security options', app: :mobile, a
       next_step
 
       # Step 2.
-      find_radio('articleSenderType').select_choice('Send Email')
+      find_radio('articleSenderType').select_choice('Send email')
       next_step
 
       # Step 3.

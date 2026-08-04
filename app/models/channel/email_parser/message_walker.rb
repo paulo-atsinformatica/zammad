@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 class Channel::EmailParser::MessageWalker
   attr_reader :mail, :raw_html
@@ -23,7 +23,13 @@ class Channel::EmailParser::MessageWalker
       end
 
       if local_sanitized_body_info.present? && local_sanitized_body_info[:remote_content_removed]
-        sanitized_body_info = { remote_content_removed: true }
+        sanitized_body_info ||= {}
+        sanitized_body_info[:remote_content_removed] = true
+      end
+
+      if local_sanitized_body_info.present? && local_sanitized_body_info[:body_rendering_error]
+        sanitized_body_info ||= {}
+        sanitized_body_info[:body_rendering_error] = true
       end
     end
 
@@ -146,9 +152,11 @@ class Channel::EmailParser::MessageWalker
     return [body_text, {}] if !options[:strict_html]
 
     # Issue #2390 - emails with >5k HTML links should be rejected
-    return [Channel::EmailParser::EXCESSIVE_LINKS_MSG, {}] if body_text.scan(%r{<a[[:space:]]}i).count >= 5_000
+    return [Channel::EmailParser::EXCESSIVE_LINKS_MSG, { body_rendering_error: true }] if body_text.scan(%r{<a[[:space:]]}i).count >= 5_000
 
-    body_text.html2html_strict
+    body, sanitized_body_info = body_text.html2html_strict
+    sanitized_body_info[:body_rendering_error] = true if body == HtmlSanitizer::UNPROCESSABLE_HTML_MSG
+    [body, sanitized_body_info]
   end
 
   def part_inline_image?(part)

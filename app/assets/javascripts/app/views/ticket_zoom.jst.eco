@@ -35,6 +35,10 @@
   <div class="tabsSidebar tabsSidebar--attributeBarSpacer vertical"></div>
 
   <div class="attributeBar">
+    <%# Ponto de partida do player de tempo de atendimento. Ele é movido para %>
+    <%# dentro de .js-attributeBar (ver App.TicketZoom#placeTimeTrackingPlayer) %>
+    <%# e estacionado de volta aqui a cada re-render daquela barra. %>
+    <div class="attributeBar-timeTracking js-timeTrackingContainer"></div>
     <div class="attributeBar-inner js-attributeBar"></div>
   </div>
 </div>

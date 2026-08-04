@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 class SecureMailing::SMIME::NotificationOptions < SecureMailing::Backend::HandlerNotificationOptions
   def type
@@ -10,6 +10,8 @@ class SecureMailing::SMIME::NotificationOptions < SecureMailing::Backend::Handle
     return if !from_certificate.parsed.usable?
 
     security_options[:sign] = { success: true }
+  rescue OpenSSL::OpenSSLError => e
+    raise SecureMailing::Backend::Handler::SigningError, e.message
   end
 
   def check_encrypt

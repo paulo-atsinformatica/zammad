@@ -162,7 +162,6 @@ class Navigation extends App.Controller
       )
 
     @renderDesktopBetaSwitch()
-    @controllerBind('ui:beta:saved', @renderDesktopBetaSwitch)
 
   renderDesktopBetaSwitch: =>
     if not App.DesktopBetaSwitch.isSwitchVisible()
@@ -183,7 +182,7 @@ class Navigation extends App.Controller
 
         new App.ControllerConfirm(
           head: __('Help')
-          message: __('You can switch between the old and the New BETA UI at any moment in the Profile > New BETA UI section.')
+          message: __('You can switch between the old and the New BETA UI at any moment in the Profile settings > New BETA UI section.')
           buttonClass: 'btn--success'
           buttonCancel: false
           buttonSubmit: __('Got it')
@@ -191,8 +190,9 @@ class Navigation extends App.Controller
       )
 
     content.find('.js-switchControl').replaceWith App.UiElement.switch.render(
-      name: 'desktop_beta_switch'
+      name:    'desktop_beta_switch'
       display: __('Try New BETA UI')
+      theme:   'light' # force light mode on the switch, due to bad contrast in dark mode
     )
 
     content.find('input[name="desktop_beta_switch"]')

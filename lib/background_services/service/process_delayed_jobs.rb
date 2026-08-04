@@ -1,13 +1,12 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 class BackgroundServices
   class Service
     class ProcessDelayedJobs < BaseDelayedJobs
 
       def self.pre_launch
-        start_time = Time.zone.now
+        start_time = super
 
-        CleanupAction.cleanup_delayed_jobs(start_time, queues:)
         ImportJob.cleanup_import_jobs(start_time)
       end
 

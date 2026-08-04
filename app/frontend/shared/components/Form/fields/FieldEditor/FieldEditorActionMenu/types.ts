@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import type {
   EditorButton,
@@ -15,4 +15,5 @@ export interface ActionMenuProps {
   visible?: boolean
   isActive?: (type: string, attributes?: Record<string, unknown>) => boolean
   typeName?: string
+  targetId?: string
 }

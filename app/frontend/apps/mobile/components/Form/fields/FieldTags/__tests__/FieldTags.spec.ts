@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import { FormKit } from '@formkit/vue'
 import { getByText, queryByRole } from '@testing-library/vue'
@@ -31,7 +31,6 @@ const renderFieldTags = (props: Partial<FieldTagsContext> = {}) => {
 
   return renderComponent(FormKit, {
     form: true,
-    formField: true,
     dialog: true,
     props: {
       type: 'tags',

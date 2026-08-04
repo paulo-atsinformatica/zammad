@@ -1,10 +1,15 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import { onActivated, ref, type ShallowRef } from 'vue'
 import { onBeforeRouteLeave, onBeforeRouteUpdate } from 'vue-router'
 
+import { useReducedMotion } from '#shared/composables/useReducedMotion.ts'
+import { scrollIntoView } from '#shared/utils/dom.ts'
+
 export const useScrollPosition = (scrollContainer?: ShallowRef<HTMLElement | null>) => {
   const scrollPosition = ref<number>()
+
+  const { hasReducedMotion } = useReducedMotion()
 
   const storeScrollPosition = () => {
     if (!scrollContainer?.value) return
@@ -20,9 +25,19 @@ export const useScrollPosition = (scrollContainer?: ShallowRef<HTMLElement | nul
   onBeforeRouteLeave(storeScrollPosition)
   onBeforeRouteUpdate(storeScrollPosition)
 
+  const scrollTo = async (
+    block: 'start' | 'end',
+    options: { behavior: ScrollOptions['behavior'] } = { behavior: 'auto' },
+  ) =>
+    scrollIntoView(scrollContainer, block, {
+      behavior: hasReducedMotion.value ? 'instant' : options.behavior,
+      postFlush: true,
+    })
+
   return {
     scrollPosition,
     storeScrollPosition,
     restoreScrollPosition,
+    scrollIntoView: scrollTo,
   }
 }

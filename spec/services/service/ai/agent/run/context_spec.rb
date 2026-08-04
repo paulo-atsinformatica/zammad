@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 require 'rails_helper'
 
@@ -76,6 +76,20 @@ RSpec.describe Service::AI::Agent::Run::Context, type: :service do
         result = context.prepare_instructions
 
         expect(result[:object_attributes]).to eq(expected_instruction_result[:object_attributes])
+      end
+    end
+
+    context 'when instruction_context declares existing_tags' do
+      let(:instruction_context) do
+        { 'existing_tags' => '' }
+      end
+
+      before do
+        ticket.tag_add('alpha', 1)
+      end
+
+      it 'injects the current tag list at runtime' do
+        expect(context.prepare_instructions).to include(existing_tags: 'alpha')
       end
     end
   end

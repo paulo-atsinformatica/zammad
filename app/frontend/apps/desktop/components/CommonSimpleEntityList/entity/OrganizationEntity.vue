@@ -1,4 +1,4 @@
-<!-- Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/ -->
+<!-- Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/ -->
 
 <script setup lang="ts">
 import type { AvatarOrganization } from '#shared/components/CommonOrganizationAvatar'
@@ -31,9 +31,9 @@ defineProps<Props>()
     no-focus-styling
   >
     <template #default="slotProps">
-      <div class="flex items-center gap-2">
+      <div class="flex w-fit items-center gap-2">
         <CommonOrganizationAvatar
-          class="rounded-full outline-1 outline-transparent group-hover:outline-blue-600 group-hover:dark:outline-blue-900 group-focus-visible:outline-blue-800"
+          class="rounded-full outline-1 outline-transparent group-hover:outline-blue-600 group-focus-visible:outline-blue-800 group-hover:dark:outline-blue-900"
           :class="{
             'outline-2! outline-blue-800!': slotProps?.isOpen && slotProps.hasOpenViaLongClick,
           }"
@@ -41,7 +41,7 @@ defineProps<Props>()
           size="small"
         />
         <CommonLabel
-          class="block truncate text-blue-800! group-hover:text-blue-850! group-hover:dark:text-blue-600! group-focus-visible:text-blue-800!"
+          class="line-clamp-2! break-word text-blue-800! group-hover:text-blue-850! group-focus-visible:text-blue-800! group-hover:dark:text-blue-600!"
         >
           {{ entity.name }}
         </CommonLabel>
@@ -50,12 +50,12 @@ defineProps<Props>()
   </OrganizationPopoverWithTrigger>
   <CommonLink
     v-else
-    :link="`/organization/profile/${entity.internalId}`"
+    :link="`/organizations/${entity.internalId}`"
     class="group flex items-center gap-2 hover:no-underline!"
   >
     <CommonOrganizationAvatar :entity="entity as AvatarOrganization" size="small" />
     <CommonLabel
-      class="block truncate text-blue-800! group-hover:text-blue-850! group-hover:dark:text-blue-600! group-focus-visible:text-blue-800!"
+      class="line-clamp-2! break-word text-blue-800! group-hover:text-blue-850! group-focus-visible:text-blue-800! group-hover:dark:text-blue-600!"
     >
       {{ entity.name }}
     </CommonLabel>

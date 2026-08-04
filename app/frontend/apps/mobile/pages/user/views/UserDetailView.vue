@@ -1,4 +1,4 @@
-<!-- Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/ -->
+<!-- Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/ -->
 
 <script setup lang="ts">
 import { computed, ref } from 'vue'
@@ -37,8 +37,8 @@ const userId = computed(() => convertToGraphQLId('User', props.internalId))
 
 const {
   user,
-  userQuery,
   loading,
+  loadingWithoutCachedResult,
   objectAttributes,
   secondaryOrganizations,
   fetchMoreSecondaryOrganizations,
@@ -53,7 +53,7 @@ useHeader({
   backUrl: '/',
   actionTitle: __('Edit'),
   actionHidden: computed(() => user.value == null || !user.value.policy.update),
-  refetch: computed(() => user.value != null && userQuery.loading().value),
+  refetch: computed(() => user.value != null && loading.value),
   onAction() {
     if (!user.value || !user.value.policy.update) return
     openEditUserDialog(user.value)
@@ -114,7 +114,7 @@ const ticketsData = computed(() => {
         v-if="user.organization"
         data-test-id="organization-link"
         :link="`/organizations/${user.organization.internalId}`"
-        class="text-blue text-center text-base"
+        class="text-center text-base text-blue"
       >
         {{ user.organization.name }}
       </CommonLink>
@@ -155,5 +155,5 @@ const ticketsData = computed(() => {
       </template>
     </CommonTicketStateList>
   </div>
-  <CommonLoader v-else :loading="loading" />
+  <CommonLoader v-else :loading="loadingWithoutCachedResult" />
 </template>

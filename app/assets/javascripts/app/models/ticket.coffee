@@ -120,7 +120,7 @@ class App.Ticket extends App.Model
       when 'update.received_merge'
         App.i18n.translateContent('Another ticket was merged into ticket |%s|', item.title)
       else
-        "Unknow action for (#{@objectDisplayName()}/#{item.type}), extend activityMessage() of model."
+        "Unknown action for (#{@objectDisplayName()}/#{item.type}), extend activityMessage() of model."
 
   # apply macro
   @macro: (params) ->
@@ -208,9 +208,23 @@ class App.Ticket extends App.Model
 
   editableByCustomer: (user) ->
     return false if @currentView() != 'customer'
+    return false if !@updatableByCustomer()
     return true  if @userIsCustomer()
 
     user.allOrganizationIds().includes(@organization_id)
+
+  # Customização ATS: espelha TicketPolicy#customer_update_allowed? para que a
+  # interface já apareça somente leitura (sem caixa de resposta, atributos
+  # travados) em vez de deixar o usuário tentar e tomar erro ao salvar.
+  # O bloqueio de verdade é o da policy, no backend.
+  updatableByCustomer: ->
+    return false if !App.Config.get('customer_ticket_update')
+
+    # Nenhuma seleção de grupos significa todos os grupos.
+    groupIds = App.Config.get('customer_ticket_update_group_ids')
+    return true if _.isEmpty(groupIds)
+
+    _.contains(_.map(groupIds, (id) -> id.toString()), @group_id?.toString())
 
   userGroupAccess: (permission) ->
     user = App.User.current()

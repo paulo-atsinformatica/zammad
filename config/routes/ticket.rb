@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 Zammad::Application.routes.draw do
   api_path = Rails.configuration.api_path
@@ -73,5 +73,11 @@ Zammad::Application.routes.draw do
   match api_path + '/ticket_articles/:id/retry_whatsapp_attachment_download', to: 'ticket_articles#retry_whatsapp_attachment_download',        via: :post
 
   # ticket summarize (AI)
-  match api_path + '/tickets/:id/summarize',                          to: 'ticket/summarize#summarize',   via: :post
+  match api_path + '/tickets/:id/summarize',                           to: 'ticket/summarize#summarize',                        via: :post
+
+  # generate knowledge base answer (AI)
+  match api_path + '/tickets/:id/knowledge_base_answers', to: 'ticket/knowledge_base_answers#create', via: :post
+
+  # related knowledge base answers via vector search (AI)
+  match api_path + '/tickets/:id/related_knowledge_base_answers', to: 'ticket/related_knowledge_base_answers#fetch', via: :post
 end

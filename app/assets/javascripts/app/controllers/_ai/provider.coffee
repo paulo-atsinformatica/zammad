@@ -1,6 +1,13 @@
 class ChannelAiProvider extends App.ControllerTabs
   @requiredPermission: 'admin.ai_provider'
   header: __('Provider')
+  headerSwitchName: 'ai_provider'
+
+  events:
+    'change .js-header-switch input': 'didChangeHeaderSwitch'
+
+  elements:
+    '.js-header-switch input': 'aiProviderSetting'
 
   constructor: ->
     super
@@ -20,6 +27,52 @@ class ChannelAiProvider extends App.ControllerTabs
 
     @render()
 
+    @controllerBind('config_update', @aiProviderConfigHasChanged)
+
+  aiProviderConfigHasChanged: (config) =>
+    return if config.name isnt 'ai_provider'
+
+    @renderHeader(config.value)
+
+  render: =>
+    super
+    @renderHeader(App.Config.get('ai_provider'))
+
+  renderHeader: (value) =>
+    @aiProviderSetting.prop('checked', value)
+
+  didChangeHeaderSwitch: ->
+    value = @aiProviderSetting.prop('checked')
+
+    App.Setting.set(
+      'ai_provider',
+      value,
+      done: =>
+        @notify(
+          type: 'success'
+          msg: if value
+            __('AI provider enabled successfully.')
+          else
+            __('AI provider disabled successfully.')
+        )
+      fail: (settings, details) =>
+        # If the provider not yet configured, enabling it may fail due to invalid configuration.
+        #   Turn it off again and show a warning message.
+        @renderHeader(false)
+        @log 'error', details.error_human || details.error || details
+        if details.error is 'AI provider is missing'
+          @notify(
+            type: 'warning'
+            msg: __('Please set up the provider before proceeding under the settings tab.')
+          )
+        else
+          @notify(
+            type:    'error'
+            msg:     details.error_human || details.error || __('The setting could not be updated.')
+            timeout: 6000
+          )
+    )
+
 class AiProviderSettings extends App.Controller
   @requiredPermission: 'admin.ai_provider'
   description : __('This service allows you to connect Zammad with an AI provider.')
@@ -27,15 +80,21 @@ class AiProviderSettings extends App.Controller
   constructor: ->
     super
 
-    App.Setting.fetchFull(
-      @render
-      force: false
-    )
+    @subscribeId = App.Setting.subscribe(@render, initFetch: true, clear: false)
 
-  render: =>
+  release: =>
+    App.Setting.unsubscribe(@subscribeId)
+
+  render: (_changedItems, localOrServer) =>
+    return if localOrServer and localOrServer isnt 'refresh'
+    return if _.isEqual(@aiProviderConfigAtRender, App.Setting.get('ai_provider_config'))
+
+    @aiProviderConfigAtRender = _.clone(App.Setting.get('ai_provider_config'))
+
     @html App.view('ai/provider')(
       description: @description,
     )
+
     new ProviderForm()
 
 class AiProviderFeedbackAndLogs extends App.Controller
@@ -103,11 +162,7 @@ class AiProviderFeedbackAndLogs extends App.Controller
     @httpLog = null
     super
 
-
 class ProviderForm extends App.Controller
-  events:
-    '.js-provider-submit': 'update'
-
   constructor: (content) ->
     super
 
@@ -115,7 +170,6 @@ class ProviderForm extends App.Controller
     @sortedProviders = @getSortedProviderOptions()
 
     @render(content)
-
 
   getSortedProviderOptions: ->
     Object
@@ -129,60 +183,82 @@ class ProviderForm extends App.Controller
   getInputFields: (provider, params) ->
     {
       token: {
-        name: 'token',
-        display: __('Token'),
-        tag: 'input',
-        type: 'password',
-        null: !provider.required?.includes('token'),
-        single: true,
-        required: provider.required?.includes('token') ? 'true' : 'false',
-        autocomplete: 'off',
-        value: params.token,
+        name:         'token'
+        display:      __('Token')
+        tag:          'input'
+        type:         'password'
+        single:       true
+        null:         not _.contains(provider.required, 'token')
+        autocomplete: 'new-password'
+        value:        params.token
       }
       model: {
-        name: 'model',
-        display: __('Model'),
-        tag: 'input',
-        type: 'text',
-        null: !provider.required?.includes('model'),
-        single: true,
-        placeholder: provider.default_model,
-        required: provider.required?.includes('model') ? 'true' : 'false',
-        autocomplete: 'off',
-        value: params.model,
+        name:         'model'
+        display:      __('Model')
+        tag:          'input'
+        type:         'text'
+        null:         not _.contains(provider.required, 'model')
+        placeholder:  provider.default_model
+        autocomplete: 'off'
+        value:        params.model
       }
       url: {
-        name: 'url',
-        display: __('URL'),
-        tag: 'input',
-        type: 'text',
-        null: !provider.required?.includes('url'),
-        autocomplete: 'off',
-        value: params.url,
-        placeholder: provider.url_placeholder or '',
-        required: provider.required?.includes('url') ? 'true' : 'false',
+        name:         'url'
+        display:      __('URL')
+        tag:          'input'
+        type:         'text'
+        null:         not _.contains(provider.required, 'url')
+        autocomplete: 'off'
+        value:        params.url
+        placeholder:  provider.url_placeholder or ''
       }
       url_completions: {
-        name: 'url_completions',
-        display: __('URL (Completions)'),
-        tag: 'input',
-        type: 'text',
-        null: !provider.required?.includes('url_completions'),
-        autocomplete: 'off',
-        value: params.url_completions,
-        placeholder: ''
-        required: provider.required?.includes('url_completions') ? 'true' : 'false',
+        name:         'url_completions'
+        display:      __('URL (Completions)')
+        tag:          'input'
+        type:         'text'
+        null:         not _.contains(provider.required, 'url_completions')
+        autocomplete: 'off'
+        value:        params.url_completions
       }
       url_embeddings: {
-        name: 'url_embeddings',
-        display: __('URL (Embeddings)'),
-        tag: 'input',
-        type: 'text',
-        null: !provider.required?.includes('url_embeddings'),
-        autocomplete: 'off',
-        value: params.url_embeddings,
-        placeholder: ''
-        required: provider.required?.includes('url_embeddings') ? 'true' : 'false',
+        name:         'url_embeddings'
+        display:      __('URL (Embeddings)')
+        tag:          'input'
+        type:         'text'
+        null:         not _.contains(provider.required, 'url_embeddings')
+        autocomplete: 'off'
+        value:        params.url_embeddings
+      }
+      ocr_active: {
+        name:         'ocr_active'
+        display:      __('Recognize image text (OCR)')
+        tag:          'switch'
+        null:         true
+        label_class:  'hidden'
+        default:      false
+        value:        params.ocr_active
+      }
+      ocr_model: {
+        name:         'ocr_model'
+        display:      __('OCR Model')
+        tag:          'input'
+        placeholder:  provider.default_ocr_model or ''
+        type:         'text'
+        null:         true
+        autocomplete: 'off'
+        value:        params.ocr_model
+        note:         __('Leave empty to use the base model')
+      }
+      url_ocr: {
+        name:         'url_ocr'
+        display:      __('URL (OCR)')
+        tag:          'input'
+        type:         'text'
+        null:         not _.contains(provider.required, 'url_ocr')
+        autocomplete: 'off'
+        value:        params.url_ocr
+        note:         __('Leave empty to use URL (Completions)')
       }
     }
 
@@ -206,7 +282,7 @@ class ProviderForm extends App.Controller
 
     currentProvider = @providers[provider]
 
-    return result if !currentProvider
+    return result if not currentProvider
 
     savedProvider = App.Setting.get('ai_provider_config')['provider']
 
@@ -222,7 +298,7 @@ class ProviderForm extends App.Controller
 
   render: (provider) ->
     config = App.Setting.get('ai_provider_config') || {}
-    current_provider = if provider != undefined then provider else config['provider']
+    current_provider = if provider isnt undefined then provider else config['provider']
 
     configure_attributes = @providerConfiguration(current_provider, config)
 
@@ -236,21 +312,14 @@ class ProviderForm extends App.Controller
       fullFormSubmitAdditionalClasses: 'btn--primary js-provider-submit',
     )
 
-    $('.js-provider-submit').on('click', @update)
-    $('select[name=provider]').on('change', (e) =>
-      @render($(e.target).val()))
+    $('.js-provider-submit').off('click.provider').on('click.provider', @update)
+
+    $('select[name=provider]').off('change.provider').on('change.provider', (e) =>
+      @render($(e.target).val())
+    )
 
   update: (e) =>
     e.preventDefault()
-
-    params = @formParam(e.target)
-
-    selectedProvider = @providers[params.provider]
-
-    if selectedProvider?.key
-      params.provider = selectedProvider.key
-    else
-      params = {}
 
     params = @formParam(e.target)
 
@@ -265,16 +334,49 @@ class ProviderForm extends App.Controller
     @validateAndSave(params)
 
   validateAndSave: (params) ->
-    has_provider = !_.isEmpty(params.provider)
+    App.ControllerForm.disable(@providerSettingsForm.form)
 
-    if !has_provider
+    has_provider = not _.isEmpty(params.provider)
+
+    if not has_provider
       delete params.provider
 
-    if !params.model || params.model.trim() == ''
+    if not params.model or params.model.trim() is ''
       delete params.model
 
-    App.Setting.set('ai_provider_config', params, done: ->
-      App.Setting.set('ai_provider', has_provider, notify: true)
+    savedProviderConfig = App.Setting.get('ai_provider_config')
+
+    # Add token to params when it's present in the current setting data but not in the params
+    # (but only if it's the same provider). E.g. because the token can not be changed in the UI.
+    if has_provider && !params.hasOwnProperty('token') && savedProviderConfig.provider == params.provider && savedProviderConfig.token
+      params.token = savedProviderConfig.token
+
+    App.Setting.set(
+      'ai_provider_config',
+      params,
+      done: =>
+        App.ControllerForm.enable(@providerSettingsForm.form)
+
+        # If the provider configuration is being updated, or the provider is already disabled,
+        #   do not touch the provider switch.
+        if has_provider or not App.Config.get('ai_provider')
+          App.Event.trigger 'notify', {
+            type:    'success'
+            msg:     __('Update successful.')
+            timeout: 2000
+          }
+
+          return
+
+        # Turn off the provider switch when the provider configuration is emptied.
+        App.Setting.set('ai_provider', false, done: =>
+          @notify(
+            type: 'success'
+            msg: __('AI provider disabled successfully.')
+          )
+        )
+      fail: =>
+        App.ControllerForm.enable(@providerSettingsForm.form)
     )
 
 App.Config.set('Provider', { prio: 1000, name: __('Provider'), parent: '#ai', target: '#ai/provider', controller: ChannelAiProvider, permission: ['admin.ai_provider'] }, 'NavBarAdmin')

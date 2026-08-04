@@ -1,10 +1,10 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import { ref } from 'vue'
 
 import { ErrorStatusCodes } from '#shared/types/error.ts'
 
-import type { NavigationHookAfter, Router } from 'vue-router'
+import type { NavigationHookAfter, RouteLocationRaw, Router } from 'vue-router'
 
 export enum ErrorRouteType {
   PublicError = 'Error',
@@ -18,10 +18,13 @@ export interface ErrorOptions {
   statusCode: ErrorStatusCodes
   messagePlaceholder?: string[]
   route?: string
+  // Optional call-to-action back into the section the error came from (e.g. the
+  //   knowledge base root), shown as a link on the error page.
+  backLink?: { label: string; link: RouteLocationRaw }
 }
 
 const defaultOptions: ErrorOptions = {
-  title: __('Not Found'),
+  title: __('Not found'),
   message: __("This page doesn't exist."),
   messagePlaceholder: [],
   statusCode: ErrorStatusCodes.NotFound,

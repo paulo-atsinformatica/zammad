@@ -1,4 +1,4 @@
-<!-- Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/ -->
+<!-- Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/ -->
 
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
@@ -107,12 +107,12 @@ onMounted(() => {
 </script>
 
 <template>
-  <LayoutPublicPage box-size="small" :title="__('Email Verification')">
+  <LayoutPublicPage box-size="small" :title="__('Email verification')">
     <div class="mt-1 text-center">
       <CommonLabel>
         {{ $t(message) }}
       </CommonLabel>
-      <CommonLoader v-if="state === 'loading'" class="mt-9 mb-3" loading />
+      <CommonLoader v-if="state === 'loading'" loading class="mt-9 mb-3" />
       <CommonIcon
         v-else-if="state === 'success'"
         class="mx-auto mt-9 mb-3 fill-green-500"

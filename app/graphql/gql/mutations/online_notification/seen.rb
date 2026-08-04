@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 module Gql::Mutations
   class OnlineNotification::Seen < BaseMutation
@@ -11,7 +11,12 @@ module Gql::Mutations
     def resolve(object_id:)
       object = fetch_object(object_id)
 
-      ::OnlineNotification.mark_as_seen!(object, context.current_user)
+      case object
+      when ::OnlineNotification
+        object.mark_as_seen!
+      else
+        ::OnlineNotification.mark_as_seen!(object, context.current_user)
+      end
 
       { success: true }
     end

@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 /// <reference types="vitest/config" />
 
@@ -13,6 +13,8 @@ import VuePlugin from '@vitejs/plugin-vue'
 import { defineConfig } from 'vite'
 import { VitePWA } from 'vite-plugin-pwa'
 
+import { discoverAddonWeaveRules } from './app/frontend/build/addonWeave/discoverRules.mjs'
+import addonWeavePlugin from './app/frontend/build/addonWeave/plugin.mjs'
 import svgIconsPlugin from './app/frontend/build/iconsPlugin.mjs'
 
 const dir = dirname(fileURLToPath(import.meta.url))
@@ -21,13 +23,19 @@ const SSL_PATH = resolve(homedir(), '.local/state/localhost.rb')
 
 const isEnvBooleanSet = (value) => ['true', '1'].includes(value)
 
-export default defineConfig(({ mode, command }) => {
+export default defineConfig(async ({ mode, command }) => {
   const isTesting = ['test', 'cypress'].includes(mode)
   const isBuild = command === 'build'
 
   const require = createRequire(import.meta.url)
 
+  // Build-time addon weave: discover every installed addon's *.weave.mjs manifest
+  // and rewrite the targeted core SFC source before the Vue compiler runs.
+  const addonWeaveRules = await discoverAddonWeaveRules()
+
   const plugins = [
+    // enforce: 'pre' → runs before VuePlugin compiles the SFC.
+    addonWeavePlugin(addonWeaveRules),
     tailwindcss(),
     VuePlugin({
       template: {
@@ -83,44 +91,56 @@ export default defineConfig(({ mode, command }) => {
 
   return {
     publicDir,
-    esbuild: {
-      // TODO: Remove the following line once the related upstream TailwindCSS issue has been addressed,
-      //   since it can mask potential syntax errors.
-      //   https://github.com/tailwindlabs/tailwindcss/issues/16582
-      logOverride: { 'css-syntax-error': 'silent' },
-    },
     build: {
-      rollupOptions: {
+      rolldownOptions: {
         output: {
-          manualChunks: {
-            lodash: ['lodash-es'],
-            vue: ['vue', 'vue-router', 'pinia'],
-            datepicker: ['@vuepic/vue-datepicker'],
-            linkifyjs: ['linkifyjs', 'linkify-string'],
-            graphql: [
-              'graphql',
-              // 🚨 'graphql-ruby-client',
-              // Important: don't include the package root here, it pulls in the Node-only `sync` entry
-              // which imports fs/path/crypto/http/... and triggers Vite "externalized for browser" warnings.
-              'graphql-ruby-client/subscriptions/ActionCableLink',
-              'graphql-tag',
-              '@apollo/client',
-              '@vue/apollo-composable',
-              '@rails/actioncable',
-            ],
-            formkit: [
-              '@formkit/core',
-              '@formkit/dev',
-              // '@formkit/drag-and-drop', # is not used in mobile
-              '@formkit/i18n',
-              '@formkit/inputs',
-              '@formkit/rules',
-              '@formkit/tailwindcss',
-              '@formkit/themes',
-              '@formkit/utils',
-              '@formkit/validation',
-              '@formkit/vue',
-            ],
+          manualChunks(id) {
+            const manualChunksMap = {
+              lodash: ['lodash-es'],
+              vue: ['vue', 'vue-router', 'pinia'],
+              datepicker: ['@vuepic/vue-datepicker'],
+              linkifyjs: ['linkifyjs', 'linkify-string'],
+              graphql: [
+                'graphql',
+                // 🚨 'graphql-ruby-client',
+                // Important: don't include the package root here, it pulls in the Node-only `sync` entry
+                // which imports fs/path/crypto/http/... and triggers Vite "externalized for browser" warnings.
+                'graphql-ruby-client/subscriptions/ActionCableLink',
+                'graphql-tag',
+                '@apollo/client',
+                '@vue/apollo-composable',
+                '@rails/actioncable',
+              ],
+              formkit: [
+                '@formkit/core',
+                '@formkit/dev',
+                // '@formkit/drag-and-drop', # is not used in mobile
+                '@formkit/i18n',
+                '@formkit/inputs',
+                '@formkit/rules',
+                '@formkit/tailwindcss',
+                '@formkit/themes',
+                '@formkit/utils',
+                '@formkit/validation',
+                '@formkit/vue',
+              ],
+            }
+
+            if (!id.includes('node_modules')) return undefined
+
+            for (const [chunkName, packages] of Object.entries(manualChunksMap)) {
+              if (
+                packages.some(
+                  (pkg) =>
+                    id.includes(`node_modules/${pkg}/`) ||
+                    id.includes(`node_modules/.pnpm/${pkg.replace('/', '+').replace('@', '')}`),
+                )
+              ) {
+                return chunkName
+              }
+            }
+
+            return undefined
           },
         },
       },
@@ -139,6 +159,12 @@ export default defineConfig(({ mode, command }) => {
     },
     server: {
       https,
+      // The HMR websocket cannot ride the Rails asset proxy (no upgrade support) — point
+      // the client directly at the Vite dev server port instead of the page origin.
+      hmr: {
+        host: process.env.VITE_RUBY_HOST || 'localhost',
+        clientPort: Number(process.env.VITE_RUBY_PORT || 3036),
+      },
       watch: {
         ignored: isTesting
           ? []
@@ -159,10 +185,19 @@ export default defineConfig(({ mode, command }) => {
       root: './app/frontend',
       setupFiles: ['./tests/vitest.setup.ts'],
       environment: 'jsdom',
+      env: {
+        SA11Y_RULESET: 'full',
+      },
       clearMocks: true,
       css: false,
       testTimeout: isEnvBooleanSet(process.env.CI) ? 30_000 : 5_000,
       unstubGlobals: true,
+      // Node v25+ enables experimental webstorage by default (stability: release candidate).
+      // Without --localstorage-file, Node provides localStorage as an empty object (no methods).
+      // This conflicts with jsdom's full localStorage implementation needed for tests.
+      ...(parseInt(process.versions.node, 10) >= 25
+        ? { execArgv: ['--no-experimental-webstorage'] }
+        : {}),
       onConsoleLog(log) {
         if (
           log.includes('Not implemented: navigation') ||

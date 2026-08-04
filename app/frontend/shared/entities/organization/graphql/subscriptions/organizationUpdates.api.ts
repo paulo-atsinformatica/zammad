@@ -8,8 +8,8 @@ import * as VueCompositionApi from 'vue';
 export type ReactiveFunction<TParam> = () => TParam;
 
 export const OrganizationUpdatesDocument = gql`
-    subscription organizationUpdates($organizationId: ID!, $first: Int, $after: String) {
-  organizationUpdates(organizationId: $organizationId) {
+    subscription organizationUpdates($organizationId: ID!, $first: Int, $after: String, $initial: Boolean = false) {
+  organizationUpdates(organizationId: $organizationId, initial: $initial) {
     organization {
       ...organizationAttributes
       ...organizationMembersWithFetchMore
@@ -19,6 +19,8 @@ export const OrganizationUpdatesDocument = gql`
       ticketsCount {
         open
         closed
+        openSearchQuery
+        closedSearchQuery
       }
     }
   }

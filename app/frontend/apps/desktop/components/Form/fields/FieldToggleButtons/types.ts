@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import type { FormFieldContext } from '#shared/components/Form/types/field.ts'
 
@@ -10,6 +10,7 @@ export interface ToggleButtonsOption extends FormKitOptionsItem<string> {
 
 export type FieldToggleButtonsContext = {
   options: ToggleButtonsOption
+  size?: 'small' | 'medium' | 'large'
 }
 
 export interface FieldToggleButtonsProps {

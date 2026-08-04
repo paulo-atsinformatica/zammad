@@ -1,4 +1,4 @@
-<!-- Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/ -->
+<!-- Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/ -->
 
 <script setup lang="ts">
 import { useNotifications } from '#shared/components/CommonNotifications/index.ts'
@@ -29,7 +29,7 @@ const schema: FormSchemaNode[] = [
       {
         type: 'text',
         name: 'code',
-        label: __('Recovery Code'),
+        label: __('Recovery code'),
         required: true,
       },
     ],

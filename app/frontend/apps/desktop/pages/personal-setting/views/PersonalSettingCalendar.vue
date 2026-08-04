@@ -1,9 +1,8 @@
-<!-- Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/ -->
+<!-- Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/ -->
 
 <script setup lang="ts">
 import { isEqual } from 'lodash-es'
-import { storeToRefs } from 'pinia'
-import { computed, reactive, ref, watch } from 'vue'
+import { computed, reactive, ref, watch, toRef } from 'vue'
 
 import {
   NotificationTypes,
@@ -19,10 +18,11 @@ import QueryHandler from '#shared/server/apollo/handler/QueryHandler.ts'
 import { useSessionStore } from '#shared/stores/session.ts'
 
 import CommonInputCopyToClipboard from '#desktop/components/CommonInputCopyToClipboard/CommonInputCopyToClipboard.vue'
-import CommonTabGroup from '#desktop/components/CommonTabGroup/CommonTabGroup.vue'
+import CommonTabGroup from '#desktop/components/CommonTabs/CommonTabGroup/CommonTabGroup.vue'
 import LayoutContent from '#desktop/components/layout/LayoutContent.vue'
 
 import { useBreadcrumb } from '../composables/useBreadcrumb.ts'
+import { usePersonalSettingTabs } from '../composables/usePersonalSettingTabs.ts'
 import { useUserCurrentCalendarSubscriptionUpdateMutation } from '../graphql/mutations/userCurrentCalendarSubscriptionUpdate.api.ts'
 import { useUserCurrentCalendarSubscriptionListQuery } from '../graphql/queries/userCurrentCalendarSubscriptionList.api.ts'
 
@@ -147,7 +147,7 @@ const calendarSubscriptionListQuery = new QueryHandler(
 
 const calendarSubscriptionListQueryResult = calendarSubscriptionListQuery.result()
 
-const { user } = storeToRefs(useSessionStore())
+const user = toRef(useSessionStore(), 'user')
 
 // Refetch calendar subscription list query when the user preference has changed.
 watch(
@@ -250,29 +250,33 @@ const submitForm = async (data: FormValues) => {
     notify({
       id: 'calendar-subscription-update-success',
       type: NotificationTypes.Success,
-      message: __('You calendar subscription settings were updated.'),
+      message: __('Your calendar subscription settings were updated.'),
     })
   })
 }
 
 const tabs = [
   {
-    label: __('Escalated Tickets'),
+    label: __('Escalated tickets'),
     key: 'escalation',
   },
   {
-    label: __('New & Open Tickets'),
+    label: __('New & open tickets'),
     key: 'newOpen',
   },
   {
-    label: __('Pending Tickets'),
+    label: __('Pending tickets'),
     key: 'pending',
   },
 ]
+
+const { tabs: navigationTabs, activeTab } = usePersonalSettingTabs()
 </script>
 
 <template>
   <LayoutContent
+    :active-tab="activeTab"
+    :tabs="navigationTabs"
     :breadcrumb-items="breadcrumbItems"
     :help-text="
       $t(

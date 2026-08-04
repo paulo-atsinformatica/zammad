@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import { ApolloError } from '@apollo/client/errors'
 import { getNode } from '@formkit/core'
@@ -340,6 +340,7 @@ describe('calling API to retry encryption', () => {
       encryptionSuccess: false,
       signingMessage: 'The certificate for verification could not be found.',
       signingSuccess: false,
+      type: EnumSecurityStateType.Smime,
     }
 
     const { waitUntilTicketLoaded } = mockTicketDetailViewGql({
@@ -350,7 +351,7 @@ describe('calling API to retry encryption', () => {
 
     await waitUntilTicketLoaded()
 
-    const securityError = view.getByRole('button', { name: 'Security Error' })
+    const securityError = view.getByRole('button', { name: 'Security error' })
     await view.events.click(securityError)
 
     const retryResult = {
@@ -399,6 +400,7 @@ describe('calling API to retry encryption', () => {
       encryptionSuccess: false,
       signingMessage: 'The certificate for verification could not be found.',
       signingSuccess: false,
+      type: EnumSecurityStateType.Smime,
     }
 
     const { waitUntilTicketLoaded } = mockTicketDetailViewGql({
@@ -409,7 +411,7 @@ describe('calling API to retry encryption', () => {
 
     await waitUntilTicketLoaded()
 
-    const securityError = view.getByRole('button', { name: 'Security Error' })
+    const securityError = view.getByRole('button', { name: 'Security error' })
     await view.events.click(securityError)
 
     const retryResult = {
@@ -459,9 +461,12 @@ describe('remote content removal', () => {
     }
     article.attachmentsWithoutInline = [
       {
+        __typename: 'StoredFile',
         id: convertToGraphQLId('Store', 1),
         internalId: 1,
         name: 'message',
+        size: null,
+        type: null,
         preferences: {
           'original-format': true,
         },
@@ -476,11 +481,11 @@ describe('remote content removal', () => {
 
     await waitUntilTicketLoaded()
 
-    const blockedContent = view.getByRole('button', { name: 'Blocked Content' })
+    const blockedContent = view.getByRole('button', { name: 'Blocked content' })
 
     await view.events.click(blockedContent)
 
-    await view.events.click(view.getByText('Original Formatting'))
+    await view.events.click(view.getByText('Original formatting'))
 
     expect(view.queryByTestId('popupWindow')).not.toBeInTheDocument()
   })
@@ -951,6 +956,7 @@ it('correctly redirects from ticket hash-based routes with other ids', async () 
       defaultArticles(),
       {
         articles: {
+          __typename: 'TicketArticleConnection',
           edges: [],
           pageInfo: {
             endCursor: null,

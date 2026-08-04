@@ -21,7 +21,7 @@ class App.TextToolsModal extends App.ControllerModal
 
   constructor: (params) ->
     @textTool = params.textTool
-    @head = App.i18n.translatePlain('Writing Assistant: %s', App.i18n.translatePlain(@textTool.name))
+    @head = App.i18n.translatePlain('AI Writing Assistant: %s', App.i18n.translatePlain(@textTool.name))
     @contextData = params.contextData
     @selectedText = params.selectedText
     @approve = params.approve
@@ -84,11 +84,14 @@ class App.TextToolsModal extends App.ControllerModal
         @renderFeedbackWidget(data.analytics.run_id) if data?.analytics?.run_id
         @stopStripAnimation()
 
-      error: =>
+      error: (data) =>
+        details = data.responseJSON || {}
+
         @stopLoading()
         @stopStripAnimation()
 
         @error = true
+        @error_message = details.error
         @update()
 
         @disableSubmit()
@@ -99,6 +102,7 @@ class App.TextToolsModal extends App.ControllerModal
     selectedText: @selectedText
     result: @result
     error: @error
+    error_message: @error_message
   ))
 
   setupListenerForRetry: =>
@@ -120,15 +124,7 @@ class App.TextToolsModal extends App.ControllerModal
     )
 
   onSubmit: =>
-    if @feedbackWidget
-      @feedbackWidget.recordUsage(context: { approved: true }, null, =>
-        @notify(
-          type: 'error'
-          msg:  __('Your AI result usage could not be recorded.')
-        )
-        false
-      )
-
+    @feedbackWidget.recordUsage(context: { approved: true }, null, -> false) if @feedbackWidget
     @approve(@result)
     @close()
 

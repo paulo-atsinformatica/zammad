@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import { tryOnScopeDispose, watchOnce } from '@vueuse/core'
 import { keyBy } from 'lodash-es'
@@ -51,7 +51,7 @@ export const useTicketOverviewsStore = defineStore('ticketOverviews', () => {
   })
 
   const overviewsRaw = ticketOverviewHandler.result()
-  const overviewsLoading = ticketOverviewHandler.loading()
+  const overviewsLoading = ticketOverviewHandler.loadingWithoutCachedResult()
 
   const overviews = computed(() => {
     if (!overviewsRaw.value?.ticketOverviews) return []

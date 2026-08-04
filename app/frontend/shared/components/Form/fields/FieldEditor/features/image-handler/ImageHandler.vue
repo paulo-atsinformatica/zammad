@@ -1,4 +1,4 @@
-<!-- Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/ -->
+<!-- Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/ -->
 
 <script setup lang="ts">
 import { NodeViewWrapper, type NodeViewProps } from '@tiptap/vue-3'
@@ -259,7 +259,7 @@ const wrapperStyle = computed(() => {
       @resize-end="stopResizing"
     >
       <img
-        class="block w-full h-full"
+        class="block h-full w-full"
         :alt="$t('Resize frame')"
         :src="src"
         :draggable="isDraggable"

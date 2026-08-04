@@ -1,4 +1,4 @@
-<!-- Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/ -->
+<!-- Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/ -->
 
 <script setup lang="ts">
 import { computed } from 'vue'
@@ -35,7 +35,7 @@ const passwordCheckMutation = new MutationHandler(useUserCurrentPasswordCheckMut
   errorNotificationMessage: __('Password could not be checked'),
 })
 
-const headerSubtitle = __('Confirm Password')
+const headerSubtitle = __('Confirm password')
 
 const { twoFactorMethodLookup } = useTwoFactorPlugins()
 
@@ -60,7 +60,7 @@ const footerActionOptions = computed(() => {
     variant = 'danger'
   }
 
-  if (props.type === 'method_list') cancelLabel = __('Cancel & Sign Out')
+  if (props.type === 'method_list') cancelLabel = __('Cancel & sign out')
 
   return {
     actionLabel,

@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 class ImportZendeskController < ApplicationController
 
@@ -109,11 +109,19 @@ class ImportZendeskController < ApplicationController
   def import_status
     job = ImportJob.find_by(name: 'Import::Zendesk')
 
-    if job.finished_at.present?
-      Setting.reload
+    if job.nil?
+      render json: { setup_done: true }
+      return
     end
 
-    model_show_render_item(job)
+    if job.finished_at.present?
+      Setting.reload
+
+      render json: { setup_done: true }
+      return
+    end
+
+    model_item_render(job)
   end
 
   private

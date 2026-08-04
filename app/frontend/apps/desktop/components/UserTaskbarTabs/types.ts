@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import type {
   EnumTaskbarEntity,
@@ -35,6 +35,7 @@ export interface UserTaskbarTabEntityProps<T = UserTaskbarTabEntity> {
   taskbarTabLink?: string
   context?: TaskbarTabContext
   collapsed?: boolean
+  isActive?: boolean
 }
 
 export interface UserTaskbarTabPlugin<T = UserTaskbarTabEntity> {

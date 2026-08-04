@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 require 'rails_helper'
 
@@ -625,6 +625,34 @@ RSpec.describe Gql::Queries::ObjectManager::FrontendAttributes, type: :graphql d
       end
 
       include_context 'when fetching frontend attributes as agent and customer'
+    end
+
+    context 'with object "Ticket" with agent-customer', authenticated_as: :user, db_strategy: :reset do
+      let(:user)   { create(:agent_and_customer) }
+      let(:object) { 'Ticket' }
+      let(:object_attribute) do
+        create(:object_manager_attribute_text, object_name: object, screens: { 'edit' => {
+                 'ticket.agent' => {
+                   'shown'    => true,
+                   'required' => true,
+                 }
+               } }).tap { ObjectManager::Attribute.migration_execute }
+      end
+
+      before do
+        object_attribute
+      end
+
+      it 'returns frontend object attributes' do
+        gql.execute(query, variables: variables)
+
+        expect(gql.result.data).to include(
+          screens: include(
+            include(name: 'edit', attributes: include(object_attribute.name)),
+            include(name: 'edit_customer', attributes: not_include(object_attribute.name))
+          )
+        )
+      end
     end
   end
 end

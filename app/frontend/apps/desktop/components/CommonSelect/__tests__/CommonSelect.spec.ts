@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import { ref } from 'vue'
 
@@ -34,10 +34,12 @@ const renderSelect = (props: Props, modelValue?: Ref) => {
       ...props,
     },
     slots: {
-      default: html` <template #default="{ open, focus }">
-        <button @click="open()">Open Select</button>
-        <button @click="focus()">Move Focus</button>
-      </template>`,
+      default: html`
+        <template #default="{ open, focus }">
+          <button @click="open()">Open Select</button>
+          <button @click="focus()">Move Focus</button>
+        </template>
+      `,
     },
     vModel: {
       modelValue,

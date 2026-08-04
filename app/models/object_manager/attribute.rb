@@ -1,10 +1,13 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 class ObjectManager::Attribute < ApplicationModel
   include HasDefaultModelUserRelations
 
   include ChecksClientNotification
+  include HasAuditLogs
   include CanSeed
+
+  self.audit_log_attributes_ignored = %i[to_create to_migrate to_delete to_config data_option_new position]
 
   DATA_TYPES = %w[
     input
@@ -74,10 +77,12 @@ class ObjectManager::Attribute < ApplicationModel
 
   belongs_to :object_lookup, optional: true
 
-  validates :name, presence: true
+  validates :name,    presence: true
+  validates :display, presence: true
   validates :data_type, inclusion: { in: DATA_TYPES, msg: '%{value} is not a valid data type' }
   validate :inactive_must_be_unused_by_references, unless: :active?
   validate :data_type_must_not_change, on: :update
+  validate :prevent_internal_flag_change, on: :update
 
   validates_with ObjectManager::Attribute::DataOptionValidator
 
@@ -87,8 +92,9 @@ class ObjectManager::Attribute < ApplicationModel
 
   before_validation :set_base_options
 
-  before_create :ensure_multiselect
-  before_update :ensure_multiselect
+  before_create  :ensure_multiselect
+  before_update  :ensure_multiselect
+  before_destroy :internal_attribute_indelible, if: :internal?
 
   scope :active,     -> { where(active:   true) }
   scope :editable,   -> { where(editable: true) }
@@ -640,7 +646,7 @@ to send no browser reload event, pass false
       # config changes
       if attribute.to_config
         execute_config_count += 1
-        if attribute.data_type =~ %r{^(multi|tree_)?select$} && attribute.data_option[:options]
+        if attribute.option_attribute? && attribute.data_option[:options]
           attribute.data_option_new[:historical_options] = attribute_historic_options(attribute)
         end
         attribute.data_option = attribute.data_option_new
@@ -650,7 +656,7 @@ to send no browser reload event, pass false
         next if !attribute.to_create && !attribute.to_migrate && !attribute.to_delete
       end
 
-      if %r{^(multi|tree_)?select$}.match?(attribute.data_type)
+      if attribute.option_attribute?
         attribute.data_option[:historical_options] = attribute_historic_options(attribute)
       end
 
@@ -942,7 +948,7 @@ is certain attribute used by triggers, overviews or schedulers
     model.columns
   end
 
-  def check_name
+  def check_name(raise_error: true)
     return if !name
 
     if name.match?(%r{.+?_(id|ids)$}i)
@@ -968,21 +974,21 @@ is certain attribute used by triggers, overviews or schedulers
       errors.add(:name, __('%{name} is a reserved word'), name: name)
     end
 
-    # fixes issue #2236 - Naming an attribute "attribute" causes ActiveRecord failure
-    begin
-      ObjectLookup.by_id(object_lookup_id).constantize.instance_method_already_implemented? name
-    rescue ActiveRecord::DangerousAttributeError
-      errors.add(:name, __('%{name} is a reserved word'), name: name)
+    record = object_lookup.to_class.new
+
+    # https://github.com/zammad/zammad/issues/2236
+    # https://github.com/zammad/zammad/issues/6072
+    if new_record?
+      if record.respond_to?(name, true)
+        errors.add(:name, __('%{name} is a reserved word'), name: name)
+      end
+      if record.attributes.key?(name)
+        errors.add(:name, __('%{name} already exists'), name: name)
+      end
     end
 
-    record = model.constantize.new
-    if new_record? && (record.respond_to?(name.to_sym) || record.attributes.key?(name))
-      errors.add(:name, __('%{name} already exists'), name: name)
-    end
-
-    if errors.present?
-      raise ActiveRecord::RecordInvalid, self
-    end
+    raise ActiveRecord::RecordInvalid, self if raise_error && errors.present?
+    return false if errors.present?
 
     true
   end
@@ -1000,6 +1006,10 @@ is certain attribute used by triggers, overviews or schedulers
 
   def local_data_option=(val)
     send(:"#{local_data_attr}=", val)
+  end
+
+  def option_attribute?
+    %w[select tree_select multiselect multi_tree_select].include?(data_type)
   end
 
   private
@@ -1035,6 +1045,19 @@ is certain attribute used by triggers, overviews or schedulers
     return if (data_type_change - allowable_changes).empty?
 
     errors.add(:data_type, __("can't be altered after creation (you can delete the attribute and create another with the desired value)"))
+  end
+
+  def prevent_internal_flag_change
+    return if !respond_to?(:internal_changed?)
+    return if !internal_changed?
+
+    errors.add(:internal, __("can't be modified"))
+  end
+
+  def internal_attribute_indelible
+    errors.add(:base, __('Internal attributes cannot be deleted'))
+
+    throw :abort
   end
 
   def local_data_attr

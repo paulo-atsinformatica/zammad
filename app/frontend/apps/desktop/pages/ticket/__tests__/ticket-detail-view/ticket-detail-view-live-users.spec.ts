@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import { expect } from 'vitest'
 
@@ -259,7 +259,7 @@ describe('Ticket detail view live users handling', () => {
     it('should display AI agent avatar when AI agent is processing', async () => {
       const view = await visitView('/tickets/1')
 
-      expect(await view.findByLabelText('AI Agent')).toBeInTheDocument()
+      expect(await view.findByLabelText('AI agent')).toBeInTheDocument()
     })
   })
 })

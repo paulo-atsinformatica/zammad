@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import type { SelectValue } from '#shared/components/CommonSelect/types.ts'
 import type { FormFieldContext } from '#shared/components/Form/types/field.ts'
@@ -36,7 +36,7 @@ export type AutoCompleteProps = FormFieldContext<{
   defaultFilter?: string
   alwaysApplyDefaultFilter?: boolean
   filterInputPlaceholder?: string
-  filterInputValidation?: string
+  filterValueValidator?: (filter: string) => boolean
   limit?: number
   multiple?: boolean
   noOptionsLabelTranslation?: boolean

@@ -1,4 +1,4 @@
-<!-- Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/ -->
+<!-- Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/ -->
 
 <script setup lang="ts">
 import { computed, onBeforeMount, ref } from 'vue'
@@ -18,7 +18,7 @@ import type { TwoFactorConfigurationComponentProps } from '../types.ts'
 
 const props = defineProps<TwoFactorConfigurationComponentProps>()
 
-const headerSubtitle = __('Save Codes')
+const headerSubtitle = __('Save codes')
 
 const headerIcon = computed(() => props.options?.headerIcon ?? 'shield-lock')
 
@@ -104,13 +104,13 @@ defineExpose({
       </div>
       <div class="mb-1 flex justify-end gap-3">
         <CommonButton prefix-icon="printer" size="medium" @click.prevent="printPage()">{{
-          $t('Print Codes')
+          $t('Print codes')
         }}</CommonButton>
         <CommonButton
           prefix-icon="files"
           size="medium"
           @click="copyToClipboard(recoveryCodes?.join('\n'))"
-          >{{ $t('Copy Codes') }}</CommonButton
+          >{{ $t('Copy codes') }}</CommonButton
         >
       </div>
     </template>

@@ -1,4 +1,4 @@
-<!-- Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/ -->
+<!-- Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/ -->
 
 <script setup lang="ts">
 import { EnumSearchableModels } from '#shared/graphql/types.ts'
@@ -7,7 +7,7 @@ import LayoutTaskbarTabContent from '#desktop/components/layout/LayoutTaskbarTab
 import SearchContent from '#desktop/pages/search/components/SearchContent.vue'
 
 defineProps<{
-  searchTerm: string
+  searchTerm?: string
 }>()
 
 defineOptions({

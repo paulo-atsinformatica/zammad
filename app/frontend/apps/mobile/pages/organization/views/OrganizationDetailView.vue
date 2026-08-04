@@ -1,4 +1,4 @@
-<!-- Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/ -->
+<!-- Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/ -->
 
 <script setup lang="ts">
 import { computed } from 'vue'
@@ -33,8 +33,14 @@ const errorCallback = createQueryErrorHandler({
 
 const organizationId = computed(() => convertToGraphQLId('Organization', props.internalId))
 
-const { organization, loading, objectAttributes, organizationQuery, fetchMoreMembers } =
-  useOrganizationDetail(organizationId, 3, 100, errorCallback)
+const {
+  organization,
+  organizationMembers,
+  loading,
+  loadingWithoutCachedResult,
+  objectAttributes,
+  fetchMoreMembers,
+} = useOrganizationDetail(organizationId, 3, 100, errorCallback)
 
 useOnlineNotificationSeen(organization)
 
@@ -45,7 +51,7 @@ useHeader({
   backUrl: '/',
   actionTitle: __('Edit'),
   actionHidden: computed(() => organization.value == null || !organization.value.policy.update),
-  refetch: computed(() => organization.value != null && organizationQuery.loading().value),
+  refetch: computed(() => organization.value != null && loading.value),
   onAction() {
     if (!organization.value || !organization.value.policy.update) return
     openEditOrganizationDialog(organization.value)
@@ -73,11 +79,7 @@ const ticketData = computed(() => getTicketData(organization.value))
       :skip-attributes="['name']"
     />
 
-    <OrganizationMembersList
-      :organization="organization"
-      :disable-show-more="loading"
-      @load-more="fetchMoreMembers()"
-    />
+    <OrganizationMembersList :members="organizationMembers" @load-more="fetchMoreMembers()" />
 
     <CommonTicketStateList
       v-if="ticketData"
@@ -87,5 +89,9 @@ const ticketData = computed(() => getTicketData(organization.value))
       :tickets-link-query="ticketData.query"
     />
   </div>
-  <CommonLoader v-else-if="loading" class="w-full p-4" :loading="loading" />
+  <CommonLoader
+    v-else-if="loadingWithoutCachedResult"
+    class="w-full p-4"
+    :loading="loadingWithoutCachedResult"
+  />
 </template>

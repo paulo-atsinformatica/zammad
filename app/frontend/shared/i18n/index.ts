@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import { reactive } from 'vue'
 
@@ -24,7 +24,7 @@ export class I18N {
   }
 
   locale() {
-    return document.documentElement.getAttribute('lang') || 'en-US'
+    return document.documentElement.getAttribute('lang') || 'en-us'
   }
 
   date(dateString: string): string {

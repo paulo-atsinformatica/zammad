@@ -1,4 +1,4 @@
-<!-- Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/ -->
+<!-- Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/ -->
 
 <script setup lang="ts">
 import { createMessage, getNode } from '@formkit/core'
@@ -142,7 +142,7 @@ const updateSharedDraft = () => {
     })
 }
 
-const { openSharedDraftFlyout } = useTicketSharedDraft(props.context.setSkipNextStateUpdate)
+const { openSharedDraftFlyout } = useTicketSharedDraft()
 
 const openFlyout = (sharedDraftStartId: string) => {
   openSharedDraftFlyout('start', sharedDraftStartId, props.context.form)
@@ -164,7 +164,7 @@ const openFlyout = (sharedDraftStartId: string) => {
       validation="required:trim"
       link="/"
       link-icon="plus-square-fill"
-      :link-label="__('Create Shared Draft')"
+      :link-label="__('Create shared draft')"
       @link-click.prevent="createSharedDraft"
       @keypress.enter.prevent="createSharedDraft"
     />
@@ -184,7 +184,7 @@ const openFlyout = (sharedDraftStartId: string) => {
               v-tooltip="sharedDraftStart.name"
               link="#"
               class="line-clamp-1"
-              :aria-label="$t('Preview Shared Draft')"
+              :aria-label="$t('Preview shared draft')"
               internal
               @click.prevent="openFlyout(sharedDraftStart.id)"
             >
@@ -201,7 +201,7 @@ const openFlyout = (sharedDraftStartId: string) => {
           </div>
           <CommonButton
             v-if="currentSharedDraftId === sharedDraftStart.id"
-            v-tooltip="__('Update Shared Draft')"
+            v-tooltip="__('Update shared draft')"
             variant="submit"
             size="small"
             icon="arrow-repeat"

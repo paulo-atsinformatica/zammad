@@ -1,7 +1,4 @@
-query autocompleteSearchGeneric(
-  $input: AutocompleteSearchGenericInput!
-  $membersCount: Int = 10
-) {
+query autocompleteSearchGeneric($input: AutocompleteSearchGenericInput!, $membersCount: Int = 10) {
   autocompleteSearchGeneric(input: $input) {
     value
     label
@@ -10,6 +7,7 @@ query autocompleteSearchGeneric(
     headingPlaceholder
     disabled
     object {
+      __typename
       ... on User {
         id
         internalId
@@ -26,6 +24,7 @@ query autocompleteSearchGeneric(
         active
         vip
         organization {
+          __typename
           id
           internalId
           name
@@ -47,6 +46,7 @@ query autocompleteSearchGeneric(
         allMembers(first: $membersCount) {
           edges {
             node {
+              __typename
               id
               internalId
               login

@@ -73,10 +73,14 @@ class App.GenericHistory extends App.ControllerModal
           created_by: App.User.find( item.created_by_id )
           sources: []
 
-      recordsSource = _.findWhere(newItem.sources, { sourceable_id: item.sourceable_id })
+      recordsSource = _.findWhere(newItem.sources, {
+        sourceable_id: item.sourceable_id,
+        sourceable_type_raw: item.sourceable_type
+      })
       if !recordsSource
         recordsSource = {
           sourceable_id: item.sourceable_id,
+          sourceable_type_raw: item.sourceable_type,
           sourceable_type: @sourceableTypeDisplayName(item.sourceable_type),
           sourceable_name: item.sourceable_name,
           users: []
@@ -96,7 +100,7 @@ class App.GenericHistory extends App.ControllerModal
       content = ''
       if item.type is 'notification'
         content = App.i18n.translateContent( "notification sent to '%s'", item.value_to )
-      if item.type is 'email'
+      else if item.type is 'email'
         content = App.i18n.translateContent( "email sent to '%s'", item.value_to )
       else if item.type is 'time_trigger_performed'
         message = switch item.value_from
@@ -131,14 +135,7 @@ class App.GenericHistory extends App.ControllerModal
         article_body = App.TicketArticle.find(item.o_id)?.body
         truncated_article_body = App.Utils.truncate(article_body) or '-'
         content = if item.type is 'created' or item.type is 'updated'
-          if item.value_to
-            App.i18n.translatePlain("reacted with a %s to message from %s '%s'", item.value_to, item.value_from, truncated_article_body)
-
-          # NB: On MySQL backends, the reaction emoji may get stripped due to column type UTF-8 limitation (`string`).
-          #   Rather than migrating this column on very heavy tables, we are opting to simply change the message here.
-          #   With Zammad 7.0, MySQL support will be dropped anyway.
-          else
-            App.i18n.translatePlain("reacted to message from %s '%s'", item.value_from, truncated_article_body)
+          App.i18n.translatePlain("reacted with a %s to message from %s '%s'", item.value_to, item.value_from, truncated_article_body)
 
         else if item.type is 'removed'
           App.i18n.translatePlain("removed reaction to message from %s '%s'", item.value_from, truncated_article_body)

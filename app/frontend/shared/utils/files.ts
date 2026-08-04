@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import type { FileUploaded } from '#shared/components/Form/fields/FieldFile/types.ts'
 import { useApplicationStore } from '#shared/stores/application.ts'
@@ -195,20 +195,32 @@ export const canDownloadFile = (type?: Maybe<string>) => {
 }
 
 export const allowedImageTypes = () => {
-  const { config } = useApplicationStore()
+  const allowedImageTypes = ['image/png', 'image/jpg', 'image/jpeg', 'image/gif', 'image/webp']
 
-  return config['active_storage.web_image_content_types'] || []
+  // Filter allowed image types based on Rails config for allowed inline content types.
+  //   This ensures that only the image types that are allowed to be displayed inline in Rails are considered
+  //   previewable in the frontend.
+  const allowedInlineTypes =
+    useApplicationStore().config['active_storage.content_types_allowed_inline'] || []
+
+  return allowedImageTypes.filter((type) => allowedInlineTypes.includes(type))
 }
 
 export const allowedImageTypesString = () => {
   return allowedImageTypes().join(',')
 }
 
+export const sanitizedContentType = (type?: Maybe<string>) =>
+  type?.replace(/^(.+?\/.+?)(\b|\s).+?$/, '$1')
+
 export const canPreviewFile = (type?: Maybe<string>): FilePreview | false => {
   if (!type) return false
 
-  if (allowedImageTypes().includes(type)) return 'image'
-  if (type === 'text/calendar') return 'calendar'
+  const contentType = sanitizedContentType(type)
+  if (!contentType) return false
+
+  if (allowedImageTypes().includes(contentType)) return 'image'
+  if (contentType === 'text/calendar') return 'calendar'
 
   return false
 }

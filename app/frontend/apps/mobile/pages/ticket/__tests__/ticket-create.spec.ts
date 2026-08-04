@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 // eslint-disable expect-expect
 
 import { getNode } from '@formkit/core'
@@ -286,7 +286,7 @@ describe('Creating new ticket as agent', () => {
     await waitUntil(() => mockFormUpdater.calls.resolve)
     await nextStep(view)
 
-    await view.events.click(view.getByLabelText('Send Email'))
+    await view.events.click(view.getByLabelText('Send email'))
     await nextStep(view)
 
     expect(view.getByLabelText('CC')).toBeInTheDocument()

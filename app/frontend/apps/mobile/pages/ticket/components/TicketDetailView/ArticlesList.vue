@@ -1,4 +1,4 @@
-<!-- Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/ -->
+<!-- Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/ -->
 
 <script setup lang="ts">
 import { toRef, shallowRef } from 'vue'
@@ -85,6 +85,7 @@ const markSeen = (id: string) => {
           row.article.sender?.name !== EnumTicketArticleSenderName.Customer ? 'left' : 'right'
         "
         :media-error="row.article.mediaErrorState?.error"
+        :body-rendering-error="row.article.bodyRenderingError"
         :security="row.article.securityState"
         :ticket-internal-id="ticket.internalId"
         :article-id="row.article.id"

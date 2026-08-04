@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import { generateObjectData } from '#tests/graphql/builders/index.ts'
 import renderComponent from '#tests/support/components/renderComponent.ts'
@@ -55,7 +55,7 @@ describe('UserInfo', () => {
 
     expect(wrapper.getByRole('link', { name: user.organization.name })).toHaveAttribute(
       'href',
-      `/organization/profile/${user.organization.internalId}`,
+      `/organizations/${user.organization.internalId}`,
     )
   })
 })

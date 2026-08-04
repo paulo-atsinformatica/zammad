@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import { within } from '@testing-library/vue'
 import { vi } from 'vitest'
@@ -144,7 +144,7 @@ describe('TicketSidebarIdoit', () => {
 
     await waitForNextTick()
 
-    expect(wrapper.getByRole('button', { name: 'Link Objects' })).toBeInTheDocument()
+    expect(wrapper.getByRole('button', { name: 'Link objects' })).toBeInTheDocument()
 
     expect(wrapper.queryByRole('status', { name: 'Objects' })).not.toBeInTheDocument()
 

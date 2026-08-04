@@ -1,10 +1,10 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import { waitFor } from '@testing-library/vue'
 
 import { renderComponent } from '#tests/support/components/index.ts'
 import { mockApplicationConfig } from '#tests/support/mock-applicationConfig.ts'
-import { mockPermissions } from '#tests/support/mock-permissions.ts'
+import { mockUserCurrent } from '#tests/support/mock-userCurrent.ts'
 import { waitForNextTick } from '#tests/support/utils.ts'
 
 import LayoutPage from '#desktop/components/layout/LayoutPage.vue'
@@ -20,17 +20,39 @@ vi.mock('#shared/server/apollo/client.ts', () => ({
   }),
 }))
 
+vi.mock(
+  '#desktop/components/BetaUi/FeedbackDialog/useFeedbackDialog.ts',
+  async (originalModule) => {
+    const module =
+      await originalModule<typeof import('#desktop/components/CommonDialog/useDialog.ts')>()
+
+    return {
+      ...module,
+      useFeedbackDialog: () => ({
+        openFeedbackDialog: ({ callback }: { callback: () => void }) => {
+          callback()
+        },
+      }),
+    }
+  },
+)
+
 describe('LayoutPage', () => {
+  afterEach(() => {
+    localStorage.clear()
+  })
+
   it('expands search and focus quick search input', async () => {
     const wrapper = renderComponent(LayoutPage, {
       router: true,
       form: true,
     })
 
+    // one button has display none it's for smaller screens
     await wrapper.events.click(
-      wrapper.getByRole('button', {
+      wrapper.getAllByRole('button', {
         name: 'Collapse sidebar',
-      }),
+      })[0],
     )
 
     expect(
@@ -66,10 +88,12 @@ describe('LayoutPage', () => {
     })
 
     beforeEach(() => {
-      mockPermissions(['user_preferences.beta_ui_switch'])
-
       mockApplicationConfig({
         ui_desktop_beta_switch: true,
+      })
+
+      mockUserCurrent({
+        hasBetaUiSwitchAvailable: true,
       })
     })
 
@@ -79,7 +103,7 @@ describe('LayoutPage', () => {
         form: true,
       })
 
-      const toggle = wrapper.getByLabelText('New BETA UI')
+      const toggle = wrapper.getByLabelText('BETA UI')
 
       expect(toggle).toBeChecked()
 
@@ -100,18 +124,20 @@ describe('LayoutPage', () => {
         form: true,
       })
 
-      expect(wrapper.queryByLabelText('New BETA UI')).not.toBeInTheDocument()
+      expect(wrapper.queryByLabelText('BETA UI')).not.toBeInTheDocument()
     })
 
     it('hides the switch if the user has no permissions', async () => {
-      mockPermissions(['ticket.customer'])
+      mockUserCurrent({
+        hasBetaUiSwitchAvailable: false,
+      })
 
       const wrapper = renderComponent(LayoutPage, {
         router: true,
         form: true,
       })
 
-      expect(wrapper.queryByLabelText('New BETA UI')).not.toBeInTheDocument()
+      expect(wrapper.queryByLabelText('BETA UI')).not.toBeInTheDocument()
     })
 
     it('hides the switch if the user has dismissed it', async () => {
@@ -122,7 +148,7 @@ describe('LayoutPage', () => {
         form: true,
       })
 
-      expect(wrapper.queryByLabelText('New BETA UI')).not.toBeInTheDocument()
+      expect(wrapper.queryByLabelText('BETA UI')).not.toBeInTheDocument()
 
       localStorage.removeItem('beta-ui-switch-dismiss')
     })
@@ -133,10 +159,10 @@ describe('LayoutPage', () => {
         form: true,
       })
 
-      const toggle = wrapper.getByLabelText('New BETA UI')
+      const toggle = wrapper.getByLabelText('BETA UI')
 
       const button = wrapper.getByRole('button', {
-        name: 'Hide Beta UI switch',
+        name: 'Hide BETA UI switch',
       })
 
       await wrapper.events.click(button)

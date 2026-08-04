@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import { within } from '@testing-library/vue'
 
@@ -9,9 +9,9 @@ import { EnumTicketStateTypeCategory } from '#shared/graphql/types.ts'
 import { convertToGraphQLId } from '#shared/graphql/utils.ts'
 
 import {
-  mockCustomerTicketsByFilterQuery,
-  waitForCustomerTicketsByFilterQueryCalls,
-} from '#desktop/entities/ticket/graphql/queries/customerTicketsByFilter.mocks.ts'
+  mockTicketsByCustomerQuery,
+  waitForTicketsByCustomerQueryCalls,
+} from '#desktop/entities/ticket/graphql/queries/ticketsByCustomer.mocks.ts'
 
 import TicketListPopoverWithTrigger, { type Props } from '../TicketListPopoverWithTrigger.vue'
 
@@ -23,8 +23,8 @@ const dummyFilters = {
 }
 
 const renderTicketListPopover = (props?: Partial<Props>) => {
-  mockCustomerTicketsByFilterQuery({
-    ticketsByFilter: {
+  mockTicketsByCustomerQuery({
+    ticketsByCustomer: {
       totalCount: 10,
       edges: dummyTickets.map((ticket) => ({
         node: ticket,
@@ -48,22 +48,12 @@ describe('TicketListPopoverWithTrigger', () => {
     expect(wrapper.getByText('Open Tickets')).toBeVisible()
   })
 
-  it('shows a skeleton when ticket info is unavailable', async () => {
-    const wrapper = renderTicketListPopover()
-
-    await wrapper.events.hover(wrapper.getByText('Open Tickets'))
-
-    const popover = await wrapper.findByRole('region')
-
-    expect(within(popover).getAllByRole('progressbar').length).toBe(6)
-  })
-
   it('displays a ticket list popover', async () => {
     const wrapper = renderTicketListPopover()
 
     await wrapper.events.hover(wrapper.getByText('Open Tickets'))
 
-    const calls = await waitForCustomerTicketsByFilterQueryCalls()
+    const calls = await waitForTicketsByCustomerQueryCalls()
 
     expect(calls.at(-1)?.variables).toEqual({
       customerId: dummyFilters.customerId,

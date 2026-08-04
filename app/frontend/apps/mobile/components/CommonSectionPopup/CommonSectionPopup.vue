@@ -1,4 +1,4 @@
-<!-- Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/ -->
+<!-- Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/ -->
 
 <script setup lang="ts">
 import { onClickOutside, onKeyUp, useVModel } from '@vueuse/core'
@@ -133,7 +133,7 @@ const getClassesByType = (type: PopupItemDescriptor['type']) => {
       <div
         v-if="persistent || localState"
         v-show="persistent ? localState : true"
-        class="window pb-safe-4 fixed top-0 bottom-0 flex w-screen flex-col justify-end px-4 text-white ltr:left-0 rtl:right-0"
+        class="window fixed top-0 bottom-0 flex w-screen flex-col justify-end px-4 pb-safe-4 text-white ltr:left-0 rtl:right-0"
         :class="{ 'z-20': !zIndex }"
         :style="{ zIndex }"
         role="presentation"

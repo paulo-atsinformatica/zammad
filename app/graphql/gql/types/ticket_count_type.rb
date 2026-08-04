@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 # This type counts user or organization tickets accessible to *current user*
 # It is very similar to what TicketUserTicketCounterJob does but not the same!
@@ -12,10 +12,10 @@ module Gql::Types
     field :closed, Integer, null: false, description: 'Closed ticket count of the related object'
     field :closed_search_query, String, description: 'Closed ticket search query of the related object'
 
-    field :organization_open, Integer, null: false, description: "Open ticket count of the related object's organizations"
-    field :organization_open_search_query, String, description: "Open ticket search query of the related object's organizations"
-    field :organization_closed, Integer, null: false, description: "Closed ticket count of the related object's organizations"
-    field :organization_closed_search_query, String, description: "Closed ticket search query of the related object's organizations"
+    field :organization_open, Integer, null: true, description: "Open ticket count of the related object's organizations"
+    field :organization_open_search_query, String, null: true, description: "Open ticket search query of the related object's organizations"
+    field :organization_closed, Integer, null: true, description: "Closed ticket count of the related object's organizations"
+    field :organization_closed_search_query, String, null: true, description: "Closed ticket search query of the related object's organizations"
 
     def open
       ticket_count(:open)

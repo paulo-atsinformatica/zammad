@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import { getTestRouter } from '#tests/support/components/renderComponent.ts'
 import { visitView } from '#tests/support/components/visitView.ts'
@@ -17,6 +17,7 @@ import { useLocaleStore } from '#shared/stores/locale.ts'
 
 const locales: Record<string, LocalesQuery['locales'][number]> = {
   de: {
+    __typename: 'Locale',
     locale: 'de-de',
     name: 'Deutsch',
     dir: EnumTextDirection.Ltr,
@@ -24,6 +25,7 @@ const locales: Record<string, LocalesQuery['locales'][number]> = {
     active: true,
   },
   ar: {
+    __typename: 'Locale',
     locale: 'ar',
     name: 'Arabic',
     dir: EnumTextDirection.Rtl,

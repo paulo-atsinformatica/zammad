@@ -1,4 +1,4 @@
-<!-- Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/ -->
+<!-- Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/ -->
 
 <script setup lang="ts">
 import CommonIcon from '#shared/components/CommonIcon/CommonIcon.vue'
@@ -38,7 +38,7 @@ const { originalFormattingUrl } = useEmailFileUrls(props.article, ticketInternal
         size="medium"
         open-in-new-tab
       >
-        {{ $t('Original Formatting') }}
+        {{ $t('Original formatting') }}
       </CommonLink>
     </CommonLabel>
   </div>

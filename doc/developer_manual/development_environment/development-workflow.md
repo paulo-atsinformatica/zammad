@@ -8,8 +8,48 @@ Zammad provides several Rake tasks to streamline development and setup.
 
 ### Database Tasks
 
+- `rails zammad:bootstrap:reset` - Quickly reset an existing development database
 - `rails db:drop zammad:db:init` – Reset an existing development database (without running `auto_wizard`)
+- `rails zammad:bootstrap:init` – Initializes Database: only run on environment where DB was never set
 - `rails db:migrate` – Run any pending Rails migrations
+
+#### Quickly reset an existing development database
+
+> [!Tip]
+>
+> `rails zammad:bootstrap:reset`
+> is pretty handy when you quickly want to restart fresh
+> without rebuilding the container
+>
+> One command in few seconds vs multiple clicks around your Docker stack.
+
+It's much **faster then rebuilding**,
+but essentially **does the same** thing.
+
+##### Explanation
+
+`rails zammad:bootstrap:reset`:
+
+- truncates DB
+- migrates it
+- seeds it
+- runs `auto_wizard` so `rails zammad:setup:auto_wizard` is not needed afterward
+
+##### Use it when
+
+- you want to reset from scratch
+- without removing your data volumes
+- or rebuilding the `devcontainer`
+
+#### Initializes Database: only run on environment where DB was never set
+
+> [!Caution]
+>
+> `rails zammad:bootstrap:init` is mostly not needed for `development`.
+
+Use `rails zammad:bootstrap:init` only if you are intending to initialize a
+previously uninitialized environment like for example `production`
+or run on a fresh install.
 
 ### Package Tasks
 
@@ -54,17 +94,10 @@ Run tests frequently to verify your changes and avoid regressions.
 
 Before running tests for the first time, prepare the test database and compile assets:
 
-```sh
-RAILS_ENV=test rails db:drop db:create zammad:ci:test:prepare
-```
+- [How to test with Rspec and Capybara](../cookbook/how-to-test-with-rspec-and-capybara.md#running)
 
-```sh
-RAILS_ENV=test rails assets:precompile
-```
+Further testing:
 
-For further details see:
-
-- [How to test with Rspec and Capybara](../cookbook/how-to-test-with-rspec-and-capybara.md)
 - [How to test with Vitest and Cypress](../cookbook/how-to-test-with-vitest-and-cypress.md)
 
 ## Linting

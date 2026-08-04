@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 class GraphqlChannel < ApplicationCable::Channel
   def subscribed
@@ -11,9 +11,10 @@ class GraphqlChannel < ApplicationCable::Channel
     operation_name = data['operationName']
 
     # context must be kept in sync with GraphqlController!
+    # Channels use session auth only (no token auth), so we set the token to nil here.
     context = {
       sid:             sid,
-      current_user:    current_user,
+      current_user:    current_user && UserContext.new(current_user, nil),
       current_user_id: current_user&.id,
       # :channel is required for ActionCableSubscriptions and MUST NOT be used otherwise.
       channel:         self,

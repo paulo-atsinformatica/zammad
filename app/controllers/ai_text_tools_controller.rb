@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 class AITextToolsController < ApplicationController
   prepend_before_action :authenticate_and_authorize!
@@ -25,5 +25,13 @@ class AITextToolsController < ApplicationController
 
   def destroy
     model_destroy_render(AI::TextTool, params)
+  end
+
+  def reset_analytics
+    AI::TextTool
+      .find(params[:id])
+      .reset_analytics_timestamp!
+
+    render json: { success: true }
   end
 end

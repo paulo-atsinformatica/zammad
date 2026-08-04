@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 require 'rails_helper'
 require 'models/core_workflow/base'
@@ -475,7 +475,7 @@ RSpec.describe 'CoreWorkflow > Conditions', type: :model do
                    'ticket.mention_user_ids': {
                      pre_condition: 'specific',
                      operator:      'is',
-                     value:         ['999'],
+                     value:         ['31337'],
                    },
                  })
         end

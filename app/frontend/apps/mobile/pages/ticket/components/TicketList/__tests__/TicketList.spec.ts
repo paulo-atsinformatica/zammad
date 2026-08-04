@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import { renderComponent } from '#tests/support/components/index.ts'
 import { waitUntil } from '#tests/support/utils.ts'
@@ -32,7 +32,6 @@ describe('testing a list of tickets', () => {
         hiddenColumns: [],
       },
       form: true,
-      formField: true,
       router: true,
       store: true,
     })

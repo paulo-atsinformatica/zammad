@@ -1,4 +1,4 @@
-<!-- Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/ -->
+<!-- Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/ -->
 
 <script setup lang="ts">
 import { useEventListener } from '@vueuse/core'
@@ -12,11 +12,11 @@ import { useForm } from '#shared/components/Form/useForm.ts'
 import { useMultiStepForm } from '#shared/components/Form/useMultiStepForm.ts'
 import { useConfirmation } from '#shared/composables/useConfirmation.ts'
 import { useStickyHeader } from '#shared/composables/useStickyHeader.ts'
-import { useTicketSignature } from '#shared/composables/useTicketSignature.ts'
 import { useTicketCreate } from '#shared/entities/ticket/composables/useTicketCreate.ts'
 import { useTicketCreateArticleType } from '#shared/entities/ticket/composables/useTicketCreateArticleType.ts'
 import { useTicketCreateView } from '#shared/entities/ticket/composables/useTicketCreateView.ts'
 import { useTicketFormOrganizationHandler } from '#shared/entities/ticket/composables/useTicketFormOrganizationHandler.ts'
+import { useTicketSignature } from '#shared/entities/ticket/composables/useTicketSignature.ts'
 import type { TicketFormData } from '#shared/entities/ticket/types.ts'
 import { useUserQuery } from '#shared/entities/user/graphql/queries/user.api.ts'
 import { defineFormSchema } from '#shared/form/defineFormSchema.ts'
@@ -73,6 +73,22 @@ const redirectAfterCreate = (internalId?: number) => {
 }
 
 const { createTicket, isTicketCustomer } = useTicketCreate(form, redirectAfterCreate)
+
+const submitTicket = async (formData: FormSubmitData<TicketFormData>) => {
+  const result = await createTicket(formData)
+
+  // After a failed mutation with field errors, navigate to the first step that
+  // contains an error so the user sees it without having to go back manually.
+  await nextTick()
+  const stepWithErrors = stepNames.value.find(
+    (stepName) => (allSteps.value[stepName]?.errorCount ?? 0) > 0,
+  )
+  if (stepWithErrors && stepWithErrors !== activeStep.value) {
+    setMultiStep(stepWithErrors)
+  }
+
+  return result
+}
 
 const getFormSchemaGroupSection = (
   stepName: string,
@@ -153,11 +169,22 @@ const ticketArticleTypeSection = getFormSchemaGroupSection(
     {
       if: '$existingAdditionalCreateNotes() && $getAdditionalCreateNote($values.articleSenderType) !== undefined',
       isLayout: true,
-      element: 'p',
-      attrs: {
-        class: 'my-10 text-base text-center text-yellow',
+      component: 'CommonAlert',
+      props: {
+        variant: 'warning',
       },
-      children: '$getAdditionalCreateNote($values.articleSenderType)',
+      children: [
+        {
+          isLayout: true,
+          element: 'div',
+          attrs: {
+            // We convert light weight markup
+            // The input is not sanitized and relies on the administrator to provide safe content
+            innerHTML: '$markup($t($getAdditionalCreateNote($values.articleSenderType)))',
+          },
+          children: '',
+        },
+      ],
     },
   ],
   true,
@@ -352,10 +379,10 @@ const schemaData = reactive({
   allSteps,
   securityIntegration,
   existingAdditionalCreateNotes: () => {
-    return Object.keys(additionalCreateNotes).length > 0
+    return Object.keys(additionalCreateNotes.value).length > 0
   },
   getAdditionalCreateNote: (value: string) => {
-    return i18n.t(additionalCreateNotes.value[value])
+    return additionalCreateNotes.value[value]
   },
 })
 
@@ -440,7 +467,7 @@ const changedFields = reactive({
 
 <script lang="ts">
 export default {
-  beforeRouteEnter(to, from, next) {
+  beforeRouteEnter(to) {
     const { ticketCreateEnabled } = useTicketCreateView()
 
     if (!ticketCreateEnabled.value) {
@@ -451,18 +478,16 @@ export default {
         route: to.fullPath,
       }
 
-      next({
+      return {
         name: 'Error',
         query: {
           redirect: '1',
         },
         replace: true,
-      })
-
-      return
+      }
     }
 
-    next()
+    return true
   },
 }
 </script>
@@ -473,7 +498,7 @@ export default {
     class="h-16!"
     :style="stickyStyles.header"
     back-url="/"
-    :title="__('Create Ticket')"
+    :title="__('Create ticket')"
   >
     <template #after>
       <CommonButton
@@ -504,14 +529,14 @@ export default {
       :form-updater-id="EnumFormUpdaterId.FormUpdaterUpdaterTicketCreate"
       should-autofocus
       use-object-attributes
-      @submit="createTicket($event as FormSubmitData<TicketFormData>)"
+      @submit="submitTicket($event as FormSubmitData<TicketFormData>)"
     />
   </div>
   <footer
     :class="{
       'bg-gray-light backdrop-blur-lg': !isScrolledToBottom,
     }"
-    class="pb-safe fixed bottom-0 z-10 w-full px-4 transition"
+    class="fixed bottom-0 z-10 w-full px-4 pb-safe transition"
   >
     <FormKit
       :variant="lastStepName === activeStep ? 'submit' : 'primary'"

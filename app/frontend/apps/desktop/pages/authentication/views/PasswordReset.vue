@@ -1,4 +1,4 @@
-<!-- Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/ -->
+<!-- Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/ -->
 
 <script setup lang="ts">
 import { ref } from 'vue'
@@ -19,6 +19,12 @@ import CommonPublicLinks from '#desktop/components/CommonPublicLinks/CommonPubli
 import LayoutPublicPage from '#desktop/components/layout/LayoutPublicPage/LayoutPublicPage.vue'
 
 import { useUserPasswordResetSendMutation } from '../graphql/mutations/userPasswordResetSend.api.ts'
+
+interface Props {
+  login?: string
+}
+
+const props = defineProps<Props>()
 
 defineOptions({
   beforeRouteEnter(to) {
@@ -42,6 +48,7 @@ const formSchema: FormSchemaNode[] = [
     label: __('Username / Email'),
     name: 'login',
     required: true,
+    value: props.login,
   },
 ]
 
@@ -108,7 +115,7 @@ const goToLogin = () => {
     </section>
     <template #boxActions>
       <CommonButton variant="secondary" size="medium" :disabled="isDisabled" @click="goToLogin()">
-        {{ $t('Cancel & Go Back') }}
+        {{ $t('Cancel & go back') }}
       </CommonButton>
       <CommonButton
         v-if="!showSuccessScreen"

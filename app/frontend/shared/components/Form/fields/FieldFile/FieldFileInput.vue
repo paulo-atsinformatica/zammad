@@ -1,4 +1,4 @@
-<!-- Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/ -->
+<!-- Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/ -->
 <script setup lang="ts">
 import { useDropZone } from '@vueuse/core'
 import { useTemplateRef } from 'vue'
@@ -316,7 +316,7 @@ const { isOverDropZone } = useDropZone(dropZoneElement, {
           type="file"
           :name="context.node.name"
           :aria-describedby="context.describedBy"
-          :v-bind="context.attrs"
+          v-bind="context.attrs"
           class="hidden"
           tabindex="-1"
           aria-hidden="true"

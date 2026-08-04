@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import { useAppName } from '#shared/composables/useAppName.ts'
 
@@ -7,7 +7,7 @@ import type { FormKitNode } from '@formkit/core'
 const addLink = (node: FormKitNode) => {
   const { props } = node
 
-  node.addProps(['link', 'linkIcon', 'linkLabel', 'onLinkClick'])
+  node.addProps(['link', 'linkIcon', 'linkLabel', 'showLinkLabel', 'onLinkClick', 'linkSize'])
 
   // The padding below is specific to mobile field layout only.
   if (useAppName() !== 'mobile') return

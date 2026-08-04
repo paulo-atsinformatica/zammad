@@ -1,0 +1,17 @@
+mutation customReportGenerate($customReportId: ID!, $format: String) {
+  customReportGenerate(customReportId: $customReportId, format: $format) {
+    customReportRun {
+      id
+      format
+      status
+      filename
+      createdAt
+      downloadable
+      downloadPath
+    }
+    errors {
+      message
+      field
+    }
+  }
+}

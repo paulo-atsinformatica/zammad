@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 require 'rails_helper'
 
@@ -10,7 +10,7 @@ RSpec.describe 'Ticket Zoom > Text Tools Analytics', authenticated_as: :authenti
   let(:reply_body)       { Faker::Lorem.unique.paragraph }
 
   let(:ai_service_text_tool_result) do
-    Struct.new(:content, :stored_result, :ai_analytics_run, :fresh, keyword_init: true).new(
+    Struct.new(:content, :stored_result, :ai_analytics_run, :fresh).new(
       content:          Faker::Lorem.unique.paragraph,
       stored_result:    nil,
       ai_analytics_run:,
@@ -30,9 +30,7 @@ RSpec.describe 'Ticket Zoom > Text Tools Analytics', authenticated_as: :authenti
     AI::TextTool.destroy_all
     create(:ai_text_tool, name: 'Dummy', instruction: 'Make it nice.')
 
-    ai_service_spy = instance_spy(Service::AIAssistance::TextTools)
-    allow(Service::AIAssistance::TextTools).to receive(:new).and_return(ai_service_spy)
-    allow(ai_service_spy).to receive(:execute).and_return(ai_service_text_tool_result)
+    allow(Service::AIAssistance::TextTools).to receive(:execute).and_return(ai_service_text_tool_result)
 
     agent
   end
@@ -52,7 +50,7 @@ RSpec.describe 'Ticket Zoom > Text Tools Analytics', authenticated_as: :authenti
   end
 
   def trigger_text_tools_modal
-    find("[aria-label='Writing Assistant Tools']").click
+    find("[aria-label='AI Writing Assistant Tools']").click
     find('.js-action', text: 'Dummy').click
 
     modal_ready

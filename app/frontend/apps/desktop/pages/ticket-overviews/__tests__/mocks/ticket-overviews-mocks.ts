@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import { generateObjectData } from '#tests/graphql/builders/index.ts'
 
@@ -14,18 +14,6 @@ import type { DeepPartial } from '#shared/types/utils.ts'
 import { mockOverviewsWithCachedCountQuery } from '#desktop/entities/ticket/graphql/queries/overviewsWithCachedCount.mocks.ts'
 import { mockTicketsCachedByOverviewQuery } from '#desktop/entities/ticket/graphql/queries/ticketsCachedByOverview.mocks.ts'
 import { mockUserCurrentTicketOverviewsQuery } from '#desktop/entities/ticket/graphql/queries/userCurrentTicketOverviews.mocks.ts'
-
-export const mockDefaultOverviewQueries = (overviews?: DeepPartial<Overview>[]): void => {
-  const usedOverviews = overviews ?? getDefaultOverviews()
-
-  mockUserCurrentTicketOverviewsQuery({
-    userCurrentTicketOverviews: usedOverviews,
-  })
-
-  mockOverviewsWithCachedCountQuery({
-    ticketOverviews: usedOverviews,
-  })
-}
 
 export const getDefaultOverviews = () => [
   {
@@ -51,6 +39,18 @@ export const getDefaultOverviews = () => [
     active: true,
   },
 ]
+
+export const mockDefaultOverviewQueries = (overviews?: DeepPartial<Overview>[]): void => {
+  const usedOverviews = overviews ?? getDefaultOverviews()
+
+  mockUserCurrentTicketOverviewsQuery({
+    userCurrentTicketOverviews: usedOverviews,
+  })
+
+  mockOverviewsWithCachedCountQuery({
+    ticketOverviews: usedOverviews,
+  })
+}
 
 export const mockDefaultTicketsCachedByOverview = (
   options: DeepPartial<TicketsCachedByOverviewQuery['ticketsCachedByOverview']> = {},

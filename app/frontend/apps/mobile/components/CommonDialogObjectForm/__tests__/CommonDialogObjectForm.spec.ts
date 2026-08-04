@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import { useMutation } from '@vue/apollo-composable'
 import gql from 'graphql-tag'
@@ -67,7 +67,6 @@ const renderForm = () => {
       mutation: useMutationOrganizationUpdate,
     },
     form: true,
-    formField: true,
     confirmation: true,
   })
   return {

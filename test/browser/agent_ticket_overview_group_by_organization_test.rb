@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 require 'browser_test_helper'
 
@@ -65,11 +65,10 @@ class AgentTicketOverviewGroupByOrganizationTest < TestCase
 
     # 5. Open the newly created overview and verify that the organization name is correctly rendered
     location(url: "#{browser_url}/#ticket/view/#{overview_name}")
-    sleep 1
+    watch_for(browser: instance, xpath: '//b[contains(text(),"äöüß & Test Organization")]')
     elements = instance.find_elements(xpath: '//b[contains(text(),"äöüß & Test Organization")]')
     elements = elements.select { |x| x.text.present? }
-    assert elements
-    # flanky
+    assert elements.any?, 'Expected to find organization name in overview'
     assert_equal 'äöüß & Test Organization', elements.first.text
   end
 end

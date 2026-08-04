@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 class Sessions::Event
   include ApplicationLib
@@ -23,7 +23,7 @@ class Sessions::Event
       { event: 'error', data: { error: e.message, payload: params[:payload] } }
     end
   ensure
-    UserInfo.current_user_id = nil
+    UserInfo.reset
     ActiveSupport::CurrentAttributes.clear_all
   end
 end

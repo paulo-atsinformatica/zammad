@@ -1,13 +1,19 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 class Webhook < ApplicationModel
   include ChecksClientNotification
+  include HasAuditLogs
   include ChecksHtmlSanitized
   include HasCollectionUpdate
   include HasSearchIndexBackend
   include CanSelector
   include CanSearch
   include EnsuresNoRelatedObjects
+  include CanSensitiveAssets
+
+  SENSITIVE_FIELDS = %i[bearer_token signature_token basic_auth_password].freeze
+
+  self.audit_log_attributes_ignored = %i[preferences]
 
   before_save :reset_custom_payload
 
@@ -42,8 +48,16 @@ class Webhook < ApplicationModel
 
     errors.add(:endpoint, __('The provided endpoint is invalid, no http or https protocol was specified.')) if !uri.is_a?(URI::HTTP)
     errors.add(:endpoint, __('The provided endpoint is invalid, no hostname was specified.')) if uri.host.blank?
+
+    HostnameSafetyCheck.validate!(uri.hostname, allow_private: true, allow_loopback: true)
   rescue URI::InvalidURIError
     errors.add :endpoint, __('The provided endpoint is invalid.')
+  rescue HostnameSafetyCheck::LoopbackIpError
+    errors.add :endpoint, __('The provided endpoint is invalid, it points to a loopback IP address.')
+  rescue HostnameSafetyCheck::LinkLocalIpError
+    errors.add :endpoint, __('The provided endpoint is invalid, it points to a link-local IP address.')
+  rescue HostnameSafetyCheck::SafetyError
+    errors.add :endpoint, __('The provided endpoint is invalid, it could not be resolved to a safe IP address.')
   end
 
   def validate_custom_payload

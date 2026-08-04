@@ -1,0 +1,121 @@
+<div class="main flex reporting public-pause-indicators">
+  <div class="page-header">
+    <div class="page-header-title">
+      <h1><%= __('Indicadores de pausa') %></h1>
+    </div>
+  </div>
+
+  <div class="page-body">
+    <div class="page-main">
+      <div class="panel panel-default public-pause-panel">
+        <div class="panel-heading">
+          <span><%= __('Filtros') %></span>
+          <span class="public-pause-refresh">
+            <span class="js-last-updated"></span>
+          </span>
+        </div>
+        <div class="panel-body public-pause-filters">
+          <div class="public-pause-filter-group">
+            <label for="js-filter-users"><%= __('Colaboradores') %></label>
+            <select id="js-filter-users" class="form-control" multiple="multiple" size="6"></select>
+          </div>
+          <div class="public-pause-filter-group">
+            <label for="js-filter-teams"><%= __('Equipes') %></label>
+            <select id="js-filter-teams" class="form-control" multiple="multiple" size="6"></select>
+          </div>
+          <div class="public-pause-filter-group public-pause-filter-state">
+            <label for="js-filter-logged"><%= __('Estado de login') %></label>
+            <select id="js-filter-logged" class="form-control">
+              <option value=""><%= __('Todos') %></option>
+              <option value="logged_in"><%= __('Logados') %></option>
+              <option value="logged_out"><%= __('Deslogados') %></option>
+            </select>
+          </div>
+          <div class="public-pause-filter-actions">
+            <button type="button" id="js-clear-filters" class="btn btn-default"><%= __('Limpar filtros') %></button>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel panel-default public-pause-table-panel">
+        <div class="panel-body">
+          <table class="table table--pause-indicators js-public-pause-table">
+            <thead>
+              <tr>
+                <th class="pause-indicators-col-indicator"></th>
+                <th><%= __('Colaborador') %></th>
+                <th><%= __('Status') %></th>
+                <th><%= __('Em pausa') %></th>
+                <th><%= __('Tempo em pausa') %></th>
+                <th><%= __('Logado') %></th>
+                <th><%= __('Pausa ativa') %></th>
+              </tr>
+            </thead>
+            <tbody class="js-public-pause-body">
+              <tr>
+                <td colspan="7"><%= __('Carregando...') %></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .public-pause-indicators .page-header {
+    border-bottom: none;
+    margin-bottom: 0;
+  }
+
+  .public-pause-indicators .page-header-title h1 {
+    font-size: 22px;
+    margin-bottom: 4px;
+  }
+
+  .public-pause-indicators .page-header-subtitle {
+    margin: 0;
+    color: #6c757d;
+    font-size: 13px;
+  }
+
+  .public-pause-panel {
+    margin-bottom: 12px;
+  }
+
+  .public-pause-filters {
+    display: flex;
+    gap: 16px;
+    align-items: flex-end;
+    flex-wrap: wrap;
+  }
+
+  .public-pause-filter-group {
+    min-width: 200px;
+  }
+
+  .public-pause-filter-state {
+    max-width: 180px;
+  }
+
+  .public-pause-filter-actions {
+    display: flex;
+    align-items: flex-end;
+  }
+
+  .public-pause-refresh {
+    float: right;
+    font-size: 12px;
+    color: #6c757d;
+  }
+
+  .public-pause-table-panel .table {
+    margin-bottom: 0;
+  }
+
+  .public-pause-indicators .pause-indicator {
+    border-radius: 999px;
+  }
+</style>
+

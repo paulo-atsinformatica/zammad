@@ -1,8 +1,30 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 class Channel < ApplicationModel
-  include Channel::Assets
   include Channel::Area::Whatsapp
+  include CanSensitiveAssets
+  include HasAuditLogs
+
+  self.audit_log_name_attribute = :area
+  self.audit_log_attributes_ignored = %i[status_in status_out last_log_in last_log_out preferences]
+
+  SENSITIVE_FIELDS = [
+    # Classic Email (IMAP, POP3, SMTP with the plain text password)
+    'options.inbound.options.password', 'options.outbound.options.password',
+
+    # XOAUTH2 email (Google, Microsoft IMAP&Graph)
+    # options.auth.access_token is also used for Facebhook (non-email)
+    'options.auth.access_token', 'options.auth.refresh_token', 'options.auth.client_secret',
+
+    # SMS (MessageBird, Masenversand, Twilio)
+    'options.token',
+
+    # Telegram
+    'options.api_token',
+
+    # Whatsapp
+    'options.access_token', 'options.app_secret',
+  ].freeze
 
   belongs_to :group, optional: true
 
@@ -11,6 +33,7 @@ class Channel < ApplicationModel
 
   scope :active, -> { where(active: true) }
   scope :in_area, ->(area) { where(area: area) }
+  scope :fetchable, -> { where('area LIKE ?', '%::Account') }
 
   validates_with Validations::ChannelEmailAccountUniquenessValidator
 
@@ -32,8 +55,16 @@ fetch all accounts
 =end
 
   def self.fetch
-    channels = Channel.where('active = ? AND area LIKE ?', true, '%::Account')
-    channels.each(&:fetch)
+    active.fetchable.each(&:fetch)
+  end
+
+  # Enqueue channels for asynchronous fetching
+  # Only channels that were not updated recently are enqueued.
+  # This method does not check wether a channel was recently fetched or not.
+  # It relies on Scheduler to call it at appropriate intervals.
+  # Change period in Scheduler to adjust fetch frequency.
+  def self.fetch_async
+    active.fetchable.each { ChannelFetchJob.perform_later(it) }
   end
 
 =begin

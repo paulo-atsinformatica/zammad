@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import { isEqual } from 'lodash-es'
 import { computed, ref, type Ref, watch } from 'vue'
@@ -37,7 +37,7 @@ export const useTicketExternalIssueTracker = (
     },
   )
 
-  const isLoading = issueTrackerQuery.loading()
+  const isLoadingIssues = issueTrackerQuery.loadingWithoutCachedResult()
 
   const queryResult = issueTrackerQuery.result()
 
@@ -58,14 +58,6 @@ export const useTicketExternalIssueTracker = (
   )
 
   const issueList = computed(() => queryResult.value?.ticketExternalReferencesIssueTrackerItemList)
-
-  const isLoadingIssues = computed(() => {
-    // Return already true when a checklist result already exists from the cache, also
-    // when maybe a loading is in progress(because of cache + network).
-    if (issueList.value !== undefined) return false
-
-    return isLoading.value
-  })
 
   const issueListUrls = computed(() => {
     return issueList.value?.map((item) => item.url)

@@ -3,6 +3,7 @@ mutation linkAdd($input: LinkInput!) {
     link {
       type
       item {
+        __typename
         ... on Ticket {
           id
           internalId
@@ -14,7 +15,7 @@ mutation linkAdd($input: LinkInput!) {
           stateColorCode
         }
         ... on KnowledgeBaseAnswerTranslation {
-          id
+          ...knowledgeBaseAnswerTranslation
         }
       }
     }

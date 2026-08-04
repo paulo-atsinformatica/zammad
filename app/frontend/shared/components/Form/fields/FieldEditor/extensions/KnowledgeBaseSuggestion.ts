@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import Mention, { type MentionOptions } from '@tiptap/extension-mention'
 import { cloneDeep } from 'lodash-es'
@@ -55,8 +55,9 @@ export default (context: Ref<FormFieldContext<FieldEditorProps>>) => {
   }).configure({
     suggestion: buildMentionSuggestion({
       activator: ACTIVATOR,
-      allowSpaces: true,
       type: 'knowledge-base',
+      label: __('Knowledge base articles'),
+      placeholder: __('Start typing to search in knowledge base…'),
       async insert(props: MentionKnowledgeBaseItem) {
         const { meta: editorMeta = {}, formId } = context.value
         const meta = editorMeta[EXTENSION_NAME] || {}

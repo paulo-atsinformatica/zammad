@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 require 'rails_helper'
 
@@ -48,6 +48,7 @@ RSpec.describe 'Ticket zoom > Checklist', authenticated_as: :authenticate, curre
   end
 
   it 'does show handle subscriptions for badge when sidebar is not opened' do
+    ensure_websocket(check_if_pinged: false)
     create(:checklist, ticket: ticket)
     expect(page).to have_css(".tabsSidebar-tab[data-tab='checklist'] .js-tabCounter", text: ticket.checklist.items.count)
   end
@@ -59,7 +60,18 @@ RSpec.describe 'Ticket zoom > Checklist', authenticated_as: :authenticate, curre
     before do
       checklist
       click '.tabsSidebar-tab[data-tab=checklist]'
-      wait.until { page.text.include?(checklist.name.upcase) } # checklist name is shown in all-caps
+
+      # The checklist above is created directly in the database, bypassing the frontend, so
+      #   sidebar_checklist.coffee's `shown()` can run before the real-time push updating the
+      #   ticket's local checklist_id arrives, rendering its "no checklist yet" empty state -
+      #   which then only self-corrects on a generic ticket-reload event, not reliably in time.
+      #   Refresh (a real fetch, independent of that push) and reopen the tab if that happens.
+      if page.has_button?('Add empty checklist', wait: 5)
+        refresh
+        click '.tabsSidebar-tab[data-tab=checklist]'
+      end
+
+      wait(30).until { page.text.include?(checklist.name.upcase) } # checklist name is shown in all-caps
       await_empty_ajax_queue
     end
 
@@ -372,8 +384,8 @@ RSpec.describe 'Ticket zoom > Checklist', authenticated_as: :authenticate, curre
 
     it 'does update for badge when sidebar is not opened and same user updates related tickets' do
       expect(page)
-        .to have_css(".tabsSidebar-tab[data-tab='checklist'] .js-tabCounter", text: ticket.checklist.incomplete)
-        .and(have_css('.js-checklist-state .ticket-meta-highlighted', text: "#{ticket.checklist.complete} of #{ticket.checklist.total}"))
+        .to have_css(".tabsSidebar-tab[data-tab='checklist'] .js-tabCounter", text: ticket.checklist.incomplete, wait: 30)
+        .and(have_css('.js-checklist-state .ticket-meta-highlighted', text: "#{ticket.checklist.complete} of #{ticket.checklist.total}", wait: 30))
     end
   end
 end

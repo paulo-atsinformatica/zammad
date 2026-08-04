@@ -1,4 +1,4 @@
-<!-- Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/ -->
+<!-- Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/ -->
 
 <script setup lang="ts">
 import { cloneDeep } from 'lodash-es'
@@ -17,6 +17,7 @@ import CommonButton from '#desktop/components/CommonButton/CommonButton.vue'
 import { useFlyout } from '#desktop/components/CommonFlyout/useFlyout.ts'
 import CommonLoader from '#desktop/components/CommonLoader/CommonLoader.vue'
 import IssueTrackerItem from '#desktop/pages/ticket/components/TicketSidebar/TicketSidebarExternalReferences/TicketSidebarExternalIssueTracker/IssueTrackerList/IssueTrackerItem.vue'
+import IssueTrackerListSkeleton from '#desktop/pages/ticket/components/TicketSidebar/TicketSidebarExternalReferences/TicketSidebarExternalIssueTracker/IssueTrackerListSkeleton.vue'
 import { useTicketExternalIssueTracker } from '#desktop/pages/ticket/components/TicketSidebar/TicketSidebarExternalReferences/TicketSidebarExternalIssueTracker/useTicketExternalIssueTracker.ts'
 import type { ExternalReferencesFormValues } from '#desktop/pages/ticket/components/TicketSidebar/TicketSidebarExternalReferences/types.ts'
 import { useTicketExternalReferencesIssueTrackerItemAddMutation } from '#desktop/pages/ticket/graphql/mutations/ticketExternalReferencesIssueTrackerItemAdd.api.ts'
@@ -261,6 +262,10 @@ defineExpose({
 
 <template>
   <CommonLoader :loading="isLoadingIssues" :error="error">
+    <template #skeleton>
+      <IssueTrackerListSkeleton />
+    </template>
+
     <div class="space-y-6">
       <CommonButton
         v-if="showEmptyState"
@@ -269,7 +274,7 @@ defineExpose({
         class="block ltr:w-full rtl:w-full"
         @click="openFlyout"
       >
-        {{ $t('Link Issue') }}
+        {{ $t('Link issue') }}
       </CommonButton>
 
       <div v-else role="list" class="space-y-5">

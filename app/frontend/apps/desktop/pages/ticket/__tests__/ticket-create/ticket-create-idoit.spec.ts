@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import { waitFor, within } from '@testing-library/vue'
 import { expect } from 'vitest'
@@ -21,7 +21,7 @@ import { mockTicketExternalReferencesIdoitObjectSearchQuery } from '#desktop/pag
 describe('Ticket create i-doit links', () => {
   describe('ticket creation', () => {
     it.todo('submits a new ticket with i-doit objects', async () => {
-      await mockApplicationConfig({
+      mockApplicationConfig({
         idoit_integration: true,
         ui_task_mananger_max_task_count: 30,
         ui_ticket_create_available_types: ['phone-in', 'phone-out', 'email-out'],
@@ -43,7 +43,7 @@ describe('Ticket create i-doit links', () => {
       await view.events.click(view.getByRole('button', { name: 'i-doit' }))
 
       await waitFor(() =>
-        expect(view.getByRole('heading', { level: 1, name: 'New Ticket' })).toBeInTheDocument(),
+        expect(view.getByRole('heading', { level: 1, name: 'New ticket' })).toBeInTheDocument(),
       )
 
       await view.events.type(view.getByLabelText('Title'), 'Test Ticket')

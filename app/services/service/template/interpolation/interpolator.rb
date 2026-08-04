@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 class Service::Template::Interpolation::Interpolator < Service::Base
   include Service::Template::Interpolation::Engine::Parser
@@ -7,8 +7,6 @@ class Service::Template::Interpolation::Interpolator < Service::Base
   attr_reader :template, :track_objects, :additional_track_generate_data, :mode
 
   def initialize(template:, tracks:, additional_track_generate_data: nil, mode: :json)
-    super()
-
     @template = template
     @track_objects = tracks
     @additional_track_generate_data = additional_track_generate_data
@@ -30,19 +28,22 @@ class Service::Template::Interpolation::Interpolator < Service::Base
     # NeverShouldHappen(TM)
     return JSON.parse(template) if mappings.blank?
 
-    replace(template, mappings)
-
-    if mode == :json
+    case mode
+    when :url
+      replace_url_encoded(template, mappings)
+      template
+    when :json
+      replace(template, mappings)
       begin
         valid!(template)
       rescue => e
         return { error: e.message }
       end
-
-      return JSON.parse(template)
+      JSON.parse(template)
+    else
+      replace(template, mappings)
+      template
     end
-
-    template
   end
 
   # The allowed classes and methods are defined within so called track classes,

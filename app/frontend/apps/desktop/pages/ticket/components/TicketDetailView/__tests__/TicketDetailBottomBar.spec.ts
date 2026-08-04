@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import { within } from '@testing-library/vue'
 import { ref } from 'vue'
@@ -37,7 +37,6 @@ const renderTicketDetailBottomBar = (props?: Partial<Props>) =>
       liveUserList: [],
       ticketId: ticket.id,
       isTicketAgent: true,
-      setSkipNextStateUpdate: vi.fn(),
       ...props,
     },
     store: true,
@@ -102,8 +101,21 @@ describe('TicketDetailBottomBar', () => {
   })
 
   describe('Drafts', () => {
-    it.todo('should not display draft information if ticket has no draft')
-    it.todo('should display draft information if ticket has a draft')
+    it('should not display draft information if ticket has no draft', () => {
+      const wrapper = renderTicketDetailBottomBar({
+        hasAvailableDraft: false,
+      })
+
+      expect(wrapper.queryByRole('button', { name: 'Draft available' })).not.toBeInTheDocument()
+    })
+
+    it('should display draft information if ticket has a draft', () => {
+      const wrapper = renderTicketDetailBottomBar({
+        hasAvailableDraft: true,
+      })
+
+      expect(wrapper.getByRole('button', { name: 'Draft available' })).toBeInTheDocument()
+    })
   })
 
   describe('Macros', () => {
@@ -131,7 +143,7 @@ describe('TicketDetailBottomBar', () => {
 
       const wrapper = renderTicketDetailBottomBar()
 
-      const actionMenu = await wrapper.findByLabelText('Additional ticket edit actions')
+      const actionMenu = await wrapper.findByLabelText('Drafts & macros')
 
       await wrapper.events.click(actionMenu)
 
@@ -154,7 +166,7 @@ describe('TicketDetailBottomBar', () => {
         wrapper.queryByRole('button', { name: 'Discard your unsaved changes' }),
       ).not.toBeInTheDocument()
 
-      expect(wrapper.queryByLabelText('Additional ticket edit actions')).not.toBeInTheDocument()
+      expect(wrapper.queryByLabelText('Drafts & macros')).not.toBeInTheDocument()
     })
 
     it('reloads macro query if subscription is triggered', async () => {
@@ -167,7 +179,9 @@ describe('TicketDetailBottomBar', () => {
       const calls = await waitForMacrosQueryCalls()
 
       expect(calls?.at(-1)?.variables).toEqual({
-        groupIds: [convertToGraphQLId('Group', 2)],
+        selector: {
+          entityIds: [convertToGraphQLId('Group', 2)],
+        },
       })
 
       await waitForNextTick()
@@ -226,7 +240,7 @@ describe('TicketDetailBottomBar', () => {
 
       const wrapper = renderTicketDetailBottomBar()
 
-      const actionMenu = await wrapper.findByLabelText('Additional ticket edit actions')
+      const actionMenu = await wrapper.findByLabelText('Drafts & macros')
 
       await wrapper.events.click(actionMenu)
 
@@ -241,6 +255,7 @@ describe('TicketDetailBottomBar', () => {
           {
             __typename: 'Macro',
             id: convertToGraphQLId('Macro', 1),
+            internalId: 1,
             active: true,
             name: 'Macro 1',
             uxFlowNextUp: 'next_task',
@@ -255,7 +270,7 @@ describe('TicketDetailBottomBar', () => {
       })
 
       const addonButton = wrapper.getByRole('button', {
-        name: 'Additional ticket edit actions',
+        name: 'Drafts & macros',
       })
 
       await wrapper.events.click(addonButton)

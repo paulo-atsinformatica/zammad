@@ -1,4 +1,4 @@
-<!-- Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/ -->
+<!-- Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/ -->
 
 <script setup lang="ts">
 import { onKeyDown, useEventListener, useIntersectionObserver, whenever } from '@vueuse/core'
@@ -90,11 +90,12 @@ const editorActions = useEditorActions(toRef(props, 'editor'), 'text/html')
 const invisibleActions = computed(() =>
   editorActions.actions.value
     .filter((action) => visibleActions.value.get(action.name) === false)
-    .map((action) => ({
-      ...action,
-      key: action.name,
-      noCloseOnClick: !!action.subMenu,
-    })),
+    .map((action) =>
+      Object.assign(action, {
+        key: action.name,
+        noCloseOnClick: !!action.subMenu,
+      }),
+    ),
 )
 
 const activeActionWithSubmenu = shallowRef<EditorButton['subMenu'] | null>(null)
@@ -133,15 +134,15 @@ whenever(
   <div
     ref="action-bar"
     data-test-id="action-bar"
-    class="focus-visible-app-default relative flex justify-between gap-1.5 focus-visible:outline-offset-0"
+    class="relative flex justify-between gap-1.5 focus-visible-app-default focus-visible:outline-offset-0"
     tabindex="0"
     role="toolbar"
   >
     <div
       class="flex flex-wrap gap-1.5 overflow-hidden"
       :class="{
-        'py-2 ps-2.5 pe-0.5 h-10.5': !isInline,
-        'py-1 ps-1.5 pe-0.5 h-9': isInline,
+        'h-10.5 py-2 ps-2.5 pe-0.5': !isInline,
+        'h-9 py-1 ps-1.5 pe-0.5': isInline,
       }"
     >
       <ActionButtonWrapper
@@ -198,7 +199,7 @@ whenever(
             :id="targetId"
             v-tooltip="$t('Overflow menu')"
             type="button"
-            class="focus-visible-app-default rounded-lg p-1.5! hover:bg-blue-600 hover:text-black dark:hover:bg-blue-900 dark:hover:text-white"
+            class="rounded-lg p-1.5! focus-visible-app-default hover:bg-blue-600 hover:text-black dark:hover:bg-blue-900 dark:hover:text-white"
             :class="{
               'bg-blue-800! text-white!': isOpen,
             }"

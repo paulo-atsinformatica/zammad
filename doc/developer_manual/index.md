@@ -13,11 +13,14 @@ it.
 
 - [Code Style Guide](standards/code-style-guide.md)
 - [How to design tests](standards/how-to-design-tests.md)
+  [How to design services](standards/how-to-design-services.md)
 - [How to add a database migration](standards/how-to-add-a-database-migration.md)
 - [How to add an SVG Icon](standards/how-to-add-an-svg-icon.md)
 - [How to handle localization & translations](standards/how-to-handle-localization.md)
 - [How to rebuild the chat](standards/how-to-rebuild-the-chat.md)
 - [How to use forms](standards/how-to-use-forms.md)
+- [How to authorize GraphQL operations](standards/how-to-authorize-graphql.md)
+- [How to log](standards/how-to-log.md)
 
 ## Cookbook / Recipes
 

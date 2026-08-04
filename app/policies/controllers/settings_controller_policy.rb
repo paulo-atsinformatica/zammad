@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 class Controllers::SettingsControllerPolicy < Controllers::ApplicationControllerPolicy
   default_permit!('admin.*')
@@ -29,6 +29,10 @@ class Controllers::SettingsControllerPolicy < Controllers::ApplicationController
   end
 
   def authorized_for_setting?(query)
+    # Setting.lookup returns nil for unknown ids. Passing nil to Pundit would raise
+    # NotDefinedError, which is not a NotAuthorizedError and would surface as a 500.
+    return not_authorized(ActiveRecord::RecordNotFound.new) if setting.nil?
+
     Pundit.authorize(user, setting, query)
     true
   rescue Pundit::NotAuthorizedError

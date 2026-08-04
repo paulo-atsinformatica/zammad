@@ -1,0 +1,54 @@
+query customReportResults(
+  $customReportId: ID!
+  $filters: JSON
+  $page: Int
+  $perPage: Int
+  $orderBy: String
+  $orderDirection: String
+) {
+  customReportResults(
+    customReportId: $customReportId
+    filters: $filters
+    page: $page
+    perPage: $perPage
+    orderBy: $orderBy
+    orderDirection: $orderDirection
+  ) {
+    columns {
+      name
+      display
+    }
+    enabledFilters {
+      name
+      display
+      type
+      options {
+        value
+        label
+      }
+    }
+    rows {
+      id
+      values
+    }
+    summary {
+      groupBy {
+        name
+        display
+      }
+      aggregations {
+        name
+        display
+      }
+      rows {
+        groups
+        values
+      }
+      totals
+    }
+    totalCount
+    page
+    perPage
+    totalPages
+  }
+}

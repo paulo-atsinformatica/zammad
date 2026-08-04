@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 FactoryBot.define do
   factory :template do
@@ -27,8 +27,9 @@ FactoryBot.define do
           'ticket.customer_id'    => { value: customer.id, value_completion: "#{customer.firstname} #{customer.lastname} <#{customer.email}>" },
           'ticket.group_id'       => { value: group.id },
           'ticket.owner_id'       => { value: owner.id },
-          'ticket.tags'           => { value: tags.join(',') }
-        }
+        }.tap do |options|
+          options['ticket.tags'] = { value: tags.join(',') } if tags.present?
+        end
       end
     end
   end

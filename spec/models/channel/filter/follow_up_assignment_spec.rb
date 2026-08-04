@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 require 'rails_helper'
 
@@ -50,6 +50,19 @@ RSpec.describe Channel::Filter::FollowUpAssignment, type: :channel_filter do
         filter(mail)
 
         expect(mail[:'x-zammad-ticket-followup-owner']).to eq(User.lookup(id: 1).login)
+      end
+
+      context 'when follow-up is an out-of-office auto-response (#6187)' do
+        it 'does not change the owner' do
+          mail = {
+            'x-zammad-out-of-office': true,
+            'x-zammad-ticket-id':     ticket.id
+          }
+
+          filter(mail)
+
+          expect(mail[:'x-zammad-ticket-followup-owner']).to be_nil
+        end
       end
     end
 

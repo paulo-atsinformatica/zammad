@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import { isEmpty } from 'lodash-es'
 
@@ -34,6 +34,12 @@ const extendDataAttribues = (node: FormKitNode) => {
     return parsedRules.some((rule) => rule.name === ruleName)
   }
 
+  context.fns.hasWarningMessage = (messages: Record<string, Record<string, unknown>>): boolean => {
+    if (!messages) return false
+
+    return Object.values(messages).some((message) => message.type === 'warning' && message.visible)
+  }
+
   extendSchemaDefinition(node, 'outer', {
     attrs: {
       'data-populated': {
@@ -58,6 +64,21 @@ const extendDataAttribues = (node: FormKitNode) => {
       },
       'data-triggers-form-updater': {
         if: '$triggerFormUpdater',
+        then: 'true',
+        else: undefined,
+      },
+      'data-message-type': {
+        if: '$fns.hasWarningMessage($messages)',
+        then: 'warning',
+        else: undefined,
+      },
+    },
+  })
+
+  extendSchemaDefinition(node, 'inner', {
+    attrs: {
+      'data-alternative-background': {
+        if: '$alternativeBackground === true',
         then: 'true',
         else: undefined,
       },

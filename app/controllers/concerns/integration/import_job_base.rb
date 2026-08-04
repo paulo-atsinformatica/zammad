@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 module Integration::ImportJobBase
   extend ActiveSupport::Concern
@@ -70,7 +70,7 @@ module Integration::ImportJobBase
     end
 
     if job
-      model_show_render_item(job)
+      model_item_render(job)
     else
       render json: {}
     end

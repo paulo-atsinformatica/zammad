@@ -1,4 +1,4 @@
-<!-- Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/ -->
+<!-- Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/ -->
 
 <script setup lang="ts">
 import CommonLabel from '#shared/components/CommonLabel/CommonLabel.vue'
@@ -25,7 +25,7 @@ const props = defineProps<Props>()
     <CommonLabel
       v-if="!noHeading"
       size="medium"
-      class="text-black! dark:text-white! mb-2.5"
+      class="mb-2.5 text-black! dark:text-white!"
       tag="h2"
     >
       {{ label }}

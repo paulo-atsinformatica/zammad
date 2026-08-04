@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import { beforeEach, expect } from 'vitest'
 
@@ -67,7 +67,7 @@ describe('Ticket detail view error handling', () => {
     expect(view).toHaveCurrentUrl('/tickets/999')
     expect(view.getByRole('img', { name: 'Error' })).toBeInTheDocument()
 
-    expect(view.getByRole('heading', { level: 1 })).toHaveTextContent('Not Found')
+    expect(view.getByRole('heading', { level: 1 })).toHaveTextContent('Not found')
 
     expect(
       view.getByText('Ticket with specified ID was not found. Try checking the URL for errors.'),

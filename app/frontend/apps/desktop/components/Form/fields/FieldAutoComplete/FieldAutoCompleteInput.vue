@@ -1,4 +1,4 @@
-<!-- Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/ -->
+<!-- Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/ -->
 
 <script setup lang="ts">
 import { useLazyQuery } from '@vue/apollo-composable'
@@ -80,6 +80,7 @@ const {
   appendedOptions,
   optionValueLookup,
   getSelectedOption,
+  getSelectedOptionValue,
   getSelectedOptionLabel,
 } = useSelectOptions<AutoCompleteOption[]>(localOptions, contextReactive)
 
@@ -172,8 +173,12 @@ const additionalQueryParams = () => {
 }
 
 const defaultFilter = computed(() => {
-  if (props.context.alwaysApplyDefaultFilter) return props.context.defaultFilter
-  if (hasValue.value) return ''
+  // Multiselect dropdowns stay open after a selection — keep applying the
+  // default filter so the recommended list re-renders, instead of collapsing
+  // to just the picked chips.
+  if (hasValue.value && !props.context.alwaysApplyDefaultFilter && !props.context.multiple) {
+    return ''
+  }
   return props.context.defaultFilter
 })
 
@@ -255,7 +260,7 @@ const selectOption = (option: SelectOption, focus = false) => {
   filterInput.value?.focus()
 }
 
-const isLoading = autocompleteQueryHandler.loading()
+const isLoading = autocompleteQueryHandler.loadingWithoutCachedResult()
 const isUserTyping = ref(false)
 
 const selectNewOption = (option: SelectOption, focus = false) => {
@@ -328,14 +333,11 @@ const availableOptionsWithMatches = computed(() => {
   //   Make sure to escape special regex characters!
   const filterRegex = new RegExp(escapeRegExp(deaccent(filter.value.trim())), 'i')
 
-  return availableOptions.value.map(
-    (option) =>
-      ({
-        ...option,
-
-        // Match options via their de-accented labels.
-        match: filterRegex.exec(deaccent(option.label || String(option.value))),
-      }) as AutoCompleteOption,
+  return availableOptions.value.map((option) =>
+    Object.assign(option, {
+      // Match options via their de-accented labels.
+      match: filterRegex.exec(deaccent(option.label || String(option.value))),
+    }),
   )
 })
 
@@ -396,6 +398,7 @@ const foldDropdown = (event?: MouseEvent) => {
 
 const openSelectDropdown = () => {
   if (props.context.disabled) return
+  if (!input.value) return
 
   select.value?.openDropdown(inputElementBounds, windowSize.height)
 
@@ -470,15 +473,13 @@ useFormBlock(
 <template>
   <div
     ref="input"
-    class="flex h-auto min-h-10 hover:outline-1 hover:-outline-offset-1 hover:outline-blue-600 has-[output:focus,input:focus]:outline has-[output:focus,input:focus]:-outline-offset-1 has-[output:focus,input:focus]:outline-blue-800 dark:hover:outline-blue-900 dark:has-[output:focus,input:focus]:outline-blue-800"
+    class="flex h-auto min-h-10 bg-blue-200 hover:outline-1 hover:-outline-offset-1 hover:outline-blue-600 has-[output:focus,input:focus]:outline has-[output:focus,input:focus]:-outline-offset-1 has-[output:focus,input:focus]:outline-blue-800 dark:bg-gray-700 dark:hover:outline-blue-900 dark:has-[output:focus,input:focus]:outline-blue-800 formkit-alternative-background:bg-neutral-50 dark:formkit-alternative-background:bg-gray-500"
     :class="[
       context.classes.input,
       {
         'rounded-lg': !select?.isOpen,
         'rounded-t-lg': select?.isOpen && !isBelowHalfScreen,
         'rounded-b-lg': select?.isOpen && isBelowHalfScreen,
-        'bg-blue-200 dark:bg-gray-700': !context.alternativeBackground,
-        'bg-neutral-50 dark:bg-gray-500': context.alternativeBackground,
       },
     ]"
     data-test-id="field-autocomplete"
@@ -516,7 +517,7 @@ useFormBlock(
         aria-haspopup="menu"
         :aria-expanded="expanded"
         :name="context.node.name"
-        class="formkit-disabled:pointer-events-none flex grow items-center gap-2.5 px-2.5 py-2 text-black focus:outline-hidden dark:text-white"
+        class="flex grow items-center gap-2.5 px-2.5 py-2 text-black focus:outline-hidden dark:text-white formkit-disabled:pointer-events-none"
         :aria-labelledby="`label-${context.id}`"
         :aria-disabled="context.disabled"
         :aria-describedby="context.describedBy"
@@ -532,19 +533,24 @@ useFormBlock(
         @blur="context.handlers.blur"
         @click.stop="handleToggleDropdown"
       >
-        <div v-if="hasValue && context.multiple" class="flex flex-wrap gap-1.5" role="list">
+        <div
+          v-if="hasValue && context.multiple"
+          class="select-scroll-shadows flex flex-wrap gap-1.5 overflow-y-auto outline-hidden"
+          :class="{
+            'select-scroll-shadows--base': !context.alternativeBackground,
+            'select-scroll-shadows--alt': context.alternativeBackground,
+            'max-w-1/2 shrink-0': expanded,
+          }"
+          role="list"
+        >
           <div
             v-for="selectedValue in valueContainer"
-            :key="selectedValue.toString()"
+            :key="getSelectedOptionValue(selectedValue).toString()"
             class="flex items-center gap-1.5"
             role="listitem"
           >
             <div
-              class="inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-xs text-black dark:text-white"
-              :class="{
-                'bg-white dark:bg-gray-200': !context.alternativeBackground,
-                'bg-neutral-100 dark:bg-gray-200': context.alternativeBackground,
-              }"
+              class="inline-flex items-center gap-1 rounded bg-white px-1.5 py-0.5 text-xs text-black dark:bg-gray-200 dark:text-white formkit-alternative-background:bg-neutral-100 dark:formkit-alternative-background:bg-gray-200"
             >
               <CommonIcon
                 v-if="getSelectedAutocompleteOptionIcon(selectedValue)"
@@ -556,18 +562,18 @@ useFormBlock(
               <span
                 v-tooltip="
                   getSelectedOptionLabel(selectedValue) ||
-                  i18n.t('%s (unknown)', selectedValue.toString())
+                  i18n.t('%s (unknown)', getSelectedOptionValue(selectedValue).toString())
                 "
-                class="line-clamp-3 break-words whitespace-pre-wrap"
+                class="line-clamp-3 break-word"
               >
                 {{
                   getSelectedOptionLabel(selectedValue) ||
-                  i18n.t('%s (unknown)', selectedValue.toString())
+                  i18n.t('%s (unknown)', getSelectedOptionValue(selectedValue).toString())
                 }}
               </span>
               <CommonIcon
-                :aria-label="i18n.t('Unselect Option')"
-                class="shrink-0 fill-stone-200 hover:fill-black focus:outline-hidden focus-visible:rounded-xs focus-visible-app-default dark:fill-neutral-500 dark:hover:fill-white"
+                :aria-label="i18n.t('Unselect option')"
+                class="shrink-0 fill-stone-200 focus-visible-app-default hover:fill-black focus-visible:rounded-xs dark:fill-neutral-500 dark:hover:fill-white"
                 name="x-lg"
                 size="xs"
                 role="button"
@@ -627,21 +633,21 @@ useFormBlock(
             <span
               v-tooltip="
                 getSelectedOptionLabel(currentValue) ||
-                i18n.t('%s (unknown)', currentValue.toString())
+                i18n.t('%s (unknown)', getSelectedOptionValue(currentValue).toString())
               "
-              class="line-clamp-3 break-words whitespace-pre-wrap"
+              class="line-clamp-3 break-word"
             >
               {{
                 getSelectedOptionLabel(currentValue) ||
-                i18n.t('%s (unknown)', currentValue.toString())
+                i18n.t('%s (unknown)', getSelectedOptionValue(currentValue).toString())
               }}
             </span>
           </div>
         </div>
         <CommonIcon
           v-if="context.clearable && hasValue && !context.disabled"
-          :aria-label="i18n.t('Clear Selection')"
-          class="shrink-0 fill-stone-200 hover:fill-black focus:outline-hidden focus-visible:rounded-xs focus-visible-app-default! dark:fill-neutral-500 dark:hover:fill-white"
+          :aria-label="i18n.t('Clear selection')"
+          class="shrink-0 fill-stone-200 focus-visible-app-default! hover:fill-black focus-visible:rounded-xs dark:fill-neutral-500 dark:hover:fill-white"
           name="x-lg"
           size="xs"
           role="button"

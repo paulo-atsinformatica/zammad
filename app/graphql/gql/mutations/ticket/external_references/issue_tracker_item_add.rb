@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 module Gql::Mutations
   class Ticket::ExternalReferences::IssueTrackerItemAdd < BaseMutation
@@ -11,9 +11,7 @@ module Gql::Mutations
     field :issue_tracker_item, Gql::Types::Ticket::ExternalReferences::IssueTrackerItemType, description: 'The added issue tracker item'
 
     def authorized?(issue_tracker_link:, issue_tracker_type:, ticket: nil)
-      return super if ticket.present?
-
-      context.current_user.permissions?('ticket.agent') && super
+      ticket.present? || context.current_user.permissions?('ticket.agent')
     end
 
     def resolve(issue_tracker_link:, issue_tracker_type:, ticket: nil)
@@ -27,14 +25,12 @@ module Gql::Mutations
         end
       end
 
-      issue_tracker_item_service = Service::Ticket::ExternalReferences::IssueTracker::Item.new(
-        type:       issue_tracker_type,
-        issue_link: issue_tracker_link_string,
-      )
-
       begin
-        item = issue_tracker_item_service.execute
-      rescue Exceptions::UnprocessableEntity => e
+        item = Service::Ticket::ExternalReferences::IssueTracker::Item.execute(
+          type:       issue_tracker_type,
+          issue_link: issue_tracker_link_string,
+        )
+      rescue Exceptions::UnprocessableContent => e
         return error_response({ field: :link, message: e.message })
       end
 

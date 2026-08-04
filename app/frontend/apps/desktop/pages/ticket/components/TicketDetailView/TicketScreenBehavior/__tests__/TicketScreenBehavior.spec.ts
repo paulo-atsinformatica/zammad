@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import { within } from '@testing-library/vue'
 
@@ -11,7 +11,7 @@ import { EnumTicketScreenBehavior } from '#shared/graphql/types.ts'
 import { waitForUserCurrentTicketScreenBehaviorMutationCalls } from '#desktop/entities/user/current/graphql/mutations/userCurrentTicketScreenBehavior.mocks.ts'
 import TicketScreenBehavior from '#desktop/pages/ticket/components/TicketDetailView/TicketScreenBehavior/TicketScreenBehavior.vue'
 
-const renderTicketScreenBehavior = () => renderComponent(TicketScreenBehavior)
+const renderTicketScreenBehavior = () => renderComponent(TicketScreenBehavior, { router: true })
 
 describe('TicketScreenBehavior', () => {
   it('displays a list of screen behavior options', async () => {

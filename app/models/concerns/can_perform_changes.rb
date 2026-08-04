@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 ##
 # A mixin for ActiveRecord models that enables the possibilitty to perform actions.
@@ -83,7 +83,15 @@ module CanPerformChanges # rubocop:disable Metrics/ModuleLength
   def execute(perform_changes_data)
     prepared_actions = prepare_actions(perform_changes_data)
 
-    raise "The given #{perform_changes_data[:origin]} contains no valid actions, stopping!" if prepared_actions.all? { |_, v| v.blank? }
+    # Customização ATS: era um raise de string crua, que virava HTTP 500 e
+    # aparecia como modal de erro técnico em inglês. O caso comum é o usuário
+    # rodar uma macro cujas ações ele não tem permissão de aplicar (ou que o
+    # Core Workflow removeu da tela), então a mensagem precisa ser
+    # compreensível e traduzível, e o status precisa ser 422 para o handler
+    # global de ajax não abrir o modal técnico.
+    if prepared_actions.all? { |_, v| v.blank? }
+      raise Exceptions::UnprocessableContent, __('None of the actions could be applied. You may not have permission to change the affected fields.')
+    end
 
     prepared_actions[:initial].each do |instance|
       instance.execute(prepared_actions)

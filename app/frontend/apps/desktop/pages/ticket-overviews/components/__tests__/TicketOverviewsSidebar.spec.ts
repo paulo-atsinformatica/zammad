@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import { beforeEach } from 'vitest'
 
@@ -19,6 +19,8 @@ const renderSidebar = () =>
 
 describe('TicketOverviewsSidebar', () => {
   beforeEach(() => {
+    mockPermissions(['ticket.agent'])
+
     mockDefaultOverviewQueries([
       {
         id: convertToGraphQLId('Overview', 1),

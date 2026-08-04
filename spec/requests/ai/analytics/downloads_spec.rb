@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 require 'rails_helper'
 
@@ -122,6 +122,26 @@ RSpec.describe 'AI::Analytics::DownloadsController', :aggregate_failures, authen
           let(:nonmatching_value) { ai_analytics_run.created_at + 1.hour }
 
           include_examples 'check filter type', :created_after
+        end
+
+        context 'when a date filter is blank or unparseable' do
+          context 'with a blank created_after' do
+            let(:filters) { { created_after: '' } }
+
+            include_examples 'finds the record'
+          end
+
+          context 'with an unparseable created_after (e.g. a serialized null)' do
+            let(:filters) { { created_after: 'null' } }
+
+            include_examples 'finds the record'
+          end
+
+          context 'with an unparseable created_before' do
+            let(:filters) { { created_before: 'undefined' } }
+
+            include_examples 'finds the record'
+          end
         end
       end
     end

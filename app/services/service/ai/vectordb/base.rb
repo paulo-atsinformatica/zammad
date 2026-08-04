@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 module Service::AI::VectorDB
   class Base < Service::Base
@@ -9,8 +9,7 @@ module Service::AI::VectorDB
 
     def ensure_ai_provider_configured!
       Service::CheckFeatureEnabled
-        .new(name: 'ai_provider', custom_error_message: __('AI provider is not configured.'))
-        .execute
+        .execute(name: 'ai_provider', custom_error_message: __('AI provider is not configured.'))
 
       true
     end

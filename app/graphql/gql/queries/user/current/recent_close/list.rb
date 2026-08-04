@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 module Gql::Queries
   class User::Current::RecentClose::List < BaseQuery
@@ -11,8 +11,8 @@ module Gql::Queries
 
     def resolve(limit: 10)
       Service::User::ListRecentCloses
-        .new(context.current_user, limit:)
-        .execute
+        .with_current_user(context.current_user)
+        .execute(limit:)
     end
   end
 end

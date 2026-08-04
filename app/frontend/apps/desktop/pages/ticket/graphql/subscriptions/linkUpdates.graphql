@@ -2,6 +2,7 @@ subscription linkUpdates($objectId: ID!, $targetType: String!) {
   linkUpdates(objectId: $objectId, targetType: $targetType) {
     links {
       item {
+        __typename
         ... on Ticket {
           id
           internalId
@@ -13,7 +14,7 @@ subscription linkUpdates($objectId: ID!, $targetType: String!) {
           stateColorCode
         }
         ... on KnowledgeBaseAnswerTranslation {
-          id
+          ...knowledgeBaseAnswerTranslation
         }
       }
       type

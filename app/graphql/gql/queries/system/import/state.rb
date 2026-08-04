@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 module Gql::Queries
   class System::Import::State < BaseQuery
@@ -6,13 +6,11 @@ module Gql::Queries
 
     type Gql::Types::ImportJobType, null: true
 
-    def self.authorize(...)
-      true
-    end
+    allow_public_access!
 
     def resolve
       begin
-        status = Service::System::Import::CheckStatus.new.execute
+        status = Service::System::Import::CheckStatus.execute
       rescue Service::System::Import::Run::ExecuteError => e
         return build_error(e.message)
       end

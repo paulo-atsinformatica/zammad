@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 class HtmlSanitizer
   class Cleanup < Base
@@ -32,7 +32,7 @@ class HtmlSanitizer
       empty_node_scrubber = HtmlSanitizer::Scrubber::RemoveLastEmptyNode.new
       string = loop_string(string, empty_node_scrubber)
 
-      Loofah.html5_fragment(string).scrub!(HtmlSanitizer::Scrubber::Cleanup.new).to_html
+      ScrubHtml.new(string, HtmlSanitizer::Scrubber::Cleanup.new).scrub!.to_html
     end
   end
 end

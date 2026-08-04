@@ -1,8 +1,7 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import { isEqual, keyBy, mapValues } from 'lodash-es'
-import { storeToRefs } from 'pinia'
-import { computed, ref } from 'vue'
+import { computed, ref, toRef } from 'vue'
 import { useRouter } from 'vue-router'
 
 import type {
@@ -98,19 +97,27 @@ const initializeOverviewsSubscriptions = (
 }
 
 export const useUserCurrentTicketOverviews = () => {
-  const { user } = storeToRefs(useSessionStore())
+  const { hasPermission } = useSessionStore()
+  const user = toRef(useSessionStore(), 'user')
+
+  const hasAgentOrCustomerPermission = computed(() =>
+    hasPermission(['ticket.agent', 'ticket.customer']),
+  )
 
   const overviewHandler = new QueryHandler(
-    useUserCurrentTicketOverviewsQuery({
-      withTicketCount: false,
-      ignoreUserConditions: false,
-    }),
+    useUserCurrentTicketOverviewsQuery(
+      {
+        withTicketCount: false,
+        ignoreUserConditions: false,
+      },
+      () => ({ enabled: hasAgentOrCustomerPermission.value }),
+    ),
   )
 
   initializeOverviewsSubscriptions(overviewHandler)
 
   const overviewsRaw = overviewHandler.result()
-  const overviewsLoading = overviewHandler.loading()
+  const overviewsLoading = overviewHandler.loadingWithoutCachedResult()
 
   const overviews = computed(() => overviewsRaw.value?.userCurrentTicketOverviews || [])
   const overviewsById = computed(() => keyBy(overviews.value, 'id'))

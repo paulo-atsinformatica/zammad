@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 class TransactionJob < ApplicationJob
 
@@ -22,7 +22,10 @@ class TransactionJob < ApplicationJob
       backend = Setting.get(setting.name)
       next if params[:disable]&.include?(backend)
 
-      TransactionDispatcher.execute_single_backend(backend.constantize, item, params)
+      backend_class = TransactionDispatcher.resolve_backend(backend)
+      next if backend_class.nil?
+
+      TransactionDispatcher.execute_single_backend(backend_class, item, params)
     end
   end
 end

@@ -10,6 +10,7 @@ class ChannelWhatsapp extends App.ControllerSubContent
   constructor: ->
     super
 
+    @title __('WhatsApp'), true
     @load()
 
   load: =>
@@ -129,6 +130,9 @@ class WhatsappAccountCloudAPIModal extends App.ControllerModal
     @formDisable(e)
 
     params = if @params then _.extend(@params, @formParams()) else @formParams()
+
+    if @channel
+      params.channel_id = @channel.id
 
     @ajax(
       id: 'whatsapp_initial'

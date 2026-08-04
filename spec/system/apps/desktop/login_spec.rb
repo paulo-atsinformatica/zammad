@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 require 'rails_helper'
 
@@ -26,13 +26,12 @@ RSpec.describe 'Desktop > Login', app: :desktop_view, authenticated_as: false, t
     it 'can login with correct code' do
       expect(page).to have_no_text('Try another method')
 
-      find_input('Security Code').type(code)
+      find_input('Security code').type(code)
       find_button('Sign in').click
 
       expect(page).to have_css("[aria-label=\"#{user.fullname}\"]")
 
-      find("[aria-label=\"#{user.fullname}\"]").click
-      click_on('Sign out')
+      logout
 
       expect(page).to have_text('Sign in')
     end

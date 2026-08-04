@@ -1,4 +1,4 @@
-<!-- Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/ -->
+<!-- Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/ -->
 
 <script setup lang="ts">
 import { computed, toRef } from 'vue'
@@ -74,7 +74,8 @@ const currentViewTitle = computed(
     v-if="taskbarTabLink"
     ref="tabLinkInstance"
     v-tooltip="currentViewTitle"
-    class="grow flex items-center gap-2 px-2 py-3 hover:no-underline! group-hover/tab:dark:bg-blue-900"
+    :aria-current="isActive ? 'page' : undefined"
+    class="flex grow items-center gap-2 px-2 py-3 hover:no-underline! group-hover/tab:dark:bg-blue-900"
     :link="taskbarTabLink"
     :class="{
       [activeBackgroundColor]: taskbarTabActive,

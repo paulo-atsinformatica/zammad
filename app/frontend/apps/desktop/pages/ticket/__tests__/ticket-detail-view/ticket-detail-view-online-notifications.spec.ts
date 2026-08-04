@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import { within } from '@testing-library/vue'
 
@@ -89,7 +89,7 @@ describe('Ticket detail: sidebar - online notifications', () => {
 
       await view.events.click(notificationsButton)
 
-      const list = await view.findByRole('region', { name: 'Notifications' })
+      const list = await view.findByRole('region', { name: 'Show notifications' })
 
       expect(within(list).getByText('No unread notifications.')).toBeInTheDocument()
 

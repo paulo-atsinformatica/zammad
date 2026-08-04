@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import type { Link } from '#shared/types/router.ts'
 
@@ -9,6 +9,12 @@ export interface BreadcrumbItem {
   noOptionLabelTranslation?: boolean
   route?: Link
   icon?: string
+  iconClass?: string
   count?: number
+  /**
+   *  Display the label as a tooltip
+   *  Won't apply for the last item in the breadcrumb
+   */
+  iconOnly?: boolean
   isActive?: boolean
 }

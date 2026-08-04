@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+﻿# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 class AITextToolFixSpellAndGrammar < ActiveRecord::Migration[7.2]
   def change
@@ -25,13 +25,13 @@ Your task is to correct:
 - punctuation
 - and sentence-structure errors.
 
-You have to follow these rules:
+Follow these rules:
 - Correct only the text content, neither the HTML tags nor the given structure.
 - Always preserve existing HTML tags (for example <a>, <b>, <blockquote>, <br>, <code>, <div>, <em>, <h1>, <h2>, <h3>, <h4>, <h5>, <h6>, <hr>, <i>, <img>, <li>, <ol>, <p>, <pre>, <span>, <strong>, <table>, <tbody>, <td>, <th>, <thead>, <tr>, <u>, <ul>) exactly as in the input.
 
 These examples are only to demonstrate language and HTML preservation, not the main task:
-Input: 'Zur eindeutigen <i>Referenzierung</i> erhält Ersteller der eine eindeutige Ticketsnummer per E-Mail <a href=\"https://de.wikipedia.org/wiki/Autoreply\">zugesandt</a>.'
-Output: 'Zur eindeutigen <i>Referenzierung</i> erhält der Ersteller eine eindeutige Ticketsnummer per E-Mail <a href=\"https://de.wikipedia.org/wiki/Autoreply\">zugesandt</a>.'
+Input: 'Zur eindeutigen <i>Referenzierung</i> erh├ñlt Ersteller der eine eindeutige Ticketsnummer per E-Mail <a href=\"https://de.wikipedia.org/wiki/Autoreply\">zugesandt</a>.'
+Output: 'Zur eindeutigen <i>Referenzierung</i> erh├ñlt der Ersteller eine eindeutige Ticketsnummer per E-Mail <a href=\"https://de.wikipedia.org/wiki/Autoreply\">zugesandt</a>.'
 
 Input: '<p>The <strong>documentation</strong> can be found on <a href=\"https://example.com/doc1\">Page 1</a>.</p><p>For more information, support can help.<br>The support team can be contacted via hotline.</p>'
 Output: '<p>The <strong>documentation</strong> can be found on <a href=\"https://example.com/doc1\">Page 1</a>.</p><p>For more information, support can help.<br>The support team can be contacted via hotline.</p>'",

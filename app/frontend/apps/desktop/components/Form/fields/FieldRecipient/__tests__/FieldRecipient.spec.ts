@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import { FormKit } from '@formkit/vue'
 import { within, waitFor } from '@testing-library/vue'
@@ -30,7 +30,6 @@ const testOptions: SetRequired<Partial<AutocompleteSearchRecipientEntry>, 'label
 
 const wrapperParameters = {
   form: true,
-  formField: true,
   router: true,
   store: true,
 }
@@ -87,7 +86,7 @@ describe('Form - Field - Recipient - Features', () => {
 
     const listitem = within(wrapper.getByRole('listitem'))
 
-    await wrapper.events.click(listitem.getByRole('button', { name: 'Unselect Option' }))
+    await wrapper.events.click(listitem.getByRole('button', { name: 'Unselect option' }))
 
     expect(emittedInput[1][0]).toEqual([])
   })
@@ -149,7 +148,7 @@ describe('Form - Field - Recipient - Query', () => {
     expect(selectOptions).toHaveLength(1)
     expect(selectOptions[0]).toHaveTextContent(testOptions[0].label)
 
-    await wrapper.events.click(wrapper.getByLabelText('Clear Search'))
+    await wrapper.events.click(wrapper.getByLabelText('Clear search'))
 
     expect(filterElement).toHaveValue('')
 

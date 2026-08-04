@@ -1,38 +1,50 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
-
-import { beforeEach, describe, expect } from 'vitest'
-import { ref } from 'vue'
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import { renderComponent } from '#tests/support/components/index.ts'
 import { mockApplicationConfig } from '#tests/support/mock-applicationConfig.ts'
 
+import { EnumChannelArea } from '#shared/graphql/types.ts'
+
 import { provideTicketInformationMocks } from '#desktop/entities/ticket/__tests__/mocks/provideTicketInformationMocks.ts'
 import { testOptionsTopBar } from '#desktop/pages/ticket/components/TicketDetailView/TicketDetailTopBar/__tests__/support/testOptions.ts'
 import TicketDetailTopBar from '#desktop/pages/ticket/components/TicketDetailView/TicketDetailTopBar/TicketDetailTopBar.vue'
-import { mockChecklistTemplatesQuery } from '#desktop/pages/ticket/graphql/queries/checklistTemplates.mocks.ts'
 
-const copyToClipboardMock = vi.fn()
+const withChannelAlert = (
+  overrides: Partial<typeof testOptionsTopBar> = {},
+): typeof testOptionsTopBar => ({
+  ...testOptionsTopBar,
+  initialChannel: EnumChannelArea.WhatsAppBusiness,
+  preferences: {
+    whatsapp: {
+      // Far enough in the past for the WhatsApp channel plugin to report the service window as
+      // closed - a fixed "danger" alert with no relative-time placeholder, so assertions stay
+      // deterministic.
+      timestamp_incoming: Math.floor(Date.now() / 1000) - 48 * 3600,
+    },
+  },
+  ...overrides,
+})
 
-vi.mock('#shared/composables/useCopyToClipboard.ts', async () => ({
-  useCopyToClipboard: () => ({ copyToClipboard: copyToClipboardMock }),
-}))
-
-vi.mock('#desktop/pages/ticket/composables/useTicketSidebar.ts')
-
-const renderTopBar = (options = testOptionsTopBar, props?: { hideDetails: boolean }) => {
+const renderTicketDetailTopBar = ({
+  ticket = testOptionsTopBar,
+  contentContainerElement = null,
+}: {
+  ticket?: typeof testOptionsTopBar
+  contentContainerElement?: HTMLDivElement | null
+} = {}) => {
   return renderComponent(
     {
       components: { TicketDetailTopBar },
       setup() {
-        provideTicketInformationMocks(options)
-        const hideDetails = ref(!!props?.hideDetails)
-        return { hideDetails }
+        provideTicketInformationMocks(ticket)
+        return { contentContainerElement }
       },
-      template: `<div ref="parent"><TicketDetailTopBar :hide-details="hideDetails"  /></div>`,
+      template: '<TicketDetailTopBar :content-container-element="contentContainerElement" />',
     },
     { form: true, router: true },
   )
 }
+
 describe('TicketDetailTopBar', () => {
   beforeEach(() => {
     mockApplicationConfig({
@@ -40,75 +52,50 @@ describe('TicketDetailTopBar', () => {
       http_type: 'http',
       ticket_hook: 'Ticket#',
     })
+  })
 
-    mockChecklistTemplatesQuery({
-      checklistTemplates: [],
+  it('renders the compact and full headers without a channel alert by default', () => {
+    const view = renderTicketDetailTopBar()
+
+    expect(view.getByTestId('ticket-detail-top-bar-clipped-details')).toBeInTheDocument()
+    expect(view.getByTestId('ticket-detail-top-bar-full-details')).toBeInTheDocument()
+    expect(view.queryByTestId('common-alert')).not.toBeInTheDocument()
+  })
+
+  it('wraps both headers with a channel alert for an editable agent ticket that has one', () => {
+    const view = renderTicketDetailTopBar({ ticket: withChannelAlert() })
+
+    const alerts = view.getAllByRole('alert')
+
+    expect(alerts).toHaveLength(2)
+    alerts.forEach((alert) => {
+      expect(alert).toHaveTextContent(
+        'The 24 hour customer service window is now closed, no further WhatsApp messages can be sent.',
+      )
     })
   })
 
-  it('shows breadcrumb with copyable ticket number', () => {
-    const wrapper = renderTopBar()
-
-    expect(wrapper.getByText('Ticket#89001')).toBeInTheDocument()
-  })
-
-  it('hides details on scroll', () => {
-    const wrapper = renderTopBar(testOptionsTopBar, { hideDetails: true })
-
-    expect(wrapper.getByText('Welcome to Zammad!')).toBeInTheDocument()
-    expect(wrapper.queryByText('Nicole Braun')).not.toBeInTheDocument()
-    expect(wrapper.queryByText('Zammad Foundation')).not.toBeInTheDocument()
-    expect(wrapper.queryByText('Highlight')).not.toBeInTheDocument()
-  })
-
-  it('shows infos about the ticket', () => {
-    const wrapper = renderTopBar()
-
-    expect(wrapper.getByText('Welcome to Zammad!')).toBeInTheDocument()
-    expect(wrapper.getByText('Nicole Braun')).toBeInTheDocument()
-    expect(wrapper.getByText('Zammad Foundation')).toBeInTheDocument()
-    expect(wrapper.getByText('Welcome to Zammad!')).toBeInTheDocument()
-    expect(wrapper.getByText('Highlight')).toBeInTheDocument()
-  })
-
-  describe('features', () => {
-    it('copies ticket number', async () => {
-      const wrapper = renderTopBar()
-
-      await wrapper.events.click(wrapper.getByIconName('files'))
-
-      expect(copyToClipboardMock).toHaveBeenCalledWith([
-        {
-          data: {
-            'text/html': '<a href="http://zammad.example.com/desktop/tickets/1">Ticket#89001</a>',
-            'text/plain': 'Ticket#89001',
-          },
-          options: {
-            presentationStyle: 'unspecified',
-          },
-        },
-      ])
+  it('does not wrap the headers with a channel alert when the ticket is not agent-visible', () => {
+    const ticket = withChannelAlert({
+      policy: { ...testOptionsTopBar.policy, agentReadAccess: false },
     })
 
-    it('shows highlight menu', () => {
-      const wrapper = renderTopBar()
+    const view = renderTicketDetailTopBar({ ticket })
 
-      expect(wrapper.getByText('Highlight')).toBeInTheDocument()
-      expect(wrapper.getByIconName('highlighter')).toBeInTheDocument()
-    })
+    expect(view.queryByTestId('common-alert')).not.toBeInTheDocument()
+    expect(view.getByTestId('ticket-detail-top-bar-clipped-details')).toBeInTheDocument()
+    expect(view.getByTestId('ticket-detail-top-bar-full-details')).toBeInTheDocument()
   })
 
-  it('displays in readonly mode if update permission is not granted', () => {
-    const readOnlyOptions = { ...testOptionsTopBar }
-    testOptionsTopBar.policy.update = false
+  it('does not wrap the headers with a channel alert when the ticket is not editable', () => {
+    const ticket = withChannelAlert({
+      policy: { ...testOptionsTopBar.policy, update: false },
+    })
 
-    const wrapper = renderTopBar(readOnlyOptions)
+    const view = renderTicketDetailTopBar({ ticket })
 
-    expect(wrapper.queryByText('Highlight')).not.toBeInTheDocument()
-    expect(wrapper.queryByRole('button', { name: 'Welcome to Zammad!' })).not.toBeInTheDocument()
-
-    expect(
-      wrapper.getByRole('heading', { name: 'Welcome to Zammad!', level: 2 }),
-    ).toBeInTheDocument()
+    expect(view.queryByTestId('common-alert')).not.toBeInTheDocument()
+    expect(view.getByTestId('ticket-detail-top-bar-clipped-details')).toBeInTheDocument()
+    expect(view.getByTestId('ticket-detail-top-bar-full-details')).toBeInTheDocument()
   })
 })

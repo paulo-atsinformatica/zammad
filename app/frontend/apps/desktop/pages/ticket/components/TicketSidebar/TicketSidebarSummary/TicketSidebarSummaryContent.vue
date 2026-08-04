@@ -1,8 +1,9 @@
-<!-- Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/ -->
+<!-- Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/ -->
 
 <script setup lang="ts">
 import { computed, shallowRef } from 'vue'
 
+import { useDebouncedLoading } from '#shared/composables/useDebouncedLoading.ts'
 import type {
   AiAnalyticsMetadata,
   AsyncExecutionError,
@@ -21,7 +22,6 @@ import type { TicketSidebarContentProps } from '#desktop/pages/ticket/types/side
 interface Props extends TicketSidebarContentProps {
   summary: Maybe<TicketAiAssistanceSummary>
   error: Maybe<AsyncExecutionError>
-  showErrorDetails: boolean
   summaryHeadings: SummaryItem[]
   isProviderConfigured: boolean
   analyticsMeta?: AiAnalyticsMetadata | null
@@ -42,6 +42,10 @@ const errorMessage = computed(() => props.error?.message)
 const hasProvidedFeedback = computed(() => !!props.analyticsMeta?.usage?.userHasProvidedFeedback)
 
 const hasRecentlyRated = shallowRef(false)
+
+const { debouncedLoading: showSkeleton } = useDebouncedLoading({
+  isLoading: computed(() => props.isProviderConfigured && !errorMessage.value && !props.summary),
+})
 
 const titleClass = computed(() => {
   let titleClass =
@@ -83,8 +87,8 @@ const titleClass = computed(() => {
                   )
                 }}
               </CommonLabel>
-              <CommonLabel v-if="showErrorDetails" class="text-red-500 dark:text-red-500">
-                {{ errorMessage }}
+              <CommonLabel v-if="errorMessage" class="text-red-500 dark:text-red-500">
+                {{ $t('API server error: %s', $t(errorMessage)) }}
               </CommonLabel>
             </div>
           </CommonAlert>
@@ -109,13 +113,14 @@ const titleClass = computed(() => {
                   : summary[item.key]!
               "
               :label="item.label"
+              :type="item.type"
             />
           </article>
         </template>
 
         <CommonLabel
           size="small"
-          class="w-full border-t block! border-neutral-100 pt-2 text-stone-200! dark:border-gray-900 dark:text-neutral-500!"
+          class="block! w-full border-t border-neutral-100 pt-2 text-stone-200! dark:border-gray-900 dark:text-neutral-500!"
           tag="p"
           >{{ $t('Be sure to check AI-generated content for accuracy.') }}
           <span v-if="analyticsMeta?.run?.id && !hasRecentlyRated">{{
@@ -134,7 +139,7 @@ const titleClass = computed(() => {
           @rated="hasRecentlyRated = true"
         />
       </template>
-      <template v-else>
+      <template v-else-if="showSkeleton">
         <CommonLabel size="small" class="text-stone-200! dark:text-neutral-500!" tag="p">{{
           $t('Summary is being generated…')
         }}</CommonLabel>

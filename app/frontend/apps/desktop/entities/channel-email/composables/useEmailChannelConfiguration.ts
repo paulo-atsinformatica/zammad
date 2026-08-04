@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import { computed, ref, watch } from 'vue'
 
@@ -9,7 +9,6 @@ import type {
   ChannelEmailInboundConfiguration,
   ChannelEmailOutboundConfiguration,
 } from '#shared/graphql/types.ts'
-import { i18n } from '#shared/i18n.ts'
 import MutationHandler from '#shared/server/apollo/handler/MutationHandler.ts'
 import type { MutationSendError } from '#shared/types/error.ts'
 
@@ -61,13 +60,13 @@ export const useEmailChannelConfiguration = (
   const stepTitle = computed(() => {
     switch (activeStep.value) {
       case 'inbound':
-        return __('Email Inbound')
+        return __('Email inbound')
       case 'inbound-messages':
-        return __('Archive Emails')
+        return __('Archive emails')
       case 'outbound':
-        return __('Email Outbound')
+        return __('Email outbound')
       default:
-        return __('Email Account')
+        return __('Email account')
     }
   })
 
@@ -149,7 +148,7 @@ export const useEmailChannelConfiguration = (
       emailChannelForms.emailAccount.setErrors(
         new UserError([
           {
-            message: i18n.t(
+            message: __(
               'Email sending and receiving could not be verified. Please check your settings.',
             ),
           },
@@ -203,8 +202,8 @@ export const useEmailChannelConfiguration = (
 
           await validateConfigurationRoundtripAndChannelAdd(
             data,
-            inboundConfiguration,
-            outboundConfiguration,
+            { ...inboundConfiguration, password: data.password },
+            { ...outboundConfiguration, password: data.password },
           )
         } else {
           emailChannelForms.emailInbound.updateFieldValues({
@@ -219,7 +218,7 @@ export const useEmailChannelConfiguration = (
           emailChannelForms.emailInbound.setErrors(
             new UserError([
               {
-                message: i18n.t(
+                message: __(
                   'The server settings could not be automatically detected. Please configure them manually.',
                 ),
               },

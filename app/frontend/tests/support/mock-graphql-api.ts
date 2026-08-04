@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import { NetworkStatus } from '@apollo/client/core'
 import {
@@ -53,6 +53,7 @@ export interface MockGraphQLInstance {
   }
 }
 
+// oxlint-disable no-use-before-define
 export const mockGraphQLApi = (operationDocument: DocumentNode): MockGraphQLInstance => {
   const resolveSpy = vi.fn()
   const errorSpy = vi.fn()

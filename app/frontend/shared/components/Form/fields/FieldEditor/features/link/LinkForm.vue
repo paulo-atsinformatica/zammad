@@ -1,4 +1,4 @@
-<!-- Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/ -->
+<!-- Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/ -->
 
 <script setup lang="ts">
 import { computed, nextTick, onMounted, ref, useTemplateRef } from 'vue'
@@ -33,6 +33,10 @@ onMounted(async () => {
   container.value?.querySelector('input')?.focus()
 })
 
+const getCurrentUrl = () => props.editor?.getAttributes(LINK_EXTENSION_NAME)?.href
+
+const hasActiveLinkMark = computed(getCurrentUrl)
+
 const getCurrentLinkLabel = () => {
   const { state } = props.editor!
   const { from, to } = state.selection
@@ -49,11 +53,6 @@ const getCurrentLinkLabel = () => {
 
   return state.doc.textBetween(from, to, '')
 }
-
-const getCurrentUrl = () => props.editor?.getAttributes(LINK_EXTENSION_NAME)?.href
-
-const hasActiveLinkMark = computed(getCurrentUrl)
-
 const url = ref(hasActiveLinkMark.value ? getCurrentUrl() : '')
 
 const linkText = ref(getCurrentLinkLabel())
@@ -147,7 +146,7 @@ const { button, buttonContainer, form: formClass } = getEditorEditorLinkFormClas
         :link="url"
         :label="$t('Link URL')"
       />
-      <FormKit v-model.trim="linkText" name="label" :label="$t('Link Text')" />
+      <FormKit v-model.trim="linkText" name="label" :label="$t('Link text')" />
 
       <div :class="buttonContainer">
         <button
@@ -157,7 +156,7 @@ const { button, buttonContainer, form: formClass } = getEditorEditorLinkFormClas
           @click="removeLink"
           @keydown.enter.stop="removeLink"
         >
-          {{ $t('Remove Link') }}
+          {{ $t('Remove link') }}
         </button>
 
         <button
@@ -171,7 +170,7 @@ const { button, buttonContainer, form: formClass } = getEditorEditorLinkFormClas
         </button>
 
         <button :class="button.primary" type="submit">
-          {{ $t('Add Link') }}
+          {{ $t('Add link') }}
         </button>
       </div>
     </Form>

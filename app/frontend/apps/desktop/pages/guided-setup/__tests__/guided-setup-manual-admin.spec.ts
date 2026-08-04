@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import { getTestRouter } from '#tests/support/components/renderComponent.ts'
 import { visitView } from '#tests/support/components/visitView.ts'
@@ -58,7 +58,7 @@ describe('guided setup admin user creation', () => {
         )
       })
 
-      expect(view.getByText('Create Administrator Account')).toBeInTheDocument()
+      expect(view.getByText('Create administrator account')).toBeInTheDocument()
 
       const firstNameField = view.getByLabelText('First name')
       const lastNameField = view.getByLabelText('Last name')

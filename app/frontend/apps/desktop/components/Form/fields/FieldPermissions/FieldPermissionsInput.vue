@@ -1,4 +1,4 @@
-<!-- Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/ -->
+<!-- Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/ -->
 
 <script setup lang="ts">
 import { cloneDeep } from 'lodash-es'
@@ -9,6 +9,7 @@ import { useDelegateFocus } from '#shared/composables/useDelegateFocus.ts'
 import { i18n } from '#shared/i18n.ts'
 
 import { useTransitionCollapse } from '#desktop/composables/useTransitionCollapse.ts'
+import { useTransitionConfig } from '#desktop/composables/useTransitionConfig.ts'
 
 import type { PermissionsChildOption, PermissionsProps } from './types.ts'
 
@@ -71,8 +72,8 @@ const { delegateFocus } = useDelegateFocus(
   `permissions_toggle_${props.context.id}_${props.context?.options && props.context?.options[0]?.value}`,
 )
 
-const { collapseDuration, collapseEnter, collapseAfterEnter, collapseLeave } =
-  useTransitionCollapse()
+const { transitions } = useTransitionConfig()
+const { collapseEnter, collapseAfterEnter, collapseLeave } = useTransitionCollapse()
 </script>
 
 <template>
@@ -152,13 +153,13 @@ const { collapseDuration, collapseEnter, collapseAfterEnter, collapseLeave } =
               ],
             },
           }"
-          @update:model-value="updateValue(option.value, $event)"
+          @update:model-value="updateValue(option.value, $event as boolean | undefined)"
           @blur="index === 0 ? context.handlers.blur : undefined"
         />
         <CommonIcon
           v-if="option.children && !valueLookup[option.value]"
           class="shrink-0 fill-stone-200 hover:fill-black focus:outline-hidden focus-visible:rounded-xs focus-visible:outline focus-visible:outline-1 focus-visible:outline-offset-1 focus-visible:outline-blue-800 dark:fill-neutral-500 dark:hover:fill-white"
-          :aria-label="i18n.t('Toggle Group')"
+          :aria-label="i18n.t('Toggle group')"
           :name="collapseLookup[option.value] ? 'chevron-up' : 'chevron-down'"
           size="xs"
           role="button"
@@ -169,8 +170,7 @@ const { collapseDuration, collapseEnter, collapseAfterEnter, collapseLeave } =
         />
       </div>
       <Transition
-        name="collapse"
-        :duration="collapseDuration"
+        :name="transitions.collapse"
         @enter="collapseEnter"
         @after-enter="collapseAfterEnter"
         @leave="collapseLeave"
@@ -240,7 +240,7 @@ const { collapseDuration, collapseEnter, collapseAfterEnter, collapseLeave } =
                   ],
                 },
               }"
-              @update:model-value="updateValue(childOption.value, $event)"
+              @update:model-value="updateValue(childOption.value, $event as boolean | undefined)"
             />
           </div>
         </div>

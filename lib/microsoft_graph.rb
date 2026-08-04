@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 class MicrosoftGraph
   BASE_URL = 'https://graph.microsoft.com/v1.0/'.freeze
@@ -118,6 +118,7 @@ class MicrosoftGraph
   def make_request(path, method: :get, json: true, params: {}, options: {})
     options[:bearer_token] = bearer_token
     options[:json] = json
+    options[:log]  = { facility: 'MicrosoftGraph', log_only_on_error: true }
 
     uri = URI(path).host.present? ? path : "#{BASE_URL}#{mailbox_path}#{path}"
 

@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import { within } from '@testing-library/vue'
 
@@ -59,16 +59,6 @@ describe('TicketPopoverWithTrigger', () => {
     expect(wrapper.getByRole('link', { name: dummyTicket.title })).toBeVisible()
   })
 
-  it('shows a skeleton when ticket info is unavailable', async () => {
-    const wrapper = renderTicketPopover()
-
-    await wrapper.events.hover(wrapper.getByRole('link'))
-
-    const popover = await wrapper.findByRole('region')
-
-    expect(within(popover).getAllByRole('progressbar').length).toBe(12)
-  })
-
   it('displays a ticket popover', async () => {
     const wrapper = renderTicketPopover()
 
@@ -83,7 +73,7 @@ describe('TicketPopoverWithTrigger', () => {
     const popover = await wrapper.findByRole('region')
 
     expect(within(popover).getByText(dummyTicket.title)).toBeVisible()
-    expect(within(popover).getByRole('status', { name: 'check-circle-no' })).toHaveAttribute(
+    expect(within(popover).getByRole('status', { name: 'open' })).toHaveAttribute(
       'aria-roledescription',
       '(ticket status: open)',
     )

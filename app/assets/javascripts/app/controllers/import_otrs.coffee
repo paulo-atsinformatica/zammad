@@ -107,11 +107,12 @@ class ImportOtrs extends App.ControllerWizardFullScreen
       url:         "#{@apiPath}/import/otrs/import_check"
       processData: true
       success:     (data, status, xhr) =>
-        if data.result is 'ok'
+        if data.result? and data.result is 'ok'
           @startMigration()
           return
-        for issue in data.issues
-          @$(".js-#{issue}").removeClass('hide')
+        if data.issues?
+          for issue in data.issues
+            @$(".js-#{issue}").removeClass('hide')
         @showImportNotice()
     )
 
@@ -139,7 +140,7 @@ class ImportOtrs extends App.ControllerWizardFullScreen
       processData: true
       success:     (data, status, xhr) =>
 
-        if data.result is 'import_done'
+        if data.setup_done is true
           window.location.reload()
           return
 

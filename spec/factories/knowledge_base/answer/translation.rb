@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 FactoryBot.define do
   factory 'knowledge_base/answer/translation', aliases: %i[knowledge_base_answer_translation] do
@@ -35,6 +35,10 @@ FactoryBot.define do
 
     trait :with_image do
       content factory: %i[knowledge_base_answer_translation_content with_image], strategy: :build
+    end
+
+    trait :with_self_hosted_video do
+      content factory: %i[knowledge_base_answer_translation_content with_self_hosted_video], strategy: :build
     end
   end
 end

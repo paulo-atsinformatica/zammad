@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 RSpec.configure do |config|
   config.before(:each, type: :system) do |example|
@@ -11,6 +11,8 @@ RSpec.configure do |config|
     # skip intro/clues for created agents/admins
     %w[admin@example.com agent1@example.com].each do |login|
       user = User.find_by(login: login)
+      next if user.nil?
+
       user.preferences[:intro]                    = true
       user.preferences[:keyboard_shortcuts_clues] = true
       user.save!

@@ -1,11 +1,10 @@
-<!-- Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/ -->
+<!-- Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/ -->
 
 <script setup lang="ts">
 import { useActiveElement, useMagicKeys, onClickOutside } from '@vueuse/core'
 import { nextTick, ref, watchEffect, useTemplateRef } from 'vue'
 
 import CommonIcon from '#shared/components/CommonIcon/CommonIcon.vue'
-import { i18n } from '#shared/i18n.ts'
 
 import CommonButton from '#desktop/components/CommonButton/CommonButton.vue'
 import { useTransitionConfig } from '#desktop/composables/useTransitionConfig.ts'
@@ -42,7 +41,7 @@ watchEffect(() => {
   closeFilterField()
 })
 
-const { durations } = useTransitionConfig()
+const { transitions } = useTransitionConfig()
 </script>
 
 <template>
@@ -50,7 +49,7 @@ const { durations } = useTransitionConfig()
     ref="container"
     class="mb-2 flex h-10 shrink-0 items-center gap-2 rounded-lg"
     :class="{
-      'bg-blue-200 px-2 has-[input:focus]:outline-1 has-[input:focus]:outline-blue-800 has-[input:hover]:outline-1 has-has-[input:hover]:outline-blue-600 has-[input:hover]:has-[input:focus]:outline-blue-800 dark:bg-gray-700 dark:has-[input:hover]:outline-blue-900 dark:has-[input:hover]:has-[input:focus]:outline-blue-800':
+      'bg-blue-200 px-2 has-has-[input:hover]:outline-blue-600 has-[input:focus]:outline-1 has-[input:focus]:outline-blue-800 has-[input:hover]:outline-1 has-[input:hover]:has-[input:focus]:outline-blue-800 dark:bg-gray-700 dark:has-[input:hover]:outline-blue-900 dark:has-[input:hover]:has-[input:focus]:outline-blue-800':
         filterFieldOpen,
     }"
   >
@@ -80,13 +79,13 @@ const { durations } = useTransitionConfig()
       type="text"
       role="searchbox"
     />
-    <Transition name="fade-move" :duration="durations.normal">
+    <Transition :name="transitions.fadeMove">
       <CommonButton
         v-if="filterFieldOpen"
+        v-tooltip="$t('Clear filter')"
         icon="x-lg"
         variant="neutral"
         class="hover:text-black hover:outline-hidden hover:outline-transparent hover:dark:text-white"
-        :aria-label="i18n.t('Clear filter')"
         @click="closeFilterField"
       />
     </Transition>

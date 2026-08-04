@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import { cloneDeep } from 'lodash-es'
 import { defineStore } from 'pinia'
@@ -164,7 +164,10 @@ export const useSessionStore = defineStore(
     const setUserPreference = (key: string, value: JsonValue) => {
       if (!user.value) return
 
-      user.value.preferences[key] = value
+      user.value.preferences = {
+        ...user.value.preferences,
+        [key]: value,
+      }
 
       return user.value
     }

@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 require 'rails_helper'
 
@@ -29,11 +29,11 @@ RSpec.describe 'Desktop > Ticket > GitHub Integration', app: :desktop_view, auth
       end
 
       click_on 'GitHub'
-      click_on 'Link Issue'
+      click_on 'Link issue'
 
       within '#flyout-link-github-issue' do
         find_input('Issue URL').type(ENV['GITHUB_ISSUE_LINK'])
-        click_on 'Link Issue'
+        click_on 'Link issue'
       end
 
       within '#ticketSidebar' do

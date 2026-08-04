@@ -1,4 +1,4 @@
-<!-- Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/ -->
+<!-- Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/ -->
 
 <script setup lang="ts">
 import { computed, toRef } from 'vue'
@@ -58,7 +58,7 @@ const customer = computed(() => {
             {{ entity.title }}
           </slot>
         </span>
-        <div v-if="stringUpdated" data-test-id="stringUpdated" class="text-gray truncate">
+        <div v-if="stringUpdated" data-test-id="stringUpdated" class="truncate text-gray">
           {{ stringUpdated }}
         </div>
       </div>

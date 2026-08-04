@@ -959,6 +959,25 @@ var bind = function(fn, me){ return function(){ return fn.apply(me, arguments); 
     ZammadChat.prototype.initialQueueDelay = 10000;
 
     ZammadChat.prototype.translations = {
+      'ca': {
+        '<strong>Chat</strong> with us!': '<strong>Xateja</strong> amb nosaltres!',
+        'All colleagues are busy.': 'Tot el personal està ocupat.',
+        'Chat closed by %s': 'Xat tancat per %s',
+        'Compose your message…': 'Redacta el teu missatge…',
+        'Connecting': 'Connectant',
+        'Connection lost': 'Connexió perduda',
+        'Connection re-established': 'Connexió restablerta',
+        'Offline': 'Fora de línia',
+        'Online': 'En línia',
+        'Scroll down to see new messages': 'Desplaçat més avall per veure nous missatges',
+        'Send': 'Envia',
+        'Since you didn\'t respond in the last %s minutes your conversation was closed.': 'Com que no heu respost en els darrers %s minuts, la vostra conversa s\'ha tancat.',
+        'Since you didn\'t respond in the last %s minutes your conversation with <strong>%s</strong> was closed.': 'Com que no heu respost en els darrers %s minuts, la vostra conversa amb <strong>%s</strong> s\'ha tancat.',
+        'Start new conversation': 'Inicia una conversa nova',
+        'Today': 'Avui',
+        'We are sorry, it is taking longer than expected to get a slot. Please try again later or send us an email. Thank you!': 'Ho sentim, està tardant més del que s\'esperava per aconseguir un espai. Si us plau, torna-ho a intentar més tard o envia\'ns un correu electrònic. Gràcies!',
+        'You are on waiting list position <strong>%s</strong>.': 'Estàs en la posició <strong>%s</strong> de la llista d\'espera.'
+      },
       'cs': {
         '<strong>Chat</strong> with us!': '<strong>Chatujte</strong> s námi!',
         'All colleagues are busy.': 'Všichni kolegové jsou vytíženi.',
@@ -988,13 +1007,13 @@ var bind = function(fn, me){ return function(){ return fn.apply(me, arguments); 
         'Connection re-established': 'Forbindelse genoprettet',
         'Offline': 'Offline',
         'Online': 'Online',
-        'Scroll down to see new messages': 'Scroll ned for at se nye beskeder',
-        'Send': 'Afsend',
-        'Since you didn\'t respond in the last %s minutes your conversation was closed.': '',
-        'Since you didn\'t respond in the last %s minutes your conversation with <strong>%s</strong> was closed.': '',
+        'Scroll down to see new messages': 'Rul ned for at se nye beskeder',
+        'Send': 'Send',
+        'Since you didn\'t respond in the last %s minutes your conversation was closed.': 'Da du ikke svarede inden for de sidste %s minutter, blev din samtale lukket.',
+        'Since you didn\'t respond in the last %s minutes your conversation with <strong>%s</strong> was closed.': 'Da du ikke svarede inden for de sidste %s minutter, blev din samtale med <strong>%s</strong> lukket.',
         'Start new conversation': 'Start en ny samtale',
         'Today': 'I dag',
-        'We are sorry, it is taking longer than expected to get a slot. Please try again later or send us an email. Thank you!': '',
+        'We are sorry, it is taking longer than expected to get a slot. Please try again later or send us an email. Thank you!': 'Vi beklager, det tager længere end forventet at få en ledig plads. Prøv igen senere, eller send os en email. Tak!',
         'You are on waiting list position <strong>%s</strong>.': 'Du er i kø som nummer <strong>%s</strong>.'
       },
       'de': {
@@ -1035,6 +1054,25 @@ var bind = function(fn, me){ return function(){ return fn.apply(me, arguments); 
         'We are sorry, it is taking longer than expected to get a slot. Please try again later or send us an email. Thank you!': 'Lo sentimos, estamos tardando más de lo esperado para asignar un agente. Inténtelo de nuevo más tarde o envíenos un correo electrónico. ¡Gracias!',
         'You are on waiting list position <strong>%s</strong>.': 'Usted está en la posición <strong>%s</strong> de la lista de espera.'
       },
+      'fa': {
+        '<strong>Chat</strong> with us!': 'با ما <strong>گفتگو کنید</strong>!',
+        'All colleagues are busy.': 'تمام همکاران مشغول هستند.',
+        'Chat closed by %s': 'چت توسط %s بسته شد',
+        'Compose your message…': 'پیام خود را وارد نمایید…',
+        'Connecting': 'درحال برقراری ارتباط',
+        'Connection lost': 'ارتباط قطع شد',
+        'Connection re-established': 'ارتباط مجددا برقرار شد',
+        'Offline': 'برون خط',
+        'Online': 'آنلاین',
+        'Scroll down to see new messages': 'برای دیدن پیام‌های جدید به سمت پایین حرکت کنید',
+        'Send': 'ارسال',
+        'Since you didn\'t respond in the last %s minutes your conversation was closed.': 'از آنجایی که در %s دقیقه گذشته پاسخی ندادید، مکالمه شما بسته شد.',
+        'Since you didn\'t respond in the last %s minutes your conversation with <strong>%s</strong> was closed.': 'از آنجایی که در %s دقیقه گذشته پاسخی ندادید، مکالمه شما با <strong>%s</strong> بسته شد.',
+        'Start new conversation': 'شروع مکالمه جدید',
+        'Today': 'امروز',
+        'We are sorry, it is taking longer than expected to get a slot. Please try again later or send us an email. Thank you!': 'متاسفیم، گرفتن یک موقعیت بیشتر از حد انتظار طول می‌کشد. لطفاً بعداً دوباره تلاش کنید یا برای ما ایمیل بفرستید. متشکریم!',
+        'You are on waiting list position <strong>%s</strong>.': 'شما در موقعیت لیست انتظار <strong>%s</strong> هستید.'
+      },
       'fr': {
         '<strong>Chat</strong> with us!': '<strong>Chattez</strong> avec nous !',
         'All colleagues are busy.': 'Tous les agents sont occupés.',
@@ -1051,7 +1089,7 @@ var bind = function(fn, me){ return function(){ return fn.apply(me, arguments); 
         'Since you didn\'t respond in the last %s minutes your conversation with <strong>%s</strong> was closed.': 'Sans réponse de votre part depuis %s minutes, votre conversation avec <strong>%s</strong> a été fermée.',
         'Start new conversation': 'Démarrer une nouvelle conversation',
         'Today': 'Aujourd\'hui',
-        'We are sorry, it is taking longer than expected to get a slot. Please try again later or send us an email. Thank you!': 'Nous sommes désolés, trouver un agent disponible prend plus de temps que prévu. Réessayez plus tard ou envoyez-nous un mail. Merci !',
+        'We are sorry, it is taking longer than expected to get a slot. Please try again later or send us an email. Thank you!': 'Nous sommes désolés, trouver un agent disponible prend plus de temps que prévu. Réessayez ultérieurement ou envoyez-nous un mail. Merci !',
         'You are on waiting list position <strong>%s</strong>.': 'Vous êtes actuellement en position <strong>%s</strong> dans la file d\'attente.'
       },
       'hr': {
@@ -1075,22 +1113,22 @@ var bind = function(fn, me){ return function(){ return fn.apply(me, arguments); 
       },
       'hu': {
         '<strong>Chat</strong> with us!': '<strong>Csevegjen</strong> velünk!',
-        'All colleagues are busy.': 'Minden munkatársunk foglalt.',
+        'All colleagues are busy.': 'Az összes munkatárs elfoglalt.',
         'Chat closed by %s': 'A csevegés %s által lezárva',
-        'Compose your message…': 'Fogalmazza meg üzenetét…',
-        'Connecting': 'Csatlakozás',
+        'Compose your message…': 'Üzenet írása…',
+        'Connecting': 'Kapcsolatépítés',
         'Connection lost': 'A kapcsolat megszakadt',
         'Connection re-established': 'A kapcsolat helyreállt',
-        'Offline': 'Offline',
-        'Online': 'Online',
-        'Scroll down to see new messages': 'Görgessen lefelé az új üzenetek megtekintéséhez',
+        'Offline': 'Kapcsolat nélkül',
+        'Online': 'Elérhető',
+        'Scroll down to see new messages': 'Görgessen le az új üzenetek megtekintéséhez',
         'Send': 'Küldés',
-        'Since you didn\'t respond in the last %s minutes your conversation was closed.': 'Mivel az elmúlt %s percben nem válaszolt, a beszélgetése lezárásra került.',
-        'Since you didn\'t respond in the last %s minutes your conversation with <strong>%s</strong> was closed.': 'Mivel az elmúlt %s percben nem válaszolt, <strong>%s</strong> munkatársunkkal folytatott beszélgetését lezártuk.',
+        'Since you didn\'t respond in the last %s minutes your conversation was closed.': 'Mivel nem válaszolt az elmúlt %s percben, a beszélgetése lezárásra került.',
+        'Since you didn\'t respond in the last %s minutes your conversation with <strong>%s</strong> was closed.': 'Mivel nem válaszolt az elmúlt %s percben, <strong>%s</strong> ügyintézővel folytatott beszélgetése lezárásra került.',
         'Start new conversation': 'Új beszélgetés indítása',
         'Today': 'Ma',
-        'We are sorry, it is taking longer than expected to get a slot. Please try again later or send us an email. Thank you!': 'Sajnáljuk, hogy a vártnál hosszabb ideig tart a helyfoglalás. Kérjük, próbálja meg később újra, vagy küldjön nekünk egy e-mailt. Köszönjük!',
-        'You are on waiting list position <strong>%s</strong>.': 'Ön a várólistán a <strong>%s</strong> helyen szerepel.'
+        'We are sorry, it is taking longer than expected to get a slot. Please try again later or send us an email. Thank you!': 'Sajnáljuk, a vártnál hosszabb ideig tart a helyfoglalás. Próbálja meg később újra, vagy küldjön nekünk e-mailt. Köszönjük!',
+        'You are on waiting list position <strong>%s</strong>.': 'Ön a várólista <strong>%s.</strong> helyén szerepel.'
       },
       'id': {
         '<strong>Chat</strong> with us!': '<strong>Obrolan</strong> dengan kami!',
@@ -2706,7 +2744,7 @@ var bind = function(fn, me){ return function(){ return fn.apply(me, arguments); 
       last_level = 0;
       pnt = null;
       $('p', editor).each(function() {
-        var cur_level, i, j, list_tag, matches, ref, ref1, ref2, start, txt;
+        var cur_level, i, j, list_tag, matches, ref, ref1, start, txt;
         cur_level = $(this).data('_listLevel');
         if (cur_level !== void 0) {
           txt = $(this).text();
@@ -2715,9 +2753,7 @@ var bind = function(fn, me){ return function(){ return fn.apply(me, arguments); 
             matches = /([0-9])\./.exec(txt);
             if (matches) {
               start = parseInt(matches[1], 10);
-              list_tag = (ref = start > 1) != null ? ref : '<ol start="' + start + {
-                '"></ol>': '<ol></ol>'
-              };
+              list_tag = start > 1 ? '<ol start="' + start + '"></ol>' : '<ol></ol>';
             } else {
               list_tag = '<ol></ol>';
             }
@@ -2731,7 +2767,7 @@ var bind = function(fn, me){ return function(){ return fn.apply(me, arguments); 
             }
           }
           if (cur_level < last_level) {
-            for (i = j = ref1 = i, ref2 = last_level - cur_level; ref1 <= ref2 ? j <= ref2 : j >= ref2; i = ref1 <= ref2 ? ++j : --j) {
+            for (i = j = ref = i, ref1 = last_level - cur_level; ref <= ref1 ? j <= ref1 : j >= ref1; i = ref <= ref1 ? ++j : --j) {
               pnt = pnt.parent();
             }
           }

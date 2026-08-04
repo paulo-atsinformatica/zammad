@@ -1,10 +1,11 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import { createApp } from 'vue'
 
 import '#desktop/styles/main.css'
 
 import { initializeAppName } from '#shared/composables/useAppName.ts'
+import { initializeDefaultObjectAttributes } from '#shared/entities/object-attributes/composables/useObjectAttributes.ts'
 import { initializeTwoFactorPlugins } from '#shared/entities/two-factor/composables/initializeTwoFactorPlugins.ts'
 import initializeGlobalComponents from '#shared/initializer/globalComponents.ts'
 import initializeGlobalProperties from '#shared/initializer/globalProperties.ts'
@@ -27,11 +28,12 @@ import initializeRouter from '#desktop/router/index.ts'
 import initializeApolloClient from '#desktop/server/apollo/index.ts'
 import { useThemeStore } from '#desktop/stores/theme.ts'
 
-import App from './AppDesktop.vue'
+import AppDesktop from './AppDesktop.vue'
 import { setCurrentApp } from './currentApp.ts'
+import { preloadComponents } from './initializer/preloadComponents.ts'
 
 export const mountApp = async () => {
-  const app = createApp(App)
+  const app = createApp(AppDesktop)
 
   // Remember the current created app.
   setCurrentApp(app)
@@ -48,6 +50,7 @@ export const mountApp = async () => {
   initializeDesktopIcons()
   initializeForm(app)
   initializeFormFields()
+  preloadComponents()
   initializeGlobalComponentStyles()
   initializeGlobalComponents(app)
   initializeGlobalProperties(app)
@@ -71,6 +74,11 @@ export const mountApp = async () => {
   if (session.id) {
     authentication.authenticated = true
     initalizeAfterSessionCheck.push(session.getCurrentUser())
+
+    // Pre-warm the default object-attribute queries in parallel with the
+    // current-user and config requests, so the cache is hot by the time the
+    // first form mounts and asks for them.
+    initializeDefaultObjectAttributes()
   }
 
   await Promise.all(initalizeAfterSessionCheck)

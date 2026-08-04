@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import { initializeStore } from '#tests/support/components/initializeStore.ts'
 import { mockGraphQLApi, mockGraphQLSubscription } from '#tests/support/mock-graphql-api.ts'
@@ -140,7 +140,7 @@ const address = {
 }
 
 export const defaultArticles = (): TicketArticlesQuery =>
-  nullableMock({
+  nullableMock<TicketArticlesQuery>({
     firstArticles: {
       __typename: 'TicketArticleConnection',
       edges: [
@@ -167,6 +167,7 @@ export const defaultArticles = (): TicketArticlesQuery =>
             },
             internal: false,
             bodyWithUrls: '<p>Body <b>of a test ticket</b></p>',
+            bodyRenderingError: false,
             sender: {
               __typename: 'TicketArticleSender',
               name: EnumTicketArticleSenderName.Customer,
@@ -222,6 +223,7 @@ export const defaultArticles = (): TicketArticlesQuery =>
             },
             internal: false,
             bodyWithUrls: '<p>energy equals power times time</p>',
+            bodyRenderingError: false,
             sender: {
               __typename: 'TicketArticleSender',
               name: EnumTicketArticleSenderName.Agent,
@@ -259,6 +261,7 @@ export const defaultArticles = (): TicketArticlesQuery =>
             },
             internal: true,
             bodyWithUrls: '<p>only agents can see this haha</p>',
+            bodyRenderingError: false,
             sender: {
               __typename: 'TicketArticleSender',
               name: EnumTicketArticleSenderName.Agent,

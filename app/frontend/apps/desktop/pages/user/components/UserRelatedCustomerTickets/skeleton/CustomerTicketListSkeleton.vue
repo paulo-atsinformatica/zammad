@@ -1,19 +1,38 @@
-<!-- Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/ -->
+<!-- Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/ -->
 
 <script setup lang="ts">
+import { computed } from 'vue'
+
+import { useDebouncedLoading } from '#shared/composables/useDebouncedLoading.ts'
+
 import CommonSkeleton from '#desktop/components/CommonSkeleton/CommonSkeleton.vue'
+
+interface Props {
+  loading?: boolean
+}
+
+const props = defineProps<Props>()
+
+const { debouncedLoading } = useDebouncedLoading({
+  isLoading: computed(() => props.loading ?? false),
+})
 </script>
 
 <template>
-  <div class="flex flex-col gap-4">
+  <div
+    v-if="loading || debouncedLoading"
+    class="flex flex-col gap-4"
+    :class="{ invisible: !debouncedLoading }"
+  >
     <CommonSkeleton class="h-4 w-1/3" alternative-background />
-    <div class="flex items-center h-9 gap-2 mb-2">
+    <div class="mb-2 flex h-9 items-center gap-2">
       <CommonSkeleton
-        :style="{ 'animation-delay': `${0.1}s` }"
+        :style="{ 'animation-delay': `${0.2}s` }"
         class="h-5 w-5 -translate-y-2"
         rounded
+        alternative-background
       />
-      <div class="grow flex flex-col gap-1">
+      <div class="flex grow flex-col gap-1">
         <CommonSkeleton
           :style="{ 'animation-delay': `${0.1}s` }"
           class="h-4 w-4/5"
@@ -26,14 +45,14 @@ import CommonSkeleton from '#desktop/components/CommonSkeleton/CommonSkeleton.vu
         />
       </div>
     </div>
-    <div class="flex items-center h-9 gap-2 mb-2">
+    <div class="mb-2 flex h-9 items-center gap-2">
       <CommonSkeleton
         :style="{ 'animation-delay': `${0.2}s` }"
         class="h-5 w-5 -translate-y-2"
         rounded
         alternative-background
       />
-      <div class="grow flex flex-col gap-1">
+      <div class="flex grow flex-col gap-1">
         <CommonSkeleton
           :style="{ 'animation-delay': `${0.2}s` }"
           class="h-4 w-3/5"
@@ -46,14 +65,14 @@ import CommonSkeleton from '#desktop/components/CommonSkeleton/CommonSkeleton.vu
         />
       </div>
     </div>
-    <div class="flex items-center h-9 gap-2">
+    <div class="flex h-9 items-center gap-2">
       <CommonSkeleton
         :style="{ 'animation-delay': `${0.3}s` }"
         class="h-5 w-5 -translate-y-2"
         rounded
         alternative-background
       />
-      <div class="grow flex flex-col gap-1">
+      <div class="flex grow flex-col gap-1">
         <CommonSkeleton
           :style="{ 'animation-delay': `${0.3}s` }"
           class="h-4 w-full"
@@ -66,6 +85,7 @@ import CommonSkeleton from '#desktop/components/CommonSkeleton/CommonSkeleton.vu
         />
       </div>
     </div>
-    <CommonSkeleton class="self-end h-6 w-1/5" />
+    <CommonSkeleton class="h-6 w-1/5 self-end" />
   </div>
+  <slot v-else />
 </template>

@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 class AI::Agent::Type::TicketPrioritizer < AI::Agent::Type
 
@@ -11,29 +11,29 @@ class AI::Agent::Type::TicketPrioritizer < AI::Agent::Type
   end
 
   def role_description
-    'Your job is to analyze ticket content and assign ticket the most appropriate priority based on the topic and urgency.' # rubocop:disable Zammad/DetectTranslatableString
+    'Your job is to analyze the current ticket content and assign the most appropriate priority based on the current topic and identified urgency.' # rubocop:disable Zammad/DetectTranslatableString
   end
 
   def form_schema
     [
-      step:   'instruction_context',
-      help:   __('Choose which priorities will be considered when prioritizing tickets. If you want to limit it to specific priorities, please select at least two below. Make sure the priorities have clear names and optional descriptions, as that would comprise the context provided to the AI agent.'),
-      fields: [
-        {
-          name:                    'definition::instruction_context::object_attributes::priority_id',
-          display:                 '',
-          tag:                     'object_attribute_options_context',
-          default:                 {},
+      { step:   'instruction_context',
+        help:   __('Choose which priorities will be considered when prioritizing tickets. If you want to limit it to specific priorities, please select at least two below. Make sure the priorities have clear names and optional descriptions, as that would comprise the context provided to the AI agent.'),
+        fields: [
+          {
+            name:                    'definition::instruction_context::object_attributes::priority_id',
+            display:                 '',
+            tag:                     'object_attribute_options_context',
+            default:                 {},
 
-          limit_label:             __('Limit priorities and provide optional descriptions'),
-          limit_description:       __('All priorities will be considered for prioritizing tickets.'),
-          table_label:             __('Available Priorities'),
-          show_description:        true,
+            limit_label:             __('Limit priorities and provide optional descriptions'),
+            limit_description:       __('All priorities will be considered for prioritizing tickets.'),
+            table_label:             __('Available Priorities'),
+            show_description:        true,
 
-          object_attribute_name:   'priority_id',
-          object_attribute_object: 'Ticket',
-        },
-      ],
+            object_attribute_name:   'priority_id',
+            object_attribute_object: 'Ticket',
+          },
+        ] },
     ]
   end
 
@@ -42,8 +42,8 @@ class AI::Agent::Type::TicketPrioritizer < AI::Agent::Type
 
 - Ignore irrelevant information (e.g. personal anecdotes, small talk, signatures, out-of-office notifications).
 - Exclude segments that don't contribute any meaningful content (e.g. greetings, farewells).
-- Do not insert personal opinions about the conversation or elaborate on the answer.
-- Do not explain your given answer.
+- Never insert personal opinions about the conversation or elaborate on the answer.
+- Never explain your given answer.
 - Only answer with the value in the \"priority_id\" field inside the JSON structure."
   end
 

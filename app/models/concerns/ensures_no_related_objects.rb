@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 module EnsuresNoRelatedObjects
   extend ActiveSupport::Concern
@@ -27,7 +27,7 @@ module EnsuresNoRelatedObjects
     validator = EnsuresNoRelatedObjects.new(self)
     return if !validator.references?
 
-    raise Exceptions::UnprocessableEntity
+    raise Exceptions::UnprocessableContent
       .new __('This object is referenced by other object(s) and thus cannot be deleted: %s'), [validator.references_text]
   end
 
@@ -60,9 +60,10 @@ module EnsuresNoRelatedObjects
     end
 
     def referenced_in?(performable)
-      record.id == performable.perform
-        &.dig(*record.class.ensures_no_related_objects_path)
-        &.to_i
+      # The configured value may be a single id (legacy) or an array of ids.
+      Array.wrap(performable.perform&.dig(*record.class.ensures_no_related_objects_path))
+        .map(&:to_i)
+        .include?(record.id)
     end
 
     def references_text

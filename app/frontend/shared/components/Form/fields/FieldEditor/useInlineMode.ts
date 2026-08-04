@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import { onClickOutside } from '@vueuse/core'
 import { computed, ref, watch, type Ref, type ShallowRef } from 'vue'
@@ -17,6 +17,7 @@ export const useInlineMode = (
   const appName = useAppName()
 
   const isEditing = ref(false)
+  const isSubmitting = ref(false)
 
   const isInlineMode = computed(() => context.value.inline)
 
@@ -44,8 +45,6 @@ export const useInlineMode = (
     // :TODO editor sometimes keeps focus after canceling, we should find a better way to handle this
     if (document.activeElement instanceof HTMLElement) document.activeElement.blur()
   }
-
-  const isSubmitting = ref(false)
 
   const handleChange = () => {
     isSubmitting.value = true

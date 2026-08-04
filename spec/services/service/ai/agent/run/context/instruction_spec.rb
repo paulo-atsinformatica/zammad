@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 require 'rails_helper'
 
@@ -91,6 +91,41 @@ RSpec.describe Service::AI::Agent::Run::Context::Instruction, type: :service do
             description: 'First option description'
           )
         )
+      end
+    end
+
+    describe 'tags' do
+      let(:result) { instruction.prepare }
+
+      before do
+        Tag::Item.destroy_all
+        create(:tag, tag: 'example_tag')
+        create(:tag, tag: 'another_tag')
+      end
+
+      context 'when tags are enabled' do
+        let(:instruction_context) { { 'tags' => true } }
+
+        it 'returns available tags' do
+          expect(result[:tags]).to contain_exactly('example_tag', 'another_tag')
+        end
+      end
+
+      context 'when tags are disabled' do
+        let(:instruction_context) { { 'tags' => false } }
+
+        it 'does not return tags' do
+          expect(result).not_to have_key(:tags)
+        end
+      end
+
+      context 'when tags state not provided' do
+        let(:instruction_context) { {} }
+
+        it 'does not return tags' do
+          expect(result).not_to have_key(:tags)
+        end
+
       end
     end
   end

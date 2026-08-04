@@ -1,4 +1,4 @@
-<!-- Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/ -->
+<!-- Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/ -->
 
 <script setup lang="ts">
 import { useTemplateRef, watch } from 'vue'
@@ -65,7 +65,7 @@ useOnEmitter('reset-quick-search-field', () => resetInput())
     />
     <CommonButton
       v-if="isSearchActive"
-      :aria-label="$t('Reset Search')"
+      v-tooltip="$t('Reset search')"
       icon="x-lg"
       variant="neutral"
       @click="resetInput"

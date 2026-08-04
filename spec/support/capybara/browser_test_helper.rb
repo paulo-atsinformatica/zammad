@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 module BrowserTestHelper
 
@@ -28,8 +28,10 @@ module BrowserTestHelper
     wait_time = tries
     tries += 1
 
-    Rails.logger.info "Stale element found. Retry #{tries}/retries (sleeping: #{wait_time})"
+    Rails.logger.info "Stale element found. Retry #{tries}/#{retries} (sleeping: #{wait_time})"
     sleep wait_time
+
+    retry
   end
 
   # Get the current cookies from the browser with the driver object.
@@ -97,6 +99,29 @@ module BrowserTestHelper
     Waiter.new(wait_handle)
   end
 
+  # Setting's class-level cache can serve a stale value for a while after a write
+  # (e.g. a real browser action, or this test's own Setting.set racing a concurrent
+  # reader) - wait for our own read to settle on the expected value before relying on
+  # frontend behavior that depends on it, rather than a blind sleep.
+  #
+  # Note: Setting.get round-trips hash values with string keys, even if the setting was
+  # written with symbol keys - use `key:` to compare a specific key instead of the whole
+  # hash if that's a concern.
+  #
+  # @example
+  #  wait_for_setting('icinga_sender', icinga_sender)
+  #
+  # @example
+  #  wait_for_setting('ai_assistance_ticket_summary_config', 'on_ticket_detail_opening', key: 'generate_on')
+  #
+  def wait_for_setting(name, value, key: nil)
+    wait.until do
+      current = Setting.get(name)
+      current = current[key] if key
+      current == value
+    end
+  end
+
   # This checks the number of queued AJAX requests in the frontend JS is zero.
   # It comes in handy when waiting for AJAX requests to be completed
   # before performing further actions.
@@ -124,8 +149,8 @@ module BrowserTestHelper
     wait(5).until do
       page.evaluate_script('App.Ajax.queue().length === 0 && $.active === 0 && Object.keys(App.FormHandlerCoreWorkflow.getRequests()).length === 0').eql? true
     end
-  rescue Selenium::WebDriver::Error::TimeoutError
-    nil # There may be cases when the default wait time is not enough.
+  rescue Selenium::WebDriver::Error::TimeoutError, Selenium::WebDriver::Error::JavascriptError
+    nil # Page may navigate away mid-check (e.g. SAML redirect), making App undefined.
   end
 
   # Moves the mouse from its current position by the given offset.

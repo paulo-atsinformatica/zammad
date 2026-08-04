@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import { EnumObjectManagerObjects } from '#shared/graphql/types.ts'
 
@@ -94,6 +94,55 @@ describe('FieldResolverTreeselect', () => {
       },
       type: 'treeselect',
       internal: true,
+    })
+  })
+
+  it('provides treeselect filter fields for the is operator', () => {
+    const fieldResolver = new FieldResolverTreeselect(EnumObjectManagerObjects.Ticket, {
+      dataType: 'tree_select',
+      name: 'category',
+      display: 'Category',
+      dataOption: {
+        translate: true,
+        options: [
+          {
+            name: 'Category 1',
+            value: 'Category 1',
+            children: [
+              {
+                name: 'Category 1.1',
+                value: 'Category 1::Category 1.1',
+              },
+            ],
+          },
+        ],
+        historical_options: {
+          'Category 1': 'Category 1',
+        },
+      },
+      isInternal: true,
+    })
+
+    expect(fieldResolver.getFilterOperatorProps()).toEqual({
+      is: {
+        type: 'treeselect',
+        noOptionsLabelTranslation: false,
+        options: [
+          {
+            label: 'Category 1',
+            value: 'Category 1',
+            children: [
+              {
+                label: 'Category 1.1',
+                value: 'Category 1::Category 1.1',
+              },
+            ],
+          },
+        ],
+        historicalOptions: {
+          'Category 1': 'Category 1',
+        },
+      },
     })
   })
 })

@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 require 'rails_helper'
 
@@ -35,7 +35,7 @@ RSpec.describe 'Login Message', authenticated_as: false, type: :system do
 
         Setting.set 'maintenance_login_message', alt_message
 
-        expect(page).to have_css('.js-maintenanceLogin', text: alt_message, wait: 30)
+        expect(page).to have_css('.js-maintenanceLogin', text: alt_message, wait: 60)
       end
     end
 

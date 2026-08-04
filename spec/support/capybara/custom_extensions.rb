@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 class Capybara::Node::Element
 
@@ -49,8 +49,24 @@ module ZammadCapybarActionDelegator
   end
 
   def click(...)
-    super.tap do
+    retry_on_click_intercepted { super }.tap do
       await_empty_ajax_queue
+    end
+  end
+
+  # A fading/animating overlay (e.g. a modal mid-transition) can briefly
+  #   obscure the target element, making an otherwise valid click fail.
+  #   Retry a few times to let the transition finish before giving up.
+  def retry_on_click_intercepted(retries: 3)
+    tries = 0
+    begin
+      yield
+    rescue Selenium::WebDriver::Error::ElementClickInterceptedError
+      tries += 1
+      raise if tries > retries
+
+      sleep 0.3
+      retry
     end
   end
 

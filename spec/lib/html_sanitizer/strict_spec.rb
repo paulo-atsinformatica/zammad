@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 require 'rails_helper'
 
@@ -252,6 +252,13 @@ RSpec.describe HtmlSanitizer::Strict, :aggregate_failures do
         expect(sanitize("<a href=\"#{attachment_url}\">No disposition</a>")).to eq("<a href=\"#{attachment_url}\" rel=\"nofollow noreferrer noopener\" target=\"_blank\" title=\"#{attachment_url}\">No disposition</a>")
         expect(sanitize("<a href=\"#{different_fqdn_url}\">Different FQDN</a>")).to eq("<a href=\"#{different_fqdn_url}\" rel=\"nofollow noreferrer noopener\" target=\"_blank\" title=\"#{different_fqdn_url}\">Different FQDN</a>")
         expect(sanitize("<a href=\"#{attachment_url_evil_other}\">Evil link</a>")).to eq("<a href=\"#{attachment_url_good}\" rel=\"nofollow noreferrer noopener\" target=\"_blank\" title=\"#{attachment_url_good}\">Evil link</a>")
+      end
+    end
+
+    context 'when href contains Zammad variable placeholders' do
+      it 'preserves curly brace variables in URL' do
+        expect(sanitize('<a href="https://example.com/?no={ticket.number}">example</a>', external: true))
+          .to eq('<a href="https://example.com/?no={ticket.number}" rel="nofollow noreferrer noopener" target="_blank" title="https://example.com/?no={ticket.number}">example</a>')
       end
     end
   end

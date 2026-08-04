@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import {
   useNotifications,
@@ -138,7 +138,7 @@ export abstract class BaseHandler<
   }
 
   private errorNotificationMessage(errorType: GraphQLErrorTypes, errorMessage?: string): string {
-    const defaultErrorNotificationMessage = __('An error occured during the operation.')
+    const defaultErrorNotificationMessage = __('An error occurred during the operation.')
 
     const fallbackErrorMessage =
       errorType === GraphQLErrorTypes.UnknownError || !errorMessage

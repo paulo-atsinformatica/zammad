@@ -1,4 +1,4 @@
-<!-- Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/ -->
+<!-- Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/ -->
 
 <script setup lang="ts">
 import {
@@ -17,6 +17,7 @@ import LayoutContent from '#desktop/components/layout/LayoutContent.vue'
 
 import { useCheckChangePassword } from '../composables/permission/useCheckChangePassword.ts'
 import { useBreadcrumb } from '../composables/useBreadcrumb.ts'
+import { usePersonalSettingTabs } from '../composables/usePersonalSettingTabs.ts'
 import { useUserCurrentChangePasswordMutation } from '../graphql/mutations/userCurrentChangePassword.api.ts'
 
 import type { ChangePasswordFormData } from '../types/change-password.ts'
@@ -44,14 +45,14 @@ const schema = [
     isLayout: true,
     element: 'div',
     attrs: {
-      class: 'grid grid-cols-2 gap-2.5',
+      class: '@container grid grid-cols-2 gap-2.5',
     },
     children: [
       {
         name: 'current_password',
         label: __('Current password'),
         type: 'password',
-        outerClass: 'col-span-2',
+        outerClass: 'col-span-full',
         props: {
           maxLength: 1001,
           autocomplete: 'current-password',
@@ -62,7 +63,7 @@ const schema = [
         name: 'new_password',
         label: __('New password'),
         type: 'password',
-        outerClass: 'col-span-1',
+        outerClass: 'col-span-full @md:col-span-1',
         props: {
           maxLength: 1001,
           autocomplete: 'new-password',
@@ -73,8 +74,8 @@ const schema = [
         name: 'new_password_confirm',
         label: __('Confirm new password'),
         type: 'password',
+        outerClass: 'col-span-full @md:col-span-1',
         validation: 'confirm',
-        outerClass: 'col-span-1',
         props: {
           maxLength: 1001,
           autocomplete: 'new-password',
@@ -109,10 +110,14 @@ const submitForm = async (formData: FormSubmitData<ChangePasswordFormData>) => {
       }
     })
 }
+
+const { tabs, activeTab } = usePersonalSettingTabs()
 </script>
 
 <template>
   <LayoutContent
+    :active-tab="activeTab"
+    :tabs="tabs"
     :breadcrumb-items="breadcrumbItems"
     :help-text="$t('Enter your current password, insert a new one and confirm it.')"
     width="narrow"
@@ -127,7 +132,7 @@ const submitForm = async (formData: FormSubmitData<ChangePasswordFormData>) => {
         <template #after-fields>
           <div class="mt-5 flex items-center justify-end gap-2">
             <CommonButton variant="submit" type="submit" size="medium" :disabled="isDisabled">
-              {{ $t('Change Password') }}
+              {{ $t('Change password') }}
             </CommonButton>
           </div>
         </template>

@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import { createRequire } from 'node:module'
 
@@ -23,6 +23,7 @@ import { generateGraphqlMockId, hasNodeParent, setNodeParent } from './utils.ts'
 
 const _require = createRequire(import.meta.url)
 const introspection = _require('../../../../graphql/graphql_introspection.json')
+// oxlint-disable no-use-before-define
 
 export interface ResolversMeta {
   variables: Record<string, unknown>

@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 # Adds close time (if missing) when tickets are closed.
 class Ticket::Stats
@@ -113,7 +113,7 @@ class Ticket::Stats
 
   def search_stats_year(condition)
     result = Service::Ticket::Stats::Monthly
-      .new(current_user: current_user)
+      .with_current_user(current_user)
       .execute(conditions: condition)
 
     result.each do |elem|

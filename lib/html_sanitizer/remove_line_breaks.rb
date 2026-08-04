@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 class HtmlSanitizer
   class RemoveLineBreaks < Loofah::Scrubber
@@ -8,6 +8,10 @@ class HtmlSanitizer
     def scrub(node)
       case node.name
       when 'span'
+        # Keep spans that carry meaningful styling (e.g. font color) or classes,
+        # otherwise the sanitizer would strip pasted/styled text down to plain text (#6251).
+        return if node['style'].present? || node.classes.any?
+
         node.children.reject { |t| SPAN_LINE_BREAKS.include?(t.text) }.each { |child| node.before child }
 
         node.remove

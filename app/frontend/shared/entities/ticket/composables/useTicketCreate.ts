@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import { NotificationTypes } from '#shared/components/CommonNotifications/types.ts'
 import { useNotifications } from '#shared/components/CommonNotifications/useNotifications.ts'
@@ -23,6 +23,12 @@ import type { TicketFormData } from '../types.ts'
 import type { ApolloError } from '@apollo/client/core'
 import type { Ref } from 'vue'
 
+const {
+  missingBodyAttachmentReference,
+  bodyAttachmentReferenceConfirmation,
+  skipAttachmentReferenceCheck,
+} = useCheckBodyAttachmentReference()
+
 export const useTicketCreate = (
   form: Ref<FormRef | undefined>,
   redirectAfterCreate: (internalId?: number) => void,
@@ -46,6 +52,7 @@ export const useTicketCreate = (
       // Treat this as successful, because it happens when you create a ticket inside a group, where you only
       // have create permission, but not view permission.
       if (graphQLErrors?.extensions?.type === GraphQLErrorTypes.Forbidden) {
+        skipAttachmentReferenceCheck.value = false
         notifySuccess()
 
         return () => redirectAfterCreate()
@@ -74,9 +81,6 @@ export const useTicketCreate = (
     errorShowNotification: false,
   })
 
-  const { missingBodyAttachmentReference, bodyAttachmentReferenceConfirmation } =
-    useCheckBodyAttachmentReference()
-
   const getCustomerVariable = (customerId: string) => {
     return isGraphQLId(customerId) ? { id: customerId } : { email: customerId }
   }
@@ -96,7 +100,11 @@ export const useTicketCreate = (
     )
 
     const { internalObjectAttributeValues, additionalObjectAttributeValues } =
-      useObjectAttributeFormData(ticketObjectAttributesLookup.value, formData)
+      useObjectAttributeFormData(
+        EnumObjectManagerObjects.Ticket,
+        ticketObjectAttributesLookup.value,
+        formData,
+      )
 
     // The customerId has an special handling, so we need to extract it from the internalObjectAttributeValues.
     const { customerId, ...internalValues } = internalObjectAttributeValues
@@ -154,6 +162,10 @@ export const useTicketCreate = (
       .send({ input })
       .then((result) => {
         if (result?.ticketCreate?.ticket) {
+          // Reset missingBodyAttachmentReference confirmation prompts
+          // after successful ticket create
+          skipAttachmentReferenceCheck.value = false
+
           notifySuccess()
 
           return () => {

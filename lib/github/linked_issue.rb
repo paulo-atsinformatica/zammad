@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 class GitHub
   class LinkedIssue
@@ -16,6 +16,10 @@ class GitHub
            title
            state
            url
+           issueType {
+             name
+             color
+           }
            milestone {
              title
            }
@@ -60,6 +64,7 @@ class GitHub
         title:      @result['title'],
         url:        @result['url'],
         icon_state: STATES_MAPPING.fetch(@result['state'], @result['state']),
+        issue_type: issue_type,
         milestone:  milestone,
         assignees:  assignees,
         labels:     labels,
@@ -99,6 +104,16 @@ class GitHub
       relative_luminance > 0.179 ? '#000000' : '#FFFFFF'
     end
 
+    def issue_type
+      name = @result.dig('issueType', 'name')
+      return if name.nil?
+
+      {
+        name:  name,
+        color: @result.dig('issueType', 'color'),
+      }
+    end
+
     def milestone
       @result.dig('milestone', 'title')
     end
@@ -114,7 +129,7 @@ class GitHub
 
     def variables!(url)
       if url !~ %r{^https?://([^/]+)/([^/]+)/([^/]+)/issues/(\d+)$}
-        raise Exceptions::UnprocessableEntity, __('Invalid GitHub issue link format')
+        raise Exceptions::UnprocessableContent, __('Invalid GitHub issue link format')
       end
 
       host            = $1
@@ -123,7 +138,7 @@ class GitHub
       id              = $4
 
       if client.endpoint.exclude?(host)
-        raise Exceptions::UnprocessableEntity, "Issue link doesn't match configured GitHub endpoint '#{client.endpoint}'"
+        raise Exceptions::UnprocessableContent, "Issue link doesn't match configured GitHub endpoint '#{client.endpoint}'"
       end
 
       {

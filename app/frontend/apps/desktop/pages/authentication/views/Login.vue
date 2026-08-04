@@ -1,4 +1,4 @@
-<!-- Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/ -->
+<!-- Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/ -->
 
 <script setup lang="ts">
 import { ApolloError } from '@apollo/client/errors'
@@ -6,6 +6,7 @@ import { computed, ref, reactive } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import CommonLink from '#shared/components/CommonLink/CommonLink.vue'
+import { useClearFormInput } from '#shared/components/Form/composables/useClearFormInput.ts'
 import Form from '#shared/components/Form/Form.vue'
 import type { FormSubmitData, FormSchemaField, FormValues } from '#shared/components/Form/types.ts'
 import { useForm } from '#shared/components/Form/useForm.ts'
@@ -17,10 +18,10 @@ import { EnumPublicLinksScreen } from '#shared/graphql/types.ts'
 import { useApplicationStore } from '#shared/stores/application.ts'
 import { useAuthenticationStore } from '#shared/stores/authentication.ts'
 
+import { useBetaUi } from '#desktop/components/BetaUi/composables/useBetaUi.ts'
 import CommonButton from '#desktop/components/CommonButton/CommonButton.vue'
 import CommonPublicLinks from '#desktop/components/CommonPublicLinks/CommonPublicLinks.vue'
 import LayoutPublicPage from '#desktop/components/layout/LayoutPublicPage/LayoutPublicPage.vue'
-import { useNewBetaUi } from '#desktop/composables/useNewBetaUi.ts'
 import LoginThirdParty from '#desktop/pages/authentication/components/LoginThirdParty.vue'
 
 import { ensureAfterAuth } from '../after-auth/composable/useAfterAuthPlugins.ts'
@@ -60,6 +61,10 @@ const {
   cancelAndGoBack,
 } = useLoginTwoFactor(clearError)
 
+const { form, isDisabled, values } = useForm()
+
+const { clearAndFocus: clearAndFocusPasswordField } = useClearFormInput(form, 'password')
+
 const finishLogin = () => {
   const { redirect: redirectUrl } = route.query
   if (typeof redirectUrl === 'string') {
@@ -97,8 +102,20 @@ const login = async (credentials: LoginCredentials) => {
     }
 
     passwordLoginErrorMessage.value = message
+
+    // Clear the password field on any error and refocus it, in order to facilitate easier retry.
+    clearAndFocusPasswordField()
   }
 }
+
+const passwordResetLink = computed(() => {
+  return {
+    name: 'PasswordReset',
+    params: {
+      login: values.value.login as Maybe<string>,
+    },
+  }
+})
 
 const loginSchema = [
   {
@@ -132,9 +149,9 @@ const loginSchema = [
         component: 'CommonLink',
         props: {
           class: 'text-right text-sm',
-          link: '/reset-password',
+          link: passwordResetLink,
         },
-        children: __('Forgot password?'),
+        children: '$t("Forgot password?")',
       },
     ],
   },
@@ -145,8 +162,6 @@ const userLostPassword = computed(() => application.config.user_lost_password)
 const schemaData = reactive({
   userLostPassword,
 })
-
-const { form, isDisabled } = useForm()
 
 const formInitialValues: FormValues = {}
 const formChangeFields = reactive<Record<string, Partial<FormSchemaField>>>({})
@@ -164,7 +179,7 @@ const showPasswordLogin = computed(
     verifyTokenResult?.value,
 )
 
-const { switchValue, toggleBetaUiSwitch } = useNewBetaUi()
+const { switchValue, toggleBetaUiSwitch } = useBetaUi()
 </script>
 
 <template>
@@ -302,7 +317,7 @@ const { switchValue, toggleBetaUiSwitch } = useNewBetaUi()
           size="medium"
           link="/"
           external
-          @click="toggleBetaUiSwitch()"
+          @click="toggleBetaUiSwitch('/', true)"
         >
           {{ $t('Switch to old interface') }}
         </CommonLink>

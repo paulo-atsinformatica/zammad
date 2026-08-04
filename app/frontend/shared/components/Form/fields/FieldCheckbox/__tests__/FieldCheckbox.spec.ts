@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import { getNode } from '@formkit/core'
 import { FormKit } from '@formkit/vue'
@@ -10,7 +10,6 @@ import { waitForTimeout } from '#tests/support/utils.ts'
 
 const wrapperParameters = {
   form: true,
-  formField: true,
 }
 
 const renderCheckbox = (options: ExtendedMountingOptions<unknown> = {}) =>

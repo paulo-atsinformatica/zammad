@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 module CanPriorization
   extend ActiveSupport::Concern
@@ -6,6 +6,8 @@ module CanPriorization
   included do
     before_create :fill_prio
     before_update :rearrangement
+
+    self.audit_log_attributes_ignored += %i[prio] if respond_to?(:audit_log_attributes_ignored)
   end
 
   def rearrangement

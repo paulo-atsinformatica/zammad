@@ -1,16 +1,15 @@
-<!-- Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/ -->
+<!-- Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/ -->
 
 <script setup lang="ts">
 import { useTimeoutFn } from '@vueuse/shared'
 import { computed, ref, watch, watchEffect } from 'vue'
 import { useRouter } from 'vue-router'
 
+import CommonProgressBar from '#shared/components/CommonProgressBar/CommonProgressBar.vue'
 import { EnumSystemImportSource } from '#shared/graphql/types.ts'
 import { i18n } from '#shared/i18n.ts'
 import QueryHandler from '#shared/server/apollo/handler/QueryHandler.ts'
 import { useApplicationStore } from '#shared/stores/application.ts'
-
-import CommonProgressBar from '#desktop/components/CommonProgressBar/CommonProgressBar.vue'
 
 import GuidedSetupActionFooter from '../../../components/GuidedSetupActionFooter.vue'
 import { guidedSetupImportSourcePluginLookup } from '../../../components/GuidedSetupImport/GuidedSetupImportSource/plugins/index.ts'
@@ -231,7 +230,7 @@ const goToLogin = () => {
     v-if="systemInitDone"
     submit-button-variant="primary"
     submit-button-type="button"
-    :submit-button-text="__('Go to Login')"
+    :submit-button-text="__('Go to login')"
     @submit="goToLogin"
   />
 </template>

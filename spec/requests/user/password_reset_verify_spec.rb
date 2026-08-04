@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 require 'rails_helper'
 
@@ -10,10 +10,10 @@ RSpec.describe 'User password reset verify endpoint', authenticated_as: false, t
     post api_v1_users_password_reset_verify_path, params: params
   end
 
-  shared_examples 'returning unprocessable entity' do |message:|
-    it 'returns unprocessable entity' do
+  shared_examples 'returning unprocessable content' do |message:|
+    it 'returns unprocessable content' do
       send_request
-      expect(response).to have_http_status(:unprocessable_entity).and have_attributes(body: include(message))
+      expect(response).to have_http_status(:unprocessable_content).and have_attributes(body: include(message))
     end
   end
 
@@ -64,7 +64,7 @@ RSpec.describe 'User password reset verify endpoint', authenticated_as: false, t
         Setting.set('user_lost_password', false)
       end
 
-      it_behaves_like 'returning unprocessable entity', message: 'This feature is not enabled.'
+      it_behaves_like 'returning unprocessable content', message: 'This feature is not enabled.'
     end
 
     context 'with a valid token' do
@@ -74,7 +74,7 @@ RSpec.describe 'User password reset verify endpoint', authenticated_as: false, t
     context 'without a token parameter' do
       let(:params) { { foo: 'bar' } }
 
-      it_behaves_like 'returning unprocessable entity', message: 'token param needed!'
+      it_behaves_like 'returning unprocessable content', message: 'token param needed!'
     end
 
     context 'with an invalid token' do
@@ -93,7 +93,7 @@ RSpec.describe 'User password reset verify endpoint', authenticated_as: false, t
         Setting.set('user_lost_password', false)
       end
 
-      it_behaves_like 'returning unprocessable entity', message: 'This feature is not enabled.'
+      it_behaves_like 'returning unprocessable content', message: 'This feature is not enabled.'
     end
 
     context 'with a valid password' do
@@ -104,6 +104,20 @@ RSpec.describe 'User password reset verify endpoint', authenticated_as: false, t
       let(:password) { 'foobar9' }
 
       it_behaves_like 'returning failure', notice: 'Invalid password'
+    end
+  end
+
+  # https://github.com/zammad/zammad/issues/6199
+  context 'when user tries to verify with a token and too unsafe password multiple times', :rack_attack do
+    let(:password) { 'short' }
+    let(:params)   { { token:, password: } }
+
+    it 'allows multiple attempts' do
+      4.times do
+        post api_v1_users_password_reset_verify_path, params:
+      end
+
+      expect(json_response).to include({ 'message' => 'failed', 'notice' => include(start_with('Invalid password')) })
     end
   end
 end

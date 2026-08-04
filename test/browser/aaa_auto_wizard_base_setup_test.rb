@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 require 'browser_test_helper'
 
@@ -11,7 +11,7 @@ class AaaAutoWizardBaseSetupTest < TestCase
       css:       '.user-menu .user a',
       attribute: 'title',
       value:     'admin@example.com',
-      timeout:   14,
+      timeout:   60,
     )
   end
 

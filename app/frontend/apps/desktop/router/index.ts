@@ -1,8 +1,10 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import redirectGuard from '#shared/router/guards/before/redirect.ts'
 import mainInitializeRouter from '#shared/router/index.ts'
 import type { InitializeAppRouter, RoutesModule } from '#shared/types/router.ts'
+
+import { currentMountPoint } from '../mountPoint.ts'
 
 import activeTaskbarTab from './guards/before/activeTaskbarTab.ts'
 import systemSetupInfo from './guards/before/systemSetupInfo.ts'
@@ -59,8 +61,17 @@ export const routes: Array<RouteRecordRaw> = [
   },
 ]
 
+// Customização ATS: a base do history acompanha o ponto de montagem do bundle
+// (ver ../mountPoint.ts). Sem isso o roteador não casa a rota das páginas
+// servidas fora de /desktop e elas abrem vazias.
 const initializeRouter: InitializeAppRouter = (app: App) => {
-  return mainInitializeRouter(app, routes, [systemSetupInfo, activeTaskbarTab], [], 'desktop')
+  return mainInitializeRouter(
+    app,
+    routes,
+    [systemSetupInfo, activeTaskbarTab],
+    [],
+    currentMountPoint(),
+  )
 }
 
 export default initializeRouter

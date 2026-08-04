@@ -1,27 +1,34 @@
-<!-- Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/ -->
+<!-- Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/ -->
 
 <script setup lang="ts">
 import { computed, ref, useTemplateRef } from 'vue'
 
 import ObjectAttributes from '#shared/components/ObjectAttributes/ObjectAttributes.vue'
+import { useReducedMotion } from '#shared/composables/useReducedMotion.ts'
 import { useUserDetail } from '#shared/entities/user/composables/useUserDetail.ts'
 import { useUserEntity } from '#shared/entities/user/composables/useUserEntity.ts'
 import { useUserNoteUpdateMutation } from '#shared/entities/user/graphql/mutations/noteUpdate.api.ts'
 import { convertToGraphQLId } from '#shared/graphql/utils.ts'
 import SubscriptionHandler from '#shared/server/apollo/handler/SubscriptionHandler.ts'
+import { useSessionStore } from '#shared/stores/session.ts'
 import { GraphQLErrorTypes } from '#shared/types/error.ts'
+import { scrollIntoView } from '#shared/utils/dom.ts'
 import emitter from '#shared/utils/emitter.ts'
 
+import CommonFloatingToolbar from '#desktop/components/CommonFloatingToolbar/CommonFloatingToolbar.vue'
+import CommonIndicator from '#desktop/components/CommonIndicator/CommonIndicator.vue'
+import { useIndicator } from '#desktop/components/CommonIndicator/useIndicator.ts'
 import CommonLoader from '#desktop/components/CommonLoader/CommonLoader.vue'
 import CommonSectionContainer from '#desktop/components/CommonSectionContainer/CommonSectionContainer.vue'
 import CommonSimpleEntityList from '#desktop/components/CommonSimpleEntityList/CommonSimpleEntityList.vue'
 import { EntityType } from '#desktop/components/CommonSimpleEntityList/types.ts'
-import CommonTabGroup from '#desktop/components/CommonTabGroup/CommonTabGroup.vue'
+import CommonTabGroup from '#desktop/components/CommonTabs/CommonTabGroup/CommonTabGroup.vue'
 import LayoutContent from '#desktop/components/layout/LayoutContent.vue'
 import UserTicketBarChart from '#desktop/components/Ticket/TicketBarChart/UserTicketBarChart.vue'
 import { usePage } from '#desktop/composables/usePage.ts'
 import { useScrollPosition } from '#desktop/composables/useScrollPosition.ts'
-import { useCustomerTicketsByFilterUpdatesSubscription } from '#desktop/entities/ticket/graphql/subscriptions/customerTicketsByFilterUpdates.api.ts'
+import { useTicketByCustomerUpdatesSubscription } from '#desktop/entities/ticket/graphql/subscriptions/ticketByCustomerUpdates.api.ts'
+import UserDetailViewContentSkeleton from '#desktop/pages/user/components/UserDetailViewContentSkeleton.vue'
 
 import UserDetailTopBar from './UserDetailTopBar.vue'
 import UserRelatedCustomerTickets from './UserRelatedCustomerTickets.vue'
@@ -36,18 +43,23 @@ const userId = computed(() => convertToGraphQLId('User', props.internalId))
 
 const chartInstance = useTemplateRef('chart')
 
-const { user, objectAttributes, secondaryOrganizations, fetchMoreSecondaryOrganizations } =
-  useUserDetail(
-    userId,
-    4,
-    100,
-    // NB: Silence toast notifications for particular errors, these will be handled by the layout taskbar tab component.
-    (errorHandler) =>
-      errorHandler.type !== GraphQLErrorTypes.Forbidden &&
-      errorHandler.type !== GraphQLErrorTypes.RecordNotFound,
-    'cache-first',
-    true, // include organization ticket counts
-  )
+const {
+  user,
+  loadingWithoutCachedResult,
+  objectAttributes,
+  secondaryOrganizations,
+  fetchMoreSecondaryOrganizations,
+} = useUserDetail(
+  userId,
+  4,
+  100,
+  // NB: Silence toast notifications for particular errors, these will be handled by the layout taskbar tab component.
+  (errorHandler) =>
+    errorHandler.type !== GraphQLErrorTypes.Forbidden &&
+    errorHandler.type !== GraphQLErrorTypes.RecordNotFound,
+  'cache-first',
+  true, // include organization ticket counts
+)
 
 const { userDisplayName } = useUserEntity(user)
 
@@ -58,6 +70,8 @@ usePage({
 const contentContainerElement = useTemplateRef('content-container')
 
 useScrollPosition(contentContainerElement)
+
+const { hasPermission } = useSessionStore()
 
 const customerTicketsTabs = computed(() => [
   {
@@ -76,19 +90,35 @@ const customerTicketsTabs = computed(() => [
 
 const activeCustomerTicketsTab = ref<'user' | 'organization'>('user')
 
-const customerTicketsByFilterSubscription = new SubscriptionHandler(
-  useCustomerTicketsByFilterUpdatesSubscription(() => ({
-    customerId: userId.value!,
-  })),
+const customerTicketsSubscription = new SubscriptionHandler(
+  useTicketByCustomerUpdatesSubscription(
+    () => ({
+      customerId: userId.value,
+    }),
+    {
+      enabled: hasPermission('ticket.agent'),
+    },
+  ),
 )
 
-customerTicketsByFilterSubscription.onResult(({ data }) => {
-  if (!data?.ticketCustomerTicketsByFilterUpdates.listChanged) return
+customerTicketsSubscription.onResult(({ data }) => {
+  if (!data?.ticketByCustomerUpdates.listChanged) return
 
   chartInstance.value?.refetchData()
 
   emitter.emit(`customer-ticket-list-refetch:${userId.value}`)
 })
+
+const { isIntersecting: isReachingBottom } = useIndicator()
+const { isIntersecting: isReachingTop } = useIndicator()
+
+const { hasReducedMotion } = useReducedMotion()
+
+const scrollTo = (position: 'start' | 'end' = 'end') => {
+  scrollIntoView(contentContainerElement.value, position, {
+    behavior: hasReducedMotion.value ? 'instant' : 'auto',
+  })
+}
 </script>
 
 <template>
@@ -99,15 +129,21 @@ customerTicketsByFilterSubscription.onResult(({ data }) => {
     content-alignment="center"
     no-scrollable
   >
-    <CommonLoader class="mt-8" :loading="!user">
-      <div ref="content-container" class="h-full w-full overflow-y-auto">
+    <CommonLoader class="size-full" :loading="loadingWithoutCachedResult">
+      <template #skeleton>
+        <UserDetailViewContentSkeleton />
+      </template>
+
+      <div ref="content-container" class="@container size-full overflow-y-auto">
+        <CommonIndicator v-model="isReachingTop" />
+
         <UserDetailTopBar
           :user="user"
           :user-display-name="userDisplayName"
           :content-container-element="contentContainerElement"
         />
-        <section class="mx-auto w-full max-w-5xl grid grid-cols-2 gap-6 p-6">
-          <div class="self-start flex flex-col gap-6">
+        <section class="mx-auto grid max-w-5xl grid-cols-1 gap-6 px-5.5 py-3 @2xl:grid-cols-2">
+          <div class="flex flex-col gap-6 self-start">
             <CommonSectionContainer
               v-if="user?.hasSecondaryOrganizations"
               :label="__('Secondary organizations')"
@@ -136,29 +172,52 @@ customerTicketsByFilterSubscription.onResult(({ data }) => {
             />
           </div>
 
-          <CommonSectionContainer class="self-start" :label="__('Related tickets')">
-            <CommonTabGroup
-              v-model="activeCustomerTicketsTab"
-              class="mb-3"
-              :tabs="customerTicketsTabs"
-            />
-            <KeepAlive>
+          <CommonSectionContainer
+            v-if="
+              hasPermission('ticket.agent') &&
+              (user.ticketsCount?.open || user.ticketsCount?.closed)
+            "
+            :label="__('Related tickets')"
+          >
+            <template v-if="user.organization">
+              <CommonTabGroup
+                v-model="activeCustomerTicketsTab"
+                class="mb-3"
+                :tabs="customerTicketsTabs"
+              />
               <UserRelatedCustomerTickets
-                v-if="activeCustomerTicketsTab === 'user'"
+                v-show="activeCustomerTicketsTab === 'user'"
                 id="tab-panel-user"
                 :customer="user"
               />
               <UserRelatedCustomerTickets
-                v-else-if="activeCustomerTicketsTab === 'organization'"
+                v-show="activeCustomerTicketsTab === 'organization'"
                 id="tab-panel-organization"
                 :customer="user"
                 customer-organizations
               />
-            </KeepAlive>
+            </template>
+            <UserRelatedCustomerTickets v-else :customer="user" />
           </CommonSectionContainer>
 
-          <UserTicketBarChart ref="chart" :user-id="userId" class="col-span-2" />
+          <UserTicketBarChart
+            v-if="hasPermission('ticket.agent')"
+            ref="chart"
+            :user-id="userId"
+            class="@2xl:col-span-2"
+          />
         </section>
+
+        <div class="sticky bottom-3 h-0 print:hidden">
+          <CommonFloatingToolbar
+            class="absolute inset-e-3 bottom-3 print:hidden"
+            :is-reaching-bottom="isReachingBottom"
+            :is-reaching-top="isReachingTop"
+            @scroll-to-end="scrollTo()"
+            @scroll-to-start="scrollTo('start')"
+          />
+        </div>
+        <CommonIndicator v-model="isReachingBottom" />
       </div>
     </CommonLoader>
   </LayoutContent>

@@ -1,11 +1,6 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
-
-import { useTransitionConfig } from '#desktop/composables/useTransitionConfig.ts'
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 export const useTransitionCollapse = () => {
-  const { durations } = useTransitionConfig()
-  const collapseDuration = durations.normal
-
   const collapseEnter = (element: Element | HTMLElement) => {
     if (!(element instanceof HTMLElement)) return
 
@@ -46,7 +41,6 @@ export const useTransitionCollapse = () => {
   }
 
   return {
-    collapseDuration,
     collapseEnter,
     collapseAfterEnter,
     collapseLeave,

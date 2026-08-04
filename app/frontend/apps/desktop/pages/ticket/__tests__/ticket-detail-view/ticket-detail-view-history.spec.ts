@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import { waitFor, within } from '@testing-library/vue'
 
@@ -74,17 +74,14 @@ describe('Ticket detail view - history', () => {
 
     await waitForNextTick()
 
-    expect(
-      await view.findByRole('heading', { name: 'Ticket History', level: 2 }),
-    ).toBeInTheDocument()
+    expect(await view.findByRole('heading', { name: 'History', level: 2 })).toBeInTheDocument()
 
     const flyout = view.getByRole('complementary', {
-      name: 'Ticket History',
+      name: 'History',
     })
 
     await waitFor(() => expect(within(flyout).getByText('Created')).toBeInTheDocument())
 
-    expect(within(flyout).getByText('Created')).toBeInTheDocument()
     expect(within(flyout).getByText('John Doe')).toBeInTheDocument()
     expect(within(flyout).getByText('2021-09-29 14:00')).toBeInTheDocument()
   })

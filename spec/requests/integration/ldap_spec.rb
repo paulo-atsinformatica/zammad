@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 require 'rails_helper'
 
@@ -43,6 +43,60 @@ RSpec.describe 'Ldap', type: :request do
             expect(json_response).to include('result' => 'ok', 'error' => 'disallow-bind-anon')
           end
         end
+      end
+    end
+  end
+
+  describe 'job_try' do
+    context 'with masked password' do
+      let!(:ldap_source) do
+        create(:ldap_source, :with_config).tap do |ls|
+          ls.preferences[:bind_pw] = 'stored_password'
+          ls.save!
+        end
+      end
+      let(:params) { { ldap_source_id: ldap_source.id, bind_pw: SensitiveParamsHelper::SENSITIVE_MASK } }
+
+      it 'stores the unmasked password in the job payload' do
+        authenticated_as(admin)
+
+        post '/api/v1/integration/ldap/job_try', params: params, as: :json
+
+        expect(ImportJob.last.payload.dig(:ldap_config, :bind_pw)).to eq('stored_password')
+      end
+    end
+  end
+
+  describe 'bind' do
+    let(:params) { { bind_pw: 'test' } }
+
+    context 'with unmasked password' do
+      it 'uses the password' do
+        authenticated_as(admin)
+
+        allow(Ldap).to receive(:new).and_call_original
+        post '/api/v1/integration/ldap/bind', params: params, as: :json
+        expect(Ldap).to have_received(:new).with(hash_including(bind_pw: 'test'))
+      end
+    end
+
+    context 'with masked password' do
+      let!(:ldap_source) do
+        create(:ldap_source, :with_config).tap do |ls|
+          ls.preferences[:bind_pw] = 'stored_password'
+          ls.save!
+        end
+      end
+      let(:params) { { ldap_source_id: ldap_source.id, bind_pw: SensitiveParamsHelper::SENSITIVE_MASK } }
+
+      it 'uses the stored password' do
+        authenticated_as(admin)
+
+        allow(Ldap).to receive(:new).and_call_original
+
+        post '/api/v1/integration/ldap/bind', params: params, as: :json
+
+        expect(Ldap).to have_received(:new).with(hash_including(bind_pw: 'stored_password'))
       end
     end
   end

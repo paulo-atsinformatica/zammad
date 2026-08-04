@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 Setting.create_if_not_exists(
   title:       __('Application secret'),
@@ -253,6 +253,35 @@ Setting.create_or_update(
   state:       'relative',
   frontend:    true
 )
+Setting.create_or_update(
+  title:       __('User Name Format'),
+  name:        'user_name_format',
+  area:        'System::Branding',
+  description: __('Defines how user names are displayed in dropdowns, overviews and selection fields.'),
+  options:     {
+    form: [
+      {
+        display:   '',
+        null:      false,
+        name:      'user_name_format',
+        tag:       'select',
+        options:   {
+          first_last:       __('Firstname Lastname'),
+          last_first:       __('Lastname Firstname'),
+          last_first_comma: __('Lastname, Firstname'),
+        },
+        translate: true,
+      },
+    ],
+  },
+  preferences: {
+    render:     true,
+    prio:       11,
+    permission: ['admin.branding'],
+  },
+  state:       'first_last',
+  frontend:    true
+)
 options = {}
 (10..99).each do |item|
   options[item] = item
@@ -307,18 +336,18 @@ Setting.create_if_not_exists(
   frontend:    true
 )
 Setting.create_if_not_exists(
-  title:       __('Websocket backend'),
+  title:       __('WebSocket backend'),
   name:        'websocket_backend',
   area:        'System::WebSocket',
-  description: __('Defines how to reach websocket server. "websocket" is default on production, "websocketPort" is for CI'),
+  description: __('Defines how to reach WebSocket server. "websocket" is default on production, "websocketPort" is for CI.'),
   state:       Rails.env.production? ? 'websocket' : 'websocketPort',
   frontend:    true
 )
 Setting.create_if_not_exists(
-  title:       __('Websocket port'),
+  title:       __('WebSocket port'),
   name:        'websocket_port',
   area:        'System::WebSocket',
-  description: __('Defines the port of the websocket server.'),
+  description: __('Defines the port of the WebSocket server.'),
   options:     {
     form: [
       {
@@ -577,18 +606,19 @@ Setting.create_if_not_exists(
   title:       __('No Proxy'),
   name:        'proxy_no',
   area:        'System::Network',
-  description: __('No proxy for the following hosts.'),
+  description: __('No proxy for these comma-separated addresses. Supports wildcards like *.example.com. Note: Loopback addresses are always excluded from proxying.'),
   options:     {
     form: [
       {
-        display: '',
-        null:    false,
-        name:    'proxy_no',
-        tag:     'input',
+        display:     '',
+        null:        false,
+        name:        'proxy_no',
+        tag:         'input',
+        placeholder: 'example.com,*.example.org',
       },
     ],
   },
-  state:       'localhost,127.0.0.0,::1',
+  state:       '',
   preferences: {
     disabled:               true,
     online_service_disable: true,
@@ -601,7 +631,7 @@ Setting.create_if_not_exists(
   title:       __('Core Workflow Ajax Mode'),
   name:        'core_workflow_ajax_mode',
   area:        'System::UI',
-  description: __('Defines if the core workflow communication should run over ajax instead of websockets.'),
+  description: __('Defines if the core workflow communication should run over AJAX instead of WebSocket.'),
   options:     {
     form: [
       {
@@ -786,6 +816,7 @@ Setting.create_if_not_exists(
   },
   frontend:    true
 )
+# TODO: Deprecated in desktop view, drop later when we drop legacy stack.
 Setting.create_if_not_exists(
   title:       __('Sidebar Attachments'),
   name:        'ui_ticket_zoom_attachments_preview',
@@ -1101,7 +1132,7 @@ Setting.create_if_not_exists(
   frontend:    true
 )
 
-options = [ { value: '0', name: 'disabled' }, { value: 1.hour.seconds.to_s, name: __('1 hour') }, { value: 2.hours.seconds.to_s, name: __('2 hours') }, { value: 1.day.seconds.to_s, name: __('1 day') }, { value: 7.days.seconds.to_s, name: __('1 week') }, { value: 14.days.seconds.to_s, name: __('2 weeks') }, { value: 21.days.seconds.to_s, name: __('3 weeks') }, { value: 28.days.seconds.to_s, name: __('4 weeks') } ]
+options = [ { value: '0', name: __('disabled') }, { value: 1.hour.seconds.to_s, name: __('1 hour') }, { value: 2.hours.seconds.to_s, name: __('2 hours') }, { value: 1.day.seconds.to_s, name: __('1 day') }, { value: 7.days.seconds.to_s, name: __('1 week') }, { value: 14.days.seconds.to_s, name: __('2 weeks') }, { value: 21.days.seconds.to_s, name: __('3 weeks') }, { value: 28.days.seconds.to_s, name: __('4 weeks') } ]
 Setting.create_if_not_exists(
   title:       __('Session Timeout'),
   name:        'session_timeout',
@@ -1118,28 +1149,31 @@ Setting.create_if_not_exists(
         translate: true,
       },
       {
-        display:   __('admin'),
+        display:   __('Admin interface'),
         null:      false,
         name:      'admin',
         tag:       'select',
         options:   options,
         translate: true,
+        note:      'admin', # intentionally not marked as translatable
       },
       {
-        display:   __('ticket.agent'),
+        display:   __('Agent tickets'),
         null:      false,
         name:      'ticket.agent',
         tag:       'select',
         options:   options,
         translate: true,
+        note:      'ticket.agent', # intentionally not marked as translatable
       },
       {
-        display:   __('ticket.customer'),
+        display:   __('Customer tickets'),
         null:      false,
         name:      'ticket.customer',
         tag:       'select',
         options:   options,
         translate: true,
+        note:      'ticket.customer', # intentionally not marked as translatable
       },
     ],
   },
@@ -1363,10 +1397,11 @@ Setting.create_if_not_exists(
         tag:     'input',
       },
       {
-        display: __('Twitter Secret'),
-        null:    true,
-        name:    'secret',
-        tag:     'input',
+        display:    __('Twitter Secret'),
+        null:       true,
+        name:       'secret',
+        tag:        'input',
+        input_type: 'password',
       },
       {
         display:  __('Your callback URL'),
@@ -1427,10 +1462,11 @@ Setting.create_if_not_exists(
         tag:     'input',
       },
       {
-        display: __('App Secret'),
-        null:    true,
-        name:    'app_secret',
-        tag:     'input',
+        display:    __('App Secret'),
+        null:       true,
+        name:       'app_secret',
+        tag:        'input',
+        input_type: 'password',
       },
       {
         display:  __('Your callback URL'),
@@ -1491,10 +1527,11 @@ Setting.create_if_not_exists(
         tag:     'input',
       },
       {
-        display: __('Client Secret'),
-        null:    true,
-        name:    'client_secret',
-        tag:     'input',
+        display:    __('Client Secret'),
+        null:       true,
+        name:       'client_secret',
+        tag:        'input',
+        input_type: 'password',
       },
       {
         display:  __('Your callback URL'),
@@ -1555,10 +1592,11 @@ Setting.create_if_not_exists(
         tag:     'input',
       },
       {
-        display: __('App Secret'),
-        null:    true,
-        name:    'app_secret',
-        tag:     'input',
+        display:    __('App Secret'),
+        null:       true,
+        name:       'app_secret',
+        tag:        'input',
+        input_type: 'password',
       },
       {
         display:  __('Your callback URL'),
@@ -1619,10 +1657,11 @@ Setting.create_if_not_exists(
         tag:     'input',
       },
       {
-        display: __('App Secret'),
-        null:    true,
-        name:    'app_secret',
-        tag:     'input',
+        display:    __('App Secret'),
+        null:       true,
+        name:       'app_secret',
+        tag:        'input',
+        input_type: 'password',
       },
       {
         display:  __('Your callback URL'),
@@ -1683,10 +1722,11 @@ Setting.create_if_not_exists(
         tag:     'input',
       },
       {
-        display: __('App Secret'),
-        null:    true,
-        name:    'app_secret',
-        tag:     'input',
+        display:    __('App Secret'),
+        null:       true,
+        name:       'app_secret',
+        tag:        'input',
+        input_type: 'password',
       },
       {
         display:     __('Site'),
@@ -1754,10 +1794,11 @@ Setting.create_if_not_exists(
         tag:     'input',
       },
       {
-        display: __('App Secret'),
-        null:    true,
-        name:    'app_secret',
-        tag:     'input',
+        display:    __('App Secret'),
+        null:       true,
+        name:       'app_secret',
+        tag:        'input',
+        input_type: 'password',
       },
       {
         display:     __('App Tenant ID'),
@@ -1824,10 +1865,11 @@ Setting.create_if_not_exists(
         tag:     'input',
       },
       {
-        display: __('App Secret'),
-        null:    true,
-        name:    'client_secret',
-        tag:     'input',
+        display:    __('App Secret'),
+        null:       true,
+        name:       'client_secret',
+        tag:        'input',
+        input_type: 'password',
       },
       {
         display:  __('Your callback URL'),
@@ -2082,7 +2124,7 @@ Setting.create_if_not_exists(
         null:      true,
         default:   true,
         name:      'pkce',
-        tag:       'select',
+        tag:       'boolean',
         options:   {
           true  => 'yes',
           false => 'no',
@@ -2157,16 +2199,16 @@ Setting.create_if_not_exists(
         display:   '',
         null:      true,
         name:      'password_min_2_lower_2_upper_characters',
-        tag:       'select',
+        tag:       'boolean',
         options:   {
-          1 => 'yes',
-          0 => 'no',
+          true  => 'yes',
+          false => 'no',
         },
         translate: true,
       },
     ],
   },
-  state:       1,
+  state:       true,
   preferences: {
     permission: ['admin.security'],
   },
@@ -2180,19 +2222,19 @@ Setting.create_if_not_exists(
   options:     {
     form: [
       {
-        display:   __('Needed'),
+        display:   '',
         null:      true,
         name:      'password_need_digit',
-        tag:       'select',
+        tag:       'boolean',
         options:   {
-          1 => 'yes',
-          0 => 'no',
+          true  => 'yes',
+          false => 'no',
         },
         translate: true,
       },
     ],
   },
-  state:       1,
+  state:       true,
   preferences: {
     permission: ['admin.security'],
   },
@@ -2206,19 +2248,19 @@ Setting.create_if_not_exists(
   options:     {
     form: [
       {
-        display:   __('Needed'),
+        display:   '',
         null:      true,
         name:      'password_need_special_character',
-        tag:       'select',
+        tag:       'boolean',
         options:   {
-          1 => 'yes',
-          0 => 'no',
+          true  => 'yes',
+          false => 'no',
         },
         translate: true,
       },
     ],
   },
-  state:       0,
+  state:       false,
   preferences: {
     permission: ['admin.security'],
   },
@@ -3000,6 +3042,106 @@ Setting.create_if_not_exists(
 )
 
 Setting.create_if_not_exists(
+  title:       __('Custom report row limit'),
+  name:        'custom_report_max_rows',
+  area:        'CustomReport::Base',
+  description: __('Maximum number of rows a single custom report may generate. Protects the server from an unfiltered report scanning the whole database.'),
+  options:     {
+    form: [
+      {
+        display: '',
+        null:    false,
+        name:    'custom_report_max_rows',
+        tag:     'input',
+      },
+    ],
+  },
+  state:       500_000,
+  preferences: {
+    permission: ['admin.report'],
+  },
+  frontend:    true
+)
+
+# Customização ATS: também no seed, e não só na migration. A migration que cria
+# este setting tem guarda de system_init_done, então numa instalação nova ela
+# retorna antes e o setting nunca existiria — o mesmo padrão que já deixou
+# permissões ATS de fora em instalação limpa.
+Setting.create_if_not_exists(
+  title:       __('Maximum running time of a ticket time tracking'),
+  name:        'ticket_time_tracking_max_running_hours',
+  area:        'Ticket::Base',
+  description: __('Hours after which a time tracking left running is closed automatically. Set to 0 to disable.'),
+  options:     {
+    form: [
+      {
+        display: '',
+        null:    true,
+        name:    'ticket_time_tracking_max_running_hours',
+        tag:     'input',
+      },
+    ],
+  },
+  state:       12,
+  preferences: {
+    permission: ['admin.ticket'],
+  },
+  frontend:    false
+)
+
+Setting.create_if_not_exists(
+  title:       __('Ticket modification by customers'),
+  name:        'customer_ticket_update',
+  area:        'CustomerWeb::Base',
+  description: __('Defines if a customer can modify their tickets (change attributes, rename them or add articles). If disabled, customers get read-only access to tickets.'),
+  options:     {
+    form: [
+      {
+        display: '',
+        null:    true,
+        name:    'customer_ticket_update',
+        tag:     'boolean',
+        options: {
+          true  => 'yes',
+          false => 'no',
+        },
+      },
+    ],
+  },
+  state:       true,
+  preferences: {
+    authentication: true,
+    permission:     ['admin.channel_web'],
+  },
+  frontend:    true
+)
+
+Setting.create_if_not_exists(
+  title:       __('Group selection for Ticket modification'),
+  name:        'customer_ticket_update_group_ids',
+  area:        'CustomerWeb::Base',
+  description: __('Defines groups in which a customer can modify their tickets. No selection means all groups are available.'),
+  options:     {
+    form: [
+      {
+        display:  '',
+        null:     true,
+        name:     'group_ids',
+        tag:      'tree_select',
+        multiple: true,
+        relation: 'Group',
+      },
+    ],
+  },
+  state:       nil,
+  preferences: {
+    authentication: true,
+    permission:     ['admin.channel_web'],
+  },
+  frontend:    true
+)
+
+Setting.create_if_not_exists(
   title:       __('Tab behaviour after ticket action'),
   name:        'ticket_secondary_action',
   area:        'CustomerWeb::Base',
@@ -3147,6 +3289,63 @@ Setting.create_if_not_exists(
     permission: ['admin.channel_formular'],
   },
   frontend:    false,
+)
+
+Setting.create_if_not_exists(
+  title:       __('Honeypot spam protection'),
+  name:        'form_ticket_create_honeypot',
+  area:        'Form::SpamProtection',
+  description: __('Adds an invisible field to the web form and rejects submissions that fill it in, which automated clients tend to do.'),
+  options:     {
+    form: [
+      {
+        display: '',
+        null:    true,
+        name:    'form_ticket_create_honeypot',
+        tag:     'boolean',
+        options: {
+          true  => 'yes',
+          false => 'no',
+        },
+      },
+    ],
+  },
+  state:       true,
+  preferences: {
+    permission: ['admin.channel_formular'],
+  },
+  frontend:    false,
+)
+Setting.create_if_not_exists(
+  title:       __('CAPTCHA provider'),
+  name:        'form_ticket_create_captcha_provider',
+  area:        'Form::SpamProtection',
+  description: __('Defines the CAPTCHA provider used to protect the web form. Leave empty to disable. The list of available providers is derived from the registered FormSpamProtection::Captcha backends.'),
+  state:       '',
+  preferences: {
+    permission: ['admin.channel_formular'],
+  },
+  frontend:    false,
+)
+Setting.create_if_not_exists(
+  title:       __('CAPTCHA provider options'),
+  name:        'form_ticket_create_captcha_options',
+  area:        'Form::SpamProtection',
+  description: __('Stores the credentials (e.g. site key and secret) of the selected CAPTCHA provider.'),
+  state:       {},
+  preferences: {
+    permission: ['admin.channel_formular'],
+  },
+  frontend:    false,
+)
+
+Setting.create_if_not_exists(
+  title:       __('Form Allowed Parameters'),
+  name:        'form_allowed_params',
+  area:        'Form::API',
+  description: __('Defines which parameters are allowed to be submitted via the form API.'),
+  state:       [],
+  frontend:    false
 )
 
 Setting.create_if_not_exists(
@@ -4246,7 +4445,7 @@ Setting.create_if_not_exists(
 )
 Setting.create_if_not_exists(
   title:       __('Defines postmaster filter.'),
-  name:        '0009_postmaster_filter_follow_up_assignment',
+  name:        '0010_postmaster_filter_follow_up_assignment',
   area:        'Postmaster::PreFilter',
   description: __('Defines postmaster filter to set the owner (based on group follow up assignment).'),
   options:     {},
@@ -4318,7 +4517,7 @@ Setting.create_if_not_exists(
 )
 Setting.create_if_not_exists(
   title:       __('Defines postmaster filter.'),
-  name:        '0030_postmaster_filter_out_of_office_check',
+  name:        '0009_postmaster_filter_out_of_office_check',
   area:        'Postmaster::PreFilter',
   description: __('Defines postmaster filter to identify out-of-office emails for follow-up detection and keeping current ticket state.'),
   options:     {},
@@ -4338,7 +4537,7 @@ Setting.create_if_not_exists(
   title:       __('Defines postmaster filter.'),
   name:        '0900_postmaster_filter_bounce_follow_up_check',
   area:        'Postmaster::PreFilter',
-  description: __('Defines postmaster filter to identify postmaster bounces; and handles them as follow-up of the original tickets'),
+  description: __('Defines postmaster filter to identify postmaster bounces; and handles them as follow-up of the original tickets.'),
   options:     {},
   state:       'Channel::Filter::BounceFollowUpCheck',
   frontend:    false
@@ -5549,7 +5748,7 @@ Setting.create_if_not_exists(
   name:        'kb_active',
   area:        'Kb::Core',
   description: __('Defines if Knowledge Base navbar button is enabled.'),
-  state:       true,
+  state:       false,
   preferences: {
     prio:           1,
     trigger:        ['menu:render'],
@@ -5578,7 +5777,7 @@ Setting.create_if_not_exists(
   title:       __('Defines the timeframe during which a self-created note can be deleted.'),
   name:        'ui_ticket_zoom_article_delete_timeframe',
   area:        'UI::TicketZoomArticle',
-  description: __("Set timeframe in seconds. If it's set to 0 you can delete notes without time limits"),
+  description: __("Set timeframe in seconds. If it's set to 0 you can delete notes without time limits."),
   options:     {},
   state:       600,
   preferences: {
@@ -5715,6 +5914,34 @@ Setting.create_if_not_exists(
 )
 
 Setting.create_if_not_exists(
+  title:       __('S/MIME signing for system notifications'),
+  name:        'smime_sign_system_notifications',
+  area:        'Integration::SMIME',
+  description: __('Defines if system notification emails are S/MIME signed.'),
+  options:     {
+    form: [
+      {
+        display: '',
+        null:    true,
+        name:    'smime_sign_system_notifications',
+        tag:     'boolean',
+        options: {
+          true  => 'yes',
+          false => 'no',
+        },
+      },
+    ],
+  },
+  state:       false,
+  preferences: {
+    prio:       3,
+    permission: ['admin.integration'],
+  },
+  # No real-time WebSocket broadcast needed for this admin toggle.
+  frontend:    false,
+)
+
+Setting.create_if_not_exists(
   title:       __('PGP integration'),
   name:        'pgp_integration',
   area:        'Integration::Switch',
@@ -5757,6 +5984,34 @@ Setting.create_if_not_exists(
 )
 
 Setting.create_if_not_exists(
+  title:       __('PGP signing for system notifications'),
+  name:        'pgp_sign_system_notifications',
+  area:        'Integration::PGP',
+  description: __('Defines if system notification emails are PGP signed.'),
+  options:     {
+    form: [
+      {
+        display: '',
+        null:    true,
+        name:    'pgp_sign_system_notifications',
+        tag:     'boolean',
+        options: {
+          true  => 'yes',
+          false => 'no',
+        },
+      },
+    ],
+  },
+  state:       false,
+  preferences: {
+    prio:       3,
+    permission: ['admin.integration'],
+  },
+  # No real-time WebSocket broadcast needed for this admin toggle.
+  frontend:    false,
+)
+
+Setting.create_if_not_exists(
   title:       __('PGP Recipient Alias Configuration'),
   name:        'pgp_recipient_alias_configuration',
   area:        'Core::Integration::PGP',
@@ -5771,7 +6026,7 @@ Setting.create_if_not_exists(
   title:       __('Authentication via %s'),
   name:        'auth_sso',
   area:        'Security::ThirdPartyAuthentication',
-  description: __('Enables button for user authentication via %s. The button will redirect to /auth/sso on user interaction.'),
+  description: __('Enables button for user authentication via %s. The button will redirect to /auth/sso on user interaction. Configure trusted proxy IP addresses or CIDR ranges from which authentication headers (%s, %s, %s) are accepted. Leave empty to accept from any IP (not recommended for production).'),
   options:     {
     form: [
       {
@@ -5788,13 +6043,37 @@ Setting.create_if_not_exists(
   },
   preferences: {
     controller:       'SettingsAreaSwitch',
-    sub:              {},
+    sub:              ['auth_sso_trusted_ips'],
     title_i18n:       [__('SSO')],
-    description_i18n: [__('SSO')],
+    description_i18n: [__('SSO'), 'REMOTE_USER', 'HTTP_REMOTE_USER', 'X-Forwarded-User'],
     permission:       ['admin.security'],
   },
   state:       false,
   frontend:    true
+)
+
+Setting.create_if_not_exists(
+  title:       __('Trusted SSO Proxy IPs'),
+  name:        'auth_sso_trusted_ips',
+  area:        'Security::ThirdPartyAuthentication::SSO',
+  description: __('Comma-separated list of trusted proxy IP addresses or CIDR ranges for SSO header acceptance.'),
+  options:     {
+    form: [
+      {
+        display:     __('Trusted SSO Proxy IPs'),
+        null:        true,
+        name:        'auth_sso_trusted_ips',
+        tag:         'input',
+        placeholder: '192.168.1.1, 10.0.0.0/8',
+      },
+    ],
+  },
+  preferences: {
+    permission:  ['admin.security'],
+    validations: ['Setting::Validation::SsoTrustedIps'],
+  },
+  state:       '',
+  frontend:    false
 )
 
 Setting.create_if_not_exists(
@@ -6008,11 +6287,29 @@ Setting.create_if_not_exists(
 )
 
 Setting.create_if_not_exists(
-  title:       __('UI Desktop Beta Switch'),
+  title:       __('Desktop BETA UI Switch'),
   name:        'ui_desktop_beta_switch',
   area:        'UI::Desktop',
   description: __('Allow users to switch automatically to the new desktop UI.'),
   state:       false,
+  frontend:    true,
+)
+
+Setting.create_if_not_exists(
+  title:       __('Desktop BETA UI Switch Admin Menu'),
+  name:        'ui_desktop_beta_switch_admin_menu',
+  area:        'UI::Desktop',
+  description: __('Allow admins to manage availability and access to the desktop BETA UI switch.'),
+  state:       false,
+  frontend:    true,
+)
+
+Setting.create_if_not_exists(
+  title:       __('Desktop BETA UI Switch Roles'),
+  name:        'ui_desktop_beta_switch_role_ids',
+  area:        'UI::Desktop',
+  description: __('Defines which roles are allowed to access the desktop BETA UI switch.'),
+  state:       [],
   frontend:    true,
 )
 
@@ -6026,6 +6323,9 @@ Setting.create_if_not_exists(
   preferences: {
     authentication: true,
     permission:     ['admin.ai_provider'],
+    validations:    [
+      'Setting::Validation::AIProvider',
+    ],
   },
   frontend:    true,
 )
@@ -6067,8 +6367,8 @@ Setting.create_if_not_exists(
   description: __('Stores the ticket summarization options (e.g. which content is visible).'),
   options:     {},
   state:       {
-    open_questions:     true,
-    upcoming_events:    true,
+    open_questions:     false,
+    upcoming_events:    false,
     customer_sentiment: true,
     generate_on:        'on_ticket_detail_opening',
   },
@@ -6076,6 +6376,24 @@ Setting.create_if_not_exists(
     authentication: true,
     permission:     ['admin.ai_assistance_ticket_summary'],
   },
+  frontend:    true,
+)
+
+Setting.create_if_not_exists(
+  title:       __('Ticket Summary Selector'),
+  name:        'ai_assistance_ticket_summary_selector',
+  area:        'AI::Assistance',
+  description: __('Enable ticket summary for following matching tickets.'),
+  options:     {
+    form: [
+      {},
+    ],
+  },
+  preferences: {
+    authentication: true,
+    permission:     ['admin.ai_assistance_ticket_summary'],
+  },
+  state:       {},
   frontend:    true,
 )
 
@@ -6107,6 +6425,76 @@ Setting.create_if_not_exists(
   frontend:    true,
 )
 
+Setting.create_if_not_exists(
+  title:       __('AI Knowledge Base Answer from Ticket'),
+  name:        'ai_assistance_kb_answer_from_ticket_generation',
+  area:        'AI::Assistance',
+  description: __('Enable or disable AI generation of knowledge base answers from ticket content.'),
+  options:     {},
+  state:       false,
+  preferences: {
+    authentication: true,
+    permission:     ['admin.ai_assistance_kb_answer_from_ticket_generation'],
+  },
+  frontend:    true,
+)
+
+Setting.create_if_not_exists(
+  title:       __('Knowledge base self-hosted video servers'),
+  name:        'kb_self_hosted_video_servers',
+  area:        'Kb::Core',
+  description: __('List of self-hosted video servers. This list is used for content security policy.'),
+  options:     {},
+  state:       [],
+  preferences: {
+    permission:  ['admin.knowledge_base'],
+    validations: ['Setting::Validation::KbSelfHostedVideoServers'],
+  },
+  frontend:    true,
+)
+
+Setting.create_if_not_exists(
+  title:       __('Vector DB'),
+  name:        'vectordb_enabled',
+  area:        'VectorDB',
+  description: __('Enable or disable the vector database, which is used for storing and retrieving vectorized data. Elasticsearch is used as the vector database backend.'),
+  options:     {},
+  state:       false,
+  frontend:    false,
+)
+
+Setting.create_if_not_exists(
+  title:       __('Vector DB knowledge base categories'),
+  name:        'vectordb_knowledge_base_category_ids',
+  area:        'VectorDB::KnowledgeBase',
+  description: __('Defines which knowledge base categories are included in the vector database.'),
+  state:       [],
+  frontend:    false,
+)
+
+Setting.create_if_not_exists(
+  title:       __('Vector DB knowledge base chunking strategy'),
+  name:        'vectordb_knowledge_base_chunking_strategy',
+  area:        'VectorDB::KnowledgeBase',
+  description: __('Defines the chunking strategy for the knowledge base vector database.'),
+  options:     {
+    form: [
+      {
+        display: '',
+        null:    true,
+        name:    'vectordb_knowledge_base_chunking_strategy',
+        tag:     'select',
+        options: {
+          'recursive' => __('Recursive hierarchical chunking'),
+          'sentence'  => __('Sentence-based chunking'),
+        },
+      },
+    ],
+  },
+  state:       'sentence',
+  frontend:    false,
+)
+
 # TODO: Unused in desktop view, drop later.
 Setting.create_if_not_exists(
   title:       __('Richtext Bubble Menu'),
@@ -6133,4 +6521,15 @@ Setting.create_if_not_exists(
     permission: ['admin.ui'],
   },
   frontend:    true,
+)
+
+Setting.create_if_not_exists(
+  title:       __('Packages Token'),
+  name:        'packages_token',
+  area:        'Core',
+  description: __('This setting defines the token to access the support.zammad.com instance for package remote commands.'),
+  options:     {},
+  state:       '',
+  preferences: { online_service_disable: true, permission: ['admin.package'] },
+  frontend:    false,
 )

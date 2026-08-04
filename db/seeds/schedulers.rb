@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 Scheduler.create_if_not_exists(
   name:   __('Process pending tickets.'),
@@ -23,7 +23,7 @@ Scheduler.create_if_not_exists(
 )
 Scheduler.create_if_not_exists(
   name:          __('Check channels.'),
-  method:        'Channel.fetch',
+  method:        'Channel.fetch_async',
   period:        30.seconds,
   prio:          1,
   active:        true,
@@ -157,6 +157,15 @@ Scheduler.create_or_update(
   created_by_id: 1,
 )
 Scheduler.create_if_not_exists(
+  name:          __("Clean up 'AuditLog'."),
+  method:        'AuditLog.cleanup',
+  period:        1.day,
+  prio:          2,
+  active:        true,
+  updated_by_id: 1,
+  created_by_id: 1,
+)
+Scheduler.create_if_not_exists(
   name:          __("Clean up 'HttpLog'."),
   method:        'HttpLog.cleanup',
   period:        1.day,
@@ -177,6 +186,15 @@ Scheduler.create_if_not_exists(
 Scheduler.create_if_not_exists(
   name:          __("Clean up 'DataPrivacyTask'."),
   method:        'DataPrivacyTask.cleanup',
+  period:        1.day,
+  prio:          2,
+  active:        true,
+  updated_by_id: 1,
+  created_by_id: 1,
+)
+Scheduler.create_if_not_exists(
+  name:          __("Clean up 'Ticket::DailyEventLock'."),
+  method:        'Ticket::DailyEventLock.cleanup',
   period:        1.day,
   prio:          2,
   active:        true,
@@ -247,7 +265,7 @@ Scheduler.create_if_not_exists(
   created_by_id: 1,
 )
 Scheduler.create_if_not_exists(
-  name:          __('Update exchange oauth 2 token.'),
+  name:          __('Update Exchange OAuth2 token.'),
   method:        'ExternalCredential::Exchange.refresh_token',
   period:        10.minutes,
   prio:          1,

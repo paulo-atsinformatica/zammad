@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import type { ExtendedRenderResult } from '#tests/support/components/renderComponent.ts'
 import { visitView } from '#tests/support/components/visitView.ts'
@@ -13,6 +13,7 @@ import { LoginDocument } from '#shared/graphql/mutations/login.api.ts'
 import { EnumTwoFactorAuthenticationMethod, type LoginMutation } from '#shared/graphql/types.ts'
 
 const twoFactorAuthentication = () => ({
+  __typename: 'UserLoginTwoFactorMethods' as const,
   availableTwoFactorAuthenticationMethods: [EnumTwoFactorAuthenticationMethod.AuthenticatorApp],
   defaultTwoFactorAuthenticationMethod: EnumTwoFactorAuthenticationMethod.AuthenticatorApp,
   recoveryCodesAvailable: false,
@@ -68,7 +69,7 @@ describe('two factor login flow', () => {
 
     await login(view)
 
-    expect(view.queryByLabelText('Security Code')).toBeInTheDocument()
+    expect(view.queryByLabelText('Security code')).toBeInTheDocument()
     expect(view.queryByTestId('loginThirdParty')).not.toBeInTheDocument()
   })
 
@@ -101,7 +102,7 @@ describe('two factor login flow', () => {
       view.getByRole('button', { name: 'Or use one of your recovery codes.' }),
     )
 
-    expect(view.getByLabelText('Recovery Code')).toBeInTheDocument()
+    expect(view.getByLabelText('Recovery code')).toBeInTheDocument()
 
     await view.events.click(view.getByLabelText('Go back'))
 
@@ -111,11 +112,11 @@ describe('two factor login flow', () => {
 
     await view.events.click(view.getByLabelText('Go back'))
 
-    expect(view.queryByLabelText('Security Code')).toBeInTheDocument()
+    expect(view.queryByLabelText('Security code')).toBeInTheDocument()
 
     await view.events.click(view.getByLabelText('Go back'))
 
-    expect(view.queryByLabelText('Security Code')).not.toBeInTheDocument()
+    expect(view.queryByLabelText('Security code')).not.toBeInTheDocument()
     expect(view.getByPlaceholderText('Username / Email')).toBeInTheDocument()
     expect(view.queryByLabelText('Go back')).not.toBeInTheDocument()
   })
@@ -123,6 +124,7 @@ describe('two factor login flow', () => {
   describe('show "try another method"', () => {
     it.each([
       {
+        __typename: 'UserLoginTwoFactorMethods' as const,
         availableTwoFactorAuthenticationMethods: [
           EnumTwoFactorAuthenticationMethod.AuthenticatorApp,
         ],
@@ -132,6 +134,7 @@ describe('two factor login flow', () => {
         available: false,
       },
       {
+        __typename: 'UserLoginTwoFactorMethods' as const,
         availableTwoFactorAuthenticationMethods: [
           EnumTwoFactorAuthenticationMethod.AuthenticatorApp,
         ],

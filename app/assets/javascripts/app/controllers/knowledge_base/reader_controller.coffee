@@ -58,6 +58,11 @@ class App.KnowledgeBaseReaderController extends App.Controller
       @renderAnswer(@object, kb_locale, true)
 
   renderAnswer: (answer, kb_locale, onlyVisibility) ->
+    if answer
+      translation = answer.translation(kb_locale.id)
+      if translation
+        App.OnlineNotification.seen('KnowledgeBaseAnswerTranslation', translation.id)
+
     if !answer
       @parentController.renderNotFound()
       return
@@ -100,6 +105,15 @@ class App.KnowledgeBaseReaderController extends App.Controller
     body = @prepareVideos(body)
 
     @answerBody.html(body)
+    @bindInlineImagePreview()
+
+  bindInlineImagePreview: ->
+    @answerBody.find('img').not ->
+      $(@).closest('a').length > 0
+    .addClass('is-previewable')
+    .on('click', (e) =>
+      @imageView(e)
+    )
 
   prepareLinks: (input) ->
     input = $($.parseHTML(input))
@@ -131,6 +145,10 @@ class App.KnowledgeBaseReaderController extends App.Controller
               "https://www.youtube.com/embed/#{settings.id}"
             when 'vimeo'
               "https://player.vimeo.com/video/#{settings.id}"
+            when 'peertube'
+              "https://#{settings.host}/videos/embed/#{settings.id}"
+            when 'mediacms'
+              "https://#{settings.host}/embed?m=#{settings.id}"
       # coffeelint: enable=indentation
 
       return match unless url

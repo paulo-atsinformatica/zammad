@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import Mention, { type MentionOptions } from '@tiptap/extension-mention'
 import { type Ref } from 'vue'
@@ -72,6 +72,9 @@ export default (context: Ref<FormFieldContext<FieldEditorProps>>) => {
     suggestion: buildMentionSuggestion({
       activator: ACTIVATOR,
       type: 'text',
+      label: __('Text modules'),
+      placeholder: __('Start typing to search for text modules…'),
+      showsDefaultList: true,
       insert(item: MentionTextItem) {
         return htmlCleanup(item.renderedContent || '')
       },

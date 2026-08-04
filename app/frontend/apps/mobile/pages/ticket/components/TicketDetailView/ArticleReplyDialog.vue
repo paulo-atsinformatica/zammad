@@ -1,8 +1,8 @@
-<!-- Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/ -->
+<!-- Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/ -->
 
 <script setup lang="ts">
 import { cloneDeep, isEqual } from 'lodash-es'
-import { computed, onMounted, onUnmounted } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 
 import type { FormRef } from '#shared/components/Form/types.ts'
 import { useConfirmation } from '#shared/composables/useConfirmation.ts'
@@ -34,6 +34,7 @@ const emit = defineEmits<{
 }>()
 
 const label = computed(() => (props.newTicketArticlePresent ? __('Edit reply') : __('Add reply')))
+const firstChangeDetected = ref(false)
 
 const articleFormGroupNodeContext = computed(() => props.articleFormGroupNode?.context)
 
@@ -42,8 +43,22 @@ const rememberArticleFormData = cloneDeep({
   __init: true,
 })
 
+// A fresh reply is dirty from the start, because opening it applies programmatic values. The form
+// marks that opening phase with formNode.context._open (set while opening, cleared once it has
+// settled), so we ignore any commit during it and flag the reply as edited on the first change a
+// user makes afterwards — to any field in the article group.
+if (!props.newTicketArticlePresent && props.articleFormGroupNode) {
+  const groupNode = props.articleFormGroupNode
+  const receipt = groupNode.on('commit', () => {
+    if (groupNode.root.context?._open) return
+    firstChangeDetected.value = true
+    groupNode.off(receipt)
+  })
+  onUnmounted(() => groupNode.off(receipt))
+}
+
 const dialogFormIsDirty = computed(() => {
-  if (!props.newTicketArticlePresent) return !!articleFormGroupNodeContext.value?.state.dirty
+  if (!props.newTicketArticlePresent) return firstChangeDetected.value
 
   return !isEqual(rememberArticleFormData, articleFormGroupNodeContext.value?._value)
 })

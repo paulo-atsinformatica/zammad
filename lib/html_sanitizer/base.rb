@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 class HtmlSanitizer
   class Base
@@ -14,11 +14,11 @@ class HtmlSanitizer
     end
 
     def loop_string(string, scrubber)
-      string = Loofah.html5_fragment(string).scrub!(scrubber).to_html
+      string = ScrubHtml.new(string, scrubber).scrub!.to_html
       old_string = string
 
       loop do
-        string = Loofah.html5_fragment(string).scrub!(scrubber).to_html
+        string = ScrubHtml.new(string, scrubber).scrub!.to_html
         break if string == old_string
 
         old_string = string

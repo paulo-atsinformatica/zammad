@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import { getNode, type FormKitNode } from '@formkit/core'
 import { FormKit } from '@formkit/vue'
@@ -66,7 +66,6 @@ const testOptions: AutocompleteSearchOrganizationEntry[] = [
 
 const wrapperParameters = {
   form: true,
-  formField: true,
   router: true,
   dialog: true,
   store: true,
@@ -164,7 +163,7 @@ describe('Form - Field - Organization - Query', () => {
     // Organization with ID 1 should have a silver crown (VIP).
     expect(getByIconName(selectOptions[0], 'crown-silver')).toBeInTheDocument()
 
-    await wrapper.events.click(wrapper.getByLabelText('Clear Search'))
+    await wrapper.events.click(wrapper.getByLabelText('Clear search'))
 
     expect(filterElement).toHaveValue('')
 

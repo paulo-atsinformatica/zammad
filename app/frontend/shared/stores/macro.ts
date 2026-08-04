@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import { without } from 'lodash-es'
 import { defineStore } from 'pinia'
@@ -39,7 +39,8 @@ export const useMacroStore = defineStore('macro', () => {
 
       if (!macros || (removeMacroId && !macros.find((macro) => macro.id === removeMacroId))) return
 
-      const { groupIds: inputGroupIds } = toValue(query.operationResult.variables) ?? {}
+      const { selector: { entityIds: inputGroupIds } = {} } =
+        toValue(query.operationResult.variables) ?? {}
 
       // Skip refetching of duplicate queries with the same group ID.
       if (!inputGroupIds || refetchFor.has(inputGroupIds)) return

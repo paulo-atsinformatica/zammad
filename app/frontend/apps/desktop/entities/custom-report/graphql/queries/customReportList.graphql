@@ -1,0 +1,8 @@
+query customReportList($scope: String) {
+  customReportList(scope: $scope) {
+    id
+    name
+    object
+    active
+  }
+}

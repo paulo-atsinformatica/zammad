@@ -1,22 +1,25 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import { getAllByRole, waitFor } from '@testing-library/vue'
 
 import { getByIconName } from '#tests/support/components/iconQueries.ts'
 import { renderComponent } from '#tests/support/components/index.ts'
 import { mockGraphQLApi } from '#tests/support/mock-graphql-api.ts'
+import { nullableMock } from '#tests/support/utils.ts'
 
 import { ObjectManagerFrontendAttributesDocument } from '#shared/entities/object-attributes/graphql/queries/objectManagerFrontendAttributes.api.ts'
 import type { TicketArticle } from '#shared/entities/ticket/types.ts'
-import { EnumSecurityStateType, type TicketArticleSecurityState } from '#shared/graphql/types.ts'
+import { EnumSecurityStateType } from '#shared/graphql/types.ts'
+import type { DeepPartial } from '#shared/types/utils.ts'
 
 import { ticketArticleObjectAttributes } from '#mobile/entities/ticket/__tests__/mocks/ticket-mocks.ts'
 import { defaultArticles } from '#mobile/pages/ticket/__tests__/mocks/detail-view.ts'
 
-import ArticleMetadata from '../ArticleMetadataDialog.vue'
+import ArticleMetadataDialog from '../ArticleMetadataDialog.vue'
 
 // parsed is tested in unit test
 const getAddress = (raw: string) => ({
+  __typename: 'AddressesField' as const,
   raw,
   parsed: null,
 })
@@ -43,7 +46,9 @@ describe('visuals for metadata', () => {
       cc: getAddress('Joe Mike <joe.mike@zammad.org>'),
       replyTo: getAddress('Arthur Miller <arthur.miller@zammad.org>'),
       type: {
+        __typename: 'TicketArticleType',
         name: 'email',
+        communication: true,
       },
       detectedLanguage: 'de',
       createdAt,
@@ -58,7 +63,7 @@ describe('visuals for metadata', () => {
       },
     }
 
-    const view = renderComponent(ArticleMetadata, {
+    const view = renderComponent(ArticleMetadataDialog, {
       props: {
         name: 'article',
         article,
@@ -103,7 +108,7 @@ describe('visuals for metadata', () => {
     expect(raw).toHaveTextContent('Raw')
     expect(raw).toHaveAttribute('href', '/api/ticket_article_plain/1')
 
-    expect(attachment).toHaveTextContent('Original Formatting')
+    expect(attachment).toHaveTextContent('Original formatting')
     expect(attachment).toHaveAttribute(
       'href',
       '/api/ticket_attachment/2/1/66?disposition=attachment',
@@ -114,18 +119,21 @@ describe('visuals for metadata', () => {
 })
 
 describe('rendering security field', () => {
-  const mockArticle = (security: TicketArticleSecurityState): TicketArticle => ({
-    ...defaultArticles().firstArticles!.edges[0].node,
-    internalId: 1,
-    securityState: {
-      __typename: 'TicketArticleSecurityState',
-      ...security,
-    },
-  })
+  const mockArticle = (
+    security: DeepPartial<NonNullable<TicketArticle['securityState']>>,
+  ): TicketArticle =>
+    nullableMock<TicketArticle>({
+      ...defaultArticles().firstArticles!.edges[0].node,
+      internalId: 1,
+      securityState: {
+        __typename: 'TicketArticleSecurityState',
+        ...security,
+      },
+    })
 
   describe('renders type', () => {
     it('renders S/MIME type when provided', () => {
-      const view = renderComponent(ArticleMetadata, {
+      const view = renderComponent(ArticleMetadataDialog, {
         props: {
           name: 'article',
           article: mockArticle({
@@ -146,7 +154,7 @@ describe('rendering security field', () => {
     })
 
     it('renders PGP type when provided', () => {
-      const view = renderComponent(ArticleMetadata, {
+      const view = renderComponent(ArticleMetadataDialog, {
         props: {
           name: 'article',
           article: mockArticle({
@@ -171,7 +179,7 @@ describe('rendering security field', () => {
     const mockEncryption = (success: boolean, comment: string) =>
       mockArticle({ encryptionSuccess: success, encryptionMessage: comment })
     const renderEncryption = (success: boolean, comment: string) => {
-      return renderComponent(ArticleMetadata, {
+      return renderComponent(ArticleMetadataDialog, {
         props: {
           name: 'article',
           article: mockEncryption(success, comment),
@@ -203,7 +211,7 @@ describe('rendering security field', () => {
     const mockSign = (success: boolean, comment: string) =>
       mockArticle({ signingSuccess: success, signingMessage: comment })
     const renderSign = (success: boolean, comment: string) => {
-      return renderComponent(ArticleMetadata, {
+      return renderComponent(ArticleMetadataDialog, {
         props: {
           name: 'article',
           article: mockSign(success, comment),
@@ -239,7 +247,7 @@ describe('rendering security field', () => {
       encryptionSuccess: true,
     })
 
-    const view = renderComponent(ArticleMetadata, {
+    const view = renderComponent(ArticleMetadataDialog, {
       props: {
         name: 'article',
         article,
@@ -267,7 +275,7 @@ describe('rendering WhatsApp metadata', () => {
 
   describe('renders message status', () => {
     it('renders correct icon + text for "sent"', () => {
-      const view = renderComponent(ArticleMetadata, {
+      const view = renderComponent(ArticleMetadataDialog, {
         props: {
           name: 'article',
           article: mockArticle({
@@ -279,13 +287,13 @@ describe('rendering WhatsApp metadata', () => {
         store: true,
       })
 
-      const messageStatus = view.getByRole('region', { name: 'Message Status' })
+      const messageStatus = view.getByRole('region', { name: 'Message status' })
       expect(messageStatus).toHaveTextContent('sent to the customer')
       expect(getByIconName(messageStatus, 'check')).toBeInTheDocument()
     })
 
     it('renders correct icon + text for "delivered"', () => {
-      const view = renderComponent(ArticleMetadata, {
+      const view = renderComponent(ArticleMetadataDialog, {
         props: {
           name: 'article',
           article: mockArticle({
@@ -298,13 +306,13 @@ describe('rendering WhatsApp metadata', () => {
         store: true,
       })
 
-      const messageStatus = view.getByRole('region', { name: 'Message Status' })
+      const messageStatus = view.getByRole('region', { name: 'Message status' })
       expect(messageStatus).toHaveTextContent('delivered to the customer')
       expect(getByIconName(messageStatus, 'check-double')).toBeInTheDocument()
     })
 
     it('renders correct icon + text for "read"', () => {
-      const view = renderComponent(ArticleMetadata, {
+      const view = renderComponent(ArticleMetadataDialog, {
         props: {
           name: 'article',
           article: mockArticle({
@@ -318,7 +326,7 @@ describe('rendering WhatsApp metadata', () => {
         store: true,
       })
 
-      const messageStatus = view.getByRole('region', { name: 'Message Status' })
+      const messageStatus = view.getByRole('region', { name: 'Message status' })
       expect(messageStatus).toHaveTextContent('read by the customer')
       expect(getByIconName(messageStatus, 'check-double-circle')).toBeInTheDocument()
     })

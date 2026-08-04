@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import { visitView } from '#tests/support/components/visitView.ts'
 import { mockApplicationConfig } from '#tests/support/mock-applicationConfig.ts'
@@ -47,7 +47,7 @@ describe('guided setup import selection', () => {
       expect(view.getByRole('button', { name: 'KayakoBeta' })).toBeInTheDocument()
       expect(view.getByRole('button', { name: 'OTRSBeta' })).toBeInTheDocument()
       expect(view.getByRole('button', { name: 'ZendeskBeta' })).toBeInTheDocument()
-      expect(view.getByRole('button', { name: 'Go Back' })).toBeInTheDocument()
+      expect(view.getByRole('button', { name: 'Go back' })).toBeInTheDocument()
 
       const importSourceButton = view.getByRole('button', {
         name: 'FreshdeskBeta',

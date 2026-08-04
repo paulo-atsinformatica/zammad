@@ -1,11 +1,11 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 class CreateRecentCloses < ActiveRecord::Migration[7.2]
   def change
     # return if it's a new setup
     return if !Setting.exists?(name: 'system_init_done')
 
-    create_table :recent_closes do |t|
+    create_table :recent_closes, id: :integer do |t|
       t.references :recently_closed_object, polymorphic: true, null: false, type: :integer
       t.references :user, null: false, foreign_key: true, type: :integer
 

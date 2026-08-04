@@ -1,8 +1,7 @@
-<!-- Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/ -->
+<!-- Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/ -->
 
 <script setup lang="ts">
-import { storeToRefs } from 'pinia'
-import { computed, ref } from 'vue'
+import { computed, ref, toRef } from 'vue'
 
 import {
   NotificationTypes,
@@ -28,6 +27,8 @@ import { useBreadcrumb } from '#desktop/pages/personal-setting/composables/useBr
 import { useUserCurrentRemoveLinkedAccountMutation } from '#desktop/pages/personal-setting/graphql/mutations/userCurrentLinkedAccount.api.ts'
 import type { LinkedAccountTableItem } from '#desktop/pages/personal-setting/types/linked-accounts.ts'
 
+import { usePersonalSettingTabs } from '../composables/usePersonalSettingTabs.ts'
+
 defineOptions({
   beforeRouteEnter() {
     const { hasEnabledProviders } = useThirdPartyAuthentication()
@@ -45,9 +46,9 @@ defineOptions({
 })
 
 const { notify } = useNotifications()
-const { breadcrumbItems } = useBreadcrumb(__('Linked Accounts'))
+const { breadcrumbItems } = useBreadcrumb(__('Linked accounts'))
 
-const { user } = storeToRefs(useSessionStore())
+const user = toRef(useSessionStore(), 'user')
 
 const { enabledProviders } = useThirdPartyAuthentication()
 const { fingerprint } = useFingerprint()
@@ -61,12 +62,11 @@ const providersLookup = computed(() => {
     const configuredProvider = authorizations.find(
       ({ provider }) => provider === enabledProvider.name,
     )
-    return {
-      ...enabledProvider,
+    return Object.assign(enabledProvider, {
       uid: configuredProvider?.uid,
       username: configuredProvider?.username || configuredProvider?.uid,
       authorizationId: configuredProvider?.id,
-    }
+    })
   })
 })
 
@@ -82,12 +82,16 @@ const tableHeaders: TableSimpleHeader[] = [
   },
 ]
 
-const tableItems = computed<TableItem[]>(() =>
-  providersLookup.value.map((provider, index) => ({
-    id: `${index}-${provider.name}`,
-    application: provider.label,
-    ...provider,
-  })),
+const tableItems = computed(() =>
+  providersLookup.value.map((provider, index) =>
+    Object.assign(
+      {
+        id: `${index}-${provider.name}`,
+        application: provider.label,
+      } as TableItem,
+      provider,
+    ),
+  ),
 )
 
 const loading = ref(false)
@@ -177,10 +181,17 @@ const tableActions = computed((): MenuItem[] => [
     show: (provider) => !provider?.username,
   },
 ])
+
+const { tabs, activeTab } = usePersonalSettingTabs()
 </script>
 
 <template>
-  <LayoutContent :breadcrumb-items="breadcrumbItems" width="narrow">
+  <LayoutContent
+    :active-tab="activeTab"
+    :tabs="tabs"
+    :breadcrumb-items="breadcrumbItems"
+    width="narrow"
+  >
     <CommonSimpleTable
       :caption="$t('Linked accounts')"
       :headers="tableHeaders"
@@ -201,12 +212,12 @@ const tableActions = computed((): MenuItem[] => [
             />
             <CommonButton
               v-else-if="action.onClick && action.show?.(item)"
+              v-tooltip="$t((action?.ariaLabel as Function)(item))"
               :icon="action.icon"
               :disabled="loading"
               :class="{ 'bg-transparent!': action.variant === 'danger' }"
               size="medium"
               :variant="action.variant"
-              :aria-label="(action?.ariaLabel as Function)(item)"
               @click="action.onClick?.(item)"
             />
           </template>

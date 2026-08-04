@@ -1,4 +1,4 @@
-<!-- Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/ -->
+<!-- Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/ -->
 
 <script setup lang="ts">
 import { computed, toRef } from 'vue'
@@ -153,7 +153,7 @@ const addLink = async (
 
 <template>
   <CommonFlyout
-    :header-title="__('Link Tickets')"
+    :header-title="__('Link tickets')"
     header-icon="link"
     name="ticket-link"
     size="large"

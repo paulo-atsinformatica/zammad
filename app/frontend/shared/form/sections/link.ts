@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import { createSection } from '@formkit/inputs'
 import { markRaw } from 'vue'
@@ -18,6 +18,8 @@ export const link = createSection(
         link: '$link',
         linkIcon: '$linkIcon',
         linkLabel: '$linkLabel',
+        linkSize: '$linkSize',
+        showLinkLabel: '$showLinkLabel',
         onLinkClick: '$onLinkClick',
       },
     }) as unknown as FormKitSchemaNode,

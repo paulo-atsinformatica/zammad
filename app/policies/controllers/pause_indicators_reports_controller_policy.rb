@@ -1,0 +1,6 @@
+# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+
+class Controllers::PauseIndicatorsReportsControllerPolicy < Controllers::ApplicationControllerPolicy
+  default_permit!(['report', 'report.pause_indicators'])
+end
+

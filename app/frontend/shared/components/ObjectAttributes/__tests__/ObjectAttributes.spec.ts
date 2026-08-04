@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import { getByRole } from '@testing-library/vue'
 import { flushPromises } from '@vue/test-utils'
@@ -459,7 +459,6 @@ describe('common object attributes interface', () => {
       },
       router: true,
       form: true,
-      formField: true,
       store: true,
     })
 
@@ -467,46 +466,5 @@ describe('common object attributes interface', () => {
     const editor = await view.findByLabelText('Note')
 
     expect(editor).toBeInTheDocument()
-  })
-
-  test.todo('calls update function when inline editable field changes', async () => {
-    mockPermissions(['ticket.agent'])
-
-    const object = {
-      internalId: 123,
-      note: 'original text',
-      objectAttributeValues: [],
-    }
-
-    const updateMapMock = vi.fn()
-
-    const view = renderComponent(ObjectAttributes, {
-      props: {
-        object,
-        attributes: [attributesByKey.note],
-        inlineEditable: ['note'],
-        updateMap: {
-          inlineEditable: { note: updateMapMock },
-        },
-      },
-      router: true,
-      form: true,
-      store: true,
-    })
-
-    const editor = await view.findByRole('textarea')
-
-    await view.events.type(editor, 'Update text')
-
-    // :TODO can't be tested since formKit event will not be called in the test env
-
-    // The update function should be called when the field changes
-    // expect(updateMapMock).toHaveBeenCalled()
-    // expect(updateMapMock).toHaveBeenCalledWith(
-    //   expect.objectContaining({
-    //     objectEntity: object,
-    //     event: expect.any(Object),
-    //   }),
-    // )
   })
 })

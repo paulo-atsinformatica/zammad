@@ -1,4 +1,4 @@
-<!-- Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/ -->
+<!-- Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/ -->
 
 <script setup lang="ts">
 import { computed } from 'vue'
@@ -38,11 +38,11 @@ const confirmationVariant = computed<ConfirmationVariantOptions>(() => {
   switch (currentConfirmationOptions.value?.confirmationVariant) {
     case 'delete':
       return {
-        headerTitle: __('Delete Object'),
+        headerTitle: __('Delete object'),
         headerIcon: 'trash3',
         content: __('Are you sure you want to delete this object?'),
         footerActionOptions: {
-          actionLabel: currentConfirmationOptions.value?.buttonLabel || __('Delete Object'),
+          actionLabel: currentConfirmationOptions.value?.buttonLabel || __('Delete object'),
           actionButton: {
             variant: 'danger',
           },
@@ -50,10 +50,10 @@ const confirmationVariant = computed<ConfirmationVariantOptions>(() => {
       }
     case 'unsaved':
       return {
-        headerTitle: __('Unsaved Changes'),
+        headerTitle: __('Unsaved changes'),
         content: __('Are you sure? You have unsaved changes that will get lost.'),
         footerActionOptions: {
-          actionLabel: __('Discard Changes'),
+          actionLabel: __('Discard changes'),
           actionButton: {
             variant: 'danger',
           },

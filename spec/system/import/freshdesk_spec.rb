@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 require 'rails_helper'
 
@@ -112,7 +112,7 @@ RSpec.describe 'Import from Freshdesk', authenticated_as: false, required_envs: 
 
       Rake::Task['zammad:setup:auto_wizard'].execute
 
-      expect(page).to have_text(Setting.get('fqdn'))
+      expect(page).to have_text(Setting.get('fqdn'), wait: 30)
 
       # skip intro/clues
       user = User.find_by(login: 'admin@example.com')

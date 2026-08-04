@@ -1,4 +1,4 @@
-<!-- Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/ -->
+<!-- Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/ -->
 
 <script setup lang="ts">
 import { computed, toRef } from 'vue'
@@ -14,8 +14,8 @@ import { useFieldSecurity } from '#shared/components/Form/fields/FieldSecurity/u
 import { translateArticleSecurity } from '#shared/entities/ticket-article/composables/translateArticleSecurity.ts'
 import { i18n } from '#shared/i18n.ts'
 
-import CommonTabGroup from '#desktop/components/CommonTabGroup/CommonTabGroup.vue'
-import type { Tab } from '#desktop/components/CommonTabGroup/types.ts'
+import CommonTabGroup from '#desktop/components/CommonTabs/CommonTabGroup/CommonTabGroup.vue'
+import type { Tab } from '#desktop/components/CommonTabs/types.ts'
 
 const props = defineProps<FieldSecurityProps>()
 const contextReactive = toRef(props, 'context')
@@ -98,7 +98,7 @@ const selectOption = (value: Tab['key'] | Tab['key'][]) => {
         :tabs="optionTabs"
         size="medium"
         multiple
-        @update:model-value="selectOption"
+        @update:model-value="selectOption($event as Tab['key'][])"
       />
     </div>
   </div>

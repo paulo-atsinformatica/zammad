@@ -1,7 +1,6 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import { flushPromises } from '@vue/test-utils'
-import { axe } from 'vitest-axe'
 
 import ticketCustomerObjectAttributes from '#tests/graphql/factories/fixtures/ticket-customer-object-attributes.ts'
 import { visitView } from '#tests/support/components/visitView.ts'
@@ -30,8 +29,6 @@ describe('ticket overviews view', () => {
 
     await flushPromises()
 
-    const results = await axe(view.html())
-
-    expect(results).toHaveNoViolations()
+    await expect(view.container).toBeAccessible()
   })
 })

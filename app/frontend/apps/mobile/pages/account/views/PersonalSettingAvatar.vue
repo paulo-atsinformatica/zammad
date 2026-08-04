@@ -1,8 +1,7 @@
-<!-- Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/ -->
+<!-- Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/ -->
 
 <script setup lang="ts">
-import { storeToRefs } from 'pinia'
-import { reactive, shallowRef, watch, ref, computed } from 'vue'
+import { reactive, shallowRef, watch, ref, computed, toRef } from 'vue'
 import { Cropper, type CropperResult } from 'vue-advanced-cropper'
 import { useRouter } from 'vue-router'
 import 'vue-advanced-cropper/dist/style.css'
@@ -46,7 +45,7 @@ activeAvatarQuery.watchOnResult((data) => {
   activeAvatar.value = data?.userCurrentAvatarActive
 })
 
-const avatarLoading = activeAvatarQuery.loading()
+const avatarLoading = activeAvatarQuery.loadingWithoutCachedResult()
 
 const state = reactive({
   resizedImage: activeAvatar.value?.imageResize || '',
@@ -56,7 +55,7 @@ watch(activeAvatar, (newValue) => {
   state.resizedImage = newValue?.imageResize || ''
 })
 
-const { user } = storeToRefs(useSessionStore())
+const user = toRef(useSessionStore(), 'user')
 
 const avatarDeleteDisabled = computed(() => {
   return !activeAvatar.value?.deletable
@@ -222,7 +221,7 @@ const actions = computed<CommonButtonOption[]>(() => [
 <template>
   <div v-if="user" class="px-4">
     <div class="flex flex-col items-center py-6">
-      <CommonLoader :loading="avatarLoading && !activeAvatarQuery.result().value">
+      <CommonLoader :loading="avatarLoading">
         <CommonAvatar v-if="state.resizedImage" :image="state.resizedImage" size="xl" />
         <CommonUserAvatar v-else :entity="user" size="xl" personal />
         <CommonButtonGroup class="mt-6" mode="full" :options="actions" />

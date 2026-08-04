@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 class Service::Template::Interpolation::Interpolator::Webhook::Track::PreDefinedWebhook < Service::Template::Interpolation::Engine::Track
   WEBHOOK_PREDEFINED_CLASS_PREFIX = 'Webhook::PreDefined::'.freeze
@@ -58,7 +58,6 @@ class Service::Template::Interpolation::Interpolator::Webhook::Track::PreDefined
     def struct(pre_defined_webhook)
       @struct ||= Struct.new('PreDefinedWebhook', *pre_defined_webhook.field_names)
     end
-
   end
 
 end

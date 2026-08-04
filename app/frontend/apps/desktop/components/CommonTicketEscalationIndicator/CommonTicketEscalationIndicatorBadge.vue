@@ -1,4 +1,4 @@
-<!-- Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/ -->
+<!-- Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/ -->
 
 <script setup lang="ts">
 import { toRef } from 'vue'
@@ -20,7 +20,7 @@ const escalationState = useEscalationState(toRef(props.ticket, 'escalationAt'))
   <CommonBadge
     v-if="ticket?.escalationAt && escalationState !== EscalationState.None"
     :variant="escalationState === EscalationState.Escalated ? 'danger' : 'warning'"
-    class="uppercase h-7"
+    class="h-7 uppercase"
     :class="hasPopover ? 'cursor-pointer' : ''"
     role="alert"
   >

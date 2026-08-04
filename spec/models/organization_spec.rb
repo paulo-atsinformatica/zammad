@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 require 'rails_helper'
 require 'models/application_model_examples'
@@ -251,6 +251,20 @@ RSpec.describe Organization, type: :model do
 
     it 'lists all assigned members' do
       expect(organization.all_members).to contain_exactly(primary_user, secondary_user)
+    end
+  end
+
+  describe '#destroy_dependent_associations' do
+    it 'does create an organization with owner and customer ticket and only destroy the customer ticket', :aggregate_failures do
+      organization    = create(:organization)
+      user_1          = create(:agent, organization: organization)
+      user_1_ticket_1 = create(:ticket, owner: user_1)
+      user_2          = create(:customer, organization: organization)
+      user_2_ticket_1 = create(:ticket, customer: user_2)
+
+      organization.destroy_dependent_associations
+      expect { user_1_ticket_1.reload }.not_to raise_error
+      expect { user_2_ticket_1.reload }.to raise_exception(ActiveRecord::RecordNotFound)
     end
   end
 end

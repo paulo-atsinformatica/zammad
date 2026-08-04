@@ -1,4 +1,4 @@
-<!-- Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/ -->
+<!-- Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/ -->
 
 <script setup lang="ts">
 import { computed } from 'vue'
@@ -27,21 +27,28 @@ const metaAddress = computed(() => {
 
 <template>
   <div
-    class="flex flex-wrap gap-1 *:not-last:after:text-sm *:not-last:after:leading-snug *:not-last:after:content-[',']"
+    class="flex max-w-full flex-wrap items-center gap-1 overflow-hidden whitespace-nowrap *:not-last:after:text-sm *:not-last:after:leading-snug *:not-last:after:content-[',']"
   >
     <template v-if="metaAddress?.parsed?.length">
       <template v-for="meta in metaAddress.parsed" :key="`${meta.name}-${meta.emailAddress}`">
-        <div v-if="meta.name || meta.emailAddress" class="flex items-center">
-          <CommonLabel v-if="meta.name" class="text-black! dark:text-white! text-nowrap me-1">{{
-            meta.name
+        <div
+          v-if="meta.name || meta.emailAddress"
+          class="flex max-w-full shrink items-center overflow-hidden"
+        >
+          <CommonLabel
+            v-if="meta.name"
+            class="me-1 block! max-w-full truncate text-black! dark:text-white!"
+            >{{ meta.name }}</CommonLabel
+          >
+          <CommonLabel v-if="meta.emailAddress" class="block! max-w-full truncate">{{
+            `<${meta.emailAddress}>`
           }}</CommonLabel>
-          <CommonLabel v-if="meta.emailAddress">{{ `<${meta.emailAddress}>` }}</CommonLabel>
         </div>
       </template>
     </template>
     <CommonLabel
       v-else-if="metaAddress?.raw"
-      class="text-black! dark:text-white! text-nowrap me-2"
+      class="me-2 block! max-w-full truncate text-black! dark:text-white!"
       >{{ metaAddress?.raw }}</CommonLabel
     >
   </div>

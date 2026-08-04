@@ -1,4 +1,4 @@
-<!-- Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/ -->
+<!-- Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/ -->
 
 <script setup lang="ts">
 import { getCSRFToken } from '#shared/server/apollo/utils/csrfToken.ts'
@@ -35,9 +35,9 @@ const csrfToken = getCSRFToken()
   <form role="form" method="post" :action="url">
     <input type="hidden" name="authenticity_token" :value="csrfToken" />
     <CommonButton
+      v-tooltip="$t(buttonLabel)"
       type="submit"
       :class="buttonClass"
-      :aria-label="buttonLabel"
       :size="buttonSize"
       :variant="buttonVariant"
       :disabled="disabled"

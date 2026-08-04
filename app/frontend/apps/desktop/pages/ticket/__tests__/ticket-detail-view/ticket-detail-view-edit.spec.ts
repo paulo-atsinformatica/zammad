@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import { getNode } from '@formkit/core'
 import { getByLabelText, getByRole, waitFor, within } from '@testing-library/vue'
@@ -125,7 +125,7 @@ describe('Ticket detail view', () => {
 
       const view = await visitView('/tickets/1')
 
-      await getNode('form-ticket-edit')?.settled
+      await getNode('form-ticket-edit-1')?.settled
 
       expect(
         view.findByRole('heading', {
@@ -156,7 +156,7 @@ describe('Ticket detail view', () => {
 
       await view.events.click(view.getByRole('option', { name: 'closed' }))
 
-      await getNode('form-ticket-edit')?.settled
+      await getNode('form-ticket-edit-1')?.settled
 
       await view.events.click(view.getByRole('button', { name: 'Update' }))
 
@@ -312,11 +312,11 @@ describe('Ticket detail view', () => {
 
       expect(getByRole(complementary, 'heading', { level: 2, name: 'Reply' })).toBeInTheDocument()
 
-      await getNode('form-ticket-edit')?.settled
+      await getNode('form-ticket-edit-1')?.settled
 
-      expect(getByLabelText(complementary, 'Visibility')).toHaveTextContent('Internal')
+      expect(getByLabelText(complementary, 'Visibility')).toBeChecked()
 
-      expect(view.getByTestId('article-reply-stripes-panel')).toHaveClass('bg-stripes')
+      expect(view.getByTestId('article-reply-internal-indicator')).toHaveClass('bg-stripes')
 
       const editor = await view.findByRole('textbox', { name: 'Text' })
 
@@ -325,7 +325,7 @@ describe('Ticket detail view', () => {
 
       await view.events.type(editor, 'Foo note')
 
-      await getNode('form-ticket-edit')?.settled
+      await getNode('form-ticket-edit-1')?.settled
 
       await view.events.click(view.getByRole('button', { name: 'Update' }))
 
@@ -449,7 +449,7 @@ describe('Ticket detail view', () => {
 
       await view.events.type(await view.findByRole('textbox', { name: 'Text' }), 'Foo email')
 
-      await getNode('form-ticket-edit')?.settled
+      await getNode('form-ticket-edit-1')?.settled
 
       await view.events.click(view.getByRole('button', { name: 'Update' }))
 
@@ -462,6 +462,65 @@ describe('Ticket detail view', () => {
           }),
         }),
       )
+    })
+
+    it('hides CC behind an "Add CC" link until revealed', async () => {
+      mockTicketQuery({
+        ticket: createDummyTicket({
+          group: {
+            id: convertToGraphQLId('Group', 1),
+            emailAddress: {
+              name: 'Zammad Helpdesk',
+              emailAddress: 'zammad@localhost',
+            },
+          },
+          articleType: 'email',
+          defaultPolicy: {
+            update: true,
+            agentReadAccess: true,
+          },
+        }),
+      })
+
+      mockTicketArticlesQuery({
+        articles: {
+          totalCount: 1,
+          edges: [
+            {
+              node: createDummyArticle({
+                articleType: 'email',
+                internal: false,
+              }),
+            },
+          ],
+        },
+      })
+
+      mockFormUpdaterQuery({
+        formUpdater: {
+          fields: {},
+          flags: {
+            newArticlePresent: false,
+          },
+        },
+      })
+
+      const view = await visitView('/tickets/1')
+
+      const articles = await view.findAllByRole('article')
+
+      await view.events.click(await within(articles[0]).findByRole('button', { name: 'Reply' }))
+
+      // Recipient is visible by default; CC stays hidden behind the "Add CC" link.
+      expect(await view.findByLabelText('To')).toBeInTheDocument()
+      expect(view.getByLabelText('CC').closest('.formkit-outer')).toHaveClass('hidden')
+
+      await view.events.click(view.getByRole('link', { name: 'Add CC' }))
+
+      // Revealing CC unhides the field, focuses it, and removes the link.
+      expect(view.getByLabelText('CC').closest('.formkit-outer')).not.toHaveClass('hidden')
+      expect(view.getByLabelText('CC')).toHaveFocus()
+      expect(view.queryByRole('link', { name: 'Add CC' })).not.toBeInTheDocument()
     })
 
     it('forwards to an article', async () => {
@@ -595,9 +654,9 @@ describe('Ticket detail view', () => {
 
       await view.events.click(view.getByRole('button', { name: 'add new email address' }))
 
-      await getNode('form-ticket-edit')?.settled
+      await getNode('form-ticket-edit-1')?.settled
 
-      await view.events.click(view.getByRole('button', { name: 'Update' }))
+      await view.events.click(await view.findByRole('button', { name: 'Update' }))
 
       const calls = await waitForTicketUpdateMutationCalls()
 
@@ -629,7 +688,9 @@ describe('Ticket detail view', () => {
 
       const view = await visitView('/tickets/1')
 
-      await view.events.click(view.getByRole('button', { name: 'Add phone call' }))
+      await getNode('form-ticket-edit-1')?.settled
+
+      await view.events.click(await view.findByRole('button', { name: 'Add internal note' }))
 
       expect(await view.findByRole('heading', { level: 2, name: 'Reply' })).toBeInTheDocument()
 
@@ -642,7 +703,7 @@ describe('Ticket detail view', () => {
       expect(confirmDialog).toBeInTheDocument()
 
       await view.events.click(
-        within(confirmDialog).getByRole('button', { name: 'Discard Changes' }),
+        within(confirmDialog).getByRole('button', { name: 'Discard changes' }),
       )
 
       await waitFor(() =>
@@ -746,8 +807,10 @@ describe('Ticket detail view', () => {
 
       const view = await visitView('/tickets/1')
 
+      await getNode('form-ticket-edit-1')?.settled
+
       // Discard changes inside the reply form
-      await view.events.click(view.getByRole('button', { name: 'Add phone call' }))
+      await view.events.click(await view.findByRole('button', { name: 'Add internal note' }))
 
       expect(await view.findByRole('heading', { level: 2, name: 'Reply' })).toBeInTheDocument()
 
@@ -757,9 +820,9 @@ describe('Ticket detail view', () => {
 
       await view.events.click(view.getByRole('button', { name: 'Discard unsaved reply' }))
 
-      expect(await view.findByRole('dialog', { name: 'Unsaved Changes' })).toBeInTheDocument()
+      expect(await view.findByRole('dialog', { name: 'Unsaved changes' })).toBeInTheDocument()
 
-      await view.events.click(view.getByRole('button', { name: 'Discard Changes' }))
+      await view.events.click(view.getByRole('button', { name: 'Discard changes' }))
 
       // Verify that ticket attributes state is not lost
       expect(view.getByLabelText('State')).toHaveTextContent('closed')
@@ -890,10 +953,12 @@ describe('Ticket detail view', () => {
         },
       })
 
-      await waitForNextTick()
+      await waitForNextTick(true)
+
+      const toolbar = view.getByRole('toolbar', { name: 'Ticket actions' })
 
       // Discard changes inside the reply form
-      await view.events.click(view.getByRole('button', { name: 'Add reply' }))
+      await view.events.click(within(toolbar).getByRole('button', { name: 'Add internal note' }))
 
       await waitFor(() => expect(view.queryByRole('textbox', { name: 'Text' })).toBeInTheDocument())
 
@@ -903,9 +968,9 @@ describe('Ticket detail view', () => {
         }),
       )
 
-      expect(await view.findByRole('dialog', { name: 'Unsaved Changes' })).toBeInTheDocument()
+      expect(await view.findByRole('dialog', { name: 'Unsaved changes' })).toBeInTheDocument()
 
-      await view.events.click(view.getByRole('button', { name: 'Discard Changes' }))
+      await view.events.click(view.getByRole('button', { name: 'Discard changes' }))
 
       await waitFor(() => {
         expect(
@@ -915,15 +980,15 @@ describe('Ticket detail view', () => {
         ).not.toBeInTheDocument()
       })
 
-      await view.events.click(view.getByRole('button', { name: 'Add reply' }))
+      await view.events.click(within(toolbar).getByRole('button', { name: 'Add internal note' }))
 
       await view.events.click(view.getByRole('button', { name: 'Discard unsaved reply' }))
 
       const dialog = await view.findByRole('dialog', {
-        name: 'Unsaved Changes',
+        name: 'Unsaved changes',
       })
 
-      await view.events.click(within(dialog).getByRole('button', { name: 'Discard Changes' }))
+      await view.events.click(within(dialog).getByRole('button', { name: 'Discard changes' }))
 
       await waitFor(() => {
         expect(
@@ -1037,6 +1102,8 @@ describe('Ticket detail view', () => {
 
       const view = await visitView('/tickets/1')
 
+      await getNode('form-ticket-edit-1')?.settled
+
       const articles = await view.findAllByRole('article')
 
       await view.events.click(await within(articles[0]).findByRole('button', { name: 'Reply' }))
@@ -1046,7 +1113,7 @@ describe('Ticket detail view', () => {
         'Reply. Check attachment.',
       )
 
-      await getNode('form-ticket-edit')?.settled
+      await getNode('form-ticket-edit-1')?.settled
 
       await view.events.click(view.getByRole('button', { name: 'Update' }))
 

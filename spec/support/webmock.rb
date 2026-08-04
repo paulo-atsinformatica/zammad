@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 # allow requests to:
 # - Zammad webservices
@@ -6,7 +6,7 @@
 # - exchange.example.com (MS Exchange TCR mocks)
 # - localhost (Selenium server control)
 allowed_sites = lambda do |uri|
-  ['zammad.com', 'google.com', 'exchange.example.com'].any? do |site|
+  ['zammad.com', 'google.com', 'exchange.example.com'].any? do |site| # rubocop:disable Style/ArrayIntersect
     uri.host.include?(site)
   end
 end

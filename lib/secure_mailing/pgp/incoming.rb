@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 class SecureMailing::PGP::Incoming < SecureMailing::Backend::HandlerIncoming
   attr_accessor :mime_type, :content_type_parameters
@@ -47,7 +47,7 @@ class SecureMailing::PGP::Incoming < SecureMailing::Backend::HandlerIncoming
     signature_part = signature_part_meta_check
     return if signature_part.nil?
 
-    verified_result(signature_part.body.decoded)
+    return if !verified_result(signature_part.body.decoded)
 
     set_article_preferences(
       operation: :sign,
@@ -135,11 +135,13 @@ class SecureMailing::PGP::Incoming < SecureMailing::Backend::HandlerIncoming
 
       begin
         pgp_tool.verify(verify_data, signature: signature)
+        true
       rescue => e
         set_article_preferences(
           operation: :sign,
           comment:   e.message,
         )
+        false
       end
     end
   end

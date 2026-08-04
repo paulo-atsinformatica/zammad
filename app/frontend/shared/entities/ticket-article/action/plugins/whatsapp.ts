@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import { createMessage, type FormKitNode } from '@formkit/core'
 import { useFormKitNodeById } from '@formkit/vue'
@@ -188,6 +188,12 @@ const actionPlugin: TicketArticleActionPlugin = {
       icon: 'whatsapp',
       view: {
         agent: ['change'],
+      },
+      editorMeta: {
+        footer: {
+          maxlength: 4096,
+          allowExceedMaxLength: true,
+        },
       },
       fields: {
         body: {

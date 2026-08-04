@@ -1,4 +1,4 @@
-<!-- Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/ -->
+<!-- Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/ -->
 
 <script setup lang="ts">
 import { useEditor, EditorContent } from '@tiptap/vue-3'
@@ -12,13 +12,11 @@ import { useSignatureHandling } from '#shared/components/Form/fields/FieldEditor
 import { EXTENSION_NAME as userMentionExtensionName } from '#shared/components/Form/fields/FieldEditor/extensions/UserMention.ts'
 import {
   imageExtensionName,
-  tableKitExtensionName,
   getCustomExtensions,
   getHtmlExtensions,
   getPlainExtensions,
   PlaceholderExtensionName,
 } from '#shared/components/Form/fields/FieldEditor/extensions.ts'
-import FieldEditorTableMenu from '#shared/components/Form/fields/FieldEditor/features/table/EditorTableMenu.vue'
 import FieldEditorFooter from '#shared/components/Form/fields/FieldEditor/FieldEditorFooter.vue'
 import type {
   EditorContentType,
@@ -34,7 +32,9 @@ import type { FormFieldContext } from '#shared/components/Form/types/field.ts'
 import { getButtonGroup } from '#shared/components/ObjectAttributes/attributes/AttributeRichtext/initializeRichtextButtons.ts'
 import { useSessionStore } from '#shared/stores/session.ts'
 import { htmlCleanup } from '#shared/utils/htmlCleanup.ts'
+import testFlags from '#shared/utils/testFlags.ts'
 
+import { TableKitExtensionName } from './extensions/TableKit.ts'
 import { useInlineMode } from './useInlineMode.ts'
 
 interface Props {
@@ -91,7 +91,7 @@ if (props.context.extensionSet === 'basic') {
     disableExtension(extension.name as EditorCustomExtensions),
   )
 
-  disableExtension(tableKitExtensionName)
+  disableExtension(TableKitExtensionName)
 }
 
 if (placeholder === '') disableExtension(PlaceholderExtensionName)
@@ -100,8 +100,8 @@ if (placeholder === '') disableExtension(PlaceholderExtensionName)
 // TODO: Maybe we need a re-creation of the editor in some edge cases... plain <-> html (check against simple channels...)
 const editorExtensions = computed(() => {
   const baseExtensions = isPlainText.value
-    ? getPlainExtensions(placeholder)
-    : getHtmlExtensions(placeholder)
+    ? getPlainExtensions(placeholder, props.context?.meta)
+    : getHtmlExtensions(placeholder, props.context?.meta)
 
   const availableExtensions = [...baseExtensions, ...customExtensions].filter((extension) => {
     const { name, options } = extension
@@ -123,9 +123,20 @@ const { hasImageExtension, loadFiles } = useAttachments(
   props.context.formId,
 )
 
-const hasTableExtension = computed(() =>
-  editorExtensions.value.some((ext) => ext.name === 'tableKit'),
-)
+const wrapperElement = useTemplateRef('wrapper')
+
+const {
+  isInlineMode,
+  isSubmitting,
+  isEditing,
+  onWrapperClick,
+  handleCancel,
+  handleChange,
+  labelInlineDesktopClasses,
+  containerInlineDesktopClasses,
+  wrapperInlineDesktopClasses,
+  inputInlineDesktopTextStyles,
+} = useInlineMode(toRef(props, 'context'), wrapperElement)
 
 const editor = useEditor({
   extensions: editorExtensions.value,
@@ -223,7 +234,6 @@ if (VITE_TEST_MODE) {
     },
   )
 }
-
 watch(
   () => props.context.disabled,
   (disabled) => {
@@ -239,7 +249,7 @@ const setEditorContent = (
   contentType: EditorContentType,
   emitUpdate?: boolean,
 ) => {
-  if (!editor.value || !content) return
+  if (!editor.value || content === undefined) return
 
   editor.value.commands.setContent(contentType === 'text/html' ? htmlCleanup(content) : content, {
     emitUpdate,
@@ -248,7 +258,10 @@ const setEditorContent = (
 
 // Set the new editor content, when the value was changed from outside (e.g. form schema update).
 const updateValueKey = props.context.node.on('input', ({ payload: newContent }) => {
-  const currentContent = isPlainText.value ? editor.value?.getText() : editor.value?.getHTML()
+  // Early return when no editor exists, keep this in mind, when we have real initial value problems.
+  if (!editor.value) return
+
+  const currentContent = getEditorContent(editor.value, contentType.value)
 
   // Skip the update if the value is identical.
   if (newContent === currentContent) return
@@ -260,8 +273,9 @@ const updateValueKey = props.context.node.on('input', ({ payload: newContent }) 
 const updateContentTypeKey = props.context.node.on(
   'prop:contentType',
   ({ payload: newContentType }) => {
-    const newContent =
-      newContentType === 'text/plain' ? editor.value?.getText() : editor.value?.getHTML()
+    if (!editor.value) return
+
+    const newContent = getEditorContent(editor.value, newContentType)
 
     setEditorContent(newContent, newContentType, true)
   },
@@ -275,6 +289,8 @@ onUnmounted(() => {
 const focusEditor = () => {
   const view = editor.value?.view
   view?.focus()
+
+  testFlags.set(`${props.context.formId}.${props.context.node.name}.editor.focused`)
 }
 
 // focus editor when clicked on its label
@@ -288,6 +304,10 @@ const characters = computed(() => {
     return currentValue.value?.length || 0
   }
   if (!editor.value) return 0
+
+  // ⚠️ Keep in mind for htmlExtension we count characters based on the serialized HTML, not text content as CharacterCount does.
+  // It is opauce to the user that the counts differs from the input
+  // f.e.g. <b>bold</b> is 13 characters, but user would expect 4 characters.
   return editor.value.storage.characterCount.characters({
     node: editor.value.state.doc,
   })
@@ -316,6 +336,8 @@ onMounted(() => {
   onLoad.length = 0
 
   if (VITE_TEST_MODE) {
+    testFlags.set(`${props.context.formId}.${props.context.node.name}.editor.ready`)
+
     if (!('editors' in globalThis)) Object.defineProperty(globalThis, 'editors', { value: {} })
     Object.defineProperty(Reflect.get(globalThis, 'editors'), props.context.node.name, {
       value: editor.value,
@@ -328,20 +350,13 @@ const classes = getFieldEditorClasses()
 
 const buttonGroup = getButtonGroup()
 
-const wrapperElement = useTemplateRef('wrapper')
+watch(isEditing, (editing) => {
+  if (!isInlineMode.value && editing) return
 
-const {
-  isInlineMode,
-  isSubmitting,
-  isEditing,
-  onWrapperClick,
-  handleCancel,
-  handleChange,
-  labelInlineDesktopClasses,
-  containerInlineDesktopClasses,
-  wrapperInlineDesktopClasses,
-  inputInlineDesktopTextStyles,
-} = useInlineMode(toRef(props, 'context'), wrapperElement)
+  // augmenting type mess up the entire type interface
+  // @ts-expect-error @ts-ignore
+  editor.value?.storage?.characterCount?.clearWarnings?.()
+})
 
 const reclaimEditorFocus = (event: MouseEvent) => {
   // Place cursor at end when clicking the wrapper directly (not editor content).
@@ -358,7 +373,7 @@ const reclaimEditorFocus = (event: MouseEvent) => {
     ref="wrapper"
     :role="isInlineMode ? 'button' : undefined"
     tabindex="-1"
-    class="flex flex-col relative"
+    class="relative flex flex-col"
     :class="[
       containerInlineDesktopClasses,
       {
@@ -371,7 +386,7 @@ const reclaimEditorFocus = (event: MouseEvent) => {
     <!-- Check if SR label is present on FormKit level labelSrOnly must be true -->
     <CommonLabel
       v-if="context.labelSrOnly && context.label && isInlineMode && !isEditing"
-      class="absolute top-4 rtl:right-1 ltr:left-1"
+      class="absolute top-4 ltr:left-1 rtl:right-1"
       :class="labelInlineDesktopClasses"
       size="small"
     >
@@ -392,7 +407,7 @@ const reclaimEditorFocus = (event: MouseEvent) => {
       @click="reclaimEditorFocus"
     >
       <EditorContent
-        class="text-base cursor-text"
+        class="cursor-text text-base"
         data-test-id="field-editor"
         :editor="editor"
         :style="inputInlineDesktopTextStyles"
@@ -402,12 +417,6 @@ const reclaimEditorFocus = (event: MouseEvent) => {
         v-if="context.meta?.footer && !context.meta.footer.disabled && editor"
         :footer="context.meta.footer"
         :characters="characters"
-      />
-
-      <FieldEditorTableMenu
-        v-if="editor && hasTableExtension"
-        :editor="editor"
-        :content-type="contentType"
       />
 
       <!-- BUTTON group is only implemented in DESKTOP -->
@@ -503,6 +512,7 @@ const reclaimEditorFocus = (event: MouseEvent) => {
 }
 
 .tableWrapper {
+  position: relative;
   overflow-x: auto;
   max-width: 100%;
 }

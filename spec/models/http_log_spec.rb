@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 require 'rails_helper'
 
@@ -23,6 +23,18 @@ RSpec.describe HttpLog, :aggregate_failures do
         expect(http_log.request['headers']).to eq("Authorization: Bearer [FILTERED]\nCookie: session_id=[FILTERED]; user_id=[FILTERED]")
         expect(http_log.request['url']).to eq('https://example.com/api?access_token=[FILTERED]&other=param')
         expect(http_log.response['body']).to eq('access_token="[FILTERED]" api_key: "[FILTERED]" secret = "[FILTERED]"')
+      end
+    end
+
+    context 'when long data is present' do
+      subject(:http_log) do
+        create(:http_log, request: { content: "{\"images\":[\"iVBORw0KGgoAAAANSUhEUgAABEkAAAECCAYAAAACQolFAAABY2lDQ1BrQ0dDb2xvclNwYWNlRGlzcGxheVAzAAAok\nX2QsUvDUBDGv1aloHUQHRwcMolDlJIKuji0FURxCFXB6pS+pqmQxkeSIgU3/4GC/4EKzm4Whzo6OAiik+jm5KTgouV5L4mkInqP435877vjOCA5bn\nBu9wOoO75bXMorm6UtJfWMBL0gDObxnK6vSv6uP+P9PvTeTstZv///jcGK6TGqn5QZxl0fSKjE+p7PJe8Tj7m0FHFLshXyieRyyOeBZ71YIL4mVlj\nNqBC/EKvlHt3q4brdYNEOcvu06WysyTmUE1jEDjxw2DDQhAId2T/8s4G/gF1yN\nFSn4UafOrJkSI\"]}" }, response: { body: "data:image/png;base64,iVBORw0KGgoAAAAAACWZVhJZk1NACoAAAAIAAUBEgADAAAAAQABAAABGgAFAAAAAQAAAEoBGwAFAAAAAQAAAFIBKAADAAAAAQACAACHaQAEAAAAAQ
+AAAFoAAAAAAAAAkAAAAAEAAACQAAAAAQADk=" })
+      end
+
+      it 'truncated long data in request/response before saving', :aggregate_failures do
+        expect(http_log.request['content']).to eq('{"images":["iVBORw0KGgoAAAANSUhEUgAABEkAA...[TRUNCATED]"]}')
+        expect(http_log.response['body']).to eq('data:image/png;base64,iVBORw0...[TRUNCATED]')
       end
     end
   end
@@ -90,6 +102,7 @@ RSpec.describe HttpLog, :aggregate_failures do
       expect(described_class.facility_to_permission('webhook')).to eq('admin.webhook')
       expect(described_class.facility_to_permission('cti')).to eq('admin.integration')
       expect(described_class.facility_to_permission('AI::Provider')).to eq('admin.ai_provider')
+      expect(described_class.facility_to_permission('MicrosoftGraph')).to eq('admin.channel_microsoft_graph')
       expect(described_class.facility_to_permission('WhatsApp::Business')).to eq('admin.channel_whatsapp')
     end
 
@@ -106,12 +119,39 @@ RSpec.describe HttpLog, :aggregate_failures do
   describe '.facilities_by_permission' do
     it 'returns a hash grouped by permissions with facilities' do
       expect(described_class.facilities_by_permission).to include(
-        'admin.ai_provider'      => include('AI::Provider'),
-        'admin.integration'      => include('GitHub'),
-        'admin.security'         => include('SAML'),
-        'admin.webhook'          => include('webhook'),
-        'admin.channel_whatsapp' => include('WhatsApp::Business')
+        'admin.ai_provider'             => include('AI::Provider'),
+        'admin.integration'             => include('GitHub'),
+        'admin.security'                => include('SAML'),
+        'admin.webhook'                 => include('webhook'),
+        'admin.channel_microsoft_graph' => include('MicrosoftGraph'),
+        'admin.channel_whatsapp'        => include('WhatsApp::Business')
       )
+    end
+  end
+
+  describe '.truncate_long_data' do
+    let(:input) { 'R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==' }
+
+    context 'when the input includes long base64 data' do
+      it 'truncates long data' do
+        expect(described_class.truncate_long_data(input)).to eq('R0lGODlhAQABAAAAACH5BAEKAAEAL...[TRUNCATED]')
+      end
+    end
+
+    context 'when the input includes base64 data URL prefix' do
+      let(:input) { 'data:image/gif;base64,R0lGfODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==' }
+
+      it 'truncates long data but preserves the prefix' do
+        expect(described_class.truncate_long_data(input)).to eq('data:image/gif;base64,R0lGfOD...[TRUNCATED]')
+      end
+    end
+
+    context 'when input is not longer than 32 chars' do
+      let(:input) { 'R0lGODlhAQABAAAAACH5BAEKAAEALAA=' }
+
+      it 'returns the input unchanged' do
+        expect(described_class.truncate_long_data(input)).to eq(input)
+      end
     end
   end
 end

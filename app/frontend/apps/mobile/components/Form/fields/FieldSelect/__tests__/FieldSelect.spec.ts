@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import { getNode } from '@formkit/core'
 import { FormKit } from '@formkit/vue'
@@ -30,7 +30,6 @@ const testOptions: SetRequired<SelectOption, 'label'>[] = [
 
 const wrapperParameters = {
   form: true,
-  formField: true,
   dialog: true,
 }
 
@@ -137,10 +136,14 @@ describe('Form - Field - Select - Options', () => {
 
     let selectOptions = wrapper.getAllByRole('option')
 
-    expect(selectOptions).toHaveLength(optionsProp.length)
+    expect(selectOptions).toHaveLength(optionsProp.length + 1)
 
     selectOptions.forEach((selectOption, index) => {
-      expect(selectOption).toHaveTextContent(testOptions[index].label)
+      if (index === testOptions.length) {
+        expect(selectOption).toHaveTextContent('3')
+      } else {
+        expect(selectOption).toHaveTextContent(testOptions[index].label!)
+      }
     })
 
     optionsProp.push({
@@ -1070,7 +1073,7 @@ describe('Form - Field - Select - Accessibility', () => {
       },
     })
 
-    expect(wrapper.getByRole('button')).toHaveAttribute('aria-label', 'Clear Selection')
+    expect(wrapper.getByRole('button')).toHaveAttribute('aria-label', 'Clear selection')
   })
 
   it('supports keyboard navigation', async () => {

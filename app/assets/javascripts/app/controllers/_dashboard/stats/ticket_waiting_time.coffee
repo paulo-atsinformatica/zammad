@@ -33,7 +33,7 @@ class Stats extends App.ControllerDashboardStatsBase
     ctx.scale dpr, dpr
 
     handlingTimeColors = {}
-    handlingTimeColors['supergood'] = '#38AE6A' # supergood
+    handlingTimeColors['supergood'] = '#480404' # supergood
     handlingTimeColors['good']      = '#A9AC41' # good
     handlingTimeColors['ok']        = '#FAAB00' # ok
     handlingTimeColors['bad']       = '#F6820B' # bad

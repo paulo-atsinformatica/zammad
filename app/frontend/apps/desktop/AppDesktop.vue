@@ -1,4 +1,4 @@
-<!-- Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/ -->
+<!-- Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/ -->
 
 <script setup lang="ts">
 import { onBeforeMount, watch } from 'vue'
@@ -19,11 +19,24 @@ import { useAuthenticationStore } from '#shared/stores/authentication.ts'
 import { useLocaleStore } from '#shared/stores/locale.ts'
 import { useSessionStore } from '#shared/stores/session.ts'
 
+import { useBetaUiDisclaimer } from '#desktop/components/BetaUi/composables/useBetaUiDisclaimer.ts'
+import {
+  useBetaUiFeedbackConsent,
+  initializeBetaUiFeedbackConsentDialog,
+} from '#desktop/components/BetaUi/composables/useBetaUiFeedbackConsent.ts'
 import { initializeConfirmationDialog } from '#desktop/components/CommonConfirmationDialog/initializeConfirmationDialog.ts'
-import { useBetaDisclaimer } from '#desktop/composables/useBetaDisclaimer.ts'
 import { useConnection } from '#desktop/composables/useConnection.ts'
 import { useTicketOverviewsStore } from '#desktop/entities/ticket/stores/ticketOverviews.ts'
 import { useUserCurrentTaskbarTabsStore } from '#desktop/entities/user/current/stores/taskbarTabs.ts'
+import { useTicketBulkUpdateStore } from '#desktop/entities/user/current/stores/ticketBulkUpdate.ts'
+import { useAppUsageStore } from '#desktop/stores/appUsage.ts'
+
+import { useBetaUi } from './components/BetaUi/composables/useBetaUi.ts'
+import { isDesktopView } from './mountPoint.ts'
+import { useBetaUiFeedbackRouteGuard } from './components/BetaUi/composables/useBetaUiFeedbackRouteGuard.ts'
+import { useMobileDetection } from './composables/responsiveness/useMobileDetection.ts'
+import { useKnowledgeBaseAccess } from './entities/knowledge-base/composables/useKnowledgeBaseAccess.ts'
+import { useKnowledgeBaseStore } from './entities/knowledge-base/stores/knowledgeBase.ts'
 
 const router = useRouter()
 
@@ -33,6 +46,9 @@ const session = useSessionStore()
 useMetaTitle().initializeMetaTitle()
 
 const application = useApplicationStore()
+
+const { canBrowse: canBrowseKnowledgeBase } = useKnowledgeBaseAccess()
+
 onBeforeMount(() => {
   application.setLoaded()
 })
@@ -44,8 +60,30 @@ usePushMessages()
 // browser tab or maintenance mode switch).
 useAuthenticationChanges()
 
-// Shows the warning for the usage of the desktop view(beta). REMOVE when stable.
-useBetaDisclaimer()
+// TODO: Remove when desktop view is stable.
+const { switchValue } = useBetaUi()
+
+// Shows the feedback consent for the BETA usage of the desktop view.
+//  The user has by this point enrolled into the BETA program.
+
+initializeBetaUiFeedbackConsentDialog() // Calling it within the check also doesn't pick up the setup scope 😱
+
+// Customização ATS: este bundle também serve páginas que não são a Desktop View
+// (hoje o relatório personalizado, em /report). Nelas o aviso e o fluxo de
+// feedback do BETA não fazem sentido — falam de uma interface que o usuário nem
+// escolheu abrir. Ver mountPoint.ts.
+if (isDesktopView()) {
+  if (switchValue.value) {
+    useBetaUiFeedbackConsent()
+    useBetaUiFeedbackRouteGuard()
+  }
+
+  // Shows the warning for the BETA usage of the desktop view.
+  //   The user has not yet enrolled into the BETA program.
+  else {
+    useBetaUiDisclaimer()
+  }
+}
 
 // We need to trigger a manual translation update for the form related strings.
 const formConfig = useFormKitConfig()
@@ -80,6 +118,18 @@ watch(
     useUserCurrentTaskbarTabsStore()
     useTicketOverviewsStore()
     initializeDefaultObjectAttributes()
+    useAppUsageStore()
+    useTicketBulkUpdateStore()
+    useMobileDetection()
+
+    // Preload the knowledge base base query so entering the section resolves
+    //   its default locale instantly — but only when there is a knowledge base
+    //   this user can actually browse. Defer until the initial route is
+    //   resolved so the store reads the real locale from the URL instead of
+    //   firing against the still-unresolved start location on a full reload.
+    if (canBrowseKnowledgeBase.value) {
+      router.isReady().then(() => useKnowledgeBaseStore())
+    }
   },
   { immediate: true },
 )

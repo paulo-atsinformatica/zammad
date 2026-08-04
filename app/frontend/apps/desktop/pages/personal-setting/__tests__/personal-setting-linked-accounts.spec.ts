@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import { visitView } from '#tests/support/components/visitView.ts'
 import { mockApplicationConfig } from '#tests/support/mock-applicationConfig.ts'
@@ -72,11 +72,11 @@ describe('linked accounts page', () => {
 
       await view.events.click(view.getByLabelText('Remove account link on GitHub'))
 
-      expect(await view.findByRole('dialog', { name: 'Delete Object' })).toBeInTheDocument()
+      expect(await view.findByRole('dialog', { name: 'Delete object' })).toBeInTheDocument()
 
       expect(view.getByText('Are you sure you want to delete this object?')).toBeInTheDocument()
 
-      await view.events.click(view.getByRole('button', { name: 'Delete Object' }))
+      await view.events.click(view.getByRole('button', { name: 'Delete object' }))
 
       const mockCalls = await waitForUserCurrentRemoveLinkedAccountMutationCalls()
 

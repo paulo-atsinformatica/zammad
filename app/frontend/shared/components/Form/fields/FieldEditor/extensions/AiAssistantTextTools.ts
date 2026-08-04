@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import { Extension, Editor } from '@tiptap/core'
 import { effectScope, ref, type Ref, watch } from 'vue'
@@ -24,6 +24,8 @@ import { GraphQLErrorTypes } from '#shared/types/error.ts'
 
 import type { FormKitNode } from '@formkit/core'
 
+export const EXTENSION_NAME = 'aiAssistantTextTools'
+
 const createAiTextToolsController = () => {
   let mutationCancelled = false
 
@@ -34,6 +36,9 @@ const createAiTextToolsController = () => {
         context: { fetchOptions: { signal: abortController.signal } },
       }),
       {
+        errorNotificationMessage: __(
+          'Writing assistant could not generate text. Please try again or contact your administrator.',
+        ),
         errorCallback: (error) => {
           return !(mutationCancelled && error.type === GraphQLErrorTypes.NetworkError)
         },
@@ -171,8 +176,6 @@ const executeTextModification = async (
     editor.chain().focus().run()
   }
 }
-
-export const EXTENSION_NAME = 'aiAssistantTextTools'
 
 export default (context: Ref<FormFieldContext<FieldEditorProps>>) => {
   const { formId, ticketId, meta: editorMeta } = context.value

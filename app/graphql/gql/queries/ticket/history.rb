@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 module Gql::Queries
   class Ticket::History < BaseQuery
@@ -8,13 +8,11 @@ module Gql::Queries
 
     type [Gql::Types::HistoryGroupType], null: false
 
-    def self.authorize(_obj, ctx)
-      ctx.current_user.permissions?(['ticket.agent'])
-    end
+    requires_permission 'ticket.agent'
 
     def resolve(ticket:)
       Service::History::Group
-        .new(current_user: context.current_user)
+        .with_current_user(context.current_user)
         .execute(object: ticket)
     end
   end

@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 require 'rails_helper'
 
@@ -112,7 +112,7 @@ RSpec.describe 'Caller log', authenticated_as: :authenticate, type: :system do
           expect(page).to have_css('input[name="title"][value="Call from 0190333"]', visible: :all)
           expect(page).to have_css('.tabsSidebar-tab[data-tab="customer"]', visible: :all)
           expect(page).to have_css("input[name=customer_id][value='#{customer.id}']", visible: :hide)
-          expect(find('[name=customer_id_completion]').value).to eq "#{customer.fullname} <#{customer.email}>"
+          expect(page).to have_field('customer_id_completion', with: "#{customer.fullname} <#{customer.email}>")
         end
       end
     end
@@ -131,7 +131,7 @@ RSpec.describe 'Caller log', authenticated_as: :authenticate, type: :system do
           expect(page).to have_text('New Ticket')
           expect(page).to have_css("input[name='title'][value='Call from 0190333']", visible: :all)
           expect(page).to have_no_css('.tabsSidebar-tab[data-tab="customer"]')
-          expect(find('[name=customer_id_completion]').value).to eq ''
+          expect(page).to have_field('customer_id_completion', with: '')
         end
       end
     end
@@ -169,7 +169,7 @@ RSpec.describe 'Caller log', authenticated_as: :authenticate, type: :system do
           expect(page).to have_css('input[name="title"][value="Call from 0190444"]', visible: :all)
           expect(page).to have_css('.tabsSidebar-tab[data-tab="customer"]', visible: :all)
           expect(page).to have_css("input[name=customer_id][value='#{customer.id}']", visible: :hide)
-          expect(find('[name=customer_id_completion]').value).to eq '0190444'
+          expect(page).to have_field('customer_id_completion', with: '0190444')
         end
       end
     end
@@ -185,7 +185,7 @@ RSpec.describe 'Caller log', authenticated_as: :authenticate, type: :system do
     it 'increments the call counter notification badge' do
       within '[href="#cti"].js-phoneMenuItem' do
         counter = find('.counter')
-        expect(counter).to have_content 1
+        expect(counter).to have_text 1
       end
     end
   end

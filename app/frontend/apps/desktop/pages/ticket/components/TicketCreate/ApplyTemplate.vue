@@ -1,4 +1,4 @@
-<!-- Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/ -->
+<!-- Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/ -->
 
 <script setup lang="ts">
 import { computed } from 'vue'
@@ -34,7 +34,7 @@ const items = computed<DropdownItem[]>(() =>
   <template v-if="templateAccess">
     <CommonDropdown
       :items="items"
-      :action-label="$t('Apply Template')"
+      :action-label="$t('Apply template')"
       orientation="top"
       @handle-action="emit('select-template', $event.key)"
     />

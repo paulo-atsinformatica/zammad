@@ -1,4 +1,4 @@
-<!-- Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/ -->
+<!-- Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/ -->
 
 <script setup lang="ts">
 import { computed } from 'vue'
@@ -16,6 +16,8 @@ import CommonSimpleTable from '#desktop/components/CommonTable/CommonSimpleTable
 import type { TableSimpleHeader } from '#desktop/components/CommonTable/types'
 import { useCalendarIcsFileEventsQuery } from '#desktop/entities/calendar/ics-file/graphql/queries/events.api.ts'
 
+import CommonTableSkeleton from '../CommonTable/Skeleton/CommonTableSkeleton.vue'
+
 interface Props {
   fileId: string
   fileType: string
@@ -30,25 +32,25 @@ const calendarEventsQuery = new QueryHandler(
   }),
 )
 const calendarEventsQueryResult = calendarEventsQuery.result()
-const calendarEventsQueryLoading = calendarEventsQuery.loading()
+const calendarEventsQueryLoading = calendarEventsQuery.loadingWithoutCachedResult()
 
 const tableHeaders: TableSimpleHeader[] = [
   {
     key: 'summary',
-    label: __('Event Summary'),
+    label: __('Event summary'),
   },
   {
     key: 'location',
-    label: __('Event Location'),
+    label: __('Event location'),
   },
   {
     key: 'start',
-    label: __('Event Starting'),
+    label: __('Event starting'),
     type: 'timestamp_absolute',
   },
   {
     key: 'end',
-    label: __('Event Ending'),
+    label: __('Event ending'),
     type: 'timestamp_absolute',
   },
 ]
@@ -82,7 +84,7 @@ const downloadCalendar = () => {
 
 <template>
   <CommonFlyout
-    :header-title="__('Preview Calendar')"
+    :header-title="__('Preview calendar')"
     :footer-action-options="{
       actionLabel: __('Download'),
       actionButton: { variant: 'primary' },
@@ -92,8 +94,12 @@ const downloadCalendar = () => {
     @action="downloadCalendar"
   >
     <CommonLoader :loading="calendarEventsQueryLoading">
+      <template #skeleton>
+        <CommonTableSkeleton :rows="3" :columns="tableHeaders.length" />
+      </template>
+
       <CommonSimpleTable
-        :caption="__('Preview Calendar')"
+        :caption="__('Preview calendar')"
         class="mb-4 w-full"
         :headers="tableHeaders"
         :items="tableItems"

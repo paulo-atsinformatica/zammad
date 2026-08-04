@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 module Gql::Mutations
   class KnowledgeBase::Answer::Suggestion::Content::Transform < BaseMutation
@@ -10,12 +10,10 @@ module Gql::Mutations
     field :body, String, null: true, description: 'Answer translation content'
     field :attachments, [Gql::Types::StoredFileType], null: true, description: 'Attachments of the answer'
 
-    def self.authorize(_obj, ctx)
-      ctx.current_user.permissions?('ticket.agent')
-    end
+    requires_permission 'ticket.agent'
 
     def resolve(translation_id:, form_id:)
-      translation = Gql::ZammadSchema.verified_object_from_id(translation_id, type: ::KnowledgeBase::Answer::Translation)
+      translation = Gql::ZammadSchema.authorized_object_from_id(translation_id, type: ::KnowledgeBase::Answer::Translation, user: context.current_user)
 
       {
         body:        convert_body(translation, form_id),

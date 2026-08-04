@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 class AI::Analytics::UsagesController < ApplicationController
   prepend_before_action :authentication_check
@@ -9,8 +9,8 @@ class AI::Analytics::UsagesController < ApplicationController
     authorize! ai_analytics_run, :show?
 
     Service::AI::Analytics::UpsertUsage
-      .new(current_user, ai_analytics_run, **usage_attributes)
-      .execute
+      .with_current_user(current_user)
+      .execute(ai_analytics_run, **usage_attributes)
 
     render json: { status: :ok }
   end

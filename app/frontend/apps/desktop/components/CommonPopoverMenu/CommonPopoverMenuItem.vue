@@ -1,4 +1,4 @@
-<!-- Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/ -->
+<!-- Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/ -->
 
 <script setup lang="ts">
 import { computed } from 'vue'
@@ -48,7 +48,7 @@ const iconColor = computed(() => {
   >
     <slot name="leading" />
     <CommonLabel
-      class="gap-2 text-left flex-1"
+      class="flex-1 gap-2 text-left"
       :class="[labelClass, variantClass]"
       :prefix-icon="icon"
       :icon-color="iconColor"

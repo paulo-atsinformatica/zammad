@@ -1,4 +1,4 @@
-<!-- Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/ -->
+<!-- Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/ -->
 
 <script setup lang="ts">
 import CommonTranslateRenderer from '#shared/components/CommonTranslateRenderer/CommonTranslateRenderer.vue'
@@ -18,7 +18,7 @@ const appName = useAppName()
 
 <template>
   <div
-    class="ai-stripe animate-ai-stripe relative flex items-center gap-1 px-4 py-3 before:absolute before:top-0 before:left-0"
+    class="relative flex ai-stripe animate-ai-stripe items-center gap-1 px-4 py-3 before:absolute before:top-0 before:left-0"
   >
     <CommonIcon class="shrink-0" :class="icon" size="tiny" name="smart-assist" />
 
@@ -32,7 +32,7 @@ const appName = useAppName()
           props: {
             class: label,
           },
-          content: $t('Writing Assistant'),
+          content: $t('AI writing assistant'),
         },
       ]"
     />

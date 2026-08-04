@@ -1,16 +1,21 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 require 'rails_helper'
 
-RSpec.describe Service::AI::Agent::Run::Context::Entity, type: :service do
-  let(:ticket) { create(:ticket, title: 'Test Ticket', group: group) }
+RSpec.describe Service::AI::Agent::Run::Context::Entity, current_user_id: 1, type: :service do
   let(:group)  { create(:group, name: 'Example Group') }
+  let(:entity) { described_class.new(entity_object: ticket, entity_context: entity_context) }
+
+  let(:ticket) do
+    create(:ticket, title: 'Test Ticket', group: group)
+      .tap { it.tag_add('example_tag') }
+  end
+
   let(:entity_context) do
     {
       'object_attributes' => %w[title group_id type]
     }
   end
-  let(:entity) { described_class.new(entity_object: ticket, entity_context: entity_context) }
 
   describe '#prepare' do
     context 'when entity_object_attributes is blank' do
@@ -151,6 +156,51 @@ RSpec.describe Service::AI::Agent::Run::Context::Entity, type: :service do
         end
       end
 
+      context 'when processing email articles and articles is set to "all"' do
+        let(:entity_context) do
+          {
+            'object_attributes' => %w[title],
+            'articles'          => 'all'
+          }
+        end
+
+        let(:articles) do
+          [
+            create(
+              :ticket_article,
+              :inbound_email,
+              ticket:       ticket,
+              content_type: 'text/html',
+              body:         '<p>First message</p><blockquote>quoted text</blockquote>',
+              created_at:   2.minutes.ago,
+            ),
+            create(
+              :ticket_article,
+              :inbound_email,
+              ticket:       ticket,
+              content_type: 'text/html',
+              body:         '<p>Reply message</p><blockquote>quoted text</blockquote>',
+              created_at:   1.minute.ago,
+            ),
+          ]
+        end
+
+        it 'skips quote removal for the first article', aggregate_failures: true do
+          result = entity.prepare
+
+          expect(result[:articles]).to contain_exactly(
+            hash_including(
+              article:        articles.first,
+              processed_body: include('quoted text').and(not_include('<p>')),
+            ),
+            hash_including(
+              article:        articles.second,
+              processed_body: not_include('quoted text').and(not_include('<p>')),
+            ),
+          )
+        end
+      end
+
       context 'when articles is set to "last"' do
         let(:entity_context) do
           {
@@ -173,7 +223,7 @@ RSpec.describe Service::AI::Agent::Run::Context::Entity, type: :service do
 
       context 'when articles is set to "last" and entity_article is provided' do
         let(:specific_article) { articles.second }
-        let(:entity) { described_class.new(entity_object: ticket, entity_context: entity_context, entity_article: specific_article) }
+        let(:entity)           { described_class.new(entity_object: ticket, entity_context: entity_context, entity_article: specific_article) }
         let(:entity_context) do
           {
             'object_attributes' => %w[title],
@@ -233,6 +283,36 @@ RSpec.describe Service::AI::Agent::Run::Context::Entity, type: :service do
               )
             end
           )
+        end
+      end
+
+      describe 'tags in entity context' do
+        let(:result) { entity.prepare }
+
+        context 'when set to true' do
+          let(:entity_context) { { 'tags' => true } }
+
+          it 'includes tags' do
+            expect(result).to include(
+              tags: ['example_tag']
+            )
+          end
+        end
+
+        context 'when tags is set to false' do
+          let(:entity_context) { { 'tags' => false } }
+
+          it 'does not include tags' do
+            expect(result).not_to include(:tags)
+          end
+        end
+
+        context 'when tags is not mentioned in the context' do
+          let(:entity_context) { {} }
+
+          it 'does not include tags' do
+            expect(result).not_to include(:tags)
+          end
         end
       end
     end

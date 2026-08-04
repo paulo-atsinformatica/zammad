@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 require 'rails_helper'
 
@@ -72,26 +72,29 @@ RSpec.describe AI::Service::AIAgent, :aggregate_failures do
 
       # Check for the complete XML structure for priority_id (with extra newlines from ERB)
       expect(args[:prompt_system]).to include(<<~XML.strip)
-        The available options from "Priority" are definied inside the XML format:
+        The available options from "Priority" are defined inside the XML format:
         <priority_id>
           <option>
             <value>1</value>
             <label>1 low</label>
+            <description>Low priority</description>
           </option>
           <option>
             <value>2</value>
             <label>2 normal</label>
+            <description>Normal priority</description>
           </option>
           <option>
             <value>3</value>
             <label>3 high</label>
+            <description>High priority</description>
           </option>
         </priority_id>
       XML
 
       # Check for the complete JSON response structure (pretty-printed JSON format)
       expect(args[:prompt_system]).to include(<<~JSON.strip)
-        Reply in the defined plain JSON structure only and do not wrap it in code block markers:
+        Reply with a plain JSON object only. Do not wrap the response in code fences, markdown, or any additional formatting. Do not include ```json or ``` in the output.
 
         {
           "state_id": "integer",
@@ -100,9 +103,9 @@ RSpec.describe AI::Service::AIAgent, :aggregate_failures do
       JSON
 
       # Check for entity context in the user prompt
+      expect(args[:prompt_user]).to include('<ticket>')
       expect(args[:prompt_user]).to include(<<~XML.strip)
-        <ticket>
-          <title>
+        <title>
             <value>Test Ticket</value>
           </title>
           <group_id>
@@ -113,12 +116,57 @@ RSpec.describe AI::Service::AIAgent, :aggregate_failures do
             <label>2 normal</label>
             <value>#{priority.id}</value>
           </priority_id>
-
-        </ticket>
       XML
+      expect(args[:prompt_user]).to include('</ticket>')
     end
 
     expect(result.content).to include('state_id' => 1, 'priority_id' => 2)
+  end
+
+  it 'stores the ticket as related_object on the analytics run' do
+    expect { ai_service.execute }
+      .to change(AI::Analytics::Run, :count).by(1)
+
+    expect(AI::Analytics::Run.last.related_object).to eq(ticket)
+  end
+
+  context 'when instruction_context options have no description' do
+    let(:context_data) do
+      {
+        ai_agent:            ai_agent,
+        ticket:              ticket,
+        role_description:    'Test AI Agent',
+        instruction:         'Analyze the ticket',
+        instruction_context: {
+          object_attributes: {
+            'priority_id' => {
+              label: 'Priority',
+              items: [
+                { value: 1, label: '1 low' },
+                { value: 2, label: '2 normal' },
+              ]
+            }
+          }
+        },
+        entity_context:      {
+          object_attributes: {
+            'title' => { value: 'Test Ticket' }
+          }
+        },
+        result_structure:    {
+          'state_id' => 'integer'
+        }
+      }
+    end
+
+    it 'omits description tags from the prompt' do
+      ai_service.execute
+
+      expect(mock_provider).to have_received(:ask) do |args|
+        expect(args[:prompt_system]).to include('<label>1 low</label>')
+        expect(args[:prompt_system]).not_to include('<description>')
+      end
+    end
   end
 
   context 'when entity_context has object_attributes with only values (no labels)' do
@@ -157,6 +205,142 @@ RSpec.describe AI::Service::AIAgent, :aggregate_failures do
       end
 
       expect(result.content).to include('state_id' => 1)
+    end
+  end
+
+  context 'when entity_context has tags' do
+    let(:context_data) do
+      {
+        ai_agent:            ai_agent,
+        ticket:              ticket,
+        role_description:    'Test AI Agent',
+        instruction:         'Analyze the ticket and provide recommendations',
+        instruction_context: {
+          object_attributes: {},
+          tags:              %w[urgent billing vip]
+        },
+        entity_context:      {
+          object_attributes: {
+            'title' => {
+              value: 'Test Ticket'
+            }
+          },
+          tags:              %w[urgent billing vip]
+        },
+        result_structure:    {
+          'state_id' => 'integer'
+        }
+      }
+    end
+
+    it 'includes tags in the user prompt' do
+      ai_service.execute
+
+      expect(mock_provider).to have_received(:ask) do |args|
+        expect(args[:prompt_user]).to include(<<~XML.strip)
+          <tags>
+              <tag>urgent</tag>
+              <tag>billing</tag>
+              <tag>vip</tag>
+            </tags>
+        XML
+      end
+    end
+
+    it 'includes tags in the system prompt' do
+      ai_service.execute
+
+      expect(mock_provider).to have_received(:ask) do |args|
+        expect(args[:prompt_system]).to include('The already available "Tags" are defined inside the XML format:')
+        expect(args[:prompt_system]).to include(<<~XML.strip)
+          <tags>
+              <tag>urgent</tag>
+              <tag>billing</tag>
+              <tag>vip</tag>
+            </tags>
+        XML
+      end
+    end
+  end
+
+  context 'when only instruction_context has tags (e.g. tag replace mode)' do
+    let(:context_data) do
+      {
+        ai_agent:            ai_agent,
+        ticket:              ticket,
+        role_description:    'Test AI Agent',
+        instruction:         'Analyze the ticket and provide recommendations',
+        instruction_context: {
+          object_attributes: {},
+          tags:              %w[urgent billing vip]
+        },
+        entity_context:      {
+          object_attributes: {
+            'title' => {
+              value: 'Test Ticket'
+            }
+          }
+        },
+        result_structure:    {
+          'state_id' => 'integer'
+        }
+      }
+    end
+
+    it 'still renders the available tags in the system prompt' do
+      ai_service.execute
+
+      expect(mock_provider).to have_received(:ask) do |args|
+        expect(args[:prompt_system]).to include('The already available "Tags" are defined inside the XML format:')
+        expect(args[:prompt_system]).to include(<<~XML.strip)
+          <tags>
+              <tag>urgent</tag>
+              <tag>billing</tag>
+              <tag>vip</tag>
+            </tags>
+        XML
+        expect(args[:prompt_user]).not_to include('<tags>')
+      end
+    end
+  end
+
+  context 'when entity_context has no tags' do
+    let(:context_data) do
+      {
+        ai_agent:            ai_agent,
+        ticket:              ticket,
+        role_description:    'Test AI Agent',
+        instruction:         'Analyze the ticket',
+        instruction_context: {
+          object_attributes: {}
+        },
+        entity_context:      {
+          object_attributes: {
+            'title' => {
+              value: 'Test Ticket'
+            }
+          },
+        },
+        result_structure:    {
+          'state_id' => 'integer'
+        }
+      }
+    end
+
+    it 'does not include tags in the user prompt' do
+      ai_service.execute
+
+      expect(mock_provider).to have_received(:ask) do |args|
+        expect(args[:prompt_user]).not_to include('<tags>')
+      end
+    end
+
+    it 'does not include tags in the system prompt' do
+      ai_service.execute
+
+      expect(mock_provider).to have_received(:ask) do |args|
+        expect(args[:prompt_system]).not_to include('<tags>')
+      end
     end
   end
 

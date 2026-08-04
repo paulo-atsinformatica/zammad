@@ -1,38 +1,29 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 class AI::Provider::CustomOpenAI < AI::Provider
+  include AI::Provider::Concerns::HandlesOpenAIMessages
+  include AI::Provider::Concerns::HasConfigurableModel
+  include AI::Provider::Concerns::HasModelsWithoutTemperatureFallback
 
   DEFAULT_OPTIONS = {
-    temperature: 0.1,
+    temperature:                0.1,
+    models_without_temperature: ['gpt-5']
   }.freeze
 
-  def chat(prompt_system:, prompt_user:)
+  def chat(prompt_system:, prompt_user:, prompt_image:)
     request_body = {
-      model:    options[:model],
-      messages: [
-        {
-          role:    'system',
-          content: prompt_system,
-        },
-        {
-          role:    'user',
-          content: prompt_user,
-        },
-      ],
+      model:    model_for(prompt_image:),
+      messages: messages_for(prompt_system:, prompt_user:, prompt_image:),
       stream:   false,
-      store:    false,
     }
-    # Some providers require 'json_schema' instead of 'json_object'
 
-    request_body[:temperature] = options[:temperature]
+    request_body[:temperature] = options[:temperature] if model_supports_temperature?
 
     request_options = {
-      open_timeout:  4,
-      read_timeout:  60,
-      verify_ssl:    true,
-      total_timeout: 60,
-      json:          true,
-      log:           {
+      **REQUEST_TIMEOUT_OPTIONS,
+      verify_ssl: true,
+      json:       true,
+      log:        {
         facility: 'AI::Provider',
       },
     }
@@ -58,12 +49,10 @@ class AI::Provider::CustomOpenAI < AI::Provider
 
   def self.ping!(config)
     request_options = {
-      open_timeout:  4,
-      read_timeout:  60,
-      verify_ssl:    true,
-      total_timeout: 60,
-      json:          true,
-      log:           {
+      **REQUEST_TIMEOUT_OPTIONS,
+      verify_ssl: true,
+      json:       true,
+      log:        {
         facility:          'AI::Provider',
         log_only_on_error: true,
       },
@@ -78,9 +67,51 @@ class AI::Provider::CustomOpenAI < AI::Provider
       request_options,
     )
 
-    raise AI::Provider::ResponseError, __('API server not accessible') if response.code.to_i != 200
+    validate_response!(response)
 
     nil
+  end
+
+  def self.check_temperature_support!(config)
+    request_body = {
+      model:       config[:model],
+      messages:    [{ role: 'user', content: 'Hello' }],
+      temperature: DEFAULT_OPTIONS[:temperature],
+      stream:      false,
+    }
+
+    request_options = {
+      **REQUEST_TIMEOUT_OPTIONS,
+      verify_ssl: true,
+      json:       true,
+      log:        {
+        facility:          'AI::Provider',
+        log_only_on_error: true,
+      },
+    }
+
+    # Token is optional since target host might not require authentication
+    request_options[:bearer_token] = config[:token] if config[:token].present?
+
+    response = UserAgent.post(
+      "#{config[:url]}/chat/completions",
+      request_body,
+      request_options,
+    )
+
+    return true if response.success?
+
+    data = JSON.parse(response.body)
+    data = data.pop if data.is_a?(Array) # Handle case when response is an array of errors
+    message = data.dig('error', 'message')
+    type = data.dig('error', 'type')
+    param = data.dig('error', 'param')
+    code = data.dig('error', 'code')
+    return false if type == 'invalid_request_error' && param == 'temperature' && code == 'unsupported_value'
+
+    raise message
+  rescue => e
+    raise CheckTemperatureSupportError, e.message
   end
 
   private

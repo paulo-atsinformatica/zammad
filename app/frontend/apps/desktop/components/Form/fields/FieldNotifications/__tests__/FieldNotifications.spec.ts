@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import { FormKit } from '@formkit/vue'
 import { waitFor } from '@testing-library/vue'
@@ -95,7 +95,6 @@ const testValue = {
 
 const wrapperParameters = {
   form: true,
-  formField: true,
 }
 
 const renderNotificationsInput = async (props: Record<string, unknown> = {}) => {

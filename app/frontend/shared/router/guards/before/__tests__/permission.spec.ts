@@ -1,10 +1,13 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import { createPinia, setActivePinia } from 'pinia'
+
+import { nullableMock } from '#tests/support/utils.ts'
 
 import { errorOptions } from '#shared/router/error.ts'
 import { useAuthenticationStore } from '#shared/stores/authentication.ts'
 import { useSessionStore } from '#shared/stores/session.ts'
+import type { UserData } from '#shared/types/store.ts'
 
 import permissionGuard from '../permission.ts'
 
@@ -25,11 +28,10 @@ describe('permissionGuard', () => {
       path: '/test',
       meta: {},
     } as RouteLocationNormalized
-    const next = vi.fn()
 
-    permissionGuard(to, from, next)
+    const result = permissionGuard(to, from, vi.fn())
 
-    expect(next).toHaveBeenCalledWith()
+    expect(result).toEqual(true)
   })
 
   it('should skip guard for no required permission', () => {
@@ -41,13 +43,12 @@ describe('permissionGuard', () => {
         requiredPermission: null,
       },
     } as RouteLocationNormalized
-    const next = vi.fn()
 
     useAuthenticationStore().authenticated = true
 
-    permissionGuard(to, from, next)
+    const result = permissionGuard(to, from, vi.fn())
 
-    expect(next).toHaveBeenCalledWith()
+    expect(result).toEqual(true)
   })
 
   it('should forbid access for user without required permission (redirect error page)', () => {
@@ -60,21 +61,22 @@ describe('permissionGuard', () => {
         requiredPermission: ['ticket.agent'],
       },
     } as RouteLocationNormalized
-    const next = vi.fn()
 
     useAuthenticationStore().authenticated = true
-    useSessionStore().user = {
+    useSessionStore().user = nullableMock<UserData>({
+      __typename: 'User',
       id: '123',
       internalId: 1,
       permissions: {
+        __typename: 'UserPermission',
         names: ['example.view'],
       },
       objectAttributeValues: [],
-    }
+    })
 
-    permissionGuard(to, from, next)
+    const result = permissionGuard(to, from, vi.fn())
 
-    expect(next).toHaveBeenCalledWith({
+    expect(result).toEqual({
       name: 'Error',
       query: {
         redirect: '1',
@@ -100,20 +102,65 @@ describe('permissionGuard', () => {
         requiredPermission: ['ticket.agent'],
       },
     } as RouteLocationNormalized
-    const next = vi.fn()
 
     useAuthenticationStore().authenticated = true
-    useSessionStore().user = {
+    useSessionStore().user = nullableMock<UserData>({
+      __typename: 'User',
       id: '123',
       internalId: 1,
       permissions: {
+        __typename: 'UserPermission',
         names: ['ticket.agent'],
       },
       objectAttributeValues: [],
-    }
+    })
 
-    permissionGuard(to, from, next)
+    const result = permissionGuard(to, from, vi.fn())
 
-    expect(next).toHaveBeenCalledWith()
+    expect(result).toEqual(true)
+  })
+
+  it('should forbid access when canAccess returns false', () => {
+    const to = {
+      name: 'KnowledgeBase',
+      path: '/knowledge-base',
+      fullPath: '/knowledge-base',
+      meta: {
+        requiresAuth: true,
+        requiredPermission: [],
+        canAccess: () => false,
+      },
+    } as unknown as RouteLocationNormalized
+
+    useAuthenticationStore().authenticated = true
+
+    const result = permissionGuard(to, from, vi.fn())
+
+    expect(result).toEqual({
+      name: 'Error',
+      query: {
+        redirect: '1',
+      },
+      replace: true,
+    })
+  })
+
+  it('should allow access when canAccess returns true', () => {
+    const to = {
+      name: 'KnowledgeBase',
+      path: '/knowledge-base',
+      fullPath: '/knowledge-base',
+      meta: {
+        requiresAuth: true,
+        requiredPermission: [],
+        canAccess: () => true,
+      },
+    } as unknown as RouteLocationNormalized
+
+    useAuthenticationStore().authenticated = true
+
+    const result = permissionGuard(to, from, vi.fn())
+
+    expect(result).toEqual(true)
   })
 })

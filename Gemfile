@@ -1,9 +1,9 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 source 'https://rubygems.org'
 
 # core - base
-ruby '3.4.7'
+ruby '3.4.9'
 gem 'rails', '~> 8.0.0'
 gem 'rake'
 
@@ -79,11 +79,11 @@ group :assets do
   # We cannot use sassc-rails, as it can lead to crashes on modern platforms like CentOS 9.
   # See https://jcmaciel.com/apple-silicon-ruby-on-rails-crash-segfault-sassc/
   #     https://github.com/sass/sassc-ruby/issues/197
-  # Pin to v5 which does not use sassc internally.
-  gem 'sass-rails', '~> 5', require: false
+  # Use dartsass-rails which uses Dart Sass (no sassc dependency).
+  gem 'dartsass-rails', require: false
 
   # asset handling - pipeline
-  gem 'sprockets', '~> 3.7.2', require: false
+  gem 'sprockets', '~> 4', require: false
   gem 'terser', require: false
 
   gem 'autoprefixer-rails', require: false
@@ -185,8 +185,6 @@ gem 'PoParser', require: false
 gem 'aws-sdk-s3', require: false
 
 # Debugging and profiling
-gem 'byebug'
-gem 'pry-byebug'
 gem 'pry-rails'
 gem 'pry-remote'
 gem 'pry-rescue'
@@ -206,7 +204,7 @@ gem 'cld'
 gem 'twitter_cldr'
 
 # AI integration
-gem 'elasticsearch', '>=8.11', '<10.0', require: false
+gem 'elasticsearch', '8.11.2', require: false
 
 # Gems used only for develop/test and not required
 # in production environments by default.
@@ -228,18 +226,18 @@ group :development, :test do
 
   # code QA
   gem 'brakeman', require: false
-  gem 'overcommit'
-  gem 'rubocop'
-  gem 'rubocop-capybara'
-  gem 'rubocop-factory_bot'
-  gem 'rubocop-faker'
-  gem 'rubocop-graphql'
-  gem 'rubocop-inflector'
-  gem 'rubocop-performance'
-  gem 'rubocop-rails'
-  gem 'rubocop-rake'
-  gem 'rubocop-rspec'
-  gem 'rubocop-rspec_rails'
+  gem 'overcommit', require: false
+  gem 'rubocop', require: false
+  gem 'rubocop-capybara', require: false
+  gem 'rubocop-factory_bot', require: false
+  gem 'rubocop-faker', require: false
+  gem 'rubocop-graphql', require: false
+  gem 'rubocop-inflector', require: false
+  gem 'rubocop-performance', require: false
+  gem 'rubocop-rails', require: false
+  gem 'rubocop-rake', require: false
+  gem 'rubocop-rspec', require: false
+  gem 'rubocop-rspec_rails', require: false
 
   # generate random test data
   gem 'factory_bot_rails'
@@ -268,8 +266,10 @@ group :development, :test do
   gem 'ruby-keycloak-admin'
 
   # Debugging and profiling
-  gem 'pry-doc' # This gem is very large, so don't include it in production.
+  gem 'pry-doc', require: false # This gem is very large, so don't include it in production.
 end
+
+gem 'minitest', require: false
 
 # To permanently extend Zammad with additional gems, you can specify them in Gemfile.local.
 Dir['Gemfile.local*'].each do |file|

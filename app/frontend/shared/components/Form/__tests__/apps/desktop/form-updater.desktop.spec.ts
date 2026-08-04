@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import { getAllByRole, getByRole, queryByRole, waitFor } from '@testing-library/vue'
 import { cloneDeep } from 'lodash-es'
@@ -22,6 +22,7 @@ import {
   type ObjectManagerFrontendAttributesPayload,
   type FormUpdaterQuery,
 } from '#shared/graphql/types.ts'
+import type { DeepPartial } from '#shared/types/utils.ts'
 
 import { FormUpdaterDocument } from '../../../graphql/queries/formUpdater.api.ts'
 import additionalFrontendObjectAttributes from '../../mocks/additionalFrontendObjectAttributes.json'
@@ -189,13 +190,13 @@ const checkSelectClearable = (
   if (clearable) {
     expect(
       getByRole(wrapper.getByLabelText(label), 'button', {
-        name: 'Clear Selection',
+        name: 'Clear selection',
       }),
     ).toBeInTheDocument()
   } else {
     expect(
       queryByRole(wrapper.getByLabelText(label), 'button', {
-        name: 'Clear Selection',
+        name: 'Clear selection',
       }),
     )
   }
@@ -207,7 +208,7 @@ const mergedObjectAttributes = mergeFrontendObjectAttributes(
 )
 
 const renderForm = async (
-  formUpdaterQueryResponse: FormUpdaterQuery | FormUpdaterQuery[],
+  formUpdaterQueryResponse: DeepPartial<FormUpdaterQuery> | DeepPartial<FormUpdaterQuery>[],
   options: ExtendedMountingOptions<Props> = {},
   objectManagerFrontendAttributes = mergedObjectAttributes,
 ) => {
@@ -1127,6 +1128,7 @@ describe('Form.vue - Form Updater - special situtations', () => {
     checkEmptyDisplayValue(wrapper, 'State')
 
     await selectValue(wrapper, 'Type', 'Incident')
+
     await waitUntil(() => mockFormUpdaterApi.calls.resolve === 2)
 
     checkDisplayValue(wrapper, 'State', 'new')
@@ -1194,8 +1196,8 @@ describe('Form.vue - Form Updater - special situtations', () => {
         example: '',
         group_id: undefined,
         multiselect: [],
-        multitreeselect: undefined,
-        number: '',
+        multitreeselect: [],
+        number: undefined,
         shared: false,
         start_date: undefined,
         state_id: 1,
@@ -1294,6 +1296,41 @@ describe('Form.vue - Form Updater - special situtations', () => {
     )
 
     checkFieldDirty(wrapper, 'Example', false)
+  })
+
+  it('dirty flag set when a hidden field is shown with a value in the same form updater response', async () => {
+    const { wrapper, mockFormUpdaterApi } = await renderForm([
+      {
+        formUpdater: {
+          fields: {
+            example: {
+              show: false,
+            },
+          },
+          flags: {},
+        },
+      },
+      {
+        formUpdater: {
+          fields: {
+            example: {
+              show: true,
+              value: 'CoreWorkflowValue',
+            },
+          },
+          flags: {},
+        },
+      },
+    ])
+
+    expect(wrapper.queryByLabelText('Example')).not.toBeInTheDocument()
+
+    await selectValue(wrapper, 'Type', 'Incident')
+
+    await waitUntil(() => mockFormUpdaterApi.calls.resolve === 2)
+
+    checkInputValue(wrapper, 'Example', 'CoreWorkflowValue')
+    checkFieldDirty(wrapper, 'Example', true)
   })
 
   it('no endless loop (additional request) for non existing options for new field values', async () => {

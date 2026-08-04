@@ -1,4 +1,4 @@
-<!-- Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/ -->
+<!-- Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/ -->
 
 <script setup lang="ts">
 import { watchPausable } from '@vueuse/core'
@@ -31,6 +31,7 @@ import hasPermission from '#shared/utils/hasPermission.ts'
 import { edgesToArray } from '#shared/utils/helpers.ts'
 
 import CommonButton from '#desktop/components/CommonButton/CommonButton.vue'
+import CommonEmptyMessage from '#desktop/components/CommonEmptyMessage/CommonEmptyMessage.vue'
 import { useSkeletonLoadingCount } from '#desktop/components/CommonTable/composables/useSkeletonLoadingCount.ts'
 import { useTicketBulkEdit } from '#desktop/components/Ticket/TicketBulkEditFlyout/useTicketBulkEdit.ts'
 import TicketListTable from '#desktop/components/Ticket/TicketListTable.vue'
@@ -40,7 +41,8 @@ import { useTicketsCachedByOverviewCache } from '#desktop/entities/ticket/compos
 import { useTicketsCachedByOverviewQuery } from '#desktop/entities/ticket/graphql/queries/ticketsCachedByOverview.api.ts'
 import { useTicketOverviewsStore } from '#desktop/entities/ticket/stores/ticketOverviews.ts'
 import { useLifetimeCustomerTicketsCount } from '#desktop/entities/user/current/composables/useLifetimeCustomerTicketsCount.ts'
-import TicketOverviewsEmptyText from '#desktop/pages/ticket-overviews/components/TicketOverviewsEmptyText.vue'
+
+const MAX_ITEMS = 2000
 
 interface Props {
   overviewId: string
@@ -105,15 +107,6 @@ const fetchOptions = {
   signal: currentAbortController.signal,
 }
 
-const refreshRefetchAbortController = () => {
-  // Stop polling to avoid duplicate requests during an manual refetch.
-  stopPolling()
-
-  currentAbortController.abort()
-  currentAbortController = new AbortController()
-  fetchOptions.signal = currentAbortController.signal
-}
-
 const ticketsQuery = new QueryHandler(
   useTicketsCachedByOverviewQuery(ticketsQueryVariables, {
     fetchPolicy: 'cache-and-network',
@@ -130,18 +123,62 @@ const ticketsQuery = new QueryHandler(
   },
 )
 
+const scrollContainerElement = useTemplateRef('scroll-container')
+
+const {
+  sort,
+  orderBy: localOrderBy,
+  orderDirection: localOrderDirection,
+  isSorting,
+} = useSorting(
+  ticketsQuery,
+  toRef(props, 'orderBy'),
+  toRef(props, 'orderDirection'),
+  scrollContainerElement,
+)
+
+const pagination = usePagination(
+  ticketsQuery,
+  'ticketsCachedByOverview',
+  queryPollingConfig.value.page_size,
+  () => ({
+    knownCollectionSignature: null,
+    renewCache: false,
+  }),
+)
+
 const ticketsResult = ticketsQuery.result()
-const loading = ticketsQuery.loading()
-
-const isLoadingTickets = computed(() => {
-  if (ticketsResult.value !== undefined) return false
-
-  return loading.value
-})
 
 const currentCollectionSignature = computed(() => {
   return ticketsResult.value?.ticketsCachedByOverview?.collectionSignature
 })
+
+const { startPolling, stopPolling } = useQueryPolling(
+  ticketsQuery,
+  pollingInterval,
+  () => ({
+    knownCollectionSignature: currentCollectionSignature.value,
+    renewCache: false,
+    pageSize: queryPollingConfig.value.page_size * pagination.currentPage,
+    cacheTtl: cacheTtl.value,
+  }),
+  () => ({
+    enabled: queryPollingConfig.value.enabled && !isSorting.value,
+  }),
+)
+
+const refreshRefetchAbortController = () => {
+  // Stop polling to avoid duplicate requests during an manual refetch.
+  stopPolling()
+
+  currentAbortController.abort()
+  currentAbortController = new AbortController()
+  fetchOptions.signal = currentAbortController.signal
+}
+
+const loading = ticketsQuery.loading()
+
+const isLoadingTickets = ticketsQuery.loadingWithoutCachedResult()
 
 const tickets = computed(() => edgesToArray(ticketsResult.value?.ticketsCachedByOverview))
 
@@ -157,44 +194,6 @@ onActivated(() => {
 onDeactivated(() => {
   foreground.value = false
 })
-
-const pagination = usePagination(
-  ticketsQuery,
-  'ticketsCachedByOverview',
-  queryPollingConfig.value.page_size,
-  () => ({
-    knownCollectionSignature: null,
-    renewCache: false,
-  }),
-)
-
-const scrollContainerElement = useTemplateRef('scroll-container')
-
-const {
-  sort,
-  orderBy: localOrderBy,
-  orderDirection: localOrderDirection,
-  isSorting,
-} = useSorting(
-  ticketsQuery,
-  toRef(props, 'orderBy'),
-  toRef(props, 'orderDirection'),
-  scrollContainerElement,
-)
-
-const { startPolling, stopPolling } = useQueryPolling(
-  ticketsQuery,
-  pollingInterval,
-  () => ({
-    knownCollectionSignature: currentCollectionSignature.value,
-    renewCache: false,
-    pageSize: queryPollingConfig.value.page_size * pagination.currentPage,
-    cacheTtl: cacheTtl.value,
-  }),
-  () => ({
-    enabled: queryPollingConfig.value.enabled && !isSorting.value,
-  }),
-)
 
 const resort = (column: string, direction: EnumOrderDirection) => {
   forceTicketsByOverviewCacheOnlyFirstPage(
@@ -303,8 +302,8 @@ const totalCount = computed(() => ticketsResult.value?.ticketsCachedByOverview.t
 
 const loadMore = async () => pagination.fetchNextPage()
 
-const { config } = storeToRefs(useApplicationStore())
-const { user } = storeToRefs(useSessionStore())
+const config = toRef(useApplicationStore(), 'config')
+const user = toRef(useSessionStore(), 'user')
 
 // Scrolling position is preserved when user visits another page and returns to overview page
 const { scrollPosition, restoreScrollPosition } = useScrollPosition(scrollContainerElement)
@@ -339,7 +338,17 @@ const localHeaders = computed(() => {
   return extendedHeaders
 })
 
-const { setOnSuccessCallback, checkedTicketIds } = useTicketBulkEdit()
+const { setOnSuccessCallback, checkedTicketIds, bulkContext } = useTicketBulkEdit()
+
+watch(
+  () => props.overviewId,
+  (newValue) => {
+    bulkContext.value = {
+      overviewId: newValue,
+    }
+  },
+  { immediate: true },
+)
 
 setOnSuccessCallback(() => {
   forceTicketsByOverviewCacheOnlyFirstPage(
@@ -366,8 +375,6 @@ setOnSuccessCallback(() => {
 
 onBeforeRouteUpdate(() => checkedTicketIds.value.clear())
 
-const maxItems = computed(() => config.value.ui_ticket_overview_ticket_limit)
-
 const { visibleSkeletonLoadingCount } = useSkeletonLoadingCount(toRef(props, 'overviewCount'))
 
 defineExpose({ tickets: readonly(tickets) })
@@ -386,7 +393,7 @@ defineExpose({ tickets: readonly(tickets) })
       :scroll-container="scrollContainerElement"
       :items="tickets"
       :total-count="totalCount"
-      :max-items="maxItems"
+      :max-items="MAX_ITEMS"
       :resorting="isSorting"
       :loading="isLoadingTickets"
       :skeleton-loading-count="visibleSkeletonLoadingCount"
@@ -395,9 +402,9 @@ defineExpose({ tickets: readonly(tickets) })
       @sort="resort"
     >
       <template #empty-list>
-        <TicketOverviewsEmptyText
+        <CommonEmptyMessage
           v-if="isCustomerAndCanCreateTickets && !hasAnyTicket"
-          class="space-y-2.5"
+          class="absolute top-1/2 w-full -translate-y-1/2 space-y-2.5 text-center ltr:left-1/2 ltr:-translate-x-1/2 rtl:right-1/2 rtl:translate-x-1/2"
           :title="$t('Welcome!')"
         >
           <CommonLabel class="block!" tag="p">{{
@@ -416,11 +423,12 @@ defineExpose({ tickets: readonly(tickets) })
             @click="router.push({ name: 'TicketCreate' })"
             >{{ $t('Create your first ticket') }}
           </CommonButton>
-        </TicketOverviewsEmptyText>
+        </CommonEmptyMessage>
 
-        <TicketOverviewsEmptyText
+        <CommonEmptyMessage
           v-else
-          :title="$t('Empty Overview')"
+          class="absolute top-1/2 w-full -translate-y-1/2 text-center ltr:left-1/2 ltr:-translate-x-1/2 rtl:right-1/2 rtl:translate-x-1/2"
+          :title="$t('Empty overview')"
           :text="$t('No tickets in this state.')"
           with-illustration
         />

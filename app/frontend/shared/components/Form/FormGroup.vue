@@ -1,11 +1,11 @@
-<!-- Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/ -->
+<!-- Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/ -->
 
 <script setup lang="ts">
 import { computed, useSlots, type SetupContext } from 'vue'
 
 import { getFormGroupClasses } from './initializeFormGroupClasses.ts'
 
-const props = defineProps<{ help?: string; showDirtyMark?: boolean }>()
+const props = defineProps<{ containerClass?: string; help?: string; showDirtyMark?: boolean }>()
 
 const slots: SetupContext['slots'] = useSlots()
 
@@ -18,6 +18,7 @@ const classMap = getFormGroupClasses()
   <div
     v-bind="$attrs"
     :class="[
+      containerClass,
       classMap.container,
       {
         [classMap.bottomMargin]: !hasHelp,

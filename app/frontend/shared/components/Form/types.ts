@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+// Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 import type { Sizes } from '#shared/components/CommonIcon/types.ts'
 import type { EnumObjectManagerObjects, FormUpdaterQuery } from '#shared/graphql/types.ts'
@@ -61,6 +61,7 @@ export interface FormSchemaField {
   updateFields?: boolean
   triggerFormUpdater?: boolean
   pendingValueUpdate?: boolean
+  formUpdaterValueChange?: boolean
   type: string
   name: string
   internal?: boolean
@@ -167,7 +168,8 @@ export interface ReactiveFormSchemaDataField {
   props: Except<
     SetOptional<FormSchemaField, 'type'>,
     'show' | 'props' | 'updateFields' | 'relation'
-  >
+  > &
+    FormFieldAdditionalProps
 }
 
 export interface ReactiveFormSchemData {
@@ -181,6 +183,7 @@ export interface ChangedField {
   name: string
   newValue: FormFieldValue
   oldValue: FormFieldValue
+  formUpdaterValueChange?: boolean
 }
 
 export type ChangedFieldFunction = {
@@ -269,7 +272,10 @@ export interface FormRef {
   values: FormValues
   flags: Record<string, boolean>
   updateSchemaDataField: UpdateSchemaDataFieldFunction
-  updateChangedFields: (changedFields: Record<string, Partial<FormSchemaField>>) => void
+  updateChangedFields: (
+    changedFields: Record<string, Partial<FormSchemaField>>,
+    changesCanTriggerFormUpdater?: boolean,
+  ) => void
 
   getNodeByName(id: string): FormKitNode | undefined
 
@@ -311,6 +317,9 @@ export type FieldEditorClass = {
   input: {
     container: string
     inlineContainer: string
+  }
+  tableMenu: {
+    triggerButton: string
   }
 }
 
