@@ -70,6 +70,158 @@ describe('custom report screen', () => {
     mockResults()
   })
 
+  // Espelha o payload real: quatro colunas nos dois relatórios, dois nomes em
+  // comum, e as mesmas linhas — porque os dois relatórios correm sobre Ticket e
+  // alcançam os mesmos tickets. O contador de colunas igual desarma o reset de
+  // larguras de CommonTable, então este caso exercita um caminho que o anterior
+  // não alcança.
+  it('keeps rendering when both reports have the same column count', async () => {
+    mockGraphQLResult<CustomReportResultsQuery, CustomReportResultsQueryVariables>(
+      CustomReportResultsDocument,
+      (variables) => {
+        const isSecond = variables.customReportId === SECOND_REPORT.id
+
+        const columns = isSecond
+          ? ['title', 'customer_id', 'closed_at', 'group_id']
+          : ['title', 'customer_id', 'owner_id', 'state_id']
+
+        const cell = (column: string) => (isSecond ? `B ${column}` : `A ${column}`)
+
+        return {
+          customReportResults: {
+            columns: columns.map((name) => ({ name, display: name })),
+            enabledFilters: [],
+            rows: ['3', '4', '5'].map((id) => ({
+              id,
+              values: Object.fromEntries(columns.map((name) => [name, `${cell(name)} ${id}`])),
+            })),
+            summary: null,
+            totalCount: 3,
+            page: 1,
+            perPage: 50,
+            totalPages: 1,
+          },
+        }
+      },
+    )
+
+    const view = await visitView('/custom-reports')
+
+    expect(await view.findByText('A owner_id 3')).toBeInTheDocument()
+
+    await view.events.click(await view.findByRole('button', { name: SECOND_REPORT.name }))
+
+    expect(await view.findByText('B closed_at 3')).toBeInTheDocument()
+
+    await view.events.click(await view.findByRole('button', { name: FIRST_REPORT.name }))
+
+    expect(await view.findByText('A owner_id 3')).toBeInTheDocument()
+  })
+
+  // Um relatório com totalizadores mas sem agrupamento devolve summary com
+  // groupBy e rows vazios e só o total geral preenchido. O bloco do resultado
+  // desenha o resumo e a tabela juntos, então um resumo que quebre leva a tabela
+  // junto — e os filtros, que ficam fora do bloco, continuariam na tela.
+  it('renders the grid for a report whose summary has no grouping', async () => {
+    mockGraphQLResult<CustomReportResultsQuery, CustomReportResultsQueryVariables>(
+      CustomReportResultsDocument,
+      {
+        customReportResults: {
+          columns: [
+            { name: 'number', display: '#' },
+            { name: 'title', display: 'Título' },
+          ],
+          enabledFilters: [],
+          rows: [{ id: '3', values: { number: '43003', title: 'chamado de teste' } }],
+          summary: {
+            groupBy: [],
+            aggregations: [{ name: 'count', display: 'Contagem' }],
+            rows: [],
+            totals: { count: 3 },
+          },
+          totalCount: 3,
+          page: 1,
+          perPage: 50,
+          totalPages: 1,
+        },
+      },
+    )
+
+    const view = await visitView('/custom-reports')
+
+    expect(await view.findByText('chamado de teste')).toBeInTheDocument()
+  })
+
+  // Payload copiado de uma instância real: relatório sem colunas escolhidas, que
+  // cai no conjunto padrão e devolve 25 delas. É a única dimensão em que esse
+  // relatório difere do que funciona.
+  const WIDE_COLUMNS = [
+    'number',
+    'title',
+    'customer_id',
+    'organization_id',
+    'group_id',
+    'owner_id',
+    'state_id',
+    'pending_time',
+    'priority_id',
+    'article_count',
+    'time_unit',
+    'escalation_at',
+    'first_response_escalation_at',
+    'update_escalation_at',
+    'close_escalation_at',
+    'last_contact_at',
+    'last_contact_agent_at',
+    'last_contact_customer_at',
+    'first_response_at',
+    'close_at',
+    'last_close_at',
+    'created_by_id',
+    'created_at',
+    'updated_by_id',
+    'updated_at',
+  ]
+
+  it('renders a report that falls back to the full default column set', async () => {
+    mockGraphQLResult<CustomReportResultsQuery, CustomReportResultsQueryVariables>(
+      CustomReportResultsDocument,
+      {
+        customReportResults: {
+          columns: WIDE_COLUMNS.map((name) => ({ name, display: name })),
+          enabledFilters: [],
+          // Metade dos valores vem nula na instância real (escalonamento, datas
+          // de contato), então o teste mantém esse formato.
+          rows: [
+            {
+              id: '3',
+              values: Object.fromEntries(
+                WIDE_COLUMNS.map((name, index) => [
+                  name,
+                  name === 'title' ? 'chamado de teste' : index % 2 === 0 ? null : `v${index}`,
+                ]),
+              ),
+            },
+          ],
+          summary: {
+            groupBy: [],
+            aggregations: [{ name: 'count', display: 'Contagem' }],
+            rows: [],
+            totals: { count: 3 },
+          },
+          totalCount: 3,
+          page: 1,
+          perPage: 50,
+          totalPages: 1,
+        },
+      },
+    )
+
+    const view = await visitView('/custom-reports')
+
+    expect(await view.findByText('chamado de teste')).toBeInTheDocument()
+  })
+
   it('keeps rendering the grid after switching between reports', async () => {
     const view = await visitView('/custom-reports')
 

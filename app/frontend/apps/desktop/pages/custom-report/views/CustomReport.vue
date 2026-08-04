@@ -288,53 +288,65 @@ const exportActions = computed<MenuItem[]>(() => [
       @apply="applyFilters"
     />
 
-    <CommonLoader :loading="resultsLoading">
-      <template v-if="result">
-        <CustomReportSummary v-if="summary" :summary="summary" />
+    <!--
+      O resultado fica FORA do CommonLoader de propósito. Ele embrulha o slot num
+      <Transition mode="out-in"> e, como `noTransition` é o padrão, o `name` vai
+      `undefined` e o Vue usa o prefixo `v-`, para o qual não existe CSS. Sem
+      duração para observar, a saída nunca conclui e o out-in fica preso: a div
+      vazia do loader permanece no DOM com `v-enter-from v-leave-from
+      v-leave-active` ao mesmo tempo, e o conteúdo nunca chega a montar. Era o
+      grid que sumia ao trocar de relatório e não voltava.
 
-        <!-- A key remonta a tabela ao trocar de relatório. Sem ela o componente
+      O loader aparece só enquanto não há nada a mostrar, e sem envolver o
+      resultado.
+    -->
+    <CommonLoader v-if="resultsLoading" :loading="true" />
+
+    <template v-else-if="result">
+      <CustomReportSummary v-if="summary" :summary="summary" />
+
+      <!-- A key remonta a tabela ao trocar de relatório. Sem ela o componente
              sobrevive à troca com as larguras de coluna e o estado de cabeçalho
              do relatório anterior, cujas colunas nem existem no novo. -->
-        <CommonAdvancedTable
-          :key="selectedReportId"
-          :caption="$t('Custom report results')"
-          :headers="tableHeaders"
-          :attributes="tableAttributes"
-          :items="tableItems"
-          :total-items-count="totalCount"
-          :order-by="orderBy"
-          :order-direction="orderDirection"
-          :table-id="`custom-report-${selectedReportId}`"
-          :storage-key-id="`custom-report-${selectedReportId}`"
-          @sort="sortByColumn"
-        />
+      <CommonAdvancedTable
+        :key="selectedReportId"
+        :caption="$t('Custom report results')"
+        :headers="tableHeaders"
+        :attributes="tableAttributes"
+        :items="tableItems"
+        :total-items-count="totalCount"
+        :order-by="orderBy"
+        :order-direction="orderDirection"
+        :table-id="`custom-report-${selectedReportId}`"
+        :storage-key-id="`custom-report-${selectedReportId}`"
+        @sort="sortByColumn"
+      />
 
-        <div class="mt-3 flex items-center justify-between gap-3">
+      <div class="mt-3 flex items-center justify-between gap-3">
+        <CommonLabel size="small">
+          {{ i18n.t('%s record(s) found', totalCount) }}
+        </CommonLabel>
+
+        <div v-if="totalPages > 1" class="flex items-center gap-2">
+          <CommonButton
+            size="medium"
+            :disabled="result.page <= 1"
+            @click="goToPage(result.page - 1)"
+          >
+            {{ $t('Previous') }}
+          </CommonButton>
           <CommonLabel size="small">
-            {{ i18n.t('%s record(s) found', totalCount) }}
+            {{ i18n.t('Page %s of %s', result.page, totalPages) }}
           </CommonLabel>
-
-          <div v-if="totalPages > 1" class="flex items-center gap-2">
-            <CommonButton
-              size="medium"
-              :disabled="result.page <= 1"
-              @click="goToPage(result.page - 1)"
-            >
-              {{ $t('Previous') }}
-            </CommonButton>
-            <CommonLabel size="small">
-              {{ i18n.t('Page %s of %s', result.page, totalPages) }}
-            </CommonLabel>
-            <CommonButton
-              size="medium"
-              :disabled="result.page >= totalPages"
-              @click="goToPage(result.page + 1)"
-            >
-              {{ $t('Next') }}
-            </CommonButton>
-          </div>
+          <CommonButton
+            size="medium"
+            :disabled="result.page >= totalPages"
+            @click="goToPage(result.page + 1)"
+          >
+            {{ $t('Next') }}
+          </CommonButton>
         </div>
-      </template>
-    </CommonLoader>
+      </div>
+    </template>
   </CustomReportPage>
 </template>
