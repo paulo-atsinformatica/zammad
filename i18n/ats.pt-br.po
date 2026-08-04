@@ -76,9 +76,6 @@ msgstr "Somado aos grupos acima, não cruzado com eles."
 msgid "No report available for this visibility."
 msgstr "Nenhum relatório disponível nesta visibilidade."
 
-msgid "Show"
-msgstr "Exibir"
-
 msgid "My groups"
 msgstr "Meus grupos"
 
@@ -130,6 +127,9 @@ msgstr "Filtros"
 msgid "Export"
 msgstr "Exportar"
 
+msgid "Export report"
+msgstr "Exportar relatório"
+
 msgid "Export format"
 msgstr "Formato de exportação"
 
@@ -142,8 +142,8 @@ msgstr "Excel (xlsx)"
 msgid "Recent exports"
 msgstr "Exportações recentes"
 
-msgid "Report exports"
-msgstr "Exportações do relatório"
+msgid "Export queue"
+msgstr "Fila de exportação"
 
 msgid "Back to the report"
 msgstr "Voltar ao relatório"

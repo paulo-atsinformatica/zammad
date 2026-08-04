@@ -18,7 +18,7 @@ const route: RouteRecordRaw[] = [
     name: 'CustomReportExports',
     component: () => import('./views/CustomReportExports.vue'),
     meta: {
-      title: __('Report exports'),
+      title: __('Export queue'),
       requiresAuth: true,
       requiredPermission: ['report.custom'],
       hasOwnLandmarks: true,

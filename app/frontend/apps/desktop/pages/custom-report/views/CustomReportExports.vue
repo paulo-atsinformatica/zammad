@@ -68,13 +68,9 @@ const statusLabel = (run: (typeof runs.value)[number]) => {
 </script>
 
 <template>
-  <CustomReportPage :title="__('Report exports')">
+  <CustomReportPage :title="__('Export queue')">
     <template #actions>
-      <CommonButton
-        size="medium"
-        prefix-icon="arrow-bar-left"
-        @click="goToReport"
-      >
+      <CommonButton size="medium" prefix-icon="arrow-bar-left" @click="goToReport">
         {{ $t('Back to the report') }}
       </CommonButton>
     </template>

@@ -31,7 +31,6 @@ const selectedReportId = ref<string>()
 const scope = ref(ALL_SCOPES)
 const page = ref(1)
 const filters = ref<RuntimeFilters>({})
-const filtersOpen = ref(false)
 
 const { generate, goToExports } = useCustomReportExport()
 
@@ -44,6 +43,7 @@ const listQuery = new QueryHandler(
 )
 const listResult = listQuery.result()
 const listLoading = listQuery.loading()
+const listError = listQuery.operationError()
 
 const reports = computed(() => listResult.value?.customReportList ?? [])
 
@@ -52,15 +52,23 @@ const selectReport = (id: string | undefined) => {
   // Filtros e página pertencem ao relatório anterior.
   filters.value = {}
   page.value = 1
-  filtersOpen.value = false
 }
 
 // Seleciona o primeiro disponível para a tela não abrir vazia, e reage a uma
 // troca de visibilidade que tire o relatório atual da lista.
-watch(reports, (value) => {
-  if (value.some((report) => report.id === selectedReportId.value)) return
+//
+// Observa o resultado da query, e não `reports`: a política é cache-and-network,
+// então trocar o recorte zera `listResult` enquanto a resposta não chega. Se
+// observássemos `reports` (que vira `[]` nesse intervalo), a escolha atual seria
+// descartada no meio do refetch e a tela ficaria vazia até o usuário clicar de
+// novo. Enquanto o resultado for indefinido, mantém o que já está selecionado.
+watch(listResult, (value) => {
+  const list = value?.customReportList
+  if (!list) return
 
-  selectReport(value[0]?.id)
+  if (list.some((report) => report.id === selectedReportId.value)) return
+
+  selectReport(list[0]?.id)
 })
 
 // Schema estático (não computed) de propósito: um schema recriado faz o FormKit
@@ -93,6 +101,14 @@ const onScopeChanged = (fieldName: string, newValue: FormFieldValue) => {
   scope.value = String(newValue)
 }
 
+// A ordenação é aplicada no banco, não na página carregada — senão ordenaria só
+// as 50 linhas visíveis. CustomReport::Query#ordered só aceita coluna real da
+// tabela, então um nome inesperado cai para `id` em vez de ir ao ORDER BY.
+//
+// Declarados antes da query porque entram nas variáveis dela.
+const orderBy = ref<string>()
+const orderDirection = ref<EnumOrderDirection>()
+
 const resultsQuery = new QueryHandler(
   useCustomReportResultsQuery(
     () => ({
@@ -108,9 +124,16 @@ const resultsQuery = new QueryHandler(
 )
 
 const resultsResult = resultsQuery.result()
-const resultsLoading = resultsQuery.loading()
+// loadingWithoutCachedResult (e não loading) para o grid já carregado não piscar
+// a cada refetch — só mostra o loader quando não há nada para exibir.
+const resultsLoading = resultsQuery.loadingWithoutCachedResult()
+const resultsError = resultsQuery.operationError()
 
 const result = computed(() => resultsResult.value?.customReportResults)
+
+// Sem isto, qualquer falha do GraphQL virava tela em branco silenciosa: o
+// template só testava `v-if="result"` e não havia ramo de erro.
+const errorMessage = computed(() => listError.value?.message || resultsError.value?.message)
 
 // CommonAdvancedTable (e não CommonSimpleTable) porque é o componente que traz
 // redimensionar coluna arrastando e ordenar clicando no cabeçalho. Ele recebe os
@@ -164,16 +187,16 @@ const goToPage = (target: number) => {
   page.value = target
 }
 
-// A ordenação é aplicada no banco, não na página carregada — senão ordenaria só
-// as 50 linhas visíveis. CustomReport::Query#ordered só aceita coluna real da
-// tabela, então um nome inesperado cai para `id` em vez de ir ao ORDER BY.
-const orderBy = ref<string>()
-const orderDirection = ref<EnumOrderDirection>()
-
 const sortByColumn = (column: string, direction: EnumOrderDirection) => {
   orderBy.value = column
   orderDirection.value = direction
   page.value = 1
+}
+
+const exportReport = (format: string) => {
+  if (!selectedReportId.value) return
+
+  generate(selectedReportId.value, format)
 }
 
 // O formato é escolhido no clique, num menu, em vez de ocupar espaço permanente
@@ -194,19 +217,13 @@ const exportActions = computed<MenuItem[]>(() => [
     onClick: () => exportReport('xlsx'),
   },
 ])
-
-const exportReport = (format: string) => {
-  if (!selectedReportId.value) return
-
-  generate(selectedReportId.value, format)
-}
 </script>
 
 <template>
   <CustomReportPage :title="__('Custom Report')" with-sidebar>
     <template #actions>
       <CommonButton size="medium" prefix-icon="list" @click="goToExports">
-        {{ $t('Report exports') }}
+        {{ $t('Export queue') }}
       </CommonButton>
       <CommonActionMenu
         :actions="exportActions"
@@ -215,7 +232,7 @@ const exportReport = (format: string) => {
         button-size="medium"
         default-icon="download"
         default-button-variant="primary"
-        :custom-menu-button-label="$t('Export')"
+        :custom-menu-button-label="$t('Export report')"
       />
     </template>
 
@@ -233,14 +250,6 @@ const exportReport = (format: string) => {
           form-class="grow"
           @changed="onScopeChanged"
         />
-        <CommonButton
-          v-if="result?.enabledFilters.length"
-          size="medium"
-          prefix-icon="filter"
-          @click="filtersOpen = !filtersOpen"
-        >
-          {{ $t('Filters') }}
-        </CommonButton>
       </div>
 
       <CommonLabel v-if="!listLoading && !reports.length" size="small">
@@ -265,10 +274,17 @@ const exportReport = (format: string) => {
       </ul>
     </template>
 
+    <CommonAlert v-if="errorMessage" variant="danger" class="mb-3">
+      {{ $t(errorMessage) }}
+    </CommonAlert>
+
+    <!-- Sempre visíveis: esconder os filtros atrás de um botão obrigava um
+         clique extra em toda consulta e escondia quais filtros existem. -->
     <CustomReportFilters
-      v-if="filtersOpen && availableFilters.length"
+      v-if="availableFilters.length"
       :available="availableFilters"
       :model-value="filters"
+      class="mb-3"
       @apply="applyFilters"
     />
 
@@ -276,7 +292,11 @@ const exportReport = (format: string) => {
       <template v-if="result">
         <CustomReportSummary v-if="summary" :summary="summary" />
 
+        <!-- A key remonta a tabela ao trocar de relatório. Sem ela o componente
+             sobrevive à troca com as larguras de coluna e o estado de cabeçalho
+             do relatório anterior, cujas colunas nem existem no novo. -->
         <CommonAdvancedTable
+          :key="selectedReportId"
           :caption="$t('Custom report results')"
           :headers="tableHeaders"
           :attributes="tableAttributes"
