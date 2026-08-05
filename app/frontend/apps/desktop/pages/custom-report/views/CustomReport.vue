@@ -185,6 +185,17 @@ const availableFilters = computed(
   () => (result.value?.enabledFilters ?? []) as unknown as AvailableFilter[],
 )
 
+// Identidade do conjunto de filtros, usada como key do formulário.
+//
+// Não dá para usar o id do relatório: ele muda no clique, enquanto os filtros só
+// chegam com a resposta. O formulário remontava no intervalo, ainda com os
+// filtros do relatório anterior, e a atualização seguinte de props não os
+// substituía — Form.vue mescla campos por nome em schemaData.fields, então campo
+// que saiu do schema permanece na tela. O resultado era ficar sempre um passo
+// atrás. Amarrando a key ao próprio conjunto, a remontagem acontece junto com o
+// dado.
+const filtersKey = computed(() => availableFilters.value.map((filter) => filter.name).join('|'))
+
 const applyFilters = (value: RuntimeFilters) => {
   filters.value = value
   page.value = 1
@@ -289,12 +300,10 @@ const exportActions = computed<MenuItem[]>(() => [
 
     <!-- Sempre visíveis: esconder os filtros atrás de um botão obrigava um
          clique extra em toda consulta e escondia quais filtros existem. -->
-    <!-- A key remonta o formulário ao trocar de relatório. O FormKit não
-         reconstrói os campos só porque o schema mudou, então voltar a um
-         relatório já visitado deixava na tela os filtros do outro. -->
+    <!-- Key pelo conjunto de filtros, não pelo relatório: ver filtersKey. -->
     <CustomReportFilters
       v-if="availableFilters.length"
-      :key="selectedReportId"
+      :key="filtersKey"
       :available="availableFilters"
       :model-value="filters"
       class="mb-3"

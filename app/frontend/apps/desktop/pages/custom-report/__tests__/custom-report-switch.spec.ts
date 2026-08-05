@@ -70,6 +70,49 @@ describe('custom report screen', () => {
     mockResults()
   })
 
+  // O id do relatório muda no clique, mas os filtros só chegam com a resposta.
+  // Remontando o formulário pelo id, ele nascia com os filtros do relatório
+  // anterior e a atualização de props seguinte não os removia — Form.vue mescla
+  // campos por nome —, então a tela ficava sempre um passo atrás.
+  it('shows the filters of the report that is selected, on every switch', async () => {
+    mockGraphQLResult<CustomReportResultsQuery, CustomReportResultsQueryVariables>(
+      CustomReportResultsDocument,
+      (variables) => {
+        const isSecond = variables.customReportId === SECOND_REPORT.id
+
+        return {
+          customReportResults: {
+            columns: [{ name: 'title', display: 'Título' }],
+            enabledFilters: isSecond
+              ? [{ name: 'closed_at', display: 'Fechado em', type: 'date', options: [] }]
+              : [{ name: 'title', display: 'Título do chamado', type: 'text', options: [] }],
+            rows: [{ id: '3', values: { title: 'chamado' } }],
+            summary: null,
+            totalCount: 1,
+            page: 1,
+            perPage: 50,
+            totalPages: 1,
+          },
+        }
+      },
+    )
+
+    const view = await visitView('/custom-reports')
+
+    expect(await view.findByLabelText('Título do chamado')).toBeInTheDocument()
+
+    await view.events.click(await view.findByRole('button', { name: SECOND_REPORT.name }))
+
+    expect(await view.findByLabelText('Fechado em')).toBeInTheDocument()
+    expect(view.queryByLabelText('Título do chamado')).not.toBeInTheDocument()
+
+    // A volta é onde aparecia o atraso.
+    await view.events.click(await view.findByRole('button', { name: FIRST_REPORT.name }))
+
+    expect(await view.findByLabelText('Título do chamado')).toBeInTheDocument()
+    expect(view.queryByLabelText('Fechado em')).not.toBeInTheDocument()
+  })
+
   // Espelha o payload real: quatro colunas nos dois relatórios, dois nomes em
   // comum, e as mesmas linhas — porque os dois relatórios correm sobre Ticket e
   // alcançam os mesmos tickets. O contador de colunas igual desarma o reset de
