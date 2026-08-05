@@ -35,10 +35,17 @@ const formKey = ref(0)
 // não estiver permitido para o tipo.
 const OPERATORS = {
   select: 'is',
+  agent: 'is',
+  customer: 'is',
+  organization: 'is',
+  number: 'is',
   boolean: 'is',
   date: 'after (absolute)',
   text: 'contains',
 } as const
+
+// Tipos cujo valor é um id e que o selector espera receber como lista.
+const ID_TYPES = ['select', 'agent', 'customer', 'organization', 'boolean'] as const
 
 const fieldFor = (filter: AvailableFilter): FormSchemaNode => {
   const shared = {
@@ -72,8 +79,16 @@ const fieldFor = (filter: AvailableFilter): FormSchemaNode => {
           clearable: true,
         },
       }
+    // Campos de busca do próprio Zammad: o usuário digita e escolhe na lista,
+    // e o valor que sai já é o id — que é o que a coluna *_id compara.
+    case 'agent':
+    case 'customer':
+    case 'organization':
+      return { ...shared, type: filter.type, props: { clearable: true } }
     case 'date':
       return { ...shared, type: 'date' }
+    case 'number':
+      return { ...shared, type: 'number' }
     default:
       return { ...shared, type: 'text' }
   }
@@ -93,10 +108,16 @@ const apply = (data: FormSubmitData<Record<string, unknown>>) => {
 
     const type = typeByName.value.get(name) ?? 'text'
 
+    // Os campos de busca podem devolver lista quando permitem múltipla escolha.
+    const values = Array.isArray(value) ? value : [value]
+    if (!values.length) return
+
     // O selector do Zammad espera lista de valores para 'is'.
     const filter: RuntimeFilter = {
       operator: OPERATORS[type],
-      value: type === 'select' || type === 'boolean' ? [String(value)] : String(value),
+      value: (ID_TYPES as readonly string[]).includes(type)
+        ? values.map((entry) => String(entry))
+        : String(value),
     }
 
     filters[name] = filter

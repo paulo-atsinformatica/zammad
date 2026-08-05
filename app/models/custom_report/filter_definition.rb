@@ -7,19 +7,42 @@
 # Sem isto a tela só sabe o nome do atributo e cai num input de texto para tudo,
 # o que é inútil para estado, grupo ou data.
 class CustomReport::FilterDefinition
-  # 'select' vem com `options`; os outros são controles simples.
-  TYPES = %w[select date boolean text].freeze
+  # 'select' vem com `options`; 'agent', 'customer' e 'organization' são campos
+  # de busca com autocomplete (o mesmo controle usado no resto do Zammad); os
+  # demais são controles simples.
+  TYPES = %w[select agent customer organization date boolean number text].freeze
+
+  # Colunas *_id cuja relação é grande demais para virar lista (ver
+  # ENUMERABLE_RELATIONS) ganham o campo de busca correspondente. Sem isto elas
+  # caíam em 'text', o operador 'contains' virava ILIKE e o Postgres recusava a
+  # consulta: `operator does not exist: integer ~~* unknown`.
+  #
+  # A chave é a classe da relação; owner_id é exceção por buscar só entre
+  # atendentes, que é o conjunto útil para "Proprietário".
+  AUTOCOMPLETE_BY_RELATION = {
+    'User'         => 'customer',
+    'Organization' => 'organization',
+  }.freeze
+
+  AGENT_ATTRIBUTES = %w[owner_id].freeze
 
   # Operadores que cada tipo aceita. O operador chega da requisição e vai direto
   # ao Selector::Sql, então precisa ser restrito: um valor desconhecido levanta
   # exceção lá dentro, e um inesperado ('is set' num texto, por exemplo) mudaria
   # o significado do filtro. A interseção com VALID_OPERATORS mantém isto em
   # sincronia com o upstream.
+  # Os tipos que resolvem para uma coluna *_id (select e os de autocomplete) só
+  # aceitam igualdade: o valor comparado é um id, e um 'contains' ali vira ILIKE
+  # sobre integer, que o Postgres recusa.
   OPERATORS_BY_TYPE = {
-    'select'  => ['is', 'is not'],
-    'date'    => ['after (absolute)', 'before (absolute)'],
-    'boolean' => ['is'],
-    'text'    => ['contains', 'contains not', 'is', 'is not', 'starts with one of', 'ends with one of'],
+    'select'       => ['is', 'is not'],
+    'agent'        => ['is', 'is not'],
+    'customer'     => ['is', 'is not'],
+    'organization' => ['is', 'is not'],
+    'number'       => ['is', 'is not'],
+    'date'         => ['after (absolute)', 'before (absolute)'],
+    'boolean'      => ['is'],
+    'text'         => ['contains', 'contains not', 'is', 'is not', 'starts with one of', 'ends with one of'],
   }.freeze
 
   # Relações cuja lista inteira pode ser oferecida como opção.
@@ -74,10 +97,37 @@ class CustomReport::FilterDefinition
   # `return` sai do método sem atribuir, e a memoização nunca acontecia.
   def resolve_type
     return 'select' if relation_options.present?
+    return autocomplete_type if autocomplete_type
     return 'date' if date_column?
     return 'boolean' if column&.type == :boolean
 
+    # Rede de segurança: nenhuma coluna numérica pode cair em 'text', senão o
+    # operador 'contains' gera ILIKE sobre integer e derruba a consulta.
+    return 'number' if numeric_column?
+
     'text'
+  end
+
+  # Campo de busca para as relações que não cabem numa lista. Devolve nil quando
+  # o atributo não é uma dessas, para o resolve_type seguir adiante.
+  def autocomplete_type
+    return @autocomplete_type if defined?(@autocomplete_type)
+
+    @autocomplete_type = begin
+      klass = relation_class
+
+      if klass.nil?
+        nil
+      elsif AGENT_ATTRIBUTES.include?(name) && klass <= User
+        'agent'
+      else
+        AUTOCOMPLETE_BY_RELATION[klass.name]
+      end
+    end
+  end
+
+  def numeric_column?
+    %i[integer bigint decimal float].include?(column&.type)
   end
 
   def column

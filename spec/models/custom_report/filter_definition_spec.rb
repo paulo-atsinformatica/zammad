@@ -42,12 +42,46 @@ RSpec.describe CustomReport::FilterDefinition do
 
     # User e Organization ficam de fora de ENUMERABLE_RELATIONS de propósito:
     # despejar a base inteira na tela seria problema de volume e de privacidade.
+    # Em vez de lista, esses viram campo de busca — texto livre não serve, porque
+    # a coluna comparada é o *_id.
     context 'with a relation to a large table' do
-      let(:name) { 'customer_id' }
-
-      it 'falls back to text instead of listing every record' do
-        expect(definition.type).to eq('text')
+      it 'offers an agent search for the owner' do
+        expect(described_class.new(name: 'owner_id', display: 'owner_id', target_class: Ticket, user: user).type)
+          .to eq('agent')
       end
+
+      it 'offers a user search for the customer' do
+        expect(described_class.new(name: 'customer_id', display: 'customer_id', target_class: Ticket, user: user).type)
+          .to eq('customer')
+      end
+
+      it 'offers an organization search for the organization' do
+        expect(described_class.new(name: 'organization_id', display: 'organization_id', target_class: Ticket, user: user).type)
+          .to eq('organization')
+      end
+    end
+
+    # Regressão: com o tipo 'text' o operador 'contains' era aceito e virava
+    # ILIKE sobre uma coluna integer, o que o Postgres recusa com
+    # "operator does not exist: integer ~~* unknown".
+    context 'with a numeric column' do
+      let(:name) { 'article_count' }
+
+      it { expect(definition.type).to eq('number') }
+
+      it 'does not accept a text operator' do
+        expect(definition.permits?('contains')).to be(false)
+      end
+    end
+
+    it 'never resolves a numeric column to a type that accepts contains' do
+      numeric = Ticket.columns_hash.select { |_, column| %i[integer bigint decimal float].include?(column.type) }.keys
+
+      offenders = numeric.select do |attribute|
+        described_class.new(name: attribute, display: attribute, target_class: Ticket, user: user).permits?('contains')
+      end
+
+      expect(offenders).to be_empty
     end
   end
 

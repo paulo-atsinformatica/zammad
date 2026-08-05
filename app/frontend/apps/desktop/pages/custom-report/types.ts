@@ -20,7 +20,19 @@ export interface AvailableFilterOption {
 
 // O tipo decide o controle renderizado. Quem determina é o backend, a partir da
 // coluna e da relação do atributo.
-export type AvailableFilterType = 'select' | 'date' | 'boolean' | 'text'
+//
+// 'agent', 'customer' e 'organization' são campos de busca com autocomplete: as
+// relações por trás deles (usuários, organizações) são grandes demais para virar
+// lista de opções, e texto livre não serve porque a coluna filtrada é o *_id.
+export type AvailableFilterType =
+  | 'select'
+  | 'agent'
+  | 'customer'
+  | 'organization'
+  | 'date'
+  | 'boolean'
+  | 'number'
+  | 'text'
 
 export interface AvailableFilter {
   name: string
