@@ -1,4 +1,5 @@
 # Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
+
 # Customização ATS: relatório personalizado.
 
 module Gql::Types::CustomReport
@@ -21,10 +22,17 @@ module Gql::Types::CustomReport
     field :rows, [Gql::Types::CustomReport::RowType, { null: false }], null: false, hash_key: :rows,
           description: 'Rows of the requested page'
 
+    # Nulo quando o relatório não define agrupamento, e o grid sai como lista
+    # simples.
+    field :grouping, Gql::Types::CustomReport::ColumnType, hash_key:    :grouping,
+                                                           description: 'Attribute the grid is broken into sections by, nil when there is none'
+    field :group_counts, [Gql::Types::CustomReport::GroupCountType, { null: false }], null: false, hash_key: :group_counts,
+          description: 'Record count of each group, across the whole result and not just this page'
+
     # Nulo quando o relatório não define totalizadores, para a tela não desenhar a
     # seção.
-    field :summary, Gql::Types::CustomReport::SummaryType, hash_key: :summary,
-          description: 'Grouped totals, nil when the report defines none'
+    field :summary, Gql::Types::CustomReport::SummaryType, hash_key:    :summary,
+                                                           description: 'Grouped totals, nil when the report defines none'
 
     field :total_count, Integer, null: false, hash_key: :total_count,
           description: 'Total number of matching records'

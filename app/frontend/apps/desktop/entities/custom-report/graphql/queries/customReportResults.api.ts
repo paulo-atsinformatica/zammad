@@ -31,6 +31,15 @@ export const CustomReportResultsDocument = gql`
     rows {
       id
       values
+      groupValue
+    }
+    grouping {
+      name
+      display
+    }
+    groupCounts {
+      value
+      count
     }
     summary {
       groupBy {

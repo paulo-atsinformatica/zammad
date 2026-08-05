@@ -25,6 +25,8 @@ class CustomReport::Result
       columns:         column_metadata,
       enabled_filters: filter_metadata,
       rows:            rows,
+      grouping:        grouping.to_h,
+      group_counts:    grouping.counts,
       summary:         summary,
       total_count:     total_count,
       page:            page,
@@ -48,6 +50,11 @@ class CustomReport::Result
   # seção.
   def summary
     @summary ||= CustomReport::Summary.new(report: report, query: query, columns: columns).call
+  end
+
+  # Quebra do grid em seções, com a contagem de cada uma.
+  def grouping
+    @grouping ||= CustomReport::Grouping.new(report: report, user: user, query: query, columns: columns)
   end
 
   def effective_per_page
@@ -94,6 +101,7 @@ class CustomReport::Result
       per_page:        effective_per_page,
       order_by:        order_by,
       order_direction: order_direction,
+      group_by:        grouping.attribute,
     )
 
     preloads = columns.preload_associations
@@ -101,8 +109,12 @@ class CustomReport::Result
 
     records.map do |record|
       {
-        id:     record.id,
-        values: columns.names.zip(columns.row(record)).to_h,
+        id:          record.id,
+        values:      columns.names.zip(columns.row(record)).to_h,
+        # A seção a que a linha pertence. Vem por linha, e não deduzida de uma
+        # coluna, porque o atributo de agrupamento não precisa estar entre as
+        # colunas escolhidas.
+        group_value: grouping.value_for(record),
       }
     end
   end

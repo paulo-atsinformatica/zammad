@@ -1,4 +1,5 @@
 # Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
+
 # Customização ATS: relatório personalizado.
 
 require 'rails_helper'
@@ -130,6 +131,96 @@ RSpec.describe CustomReport::Result do
     # do scope de permissão de quem visualiza.
     it 'does not return records outside the reach of the viewer' do
       expect(result[:rows].pluck(:id)).not_to include(hidden_ticket.id)
+    end
+  end
+
+  # Como na Visão Geral: o grid quebrado em seções por um atributo, com a
+  # contagem de cada seção — e não só uma tabela de totalizadores separada
+  # (ver CustomReport::Summary, que continua existindo para isso).
+  describe 'grid grouping' do
+    let(:owner_a) { create(:agent, groups: [group]) }
+    let(:owner_b) { create(:agent, groups: [group]) }
+
+    let(:report) do
+      create(:custom_report,
+             object:          'Ticket',
+             columns:         %w[title owner_id],
+             enabled_filters: [],
+             condition:       {},
+             group_by:        ['owner_id'],
+             created_by_id:   user.id,
+             updated_by_id:   user.id)
+    end
+
+    before do
+      alpha.update!(owner: owner_a)
+      beta.update!(owner: owner_b)
+    end
+
+    it 'exposes the attribute the grid is grouped by' do
+      expect(result[:grouping]).to eq(name: 'owner_id', display: 'Owner')
+    end
+
+    it 'counts every record of the owner_a group, across the whole result' do
+      counts = result[:group_counts].index_by { |entry| entry[:value] }
+
+      expect(counts[owner_a.fullname][:count]).to eq(1)
+    end
+
+    it 'counts every record of the owner_b group, across the whole result' do
+      counts = result[:group_counts].index_by { |entry| entry[:value] }
+
+      expect(counts[owner_b.fullname][:count]).to eq(1)
+    end
+
+    it 'labels the row of the group it belongs to' do
+      rows = result[:rows].index_by { |row| row[:id] }
+
+      expect(rows[alpha.id][:group_value]).to eq(owner_a.fullname)
+    end
+
+    it 'labels every row with the section it belongs to' do
+      rows = result[:rows].index_by { |row| row[:id] }
+
+      expect(rows[beta.id][:group_value]).to eq(owner_b.fullname)
+    end
+
+    # A ordenação segue a coluna de agrupamento (owner_id), não o rótulo exibido
+    # (o nome do usuário) — por isso o teste verifica adjacência, e não uma
+    # sequência alfabética que a query não promete.
+    it 'orders the page so rows of the same section stay together' do
+      create(:ticket, group:, title: 'gamma', owner: owner_a)
+
+      values = result[:rows].pluck(:group_value)
+
+      # Toda vez que o valor muda, ele nunca volta ao anterior: cada seção
+      # aparece uma única vez, em bloco.
+      expect(values.uniq.size).to eq(values.chunk_while { |a, b| a == b }.count)
+    end
+
+    context 'when the report defines no grouping' do
+      let(:report) do
+        create(:custom_report,
+               object:          'Ticket',
+               columns:         %w[title],
+               enabled_filters: [],
+               condition:       {},
+               group_by:        [],
+               created_by_id:   user.id,
+               updated_by_id:   user.id)
+      end
+
+      it 'returns nil grouping' do
+        expect(result[:grouping]).to be_nil
+      end
+
+      it 'returns no group counts' do
+        expect(result[:group_counts]).to eq([])
+      end
+
+      it 'labels no row with a section, so the grid renders as a plain list' do
+        expect(result[:rows].first[:group_value]).to be_nil
+      end
     end
   end
 end

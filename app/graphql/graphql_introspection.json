@@ -5057,6 +5057,49 @@
         },
         {
           "kind": "OBJECT",
+          "name": "CustomReportGroupCount",
+          "description": "How many records a group of the report holds",
+          "fields": [
+            {
+              "name": "count",
+              "description": "Number of records in the group, across the whole result",
+              "args": [],
+              "type": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": {
+                  "kind": "SCALAR",
+                  "name": "Int",
+                  "ofType": null
+                }
+              },
+              "isDeprecated": false,
+              "deprecationReason": null
+            },
+            {
+              "name": "value",
+              "description": "Label of the group, already resolved for relations",
+              "args": [],
+              "type": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": {
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
+                }
+              },
+              "isDeprecated": false,
+              "deprecationReason": null
+            }
+          ],
+          "inputFields": null,
+          "interfaces": [],
+          "enumValues": null,
+          "possibleTypes": null
+        },
+        {
+          "kind": "OBJECT",
           "name": "CustomReportResult",
           "description": "A page of results of a custom report",
           "fields": [
@@ -5104,6 +5147,42 @@
                     }
                   }
                 }
+              },
+              "isDeprecated": false,
+              "deprecationReason": null
+            },
+            {
+              "name": "groupCounts",
+              "description": "Record count of each group, across the whole result and not just this page",
+              "args": [],
+              "type": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": {
+                  "kind": "LIST",
+                  "name": null,
+                  "ofType": {
+                    "kind": "NON_NULL",
+                    "name": null,
+                    "ofType": {
+                      "kind": "OBJECT",
+                      "name": "CustomReportGroupCount",
+                      "ofType": null
+                    }
+                  }
+                }
+              },
+              "isDeprecated": false,
+              "deprecationReason": null
+            },
+            {
+              "name": "grouping",
+              "description": "Attribute the grid is broken into sections by, nil when there is none",
+              "args": [],
+              "type": {
+                "kind": "OBJECT",
+                "name": "CustomReportColumn",
+                "ofType": null
               },
               "isDeprecated": false,
               "deprecationReason": null
@@ -5219,6 +5298,18 @@
           "name": "CustomReportRow",
           "description": "A row of a custom report result",
           "fields": [
+            {
+              "name": "groupValue",
+              "description": "Label of the section this row belongs to, nil when the report has no grouping",
+              "args": [],
+              "type": {
+                "kind": "SCALAR",
+                "name": "String",
+                "ofType": null
+              },
+              "isDeprecated": false,
+              "deprecationReason": null
+            },
             {
               "name": "id",
               "description": "ID of the underlying record, so the grid can link to it",

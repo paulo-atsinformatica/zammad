@@ -69,11 +69,15 @@ class CustomReport::Query
   end
 
   # Página de resultados para exibição em grid.
-  def page(page: 1, per_page: DEFAULT_PER_PAGE, order_by: nil, order_direction: 'asc')
+  #
+  # group_by entra antes da ordenação escolhida: sem isso os registros de uma
+  # mesma seção ficariam espalhados pela página e o grid agrupado mostraria a
+  # mesma seção várias vezes.
+  def page(page: 1, per_page: DEFAULT_PER_PAGE, order_by: nil, order_direction: 'asc', group_by: nil)
     per_page = per_page.to_i.clamp(1, MAX_PER_PAGE)
     page     = [page.to_i, 1].max
 
-    ordered(order_by, order_direction)
+    ordered(order_by, order_direction, group_by)
       .offset((page - 1) * per_page)
       .limit(per_page)
   end
@@ -158,10 +162,13 @@ class CustomReport::Query
   end
 
   # Só ordena por coluna real da tabela: o valor vem da requisição e iria direto
-  # para o ORDER BY.
-  def ordered(order_by, order_direction)
+  # para o ORDER BY. Vale para o agrupamento também, que vem do modelo salvo.
+  def ordered(order_by, order_direction, group_by = nil)
     column    = target_class.column_names.include?(order_by.to_s) ? order_by.to_s : 'id'
     direction = order_direction.to_s.casecmp('desc').zero? ? :desc : :asc
+
+    group = group_by.to_s if target_class.column_names.include?(group_by.to_s)
+    return relation.reorder(group => :asc, column => direction) if group.present? && group != column
 
     relation.reorder(column => direction)
   end

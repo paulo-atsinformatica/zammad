@@ -1,4 +1,5 @@
 # Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
+
 # Customização ATS: relatório personalizado.
 
 module Gql::Types::CustomReport
@@ -18,6 +19,11 @@ module Gql::Types::CustomReport
     # usa para dados de forma dinâmica (ver Gql::Queries::FormUpdater).
     field :values, GraphQL::Types::JSON, null: false, hash_key: :values,
           description: 'Formatted values keyed by attribute name'
+
+    # Vem por linha porque o atributo de agrupamento não precisa estar entre as
+    # colunas escolhidas — o grid não teria de onde deduzi-lo.
+    field :group_value, String, hash_key:    :group_value,
+                                description: 'Label of the section this row belongs to, nil when the report has no grouping'
     # rubocop:enable GraphQL/UnnecessaryFieldAlias
   end
 end

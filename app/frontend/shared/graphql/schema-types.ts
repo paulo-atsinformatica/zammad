@@ -797,6 +797,15 @@ export type CustomReportGeneratePayload = {
   errors?: Maybe<Array<UserError>>;
 };
 
+/** How many records a group of the report holds */
+export type CustomReportGroupCount = {
+  __typename?: 'CustomReportGroupCount';
+  /** Number of records in the group, across the whole result */
+  count: Scalars['Int']['output'];
+  /** Label of the group, already resolved for relations */
+  value: Scalars['String']['output'];
+};
+
 /** A page of results of a custom report */
 export type CustomReportResult = {
   __typename?: 'CustomReportResult';
@@ -804,6 +813,10 @@ export type CustomReportResult = {
   columns: Array<CustomReportColumn>;
   /** Attributes the viewer may filter by, with the control to render */
   enabledFilters: Array<CustomReportFilter>;
+  /** Record count of each group, across the whole result and not just this page */
+  groupCounts: Array<CustomReportGroupCount>;
+  /** Attribute the grid is broken into sections by, nil when there is none */
+  grouping?: Maybe<CustomReportColumn>;
   /** Current page number */
   page: Scalars['Int']['output'];
   /** Page size actually applied, after the server side cap */
@@ -821,6 +834,8 @@ export type CustomReportResult = {
 /** A row of a custom report result */
 export type CustomReportRow = {
   __typename?: 'CustomReportRow';
+  /** Label of the section this row belongs to, nil when the report has no grouping */
+  groupValue?: Maybe<Scalars['String']['output']>;
   /** ID of the underlying record, so the grid can link to it */
   id: Scalars['ID']['output'];
   /** Formatted values keyed by attribute name */

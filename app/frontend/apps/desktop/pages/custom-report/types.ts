@@ -59,3 +59,10 @@ export interface ReportSummary {
   rows: ReportSummaryRow[]
   totals: Record<string, unknown>
 }
+
+// Quantos registros uma seção do grid agrupado tem, no resultado inteiro — e não
+// só na página carregada (ver CustomReport::Grouping#counts).
+export interface ReportGroupCount {
+  value: string
+  count: number
+}

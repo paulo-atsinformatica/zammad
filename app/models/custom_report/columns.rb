@@ -48,6 +48,13 @@ class CustomReport::Columns
     names.map { |name| value(record, name) }
   end
 
+  # Valor formatado de um atributo qualquer, não só das colunas exibidas — o
+  # agrupamento do grid precisa do rótulo do atributo de agrupamento mesmo quando
+  # ele não é uma das colunas escolhidas.
+  def display_value(record, name)
+    value(record, name)
+  end
+
   # Rótulo traduzido de um atributo qualquer, não só das colunas exibidas.
   # Usado para os filtros oferecidos na tela.
   #

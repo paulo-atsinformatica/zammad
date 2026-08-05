@@ -142,26 +142,57 @@ const tableHeaders = computed(() => result.value?.columns.map((column) => column
 
 // dataType 'input' para todas: o backend já entrega os valores formatados como
 // texto (datas em ISO, relações pelo nome), então não há tipo a interpretar aqui.
-const tableAttributes = computed(
-  () =>
+const tableAttributes = computed(() => {
+  const attributes =
     result.value?.columns.map((column) => ({
       name: column.name,
       label: column.display,
       dataType: 'input',
       headerPreferences: { noResize: false, truncate: true },
       columnPreferences: {},
-    })) ?? [],
-)
+    })) ?? []
+
+  // O atributo de agrupamento precisa existir aqui mesmo quando não é uma das
+  // colunas escolhidas: é dele que CommonAdvancedTable lê o rótulo da seção (ver
+  // groupByAttribute). Sem duplicar quando o admin também escolheu exibi-lo como
+  // coluna normal.
+  const grouping = result.value?.grouping
+  if (grouping && !attributes.some((attribute) => attribute.name === grouping.name)) {
+    attributes.push({
+      name: grouping.name,
+      label: grouping.display,
+      dataType: 'input',
+      headerPreferences: { noResize: false, truncate: true },
+      columnPreferences: {},
+    })
+  }
+
+  return attributes
+})
 
 // Cada linha vira um objeto plano com as colunas na raiz, que é o formato do
 // grid. O id vem separado para o grid poder identificar a linha.
 const tableItems = computed(
   () =>
-    result.value?.rows.map((row) => ({
-      id: row.id,
-      ...(row.values as Record<string, unknown>),
-    })) ?? [],
+    result.value?.rows.map((row) => {
+      const grouping = result.value?.grouping
+
+      return {
+        id: row.id,
+        ...(row.values as Record<string, unknown>),
+        // Sobrescreve mesmo se o atributo já é uma coluna: os dois vêm do mesmo
+        // CustomReport::Columns#value, então o valor é idêntico — só garante que
+        // a chave existe quando o agrupamento não é uma coluna escolhida.
+        ...(grouping ? { [grouping.name]: row.groupValue } : {}),
+      }
+    }) ?? [],
 )
+
+// CommonAdvancedTable usa isto para quebrar o grid em seções com divisor,
+// rótulo e contagem — o mesmo mecanismo da Visão Geral (ver
+// TicketOverviews.vue). O atributo de agrupamento some sozinho da lista de
+// colunas exibidas; aparece só como cabeçalho de cada seção.
+const groupByName = computed(() => result.value?.grouping?.name)
 
 // Largura mínima da área da tabela. CommonTable dimensiona as colunas a partir
 // do clientWidth do elemento pai (ver TableHeader#setHeaderWidths), então sem
@@ -344,6 +375,7 @@ const exportActions = computed<MenuItem[]>(() => [
             :total-items-count="totalCount"
             :order-by="orderBy"
             :order-direction="orderDirection"
+            :group-by="groupByName"
             :table-id="`custom-report-${selectedReportId}`"
             :storage-key-id="`custom-report-${selectedReportId}`"
             @sort="sortByColumn"

@@ -281,4 +281,46 @@ describe('custom report screen', () => {
     // E voltar ao anterior também não trazia o grid de volta.
     expect(await view.findByText('chamado de teste')).toBeInTheDocument()
   })
+
+  // O agrupamento quebra o grid em seções, como a Visão Geral já faz para
+  // Overview#groupBy — mesmo mecanismo de CommonAdvancedTable, só que dirigido
+  // pelo CustomReport::Grouping em vez de um Overview.
+  it('breaks the grid into sections when the report defines a grouping', async () => {
+    mockGraphQLResult<CustomReportResultsQuery, CustomReportResultsQueryVariables>(
+      CustomReportResultsDocument,
+      {
+        customReportResults: {
+          columns: [{ name: 'title', display: 'Título' }],
+          enabledFilters: [],
+          grouping: { name: 'owner_id', display: 'Proprietário' },
+          groupCounts: [
+            { value: 'Paulo Mota', count: 2 },
+            { value: 'Maria Souza', count: 1 },
+          ],
+          rows: [
+            { id: '10', values: { title: 'chamado um' }, groupValue: 'Paulo Mota' },
+            { id: '11', values: { title: 'chamado dois' }, groupValue: 'Paulo Mota' },
+            { id: '12', values: { title: 'chamado três' }, groupValue: 'Maria Souza' },
+          ],
+          summary: null,
+          totalCount: 3,
+          page: 1,
+          perPage: 50,
+          totalPages: 1,
+        },
+      },
+    )
+
+    const view = await visitView('/custom-reports')
+
+    expect(await view.findByText('chamado um')).toBeInTheDocument()
+    expect(await view.findByText('Paulo Mota')).toBeInTheDocument()
+    expect(await view.findByText('Maria Souza')).toBeInTheDocument()
+
+    // A coluna de agrupamento não aparece como coluna comum: só como cabeçalho
+    // de seção. Ela é a única fonte de "Paulo Mota" na tela — se aparecesse
+    // também como célula normal, a asserção acima teria mais de um match e o
+    // findByText já teria falhado por ambiguidade.
+    expect(view.queryByRole('columnheader', { name: 'Proprietário' })).not.toBeInTheDocument()
+  })
 })

@@ -30,6 +30,15 @@ query customReportResults(
     rows {
       id
       values
+      groupValue
+    }
+    grouping {
+      name
+      display
+    }
+    groupCounts {
+      value
+      count
     }
     summary {
       groupBy {
