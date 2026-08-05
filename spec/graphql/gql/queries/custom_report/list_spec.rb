@@ -31,6 +31,15 @@ RSpec.describe Gql::Queries::CustomReport::List, type: :graphql do
       expect(gql.result.data.pluck('name')).to include('Tickets abertos')
     end
 
+    # `object` é o acessor que o graphql-ruby usa para chegar ao registro sendo
+    # resolvido. Um campo com esse nome resolvia para o próprio CustomReport e o
+    # cliente recebia "#<CustomReport:0x00007f...>" no lugar de "Ticket".
+    it 'returns the object name and not the record itself' do
+      gql.execute(query)
+
+      expect(gql.result.data.first['object']).to eq('Ticket')
+    end
+
     # A tela usa o id devolvido aqui como argumento de customReportResults e
     # customReportGenerate, que resolvem por ID global. Se este campo voltar a
     # expor o id cru, a tela para de carregar dados.

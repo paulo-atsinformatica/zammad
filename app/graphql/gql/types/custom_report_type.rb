@@ -12,7 +12,21 @@ module Gql::Types
     global_id_field :id
 
     field :name, String, null: false
-    field :object, String, null: false, description: 'Object the rows represent'
+
+    # resolver_method explícito: `object` é o acessor que o graphql-ruby usa para
+    # chegar ao registro sendo resolvido, então um campo com esse nome resolvia
+    # para o próprio CustomReport e a consulta devolvia
+    # "#<CustomReport:0x00007f...>" em vez de "Ticket". Mesma armadilha que
+    # CustomReport::ResultType evita com hash_key.
+    field :object, String, null: false, resolver_method: :report_object,
+          description: 'Object the rows represent'
+
     field :active, Boolean, null: false
+
+    # Aqui `object` é o registro (o acessor do graphql-ruby); `.object` nele é a
+    # coluna.
+    def report_object
+      object.object
+    end
   end
 end
