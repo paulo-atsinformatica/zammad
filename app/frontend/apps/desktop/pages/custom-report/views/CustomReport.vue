@@ -163,6 +163,15 @@ const tableItems = computed(
     })) ?? [],
 )
 
+// Largura mínima da área da tabela. CommonTable dimensiona as colunas a partir
+// do clientWidth do elemento pai (ver TableHeader#setHeaderWidths), então sem
+// isto um relatório de 25 colunas espremia todas na largura da tela e os
+// cabeçalhos se sobrepunham. Dando ao pai uma largura proporcional, cada coluna
+// recebe espaço legível e a rolagem lateral cresce junto.
+const COLUMN_MIN_WIDTH = 180
+
+const gridMinWidth = computed(() => `${Math.max(tableAttributes.value.length * COLUMN_MIN_WIDTH, 640)}px`)
+
 const totalPages = computed(() => result.value?.totalPages ?? 0)
 const totalCount = computed(() => result.value?.totalCount ?? 0)
 
@@ -280,8 +289,12 @@ const exportActions = computed<MenuItem[]>(() => [
 
     <!-- Sempre visíveis: esconder os filtros atrás de um botão obrigava um
          clique extra em toda consulta e escondia quais filtros existem. -->
+    <!-- A key remonta o formulário ao trocar de relatório. O FormKit não
+         reconstrói os campos só porque o schema mudou, então voltar a um
+         relatório já visitado deixava na tela os filtros do outro. -->
     <CustomReportFilters
       v-if="availableFilters.length"
+      :key="selectedReportId"
       :available="availableFilters"
       :model-value="filters"
       class="mb-3"
@@ -305,22 +318,29 @@ const exportActions = computed<MenuItem[]>(() => [
     <template v-else-if="result">
       <CustomReportSummary v-if="summary" :summary="summary" />
 
-      <!-- A key remonta a tabela ao trocar de relatório. Sem ela o componente
-             sobrevive à troca com as larguras de coluna e o estado de cabeçalho
-             do relatório anterior, cujas colunas nem existem no novo. -->
-      <CommonAdvancedTable
-        :key="selectedReportId"
-        :caption="$t('Custom report results')"
-        :headers="tableHeaders"
-        :attributes="tableAttributes"
-        :items="tableItems"
-        :total-items-count="totalCount"
-        :order-by="orderBy"
-        :order-direction="orderDirection"
-        :table-id="`custom-report-${selectedReportId}`"
-        :storage-key-id="`custom-report-${selectedReportId}`"
-        @sort="sortByColumn"
-      />
+      <!-- O invólucro rola na horizontal e a div interna carrega a largura
+           mínima: é o clientWidth dela que CommonTable usa para dimensionar as
+           colunas. -->
+      <div class="overflow-x-auto">
+        <div :style="{ minWidth: gridMinWidth }">
+          <!-- A key remonta a tabela ao trocar de relatório. Sem ela o componente
+               sobrevive à troca com as larguras de coluna e o estado de cabeçalho
+               do relatório anterior, cujas colunas nem existem no novo. -->
+          <CommonAdvancedTable
+            :key="selectedReportId"
+            :caption="$t('Custom report results')"
+            :headers="tableHeaders"
+            :attributes="tableAttributes"
+            :items="tableItems"
+            :total-items-count="totalCount"
+            :order-by="orderBy"
+            :order-direction="orderDirection"
+            :table-id="`custom-report-${selectedReportId}`"
+            :storage-key-id="`custom-report-${selectedReportId}`"
+            @sort="sortByColumn"
+          />
+        </div>
+      </div>
 
       <div class="mt-3 flex items-center justify-between gap-3">
         <CommonLabel size="small">
