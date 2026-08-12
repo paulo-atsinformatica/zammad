@@ -12,10 +12,11 @@ class App.EconomicGroupProfile extends App.Controller
     @load()
 
   meta: =>
-    url:  @url()
-    id:   @name
-    head: @name
-    title: @name
+    url:       @url()
+    id:        @name
+    head:      @name
+    title:     @name
+    iconClass: 'economic-group'
 
   url: =>
     '#economic_group/profile/' + encodeURIComponent(@name)

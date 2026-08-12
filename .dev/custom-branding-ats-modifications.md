@@ -815,6 +815,17 @@ Arquivos ATS puros (nenhum arquivo do upstream foi tocado):
   de teste com `Setting.set('system_init_done', true)`, não é uma mudança de
   código.
 
+**Correções pós-primeiro teste visual (12/08/2026):**
+
+- Ícone com 3 círculos **sobrepostos** ficava uma mancha borrada em 16px —
+  trocado por 3 círculos **separados** (com espaço entre eles) em
+  `economic-group.svg`/`icons.svg`.
+- A aba (task) do perfil de grupo ficava travada no ícone de "loading" pra
+  sempre — `EconomicGroupProfile#meta()` nunca setava `iconClass`, e
+  `App.TaskManager` usa `'loading'` como valor padrão até o controller
+  informar o ícone real (`app/assets/javascripts/app/lib/app_post/task_manager/singleton.coffee:54`).
+  Adicionado `iconClass: 'economic-group'` no `meta()`.
+
 ## Referências
 
 - Repositório original: https://github.com/zammad/zammad
