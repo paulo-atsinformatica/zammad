@@ -699,6 +699,55 @@ Arquivos ATS puros: `app/assets/javascripts/app/controllers/_plugin/ticket_list_
   código; `assets:precompile` é quem pega isso, `coffeelint` não está disponível
   neste ambiente.
 
+### Campos customizados de Organização já usados em produção (12/08/2026)
+
+19 campos de `Organization` (texto/textarea) que já existiam em produção
+(criados manualmente em Gerenciar > Objetos) mas nunca tinham sido capturados
+no código — instalação nova, ou este ambiente de teste, ficava sem eles.
+Agora criados automaticamente, de forma idempotente (só cria o que ainda não
+existe), tanto no seed (instalação nova) quanto numa migration (instalação já
+em produção, onde o seed não roda de novo): `razaosocial`, `cpf`, `cnpj`,
+`codcliente`, `perfildeacesso`, `classificacao`, `cep`, `endereco`, `numero`,
+`complemento`, `bairro`, `cidade`, `estado`, `pais`, `observacao` (textarea),
+`grupoeconomico`, `unidaderesponsavel`, `nomegrupoeconomico`, `email`.
+
+**Pendente**: `segmento` (select), `modulos` (multiselect) e `codrota`
+(select) ficam de fora até termos a lista real de opções já configuradas em
+produção — inventar valores aqui poderia divergir do que está em uso e
+`ObjectManager::Attribute.add` sobrescreve config de campo já existente.
+
+Arquivos ATS puros (nenhum arquivo do upstream foi tocado):
+
+- `db/seeds/organization_custom_attributes.rb` — cria os campos num banco
+  novo. Separado de `db/seeds/object_manager_attributes.rb` (100% stock do
+  Zammad) de propósito, para não aumentar risco de conflito num sync.
+- `db/migrate/20260812150000_add_organization_custom_attributes.rb` — mesma
+  criação para instalações já em produção. Só roda se `system_init_done`
+  existir (senão a própria instalação nova ainda vai rodar o seed).
+
+**Arquivo do upstream tocado — reaplicar se o upstream mexer nele:**
+
+| Arquivo | Mudança e motivo |
+|---|---|
+| `db/seeds.rb` | Acrescenta `organization_custom_attributes` na lista `seeds` (ordenada manualmente, não é glob de diretório), logo depois de `object_manager_attributes`. |
+
+**Decisões que não são óbvias pelo código:**
+
+- **Guard com `ObjectManager::Attribute.exists?` antes de todo `.add`.**
+  `.add` não é idempotente: se já existe um registro com o mesmo
+  `(object_lookup_id, name)`, ele **atualiza** em vez de ignorar — chamar sem
+  guard num campo já em produção poderia alterar configuração real (mais
+  arriscado ainda em select/multiselect, daí os 3 campos pendentes ficarem de
+  fora).
+- **`created_by_id: 1, updated_by_id: 1` explícitos.** Sem usuário autenticado
+  no contexto de seed/migration isolado (`UserInfo.current_user_id` vazio), a
+  validação do model falha com "Created by must exist, Updated by must
+  exist".
+- **`__()` só no seed, nunca na migration.** Regra própria do projeto
+  (`Zammad/ForbidTranslatableMarker`): strings traduzíveis devem ser marcadas
+  onde são definidas — isto é, no seed. Na migration os mesmos `display:`
+  usam string literal simples.
+
 ## Referências
 
 - Repositório original: https://github.com/zammad/zammad
