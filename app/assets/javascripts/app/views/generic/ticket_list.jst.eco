@@ -16,6 +16,13 @@
             <% end %>
             <%= ticket.title || '-' %>
           </a>
+          <% if @show_id: %>
+            <%# Customização ATS: copiar o número sem abrir o ticket. Fora do <a>, senão o clique também navegaria. %>
+            <span class="js-ticketListNumberCopy ticketNumberCopy-icon u-clickable" data-number="<%- @C('ticket_hook') %><%= ticket.number %>" title="<%- @T('Copy') %>">
+              <span class="js-ticketListNumberCopy-idle"><%- @Icon('clipboard') %></span>
+              <span class="js-ticketListNumberCopy-done hide"><%- @Icon('checkmark') %></span>
+            </span>
+          <% end %>
           <%- @humanTime(ticket.created_at, false, 'time') %>
         </div>
         <% if @object && @editable: %>

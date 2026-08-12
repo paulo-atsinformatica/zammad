@@ -17392,6 +17392,35 @@ body.is-pause-blocked {
   color: var(--text-normal);
 }
 
+/* Mesmo destaque, na barra que aparece no topo quando a sidebar de abas está
+   recolhida (muitas abas abertas) — outro elemento (.ticket-number-copy-header
+   em ticket_zoom.jst.eco), não o de cima, então precisa da própria regra. */
+.ticket-number-copy-header .ticket-number {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-normal);
+}
+
+/* Botão de copiar o número em qualquer lista de tickets (views/generic/ticket_list),
+   inclusive dentro do balão de Tickets abertos/fechados do cliente/organização.
+   Fica opaco por padrão e só destaca no hover da linha, para não competir com o
+   título do ticket. */
+.task .js-ticketListNumberCopy {
+  display: inline-flex;
+  align-items: center;
+  margin-inline-start: 4px;
+  opacity: 0.5;
+
+  svg {
+    width: 13px;
+    height: 13px;
+  }
+
+  &:hover {
+    opacity: 1;
+  }
+}
+
 /* Position in ticket zoom controls */
 .ticketZoom-controls {
   display: flex;
