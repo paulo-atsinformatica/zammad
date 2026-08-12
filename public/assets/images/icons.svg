@@ -155,6 +155,13 @@
 </symbol><symbol id="icon-dropdown-list" viewBox="0 0 19 14">
     <title>dropdown-list</title>
     <path d="M0 0h19v2H0V0Zm0 4h19v2H0V4Zm0 4h19v2H0V8Zm0 4h19v2H0v-2Z" fill-rule="evenodd"/>
+</symbol><symbol id="icon-economic-group" viewBox="0 0 16 16">
+    <title>economic-group</title>
+    <g fill-rule="evenodd">
+        <circle cx="5" cy="5" r="3.6"/>
+        <circle cx="11" cy="5" r="3.6"/>
+        <circle cx="8" cy="11.2" r="3.8"/>
+    </g>
 </symbol><symbol id="icon-email-button" viewBox="0 0 29 24">
     <title>email-button</title>
     <path d="M3.692 5h21.614l-10.811 9.279L3.692 5ZM26 6.554V20H3V6.555l10.97 9.423.526.452.527-.452L26 6.554Z" fill="#FFF" fill-rule="evenodd"/>

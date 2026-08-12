@@ -90,12 +90,48 @@ class App.GlobalSearch extends App.Controller
           #   already moved on from.
           return if requestGeneration isnt @searchGeneration
 
-          @renderTry(result, query, params)
+          @loadEconomicGroups(query, result, requestGeneration, params)
         error: =>
           @clearDelay('global-search-ajax-longer-as-expected')
           @ajaxStop(params)
       )
     @delay(delayCallback, params.delay || 1, 'global-search-ajax')
+
+  # Customização ATS: "Grupo Econômico" (Organization#grupoeconomico) não é um
+  # model pesquisável de verdade (Models.searchable) - por isso entra como
+  # uma seção sintética à parte, buscada num endpoint próprio e mesclada no
+  # resultado antes de renderizar, em vez de participar do /search genérico.
+  loadEconomicGroups: (query, result, requestGeneration, params) =>
+    economicGroupProfileAccess = @permissionCheck(App.Config.get('economic_group/profile/:name', 'Routes').requiredPermission)
+
+    return @renderTry(result, query, params) if !economicGroupProfileAccess
+
+    App.Ajax.request(
+      id:          "#{@ajaxId}-economic-groups"
+      type:        'GET'
+      url:         "#{@apiPath}/economic_groups/search"
+      data:
+        query: query
+      processData: true
+      success: (groups) =>
+        return if requestGeneration isnt @searchGeneration
+
+        if groups && groups.length > 0
+          result['EconomicGroup'] =
+            items: (
+              for group in groups
+                display: "#{group.name} (#{group.count})"
+                id:      group.name
+                class:   'economic-group'
+                url:     "#economic_group/profile/#{encodeURIComponent(group.name)}"
+                icon:    'economic-group'
+            )
+            total_count: groups.length
+
+        @renderTry(result, query, params)
+      error: =>
+        @renderTry(result, query, params)
+    )
 
   ajaxStart: (params) =>
     @ajaxCount++

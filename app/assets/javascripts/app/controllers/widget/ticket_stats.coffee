@@ -19,6 +19,10 @@ class App.TicketStats extends App.Controller
       @subscribeIdUser = App.User.full(@user.id, @load, false, true)
     else if @organization
       @subscribeIdOrganization = App.Organization.full(@organization.id, @load, false, true)
+    else if @organizationIds
+      # Customização ATS: perfil de "Grupo Econômico" - várias organizações de
+      # uma vez, sem um único registro pra assinar/observar.
+      @load()
 
     # rerender view, e.g. on language change
     @controllerBind('ui:rerender', =>
@@ -30,7 +34,7 @@ class App.TicketStats extends App.Controller
       tickets = []
       if @user
         tickets = tickets.concat(@data?.user?.open_ids).concat(@data?.user?.closed_ids)
-      else if @organization
+      else if @organization || @organizationIds
         tickets = tickets.concat(@data?.organization?.open_ids).concat(@data?.organization?.closed_ids)
 
       return if !_.contains(tickets, updateData.id)
@@ -58,6 +62,10 @@ class App.TicketStats extends App.Controller
       ajaxKey = "org_#{@organization.id}"
       data =
         organization_id: @organization.id
+    else if @organizationIds
+      ajaxKey = "orgs_#{@organizationIds.join('_')}"
+      data =
+        organization_id: @organizationIds
     else
       if @init
         @init = false
@@ -107,7 +115,7 @@ class App.TicketStats extends App.Controller
     @html App.view('widget/ticket_stats')(
       user:               @user
       user_total:         user_total
-      organization:       @organization
+      organization:       @organization || @organizationIds
       organization_total: organization_total
     )
 

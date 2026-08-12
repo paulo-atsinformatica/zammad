@@ -748,6 +748,73 @@ Arquivos ATS puros (nenhum arquivo do upstream foi tocado):
   onde são definidas — isto é, no seed. Na migration os mesmos `display:`
   usam string literal simples.
 
+### Busca e perfil de "Grupo Econômico" (12/08/2026)
+
+5º grupo na busca global (além de Tickets/Clientes/Organizações/Base de
+Conhecimento), agrupando organizações pelo campo customizado
+`Organization#grupoeconomico`. Ao digitar um nome de grupo que bate, aparece
+com ícone próprio; ao clicar, abre uma tela de perfil nova mostrando as
+organizações daquele grupo (clicáveis, abrem o perfil normal da organização)
+e os tickets abertos/fechados + gráfico de frequência agregados de **todas**
+as organizações do grupo, no mesmo layout do perfil de organização.
+
+Arquivos ATS puros (nenhum arquivo do upstream foi tocado):
+
+- `app/controllers/economic_groups_controller.rb` + `config/routes/economic_groups.rb`
+  — `GET /api/v1/economic_groups/search?query=` (nomes de grupo que batem,
+  com contagem de organizações) e `GET /api/v1/economic_groups/show?name=`
+  (organizações daquele grupo). Exige permissão `ticket.agent` (mesma exigida
+  pelo perfil de organização) — qualquer agente vê, não só admin.
+- `app/assets/javascripts/app/controllers/economic_group_profile.coffee` +
+  `app/assets/javascripts/app/views/economic_group_profile/index.jst.eco` —
+  tela de perfil, seguindo o mesmo padrão de
+  `app/assets/javascripts/app/controllers/organization_profile.coffee`
+  (Router + `App.TaskManager.execute` + widget `App.TicketStats`), trocando a
+  lista de membros (pessoas) por organizações.
+- `public/assets/images/icons/economic-group.svg` — ícone novo (3 círculos
+  sobrepostos), inserido manualmente em `public/assets/images/icons.svg` e em
+  `app/assets/stylesheets/svg-dimensions.css` (ver decisão abaixo).
+
+**Arquivos do upstream tocados — reaplicar se o upstream mexer neles:**
+
+| Arquivo | Mudança e motivo |
+|---|---|
+| `app/assets/javascripts/app/lib/app_post/global_search.coffee` | Depois de montar o resultado normal do `/search`, busca `/economic_groups/search` e injeta um grupo sintético `result['EconomicGroup']` antes de renderizar — sem participar de `Models.searchable`/`CanSearch`, que são só pra models reais. |
+| `app/assets/javascripts/app/controllers/widget/ticket_stats.coffee` | `App.TicketStats` ganhou um 3º modo `organizationIds` (array), além dos já existentes `user`/`organization` (só 1). Sem assinatura/observação (não tem 1 registro pra observar), só dispara `load()` direto. O backend (`Ticket::Stats`) já aceitava array de `organization_id` desde sempre (usado pra somar tickets de todas as organizações de um cliente) — não precisou mudar nada no Ruby. |
+
+**Decisões que não são óbvias pelo código:**
+
+- **Grupo econômico é sintético, não um "model pesquisável".** `grupoeconomico`
+  é só uma coluna de texto repetida em várias `Organization` — não tem
+  tabela própria. Por isso não dá pra usar o mecanismo padrão de busca
+  (`Models.searchable`, que espera um ActiveRecord real com `assets`,
+  `search_preferences` etc.) nem a busca nova em Vue (união GraphQL fixa em
+  `Ticket/User/Organization`, `app/graphql/gql/types/search_result/item_type.rb`).
+  Solução: endpoint próprio + merge manual no resultado do JS, ver acima.
+- **`icons.svg`/`svg-dimensions.css` editados à mão, não via `gulp build`.**
+  Rodar `pnpm exec gulp build` em `public/assets/images/` (processo oficial,
+  ver `public/assets/images/README.md`) recompila **todo** o sprite com uma
+  versão de `svgmin` diferente da que gerou o arquivo commitado, reformatando
+  as ~200 entradas existentes (quebra de linha, ordem de atributos) — um diff
+  de ~1800 linhas para adicionar 1 ícone, e ainda com bug (`icon-loading`/
+  `icon-logo`/`icon-spinner-small` saíram com dimensão errada, 90x35).
+  Extraído só o `<symbol>` novo do resultado do gulp e colado manualmente no
+  meio do arquivo original — mesmo padrão de string (sem `fill` explícito,
+  cor vem do CSS via `fill: currentColor`).
+- **Ícone é fill puro (3 círculos), não usa `stroke`.** Nenhum ícone existente
+  no sprite usa `stroke` visível (todos são formas preenchidas) — um ícone com
+  linha/traço arriscava não herdar cor nenhuma do CSS do jeito esperado. Times
+  de círculos sobrepostos segue o mesmo padrão de todo o resto do sprite.
+- **Endpoint usa `GET .../show?name=` em vez de `GET .../:name`.** O "id" do
+  grupo é o próprio nome (string arbitrária, pode ter espaço/acento/barra) —
+  passar como query param evita qualquer problema de roteamento com
+  caracteres especiais, sem precisar de constraint de rota.
+- **`system_init_done` estava `false` no banco de dev local usado para
+  testar.** Isso trava a SPA na tela de "Getting Started" pra qualquer
+  visitante anônimo (não é bug desta feature) — corrigido só neste ambiente
+  de teste com `Setting.set('system_init_done', true)`, não é uma mudança de
+  código.
+
 ## Referências
 
 - Repositório original: https://github.com/zammad/zammad

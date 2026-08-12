@@ -1,0 +1,21 @@
+<div class="profile">
+  <div class="profile-window">
+    <div class="profile-section vertical centered">
+      <%- @Icon('economic-group', 'organization-icon') %>
+      <h1><%= @name %></h1>
+    </div>
+    <div class="profile-section profile-organizationsSection">
+      <label><%- @T('Organizations') %></label>
+      <ul class="organizationList">
+        <% for organization in @organizations: %>
+          <li>
+            <a href="#organization/profile/<%= organization.id %>" class="<% if organization.active is false: %>is-inactive<% end %>">
+              <%= organization.name %>
+            </a>
+          </li>
+        <% end %>
+      </ul>
+    </div>
+    <div class="profile-section js-ticket-stats"></div>
+  </div>
+</div>
