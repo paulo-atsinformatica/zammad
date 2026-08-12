@@ -666,6 +666,39 @@ locales levaria minutos sem benefício). Manualmente:
 Ao adicionar uma string traduzível em código customizado, acrescente o `msgid` ao
 `i18n/ats.pt-br.po` também.
 
+### Botão de copiar número do ticket em listas de tickets (12/08/2026)
+
+Ícone de copiar ao lado do número em toda lista renderizada por
+`app/assets/javascripts/app/views/generic/ticket_list.jst.eco` — balão de
+"Tickets abertos/fechados" do cliente/organização (ticket zoom), Tickets
+relacionados, e tickets vinculados da base de conhecimento. Ícone fica **fora**
+do `<a>` da linha, para o clique não também navegar para o ticket.
+
+Arquivos ATS puros: `app/assets/javascripts/app/controllers/_plugin/ticket_list_number_copy.coffee`.
+
+**Arquivos do upstream tocados — reaplicar se o upstream mexer neles:**
+
+| Arquivo | Mudança e motivo |
+|---|---|
+| `app/assets/javascripts/app/views/generic/ticket_list.jst.eco` | Acrescenta o ícone de copiar (dois `<span>` de estado, idle/done) dentro do bloco já existente `<% if @show_id: %>`. |
+| `app/assets/stylesheets/zammad.scss` | Regras `.task .js-ticketListNumberCopy` (o botão) e `.ticket-number-copy-header .ticket-number` (número maior/em negrito na barra compacta que aparece quando a sidebar de abas está recolhida — mesmo destaque que `.task-subline .ticket-number-copy` já tinha, mas em elemento e template diferentes, então precisou de regra própria). |
+
+**Decisões que não são óbvias pelo código:**
+
+- **Delegação global no `document`, não `events` de controller.** O balão de
+  "Tickets abertos/fechados" é um popover do Bootstrap injetado direto no
+  `<body>` por `App.PopoverProviderAjax#replaceOnShow` — não existe controller
+  Spine dono daquele HTML, então um `events:` normal nunca dispararia ali. A
+  mesma delegação cobre os outros três lugares que reaproveitam o template.
+- **Troca de ícone via duas `<span>` pré-renderizadas, não `@Icon(...)` chamado
+  do JS.** `@Icon` só existe dentro do contexto de render de um controller; fora
+  disso (como no handler global) não há como chamar. O clique só alterna a
+  classe `hide` entre os dois estados já prontos no template.
+- **`<%# %>` de uma linha só.** Eco não aceita comentário `<%# %>` que quebra em
+  mais de uma linha — já documentado abaixo, e reincidiu ao escrever este
+  código; `assets:precompile` é quem pega isso, `coffeelint` não está disponível
+  neste ambiente.
+
 ## Referências
 
 - Repositório original: https://github.com/zammad/zammad
