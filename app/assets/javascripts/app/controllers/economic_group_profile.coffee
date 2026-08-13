@@ -1,6 +1,6 @@
 # Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
-# Customização ATS: tela de perfil de "Grupo Econômico" (Organization#grupoeconomico).
+# Customização ATS: tela de perfil de "Grupo Econômico" (Organization#nomegrupoeconomico).
 # Não existe um model/tabela pra isso - é só um agrupamento de Organizations que
 # compartilham o mesmo valor nesse campo customizado. Segue o mesmo padrão visual
 # de app/assets/javascripts/app/controllers/organization_profile.coffee (lista +

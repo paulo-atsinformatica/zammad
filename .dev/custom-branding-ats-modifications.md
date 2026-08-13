@@ -752,7 +752,8 @@ Arquivos ATS puros (nenhum arquivo do upstream foi tocado):
 
 5º grupo na busca global (além de Tickets/Clientes/Organizações/Base de
 Conhecimento), agrupando organizações pelo campo customizado
-`Organization#grupoeconomico`. Ao digitar um nome de grupo que bate, aparece
+`Organization#nomegrupoeconomico` (o nome legível do grupo — `grupoeconomico`
+é só o código interno, não serve pra busca). Ao digitar um nome de grupo que bate, aparece
 com ícone próprio; ao clicar, abre uma tela de perfil nova mostrando as
 organizações daquele grupo (clicáveis, abrem o perfil normal da organização)
 e os tickets abertos/fechados + gráfico de frequência agregados de **todas**
@@ -784,7 +785,7 @@ Arquivos ATS puros (nenhum arquivo do upstream foi tocado):
 
 **Decisões que não são óbvias pelo código:**
 
-- **Grupo econômico é sintético, não um "model pesquisável".** `grupoeconomico`
+- **Grupo econômico é sintético, não um "model pesquisável".** `nomegrupoeconomico`
   é só uma coluna de texto repetida em várias `Organization` — não tem
   tabela própria. Por isso não dá pra usar o mecanismo padrão de busca
   (`Models.searchable`, que espera um ActiveRecord real com `assets`,

@@ -97,7 +97,7 @@ class App.GlobalSearch extends App.Controller
       )
     @delay(delayCallback, params.delay || 1, 'global-search-ajax')
 
-  # Customização ATS: "Grupo Econômico" (Organization#grupoeconomico) não é um
+  # Customização ATS: "Grupo Econômico" (Organization#nomegrupoeconomico) não é um
   # model pesquisável de verdade (Models.searchable) - por isso entra como
   # uma seção sintética à parte, buscada num endpoint próprio e mesclada no
   # resultado antes de renderizar, em vez de participar do /search genérico.

@@ -1,7 +1,7 @@
 # Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 # Customização ATS: "Grupo Econômico" não é uma tabela própria — é um
-# agrupamento por valor repetido em Organization#grupoeconomico (campo
+# agrupamento por valor repetido em Organization#nomegrupoeconomico (campo
 # customizado). Este controller só lê esse agrupamento, para alimentar a
 # busca global e a tela de perfil do grupo.
 class EconomicGroupsController < ApplicationController
@@ -17,10 +17,10 @@ class EconomicGroupsController < ApplicationController
     return render json: [] if query.blank?
 
     groups = Organization
-      .where_or_cis(%i[grupoeconomico], "%#{SqlHelper.quote_like(query)}%")
-      .where.not(grupoeconomico: [nil, ''])
-      .group(:grupoeconomico)
-      .reorder(:grupoeconomico)
+      .where_or_cis(%i[nomegrupoeconomico], "%#{SqlHelper.quote_like(query)}%")
+      .where.not(nomegrupoeconomico: [nil, ''])
+      .group(:nomegrupoeconomico)
+      .reorder(:nomegrupoeconomico)
       .limit(10)
       .count
 
@@ -30,12 +30,12 @@ class EconomicGroupsController < ApplicationController
   # GET /api/v1/economic_groups/show?name=...
   #
   # Usado pela tela de perfil do grupo: todas as organizações amarradas ao
-  # mesmo valor de grupoeconomico.
+  # mesmo valor de nomegrupoeconomico.
   def show
     name = params[:name].to_s
 
     organizations = Organization
-      .where(grupoeconomico: name)
+      .where(nomegrupoeconomico: name)
       .reorder(:name)
 
     render json: {
