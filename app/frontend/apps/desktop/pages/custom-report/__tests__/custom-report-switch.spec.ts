@@ -103,14 +103,16 @@ describe('custom report screen', () => {
 
     await view.events.click(await view.findByRole('button', { name: SECOND_REPORT.name }))
 
-    expect(await view.findByLabelText('Fechado em')).toBeInTheDocument()
+    // Um filtro de data rende dois campos (início e fim do período), por isso
+    // findAll: o rótulo de cada um é o nome do campo mais o sufixo.
+    expect(await view.findAllByLabelText(/Fechado em/)).toHaveLength(2)
     expect(view.queryByLabelText('Título do chamado')).not.toBeInTheDocument()
 
     // A volta é onde aparecia o atraso.
     await view.events.click(await view.findByRole('button', { name: FIRST_REPORT.name }))
 
     expect(await view.findByLabelText('Título do chamado')).toBeInTheDocument()
-    expect(view.queryByLabelText('Fechado em')).not.toBeInTheDocument()
+    expect(view.queryAllByLabelText(/Fechado em/)).toHaveLength(0)
   })
 
   // Espelha o payload real: quatro colunas nos dois relatórios, dois nomes em

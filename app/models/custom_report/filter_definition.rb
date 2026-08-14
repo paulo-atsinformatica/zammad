@@ -40,7 +40,11 @@ class CustomReport::FilterDefinition
     'customer'     => ['is', 'is not'],
     'organization' => ['is', 'is not'],
     'number'       => ['is', 'is not'],
-    'date'         => ['after (absolute)', 'before (absolute)'],
+    # Data é sempre período: 'in range' recebe [de, até] e o Selector::Sql já
+    # cobre os três casos (BETWEEN, só >= ou só <=), então "num dia só" é o
+    # mesmo dia nos dois campos. Os operadores de data única continuam aceitos
+    # para não quebrar quem já tenha um filtro montado com eles.
+    'date'         => ['in range', 'after (absolute)', 'before (absolute)'],
     'boolean'      => ['is'],
     'text'         => ['contains', 'contains not', 'is', 'is not', 'starts with one of', 'ends with one of'],
   }.freeze

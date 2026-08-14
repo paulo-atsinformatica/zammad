@@ -144,7 +144,25 @@ class CustomReport::Query
     # em vez de blank? para não descartar um filtro booleano em `false`.
     return if condition[:value].nil? || condition[:value] == ''
 
-    { operator: operator, value: condition[:value] }
+    value = normalize_filter_value(condition[:value])
+    return if value.nil?
+
+    { operator: operator, value: value }
+  end
+
+  # O intervalo de datas ('in range') chega como [de, até], e um lado vazio é
+  # legítimo — significa "sem limite deste lado", que o Selector::Sql resolve
+  # como >= ou <=. Já os dois lados vazios fariam ele levantar exceção
+  # ("Invalid value in range"), então isso vira "não filtrar por isto".
+  #
+  # Devolve nil quando o filtro deve ser descartado.
+  def normalize_filter_value(value)
+    return value if !value.is_a?(Array)
+
+    normalized = value.map { |item| item.to_s.strip.presence }
+    return if normalized.compact.empty?
+
+    normalized
   end
 
   def filter_definition(attribute)

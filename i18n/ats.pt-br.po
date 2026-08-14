@@ -479,3 +479,87 @@ msgstr "Não foi possível gerar o rascunho da base de conhecimento para \"%s\":
 
 msgid "Refresh"
 msgstr "Atualizar"
+
+#. ------------------------------ Rótulos de colunas de ticket usadas como
+#. filtro/coluna no relatório personalizado.
+#.
+#. Estas colunas existem no banco mas não são atributos do Object Manager, então
+#. CustomReport::Columns#display_for cai no fallback `humanize` e gera o rótulo
+#. em inglês ("close_at" -> "Close at"). Traduzindo o texto humanizado, o mesmo
+#. fallback passa a devolver português.
+msgid "Ai agent running"
+msgstr "Agente de IA em execução"
+
+msgid "Article count"
+msgstr "Quantidade de artigos"
+
+msgid "Close at"
+msgstr "Fechado em"
+
+msgid "Close diff in min"
+msgstr "Diferença de fechamento (min)"
+
+msgid "Close escalation at"
+msgstr "Escalonamento de fechamento em"
+
+msgid "Close in min"
+msgstr "Tempo até o fechamento (min)"
+
+msgid "Create article sender"
+msgstr "Remetente do primeiro artigo"
+
+msgid "Create article type"
+msgstr "Tipo do primeiro artigo"
+
+msgid "First response at"
+msgstr "Primeira resposta em"
+
+msgid "First response diff in min"
+msgstr "Diferença da primeira resposta (min)"
+
+msgid "First response escalation at"
+msgstr "Escalonamento da primeira resposta em"
+
+msgid "First response in min"
+msgstr "Tempo até a primeira resposta (min)"
+
+msgid "Last close at"
+msgstr "Último fechamento em"
+
+msgid "Last contact agent at"
+msgstr "Último contato do atendente em"
+
+msgid "Last contact at"
+msgstr "Último contato em"
+
+msgid "Last contact customer at"
+msgstr "Último contato do cliente em"
+
+msgid "Last owner update at"
+msgstr "Última troca de proprietário em"
+
+msgid "Pending time"
+msgstr "Aguardando até"
+
+msgid "Preferences"
+msgstr "Preferências"
+
+msgid "Time unit"
+msgstr "Tempo contabilizado"
+
+msgid "Update diff in min"
+msgstr "Diferença de atualização (min)"
+
+msgid "Update escalation at"
+msgstr "Escalonamento de atualização em"
+
+msgid "Update in min"
+msgstr "Tempo até a atualização (min)"
+
+#. ------------------------------ Rótulos dos dois campos de um filtro de data
+#. (intervalo) na tela do relatório personalizado. %s é o nome do campo.
+msgid "%s (from)"
+msgstr "%s (de)"
+
+msgid "%s (until)"
+msgstr "%s (até)"

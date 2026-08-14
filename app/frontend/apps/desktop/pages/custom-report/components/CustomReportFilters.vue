@@ -6,6 +6,7 @@ import { computed, ref } from 'vue'
 
 import Form from '#shared/components/Form/Form.vue'
 import type { FormSchemaNode, FormSubmitData } from '#shared/components/Form/types.ts'
+import { i18n } from '#shared/i18n.ts'
 
 import CommonButton from '#desktop/components/CommonButton/CommonButton.vue'
 
@@ -40,20 +41,25 @@ const OPERATORS = {
   organization: 'is',
   number: 'is',
   boolean: 'is',
-  date: 'after (absolute)',
+  // Data é sempre período. 'in range' recebe [de, até] e o Selector::Sql cobre
+  // os três casos (BETWEEN, só >= ou só <=), então filtrar um dia só é pôr a
+  // mesma data nos dois campos.
+  date: 'in range',
   text: 'contains',
 } as const
 
 // Tipos cujo valor é um id e que o selector espera receber como lista.
 const ID_TYPES = ['select', 'agent', 'customer', 'organization', 'boolean'] as const
 
-const fieldFor = (filter: AvailableFilter): FormSchemaNode => {
-  const shared = {
-    name: filter.name,
-    label: filter.display,
-    outerClass: 'col-span-1',
-  }
+// Um filtro de data vira dois campos no formulário. Os sufixos os reagrupam num
+// único filtro na hora de aplicar — ver `apply`.
+const DATE_FROM_SUFFIX = '__from'
+const DATE_TILL_SUFFIX = '__till'
 
+const fieldFor = (
+  filter: AvailableFilter,
+  shared: { name: string; label: string; outerClass: string },
+): FormSchemaNode => {
   switch (filter.type) {
     case 'select':
       return {
@@ -85,8 +91,6 @@ const fieldFor = (filter: AvailableFilter): FormSchemaNode => {
     case 'customer':
     case 'organization':
       return { ...shared, type: filter.type, props: { clearable: true } }
-    case 'date':
-      return { ...shared, type: 'date' }
     case 'number':
       return { ...shared, type: 'number' }
     default:
@@ -94,17 +98,67 @@ const fieldFor = (filter: AvailableFilter): FormSchemaNode => {
   }
 }
 
-const schema = computed<FormSchemaNode[]>(() => props.available.map(fieldFor))
+const fieldsFor = (filter: AvailableFilter): FormSchemaNode[] => {
+  const shared = {
+    name: filter.name,
+    label: filter.display,
+    outerClass: 'col-span-1',
+  }
+
+  if (filter.type !== 'date') return [fieldFor(filter, shared)]
+
+  // `display` já vem traduzido do backend, então o rótulo composto é montado
+  // aqui: mandá-lo inteiro para o FormKit traduzir não acharia entrada nenhuma
+  // e o sufixo ficaria em inglês.
+  return [
+    {
+      ...shared,
+      name: `${filter.name}${DATE_FROM_SUFFIX}`,
+      label: i18n.t('%s (from)', filter.display),
+      type: 'date',
+    },
+    {
+      ...shared,
+      name: `${filter.name}${DATE_TILL_SUFFIX}`,
+      label: i18n.t('%s (until)', filter.display),
+      type: 'date',
+    },
+  ]
+}
+
+const schema = computed<FormSchemaNode[]>(() => props.available.flatMap(fieldsFor))
 
 const typeByName = computed(
   () => new Map(props.available.map((filter) => [filter.name, filter.type])),
 )
 
-const apply = (data: FormSubmitData<Record<string, unknown>>) => {
+// Os dois campos de um filtro de data voltam separados do formulário e são
+// remontados aqui num único `in range`. Um lado vazio é intencional: significa
+// "sem limite deste lado", e o backend resolve como >= ou <=.
+const dateRangeFilters = (data: Record<string, unknown>): RuntimeFilters => {
   const filters: RuntimeFilters = {}
+
+  props.available.forEach((filter) => {
+    if (filter.type !== 'date') return
+
+    const from = String(data[`${filter.name}${DATE_FROM_SUFFIX}`] ?? '').trim()
+    const till = String(data[`${filter.name}${DATE_TILL_SUFFIX}`] ?? '').trim()
+    if (!from && !till) return
+
+    filters[filter.name] = { operator: OPERATORS.date, value: [from, till] }
+  })
+
+  return filters
+}
+
+const apply = (data: FormSubmitData<Record<string, unknown>>) => {
+  const filters: RuntimeFilters = dateRangeFilters(data)
 
   Object.entries(data).forEach(([name, value]) => {
     if (value === undefined || value === null || value === '') return
+
+    // Campos de data já foram tratados acima, pelo nome do filtro.
+    if (name.endsWith(DATE_FROM_SUFFIX) || name.endsWith(DATE_TILL_SUFFIX)) return
 
     const type = typeByName.value.get(name) ?? 'text'
 

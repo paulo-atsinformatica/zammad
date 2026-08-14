@@ -148,6 +148,15 @@ RSpec.describe CustomReport::FilterDefinition do
       it { expect(definition.permits?('after (absolute)')).to be(false) }
     end
 
+    # Data é sempre período na tela: um filtro de dia único é a mesma data nos
+    # dois campos, e não um operador diferente.
+    context 'with a date filter' do
+      let(:name) { 'created_at' }
+
+      it { expect(definition.permits?('in range')).to be(true) }
+      it { expect(definition.permits?('contains')).to be(false) }
+    end
+
     it 'never permits an operator the selector does not know' do
       expect(described_class::OPERATORS_BY_TYPE.values.flatten.uniq - Selector::Sql::VALID_OPERATORS)
         .to be_empty

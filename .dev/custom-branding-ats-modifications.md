@@ -393,6 +393,45 @@ upstream são as que correm risco de serem perdidas num merge.
   Reaplica a classe em `taskInit`/`taskUpdate`, já que a taskbar recria o DOM
   das abas.
 
+#### Pausa manual removida; pausa/retomada seguem o controle de pausas (14/08/2026)
+
+O atendente não pausa mais a contagem por conta própria. O botão de pausar saiu
+do player, e a contagem agora só para por eventos do sistema de pausas:
+
+| Evento | O que acontece com a contagem |
+|---|---|
+| Entrar em pausa, ou ficar offline | Pausa, e **retoma sozinha** ao encerrar a pausa / voltar a ficar online |
+| "Deslogar" no controle de pausas | Pausa e **não** retoma sozinha — nem ao logar de novo; volta só com um clique em Iniciar |
+| Fechar o ticket | Continua encerrando, como já era (`Ticket#end_time_tracking_on_close`) |
+| Iniciar contagem em outro ticket | Segue igual: pergunta e transfere (`switchTracking`) |
+
+Arquivos (todos já eram tocados pela feature):
+`controllers/ticket_zoom/time_tracking.coffee`,
+`views/ticket_zoom/time_tracking.jst.eco`, `stylesheets/zammad.scss`.
+
+Removidos: botão `.js-tt-pause` (markup, `elements`, `events`), `onPauseClick`,
+`pauseTracking`, `canPause`, o bloco do botão em `updateButtonStates` e a regra
+CSS `.js-tt-pause.is-ready`. O auto-pause (`autoPauseTracking`) **já existia** e
+foi mantido; o que faltava era o caminho de volta.
+
+**Decisões que não são óbvias pelo código:**
+
+- **`blockAutoResume` é estado de tela, não do banco.** Não existe campo que
+  distinga "pausado por logout" de "pausado por pausa comum" — logout nem cria
+  `UserPause` (é `UserPauseSession`, outro conceito). O que distingue os casos é
+  o evento do frontend: `pause_control:logout` é disparado separadamente de
+  `pause:started`/`user_state:changed` (ver `user_status_bar.coffee`). Daí a
+  flag viver no controller do player.
+- **Só um clique manual em Iniciar limpa a flag.** É o que garante "quando ele
+  iniciar vai ter que clicar no botão": logar de novo dispara
+  `pause_control:login`, que não mexe na flag.
+- **`maybeAutoResume` delega o resto a `canResume`.** Ticket fechado, permissão,
+  dono do ticket e o próprio estado de pausa/offline já são checados lá — repetir
+  isso na retomada automática só criaria duas regras para divergirem depois.
+- **`UserPauseService#end_pause` já devolve `resume_tracking`/`tracking_id`, e
+  segue sem consumidor.** A retomada foi feita no frontend, junto do auto-pause
+  que já morava lá, em vez de mover metade da regra para o backend.
+
 ### Acesso somente leitura para clientes
 
 Objetivo: cliente entra no perfil dele e **apenas visualiza** — não muda
@@ -877,6 +916,68 @@ liga por padrão — separado de `db/seeds/settings.rb`, que é 100% stock),
   em todos os grupos. Também rodou de verdade contra o banco de teste (limpo)
   até a suíte tentar abrir o Chrome, então o seed/reset em si (truncate +
   migrate + seed) foi validado de ponta a ponta.
+
+### Filtros do relatório: rótulos em pt-BR e data como período (14/08/2026)
+
+Dois ajustes na tela de visualização do relatório personalizado.
+
+**1. Rótulos em português.** Filtros como "Close at" e "Last close at"
+apareciam em inglês. A tradução já funcionava — faltavam as strings.
+
+`CustomReport::Columns#display_for` traduz o rótulo do atributo, mas colunas de
+ticket que **não são atributos do Object Manager** (`close_at`, `last_close_at`,
+`first_response_at`, os `*_in_min`, etc.) não têm rótulo cadastrado e caem no
+fallback `humanize`, que gera o texto em inglês (`close_at` → "Close at").
+Traduzindo esse texto humanizado no catálogo, o mesmo fallback passa a devolver
+português — sem tocar no código.
+
+Levantadas **todas** as colunas de `tickets` nessa situação (não só as do
+print): 22 rótulos novos em `i18n/ats.pt-br.po`.
+
+**2. Filtro de data virou período.** Antes aceitava uma data só
+(`after (absolute)`). Agora todo filtro de data rende **dois** campos (de/até)
+e usa o operador nativo `in range`, que o `Selector::Sql` já implementa
+(`lib/selector/sql.rb:586`): com os dois lados vira `BETWEEN`, com só um lado
+vira `>=` ou `<=`. Filtrar um dia só é pôr a mesma data nos dois campos.
+
+Arquivos ATS puros:
+
+- `app/models/custom_report/filter_definition.rb` — `'date'` passou a aceitar
+  `in range` (os operadores antigos seguem aceitos, para não quebrar filtro já
+  montado).
+- `app/models/custom_report/query.rb` — `normalize_filter_value`, ver decisão
+  abaixo.
+- `app/frontend/apps/desktop/pages/custom-report/components/CustomReportFilters.vue`
+  — `fieldsFor` (plural) devolve os dois campos de data, e `dateRangeFilters`
+  os remonta num filtro só ao aplicar.
+- `i18n/ats.pt-br.po` + `db/migrate/20260814140000_sync_ats_translations_report_column_labels.rb`.
+
+Nenhum arquivo do upstream foi tocado.
+
+**Decisões que não são óbvias pelo código:**
+
+- **Os dois lados vazios descartam o filtro, um lado vazio não.** O
+  `Selector::Sql` levanta `"Invalid value in range"` quando recebe `['', '']`,
+  o que derrubaria a tela inteira — e não só aquele filtro. Já um lado vazio é
+  intencional ("sem limite deste lado"), então `normalize_filter_value` só
+  descarta quando os dois estão em branco.
+- **Rótulo composto montado no TypeScript, não no schema do FormKit.** O
+  `display` já chega traduzido do backend; mandar "Fechado em (from)" inteiro
+  para o FormKit traduzir não acharia entrada nenhuma no catálogo e o sufixo
+  ficaria em inglês. Daí `i18n.t('%s (from)', filter.display)`.
+- **O teste de troca de relatório passou a usar `findAllByLabelText`.** Um
+  filtro de data agora rende dois campos, então `findByLabelText('Fechado em')`
+  encontraria dois elementos e falharia. A regex também deixa o teste
+  indiferente ao idioma do sufixo.
+- **Validado**: `rspec spec/models/custom_report/{query,filter_definition}_spec.rb`
+  (45 exemplos, 0 falhas), `vitest custom-report-switch.spec.ts` (6 passando),
+  `pnpm lint:ts` (vue-tsc limpo), `pnpm lint:js` (nada nos arquivos deste lote)
+  e `assets:precompile`. PO conferido por script: 177 pares
+  `msgid`/`msgstr`, sem duplicados nem entrada malformada.
+- **Se o rspec sair com código 1 e nenhuma saída**, o problema não está no
+  código: falta o Postgres. `docker start zc-run` não sobe `zc-pg`/`zc-redis`, e
+  sem banco o `rails_helper` morre calado — nem stdout nem stderr. Subir os três
+  containers resolve.
 
 ## Referências
 

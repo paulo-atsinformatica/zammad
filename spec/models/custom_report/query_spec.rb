@@ -130,6 +130,60 @@ RSpec.describe CustomReport::Query do
         expect(query.runtime_filters).to be_empty
       end
     end
+
+    # Filtro de data é sempre um período: a tela manda [de, até] e um lado vazio
+    # significa "sem limite deste lado".
+    context 'with a date range' do
+      let(:report) do
+        create(:custom_report, object: 'Ticket', condition: {}, enabled_filters: %w[created_at])
+      end
+
+      context 'when both ends are given' do
+        let(:filters) do
+          { 'created_at' => { 'operator' => 'in range', 'value' => %w[2026-01-01 2026-12-31] } }
+        end
+
+        it 'passes the range to the selector' do
+          expect(query.runtime_filters['ticket.created_at'])
+            .to eq(operator: 'in range', value: %w[2026-01-01 2026-12-31])
+        end
+
+        it 'does not raise when building the relation' do
+          expect { query.relation.to_a }.not_to raise_error
+        end
+      end
+
+      context 'when only one end is given' do
+        let(:filters) do
+          { 'created_at' => { 'operator' => 'in range', 'value' => ['2026-01-01', ''] } }
+        end
+
+        it 'keeps the open end as nil instead of dropping the filter' do
+          expect(query.runtime_filters['ticket.created_at'])
+            .to eq(operator: 'in range', value: ['2026-01-01', nil])
+        end
+
+        it 'does not raise when building the relation' do
+          expect { query.relation.to_a }.not_to raise_error
+        end
+      end
+
+      # Os dois lados vazios fariam o Selector::Sql levantar
+      # "Invalid value in range", derrubando a tela inteira.
+      context 'when both ends are blank' do
+        let(:filters) do
+          { 'created_at' => { 'operator' => 'in range', 'value' => ['', ''] } }
+        end
+
+        it 'treats it as no filter' do
+          expect(query.runtime_filters).to be_empty
+        end
+
+        it 'does not raise when building the relation' do
+          expect { query.relation.to_a }.not_to raise_error
+        end
+      end
+    end
   end
 
   describe '#exceeds_max_rows?' do
