@@ -432,6 +432,46 @@ foi mantido; o que faltava era o caminho de volta.
   segue sem consumidor.** A retomada foi feita no frontend, junto do auto-pause
   que já morava lá, em vez de mover metade da regra para o backend.
 
+#### Bug: retomava o ticket errado com dois abertos (14/08/2026)
+
+Relato do usuário: inicia contagem no ticket A, inicia no B (troca — pausa A
+automaticamente, como já era o esperado). Fica offline, volta a ficar online.
+**Os dois** retomam — inclusive A, que devia continuar pausado.
+
+Causa: `App.TicketZoomTimeTracking` existe **uma instância por aba de ticket
+aberta**, e todas escutam o mesmo evento global `user_state:changed`. O guard de
+`maybeAutoResume` só verificava "este ticket está pausado e pode retomar"
+(`canResume`) — verdadeiro tanto para B (pausado pela troca de estado) quanto
+para A (que já estava pausado antes, por causa da troca de ticket, sem relação
+nenhuma com ficar offline). Ao voltar online, as duas abas decidem retomar.
+
+Correção: nova flag `@autoPaused`, só `true` enquanto a pausa **desta aba**
+tiver sido causada pelo próprio `autoPauseTracking` (offline/pausa/deslogar).
+`maybeAutoResume` passou a exigir a flag além do `canResume`. Pausa por troca de
+ticket (`switchTracking`, chamado pela OUTRA aba) nunca marca a flag nesta —
+por isso A não tenta mais retomar.
+
+**Decisões que não são óbvias pelo código:**
+
+- **A flag não é zerada no ramo "pausado" de `onTimeTrackingStateChange` (o
+  evento de WebSocket) nem no ramo equivalente de `checkCurrentTracking`.**
+  `autoPauseTracking` já marca a flag `true` no próprio `success`, e o mesmo
+  pause que ele causa dispara esse evento de volta pro mesmo controller — zerar
+  ali desfaria o que acabou de ser marcado, por causa da ordem de chegada das
+  duas respostas assíncronas (a do `pause` e a notificação de estado). O valor
+  padrão (`false`) já cobre sozinho o caso "pausado por outro motivo", sem
+  precisar zerar em lugar nenhum.
+- **Zerada em todo caminho que reativa a contagem** (`startTracking`,
+  `resumeTracking`, `switchTracking`, clique manual em Iniciar, e os ramos
+  `running`/`ended`/`inactive` do WebSocket): uma vez resolvido o motivo do
+  auto-pause, a flag não deve sobreviver pro próximo ciclo.
+- **Não foi possível escrever teste automatizado para isto.** É bug de
+  coordenação entre múltiplas instâncias de controller reagindo ao mesmo evento
+  global — precisaria de um spec de sistema com duas abas de ticket abertas
+  simultaneamente, e este ambiente não tem Chrome/chromedriver (mesma limitação
+  já documentada para o spec de contagem por grupo). Verificado rastreando a
+  lógica manualmente linha a linha contra o cenário relatado.
+
 ### Acesso somente leitura para clientes
 
 Objetivo: cliente entra no perfil dele e **apenas visualiza** — não muda

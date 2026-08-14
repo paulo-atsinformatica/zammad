@@ -40,6 +40,16 @@ class App.TicketZoomTimeTracking extends App.Controller
     # que logar de volta retome a contagem sozinho (ver onPauseControlLogout).
     @blockAutoResume = false
 
+    # Customização ATS: só true enquanto ESTE ticket estiver pausado
+    # especificamente por autoPauseTracking (offline/pausa/deslogar) - nunca por
+    # troca de ticket ou fechamento. Distingue "este ticket parou porque o
+    # atendente ficou indisponível" de "este ticket já estava parado por outro
+    # motivo quando o atendente ficou indisponível". Sem isso, ficar
+    # offline/online com dois tickets abertos (um rodando, outro já pausado por
+    # troca) retomava os DOIS ao voltar - inclusive o errado - porque
+    # maybeAutoResume só olhava "está pausado e pode retomar", igual em ambos.
+    @autoPaused = false
+
     # Listen for user state changes (pause/offline)
     @controllerBind('user_state:changed', @onUserStateChanged)
     @controllerBind('pause:started', @onPauseStarted)
@@ -179,11 +189,16 @@ class App.TicketZoomTimeTracking extends App.Controller
             @isPaused = true
             @isDeactivated = true
           
+          # @autoPaused não é zerado no ramo "pausado": este método é chamado
+          # logo depois de autoPauseTracking() em onUserStateChanged, e uma
+          # resposta chegando antes não pode apagar a flag que a outra acabou
+          # de marcar. Só zera quando a contagem está de fato rodando.
           if !@isPaused && data.is_active
+            @autoPaused = false
             @startTimer(data.resumed_at || data.started_at)
           else
             @stopTimer()
-          
+
           @updateButtonStates()
           @renderTime()
         else
@@ -195,6 +210,7 @@ class App.TicketZoomTimeTracking extends App.Controller
           @totalSeconds = @summarySeconds or 0
           @isPaused = false
           @isDeactivated = false
+          @autoPaused = false
           @stopTimer()
           @updateButtonStates()
           @renderTime()
@@ -285,6 +301,7 @@ class App.TicketZoomTimeTracking extends App.Controller
     # Um clique manual em Iniciar sempre reabilita o retorno automático,
     # mesmo que o bloqueio tenha vindo de um "deslogar" anterior.
     @blockAutoResume = false
+    @autoPaused = false
 
     if @canResume()
       @resumeTracking()
@@ -308,6 +325,7 @@ class App.TicketZoomTimeTracking extends App.Controller
         @tracking = data
         @totalSeconds = @baseSeconds(data)
         @isPaused = false
+        @autoPaused = false
         @startTimer(data.resumed_at || data.started_at)
         @updateButtonStates()
         @notify(
@@ -352,6 +370,7 @@ class App.TicketZoomTimeTracking extends App.Controller
         @tracking = data
         @totalSeconds = @baseSeconds(data, @totalSeconds)
         @isPaused = false
+        @autoPaused = false
         @startTimer(data.resumed_at || data.started_at)
         @updateButtonStates()
         @notify(
@@ -409,6 +428,7 @@ class App.TicketZoomTimeTracking extends App.Controller
         @tracking = data.new_tracking
         @totalSeconds = @baseSeconds(@tracking)
         @isPaused = false
+        @autoPaused = false
         @startTimer(@tracking.resumed_at || @tracking.started_at)
         @updateButtonStates()
         @notify(
@@ -489,15 +509,23 @@ class App.TicketZoomTimeTracking extends App.Controller
       when 'running'
         @isPaused = false
         @isDeactivated = false
+        @autoPaused = false
         @startTimer(data.resumed_at || data.started_at)
       when 'paused'
         @isPaused = true
         @isDeactivated = !data.is_active
         @stopTimer()
+        # @autoPaused não é tocado aqui de propósito: autoPauseTracking já seta
+        # true no próprio success, e esse mesmo pause dispara este evento de
+        # volta via WebSocket - zerar aqui desfaria o que acabou de ser
+        # marcado. Uma pausa que não veio de autoPauseTracking (troca de
+        # ticket, por exemplo) nunca marca a flag, então o valor por padrão
+        # (false) já protege esse caso sem precisar zerar aqui.
       when 'ended', 'inactive'
         @tracking = null
         @isPaused = false
         @isDeactivated = false
+        @autoPaused = false
         @stopTimer()
         @totalSeconds = 0
     
@@ -514,6 +542,7 @@ class App.TicketZoomTimeTracking extends App.Controller
     @totalSeconds = 0
     @isPaused = false
     @isDeactivated = false
+    @autoPaused = false
     @stopTimer()
     @updateButtonStates()
 
@@ -555,6 +584,7 @@ class App.TicketZoomTimeTracking extends App.Controller
         @tracking = data
         @totalSeconds = @baseSeconds(data, @totalSeconds)
         @isPaused = true
+        @autoPaused = true
         @stopTimer()
         @updateButtonStates()
         @renderTime()
@@ -569,6 +599,7 @@ class App.TicketZoomTimeTracking extends App.Controller
   # falta só o bloqueio específico de "deslogar" (blockAutoResume).
   maybeAutoResume: ->
     return if @blockAutoResume
+    return if !@autoPaused
     return if !@canResume()
 
     @resumeTracking()
