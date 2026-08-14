@@ -17275,17 +17275,6 @@ body.is-pause-blocked {
   }
 }
 
-/* Pausar usa âmbar para diferenciar de "iniciar" sem depender do ícone. */
-.js-tt-pause.is-ready {
-  border-color: hsl(38, 80%, 50%);
-  color: hsl(38, 85%, 60%);
-  background: hsla(38, 80%, 50%, 0.12);
-
-  &:hover {
-    background: hsla(38, 80%, 50%, 0.22);
-  }
-}
-
 /* Timer display */
 .tt-timer {
   min-width: 72px;

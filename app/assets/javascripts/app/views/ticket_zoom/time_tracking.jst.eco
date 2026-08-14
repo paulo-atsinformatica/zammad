@@ -16,11 +16,5 @@
       <path d="M4 3.5L11 7L4 10.5Z"></path>
     </svg>
   </button>
-  <button type="button" class="tt-btn js-tt-pause" title="<%- @T('Pausar contagem') %>" disabled>
-    <svg class="icon-small" viewBox="0 0 14 14" aria-hidden="true">
-      <rect x="4" y="3" width="2.5" height="8"></rect>
-      <rect x="7.5" y="3" width="2.5" height="8"></rect>
-    </svg>
-  </button>
   <div class="tt-timer js-tt-timer">00:00:00</div>
 </div>

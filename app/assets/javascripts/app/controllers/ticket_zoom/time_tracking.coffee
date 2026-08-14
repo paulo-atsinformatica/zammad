@@ -3,12 +3,10 @@
 class App.TicketZoomTimeTracking extends App.Controller
   elements:
     '.js-tt-start': 'startButton'
-    '.js-tt-pause': 'pauseButton'
     '.js-tt-timer': 'timerDisplay'
 
   events:
     'click .js-tt-start':  'onStartClick'
-    'click .js-tt-pause':  'onPauseClick'
     'click .js-tt-others': 'onOthersClick'
 
   # Base do cronômetro: o acumulado deste usuário NO TICKET, e não só do registro
@@ -36,6 +34,11 @@ class App.TicketZoomTimeTracking extends App.Controller
     @timer = null
     @totalSeconds = 0
     @isPaused = false
+
+    # Customização ATS: fica true a partir de "deslogar" no controle de pausas
+    # e só volta a false quando o usuário clica em Iniciar de novo - impede
+    # que logar de volta retome a contagem sozinho (ver onPauseControlLogout).
+    @blockAutoResume = false
 
     # Listen for user state changes (pause/offline)
     @controllerBind('user_state:changed', @onUserStateChanged)
@@ -221,13 +224,6 @@ class App.TicketZoomTimeTracking extends App.Controller
     return false if @isTicketClosed() # Ticket is closed
     true
 
-  # Check if can pause tracking
-  canPause: ->
-    return false if !@canInteract()
-    return false if !@tracking?.is_active # Not tracking
-    return false if @isPaused # Already paused
-    true
-
   # Check if can resume tracking
   canResume: ->
     return false if !@canInteract()
@@ -251,14 +247,6 @@ class App.TicketZoomTimeTracking extends App.Controller
     else
       @startButton.prop('disabled', true).addClass('is-disabled').removeClass('is-ready')
       @startButton.attr('title', @getDisabledReason())
-
-    # Pause button - shows pause icon, enabled when can pause
-    if @canPause()
-      @pauseButton.prop('disabled', false).removeClass('is-disabled').addClass('is-ready')
-      @pauseButton.attr('title', App.i18n.translateContent('Pausar contagem'))
-    else
-      @pauseButton.prop('disabled', true).addClass('is-disabled').removeClass('is-ready')
-      @pauseButton.attr('title', App.i18n.translateContent('Pausar contagem'))
 
     # Timer display - show current state
     if @tracking
@@ -293,17 +281,15 @@ class App.TicketZoomTimeTracking extends App.Controller
 
   onStartClick: (e) ->
     e.preventDefault()
-    
+
+    # Um clique manual em Iniciar sempre reabilita o retorno automático,
+    # mesmo que o bloqueio tenha vindo de um "deslogar" anterior.
+    @blockAutoResume = false
+
     if @canResume()
       @resumeTracking()
     else if @canStart()
       @startTracking()
-
-  onPauseClick: (e) ->
-    e.preventDefault()
-    
-    if @canPause()
-      @pauseTracking()
 
   startTracking: ->
     @startButton.prop('disabled', true)
@@ -347,35 +333,6 @@ class App.TicketZoomTimeTracking extends App.Controller
         @notify(
           type:    'error'
           msg:     responseData?.error || App.i18n.translateContent('Erro ao iniciar contagem')
-          timeout: 3000
-        )
-    )
-
-  pauseTracking: ->
-    @pauseButton.prop('disabled', true)
-    
-    @ajax(
-      id:          "tt_pause_#{@ticket_id}"
-      type:        'POST'
-      url:         "#{@apiPath}/tickets/#{@ticket_id}/time_tracking/pause"
-      processData: true
-      success:     (data) =>
-        @tracking = data
-        @totalSeconds = @baseSeconds(data, @totalSeconds)
-        @isPaused = true
-        @stopTimer()
-        @updateButtonStates()
-        @renderTime()
-        @notify(
-          type:    'success'
-          msg:     App.i18n.translateContent('Contagem pausada')
-          timeout: 2000
-        )
-      error: (xhr) =>
-        @updateButtonStates()
-        @notify(
-          type:    'error'
-          msg:     xhr.responseJSON?.error || App.i18n.translateContent('Erro ao pausar contagem')
           timeout: 3000
         )
     )
@@ -468,29 +425,36 @@ class App.TicketZoomTimeTracking extends App.Controller
         )
     )
 
-  # Auto-pause when user goes offline or enters pause
+  # Auto-pause when user goes offline or enters pause; auto-resume when back online
   onUserStateChanged: =>
     @currentUser = App.User.current()
-    
+
     if @tracking?.is_active && !@isPaused
       if @currentUser.current_state == 'offline' || @currentUser.in_pause
         @autoPauseTracking()
+    else if @isPaused
+      @maybeAutoResume()
     @checkCurrentTracking()
     @updateButtonStates()
 
   onPauseStarted: =>
     @currentUser = App.User.current()
-    
+
     if @tracking?.is_active && !@isPaused
       @autoPauseTracking()
-    
+
     @updateButtonStates()
 
   onPauseEnded: =>
     @currentUser = App.User.current()
+    @maybeAutoResume()
     @updateButtonStates()
 
+  # Customização ATS: "deslogar" no controle de pausas pausa a contagem e
+  # bloqueia o retorno automático - só volta com um clique manual em Iniciar
+  # (ver onStartClick). Diferente de pausa/offline comuns, que retomam sozinhos.
   onPauseControlLogout: =>
+    @blockAutoResume = true
     if @tracking?.is_active && !@isPaused
       @autoPauseTracking()
     @checkCurrentTracking()
@@ -597,6 +561,17 @@ class App.TicketZoomTimeTracking extends App.Controller
       error: =>
         # Silent error for auto-pause
     )
+
+  # Customização ATS: retoma sozinho ao terminar a pausa ou voltar a ficar
+  # online - a contagem manual do botão de pausa foi removida, então este é
+  # o único caminho de volta além de clicar em Iniciar. `canResume` já cobre
+  # ticket fechado, permissão, dono e o próprio estado de pausa/offline atual;
+  # falta só o bloqueio específico de "deslogar" (blockAutoResume).
+  maybeAutoResume: ->
+    return if @blockAutoResume
+    return if !@canResume()
+
+    @resumeTracking()
 
   onTicketUpdate: (data) =>
     return if data.ticket_id != @ticket_id
