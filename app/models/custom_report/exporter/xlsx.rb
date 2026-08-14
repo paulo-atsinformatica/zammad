@@ -2,13 +2,24 @@
 
 # Customização ATS: export xlsx em streaming de relatório personalizado.
 
-# Escreve a planilha linha por linha em disco.
+# Escreve a planilha linha a linha, lendo os registros em lotes.
 #
-# Não usa ExcelSheet de propósito: ele recebe os registros como Array e monta a
-# planilha inteira em memória, o que inviabiliza relatórios grandes. Aqui o
-# WriteXLSX roda em constant_memory, modo em que cada linha é descarregada em
-# disco assim que a próxima começa — o custo de memória deixa de acompanhar o
-# tamanho do resultado, como já acontece no export CSV.
+# Não usa ExcelSheet de propósito: ele carrega os registros todos de uma vez
+# como Array. Aqui a leitura é em lotes (query.each_batch), então o banco nunca
+# devolve o resultado inteiro de uma vez.
+#
+# A escrita, porém, NÃO é streaming: write_xlsx 1.15.0 acumula as células em
+# memória (Writexlsx::Worksheet::CellDataStore mantém um Array) e só serializa
+# no close. A gem tem uma opção `optimization`, mas ela é lida e nunca usada —
+# não existe modo de memória constante nesta versão. Quem segura o consumo é o
+# limite de MAX_ROWS; acima disso o caminho é o CSV, esse sim em streaming.
+#
+# Cuidado: só as chaves em Workbook#process_workbook_options (tempdir,
+# date_1904, optimization, excel2003_style, strings_to_urls, max_url_length)
+# são tratadas como opção. Qualquer outra é silenciosamente interpretada como
+# propriedade do formato padrão e vira uma chamada `set_<chave>` no
+# Writexlsx::Format — foi assim que um `constant_memory: 1` daqui derrubava
+# toda geração com "undefined method 'set_constant_memory'".
 class CustomReport::Exporter::Xlsx
   # Limite do próprio formato: uma planilha xlsx não passa de 1.048.576 linhas,
   # contando o cabeçalho. Acima disso o arquivo abriria truncado sem avisar, então
@@ -32,7 +43,7 @@ class CustomReport::Exporter::Xlsx
 
     path = run.prepare_file_path!
 
-    workbook = WriteXLSX.new(path.to_s, constant_memory: 1)
+    workbook = WriteXLSX.new(path.to_s)
     processed = write_rows(workbook)
     write_summary(workbook)
     workbook.close

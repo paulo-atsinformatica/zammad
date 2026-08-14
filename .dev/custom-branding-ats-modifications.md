@@ -917,6 +917,37 @@ liga por padrão — separado de `db/seeds/settings.rb`, que é 100% stock),
   até a suíte tentar abrir o Chrome, então o seed/reset em si (truncate +
   migrate + seed) foi validado de ponta a ponta.
 
+### Export xlsx quebrado: `set_constant_memory` (14/08/2026)
+
+Toda geração em Excel falhava com
+`undefined method 'set_constant_memory' for an instance of Writexlsx::Format`
+(o CSV seguia funcionando).
+
+Causa: `WriteXLSX.new(path, constant_memory: 1)`. O construtor da gem só trata
+como **opção** as chaves de uma allowlist —
+`tempdir date_1904 optimization excel2003_style strings_to_urls max_url_length`
+(`write_xlsx-1.15.0/lib/write_xlsx/workbook/initialization.rb:116`). Qualquer
+outra chave cai no `reject` da linha 122 e vira **propriedade do formato
+padrão**, aplicada depois em `add_format` como `set_<chave>`. Ou seja, uma opção
+inexistente não dá erro de argumento: vira uma chamada de método inexistente no
+`Writexlsx::Format`, e só na hora de gerar.
+
+Correção: remover a opção (`app/models/custom_report/exporter/xlsx.rb`).
+
+**O comentário do arquivo estava errado e foi reescrito.** Ele afirmava que o
+xlsx rodava em "constant_memory", com o custo de memória independente do volume.
+Isso nunca foi verdade nesta gem: `Writexlsx::Worksheet::CellDataStore` guarda
+as células num Array e só serializa no `close`, e a opção `optimization` é lida
+(`initialization.rb:30`) e **nunca usada** em lugar nenhum da lib — não existe
+modo de memória constante na 1.15.0. O mesmo comentário enganoso em
+`app/jobs/custom_report_generate_job.rb` também foi corrigido. O que segura o
+consumo é o teto de `MAX_ROWS`; streaming de verdade só no CSV.
+
+Spec nova: `spec/models/custom_report/exporter/xlsx_spec.rb`. Não havia **nenhum**
+teste de exportador — por isso o bug só apareceu em produção. A spec gera o
+arquivo de verdade e confere a assinatura `PK` (xlsx é zip): mockar o WriteXLSX
+teria deixado passar exatamente este erro, que é de integração com a gem.
+
 ### Filtros do relatório: rótulos em pt-BR e data como período (14/08/2026)
 
 Dois ajustes na tela de visualização do relatório personalizado.

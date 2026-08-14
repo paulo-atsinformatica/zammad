@@ -69,8 +69,10 @@ class CustomReportGenerateJob < ApplicationJob
 
     summary = CustomReport::Summary.new(report: run.custom_report, query:, columns:)
 
-    # Os dois exportadores escrevem em streaming; o xlsx tem teto porque o
-    # formato tem (ver CustomReport::Exporter::Xlsx::MAX_ROWS).
+    # Os dois leem o resultado em lotes, mas só o CSV escreve em streaming: o
+    # xlsx acumula a planilha em memória até o close, por limitação da gem (ver
+    # CustomReport::Exporter::Xlsx). Daí o teto de MAX_ROWS lá, que também é o
+    # limite do próprio formato.
     klass = run.format == 'xlsx' ? CustomReport::Exporter::Xlsx : CustomReport::Exporter::Csv
 
     klass.new(run:, query:, columns:, summary:, on_progress:)
