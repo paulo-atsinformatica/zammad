@@ -51,12 +51,25 @@
   --color-green-100: #f5e5e5;
   --color-green-200: #e8b3b3;
   --color-green-250: #e9fbe6;
-  --color-green-300: #e8b3b3;
+
+  /* Customização ATS: 300, 500 e 900 ficaram nos valores originais do Zammad de
+     propósito — são o trio da mensagem de SUCESSO, e pintá-los da cor da marca
+     deixava o texto ilegível.
+
+     As classes são `bg-green-300 dark:bg-green-900 text-green-500` (ver
+     initializeGlobalComponentStyles.ts: valem para notificação, alerta e selo).
+     Com os três em #480404, no tema escuro fundo e texto caíam na mesma cor e o
+     balão aparecia vazio; de quebra, sucesso e erro ficavam ambos vermelhos e
+     indistinguíveis.
+
+     green-400 segue vermelho ATS: ele não entra nessas classes (é indicador de
+     ticket fechado, resposta publicada e aba) e ali não há problema de leitura. */
+  --color-green-300: #bbe0cb;
   --color-green-350: #bce7b6;
   --color-green-400: #480404;
-  --color-green-500: #480404;
+  --color-green-500: #36af6a;
   --color-green-700: #0c6300;
-  --color-green-900: #480404;
+  --color-green-900: #07341a;
 
   --color-yellow-50: #fff6da;
   --color-yellow-100: #fffee2;

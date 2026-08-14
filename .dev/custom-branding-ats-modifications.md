@@ -917,6 +917,35 @@ liga por padrão — separado de `db/seeds/settings.rb`, que é 100% stock),
   até a suíte tentar abrir o Chrome, então o seed/reset em si (truncate +
   migrate + seed) foi validado de ponta a ponta.
 
+### Mensagem de sucesso invisível no tema escuro (14/08/2026)
+
+Ao gerar o relatório em CSV (que funciona), a notificação de "pronto para
+baixar" aparecia como um balão vermelho **vazio** no topo. Não era falta de
+tradução: a string existe e a notificação nativa do Chrome mostrava o texto
+certo.
+
+Causa: em `app/frontend/apps/desktop/styles/tokens.css`, o branding tinha
+pintado toda a escala `green` de `#480404`. As classes de sucesso são
+`bg-green-300 dark:bg-green-900 text-green-500`
+(`app/frontend/apps/desktop/initializer/initializeGlobalComponentStyles.ts`,
+linhas 21, 33 e 75 — valem para **selo, alerta e notificação**). No tema escuro
+o fundo virava `green-900` e o texto `green-500`, os dois `#480404`: **mesma
+cor**, texto invisível. De quebra, sucesso e erro ficavam ambos vermelhos.
+
+Ou seja, o defeito não era do relatório: **toda** mensagem de sucesso da
+Desktop View no tema escuro estava ilegível.
+
+Correção: `green-300`, `green-500` e `green-900` voltaram aos valores originais
+do Zammad. Só esses três — são os que compõem as classes de sucesso.
+`green-400` **segue vermelho ATS**: ele não entra nessas classes (é indicador de
+ticket fechado, resposta publicada da base de conhecimento e aba de ticket) e
+ali não havia problema de leitura. Mexer nele mudaria o visual de coisas que
+estão funcionando.
+
+Regra que fica: cor de **status** (sucesso/erro/aviso) não deve ser
+rebrandada junto com a paleta da marca — ela precisa contrastar com o próprio
+fundo e distinguir-se do erro.
+
 ### Export xlsx quebrado: `set_constant_memory` (14/08/2026)
 
 Toda geração em Excel falhava com
