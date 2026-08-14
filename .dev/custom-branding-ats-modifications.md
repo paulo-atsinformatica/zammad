@@ -827,6 +827,57 @@ Arquivos ATS puros (nenhum arquivo do upstream foi tocado):
   informar o ícone real (`app/assets/javascripts/app/lib/app_post/task_manager/singleton.coffee:54`).
   Adicionado `iconClass: 'economic-group'` no `meta()`.
 
+### Contador de tickets por agrupamento e botão de atualizar na Visão Geral (14/08/2026)
+
+Duas melhorias na tela de Visão Geral (`#ticket/view/:view`) quando ela está
+com agrupamento ativo (ex.: agrupar por proprietário):
+
+1. **Contador ao lado do nome do grupo** (ex.: "Débora Carvalho (4)"). Essa
+   feature já existe **nativa** no Zammad (`App.ControllerTable#renderTableGroupByRow`),
+   mas vem desligada de fábrica atrás de um setting cujo título no admin
+   (`'Open ticket indicator'`) não tem nada a ver com o que ele faz — por isso
+   é praticamente impossível de achar/ligar pela UI. Ligado por padrão neste
+   fork via seed + migration.
+2. **Botão "Atualizar"** ao lado de "Opções", recarrega a lista da visão geral
+   sem recarregar a página inteira (reaproveita `App.OverviewListCollection.fetch`,
+   o mesmo mecanismo que "Opções" já usa ao salvar).
+
+Arquivos ATS puros: `db/seeds/ats_settings.rb` (settings nativos que o fork
+liga por padrão — separado de `db/seeds/settings.rb`, que é 100% stock),
+`db/migrate/20260814120000_enable_table_group_by_show_count.rb`.
+
+**Arquivos do upstream tocados — reaplicar se o upstream mexer neles:**
+
+| Arquivo | Mudança e motivo |
+|---|---|
+| `db/seeds.rb` | Acrescenta `ats_settings` na lista `seeds`, logo depois de `settings`. |
+| `app/assets/javascripts/app/controllers/_application_controller/table.coffee` | `renderTableGroupByRow` recontava `@objects` inteiro (um loop `for` completo) **uma vez por grupo renderizado** — O(n × grupos), com `groupObjectName` (usa `App.viewPrint`, não é barato) chamado a cada iteração. Numa fila de centenas de tickets isso trava a cada re-render, e a Visão Geral re-renderiza a cada push de WebSocket. Trocado por um `_.countBy` calculado uma vez em `renderTableRows` (guardado em `@groupByCounts`), e `renderTableGroupByRow` só faz um lookup O(1). Contagem sobre `@objects` (lista completa), não a página atual, pra não mudar com paginação — mesma semântica de antes. |
+| `app/assets/javascripts/app/views/agent_ticket_view/content.jst.eco` | Acrescenta o botão `.js-overviewRefresh` fora do `<% if @edit: %>` (esse é só admin) — visível pra qualquer agente. |
+| `app/assets/javascripts/app/controllers/ticket_overview/table.coffee` | Novo evento `click [data-type=refresh]` + método `refresh`/`refreshDone`. |
+| `i18n/ats.pt-br.po` | `"Refresh"` não tinha tradução pt-BR nativa em nenhum catálogo do Zammad — adicionada aqui. |
+
+**Decisões que não são óbvias pelo código:**
+
+- **Botão de atualizar se reabilita por tempo (2s), não esperando o callback
+  de dados.** Se o `fetch` falhar (rede caiu, etc.), `App.OverviewListCollection`
+  nunca dispara o callback de `updateTable` — esperar por ele deixaria o botão
+  travado pra sempre numa falha. O `@delay` também evita spam de cliques.
+- **Contagem usa `@objects` (lista completa carregada), não `objectsToShow`
+  (página atual).** Preserva o comportamento original: o total do grupo não
+  muda dependendo de qual página da paginação você está vendo.
+- **Setting `ui_table_group_by_show_count` ligado só se `system_init_done`
+  existir, na migration.** Mesmo motivo de sempre: instalação nova quem liga
+  isso é o seed; a migration é só pra quem já está em produção.
+- **Não foi possível rodar o spec de sistema que cobre esse contador
+  (`spec/system/ticket/view_spec.rb:401`, contexto `ui_table_group_by_show_count`)
+  neste ambiente de dev — Chrome/chromedriver não estão instalados no
+  container `zc-run`.** Verificado por outra via: reproduzido o algoritmo
+  antigo (recontagem por loop) e o novo (`_.countBy`) em Node com os mesmos 4
+  tickets/3 grupos do spec (`''`, `'key_1'` ×2, `'key_2'`) — resultado idêntico
+  em todos os grupos. Também rodou de verdade contra o banco de teste (limpo)
+  até a suíte tentar abrir o Chrome, então o seed/reset em si (truncate +
+  migrate + seed) foi validado de ponta a ponta.
+
 ## Referências
 
 - Repositório original: https://github.com/zammad/zammad

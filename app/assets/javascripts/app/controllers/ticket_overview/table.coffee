@@ -5,6 +5,7 @@ class App.TicketOverviewTable extends App.Controller
   events:
     'click [data-type=settings]': 'settings'
     'click [data-type=viewmode]': 'viewmode'
+    'click [data-type=refresh]':  'refresh'
 
   constructor: ->
     super
@@ -401,6 +402,26 @@ class App.TicketOverviewTable extends App.Controller
     App.LocalStorage.set("mode:#{@view}", @view_mode, @Session.get('id'))
     @fetch()
     #@render()
+
+  # Customização ATS: recarrega a lista da visão geral sem recarregar a página.
+  refresh: (e) =>
+    e.preventDefault()
+    return if !@view
+    return if @refreshActive
+
+    @refreshActive = true
+    @$('.js-overviewRefresh').addClass('is-disabled')
+
+    App.OverviewListCollection.fetch(@view)
+
+    # Reabilita por tempo em vez de esperar o callback de dados: se o fetch
+    # falhar, App.OverviewListCollection nunca chama updateTable e o botão
+    # ficaria travado. O intervalo também evita spam de cliques.
+    @delay(@refreshDone, 2000, 'overview-refresh-reset')
+
+  refreshDone: =>
+    @refreshActive = false
+    @$('.js-overviewRefresh').removeClass('is-disabled')
 
   settings: (e) =>
     e.preventDefault()

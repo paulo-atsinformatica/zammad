@@ -4,7 +4,7 @@ Zammad::Application.routes.draw do
   api_path = Rails.configuration.api_path
 
   # Customização ATS: busca/perfil de "Grupo Econômico" (agrupamento por
-  # Organization#grupoeconomico), ver app/controllers/economic_groups_controller.rb.
+  # Organization#nomegrupoeconomico), ver app/controllers/economic_groups_controller.rb.
   match api_path + '/economic_groups/search',
         to:  'economic_groups#search',
         via: :get

@@ -476,3 +476,6 @@ msgstr "Recursos e controles específicos do usuário."
 
 msgid "Failed to generate knowledge base draft for \"%s\": %s"
 msgstr "Não foi possível gerar o rascunho da base de conhecimento para \"%s\": %s"
+
+msgid "Refresh"
+msgstr "Atualizar"

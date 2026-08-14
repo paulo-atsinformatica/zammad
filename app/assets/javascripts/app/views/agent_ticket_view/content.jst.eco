@@ -3,6 +3,8 @@
     <h2><%- @T(@overview.name) %></h2>
   </div>
   <div class="page-header-meta">
+    <%# Customização ATS: recarrega a lista sem recarregar a página inteira. Fora do @edit, que é só admin. %>
+    <div class="btn btn--action btn--icon--last js-overviewRefresh" data-type="refresh"><%- @T('Refresh') %> <%- @Icon('reload') %></div>
     <% if @edit: %>
       <div class="btn btn--action" data-type="settings"><%- @T('Options') %></div>
     <% end %>

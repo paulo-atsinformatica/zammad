@@ -557,6 +557,17 @@ class App.ControllerTable extends App.Controller
     else
       objectsGrouped = { '': objectsToShow }
 
+    # Customização ATS: contagem por grupo calculada uma única vez por render.
+    # O upstream recontava @objects inteiro dentro de renderTableGroupByRow, uma
+    # vez por grupo — O(n × grupos), com App.viewPrint (caro) em cada iteração.
+    # Numa fila de centenas de tickets agrupada por proprietário isso travava a
+    # cada re-render, e o overview re-renderiza a cada push de WebSocket.
+    # Conta sobre @objects (lista completa), não sobre a página atual, para o
+    # total do grupo não mudar conforme a paginação — mesma semântica do upstream.
+    @groupByCounts = undefined
+    if @groupBy && @objects && @Config.get('ui_table_group_by_show_count') is true
+      @groupByCounts = _.countBy(@objects, (object) => @groupObjectName(object, @groupBy))
+
     for groupValue in @sortObjectKeys(objectsGrouped, @groupDirection)
       groupObjects = objectsGrouped[groupValue]
 
@@ -581,16 +592,9 @@ class App.ControllerTable extends App.Controller
     tableBody
 
   renderTableGroupByRow: (object, position, groupByName) =>
-    ui_table_group_by_show_count = @Config.get('ui_table_group_by_show_count')
-    groupByCount = undefined
-    if ui_table_group_by_show_count is true
-      groupBy = @groupBy
-      groupLast = @groupObjectName(object, @groupBy)
-      groupByCount = 0
-      if @objects
-        for localObject in @objects
-          if @groupObjectName(localObject, groupBy) is groupLast
-            groupByCount += 1
+    # Customização ATS: só consulta o mapa montado em renderTableRows (ver
+    # comentário lá) em vez de varrer @objects de novo para cada grupo.
+    groupByCount = @groupByCounts?[@groupObjectName(object, @groupBy)]
 
     App.view('generic/table_row_group_by')(
       position:      position
