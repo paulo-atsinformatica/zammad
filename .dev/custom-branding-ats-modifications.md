@@ -597,6 +597,35 @@ usar `users.current_active_ticket_id`, que o servidor mantém e que `pause!`
   pause** (`in_pause`/`offline` no instante em que a contagem para). Trocar de
   ticket acontece com o usuário disponível, então não marca.
 
+#### Correção da correção: 409/422 ao voltar da pausa (15/08/2026)
+
+A tentativa acima ainda falhava com duas abas abertas:
+`POST .../318/time_tracking/resume 409`, `.../259/time_tracking/resume 409` e
+depois `422`. As duas abas tentavam retomar ao mesmo tempo.
+
+Duas causas:
+
+1. **`current_active_ticket_id` lido do usuário no navegador não é confiável.**
+   O campo existe nos assets, mas o objeto `App.User.current()` nem sempre
+   chega atualizado a todas as abas — com o valor velho (ou ausente) cada aba
+   caía no fallback local e todas se achavam no direito de retomar. Passou a vir
+   do servidor a cada consulta de estado: `is_user_active_ticket` em
+   `TicketTimeTrackingsController#tracking_json`.
+2. **A retomada automática usava o mesmo caminho de erro do clique manual.** Um
+   409 ("outro ticket em atendimento") abria o **diálogo de troca de ticket**
+   sozinho, sem ninguém ter clicado em nada, e o 422 virava alerta vermelho.
+   `resumeTracking` ganhou o parâmetro `silent`: na retomada automática a falha
+   só ressincroniza com o servidor.
+
+**Decisões que não são óbvias pelo código:**
+
+- **`is_user_active_ticket` é preservado ao reconstruir `@tracking` no evento de
+  WebSocket** (`onTimeTrackingStateChange`): o push não carrega o campo, e sem
+  preservar, o primeiro evento apagaria a informação que decide a retomada.
+- **Falha de retomada automática não é erro do usuário.** Ele não pediu nada, e
+  outro ticket já ter assumido a contagem é resposta legítima — daí o silêncio,
+  não um toast.
+
 ### Gatilho: e-mail para os endereços guardados num campo (15/08/2026)
 
 Permite pôr endereços num campo (ex.: "E-mails de aviso" da organização) e, com

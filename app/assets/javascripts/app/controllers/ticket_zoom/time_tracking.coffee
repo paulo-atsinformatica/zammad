@@ -360,9 +360,13 @@ class App.TicketZoomTimeTracking extends App.Controller
         )
     )
 
-  resumeTracking: ->
+  # silent: retomada automática (fim de pausa / voltou a ficar online). Falha aí
+  # não pode virar diálogo de troca de ticket nem alerta vermelho — o usuário
+  # não pediu nada, e outro ticket já ter assumido a contagem é resposta
+  # legítima, não erro dele.
+  resumeTracking: (silent = false) ->
     @startButton.prop('disabled', true)
-    
+
     @ajax(
       id:          "tt_resume_#{@ticket_id}"
       type:        'POST'
@@ -385,6 +389,14 @@ class App.TicketZoomTimeTracking extends App.Controller
         )
       error: (xhr) =>
         @updateButtonStates()
+
+        # Retomada automática falha em silêncio: ressincroniza com o servidor e
+        # segue. Sem isto, um 409 ("outro ticket em atendimento") abriria o
+        # diálogo de troca sozinho, sem ninguém ter clicado em nada.
+        if silent
+          @checkCurrentTracking()
+          return
+
         # Parse JSON response if not already parsed
         responseData = xhr.responseJSON
         if !responseData && xhr.responseText
@@ -392,7 +404,7 @@ class App.TicketZoomTimeTracking extends App.Controller
             responseData = JSON.parse(xhr.responseText)
           catch e
             responseData = {}
-        
+
         # Check for existing ticket - show switch dialog instead of error
         if responseData?.existing_ticket_id
           @showSwitchDialog(responseData)
@@ -507,6 +519,9 @@ class App.TicketZoomTimeTracking extends App.Controller
       ended_at: data.ended_at
       total_seconds: data.total_seconds
       ticket_total_seconds: data.ticket_total_seconds
+      # O push não carrega este campo; mantém o que veio do último GET para
+      # isAutoResumable não perder a referência a cada evento.
+      is_user_active_ticket: @tracking?.is_user_active_ticket
     }
     @totalSeconds = @baseSeconds(data)
     
@@ -611,25 +626,27 @@ class App.TicketZoomTimeTracking extends App.Controller
     return if !@isAutoResumable()
     return if !@canResume()
 
-    @resumeTracking()
+    @resumeTracking(true)
 
   # Qual dos tickets abertos deve voltar sozinho.
   #
-  # O servidor guarda em users.current_active_ticket_id qual ticket ocupa o
-  # slot de atendimento, e `pause!` (o que roda ao entrar em pausa ou ficar
-  # offline) NÃO limpa esse campo — só encerrar ou trocar de ticket o move.
-  # Ou seja: entre vários tickets pausados, o ativo é o que parou por causa da
-  # indisponibilidade; um pausado por troca já entregou o slot a outro e não
-  # pode ressuscitar.
+  # `is_user_active_ticket` vem junto do GET de estado da contagem e diz se ESTE
+  # ticket detém o slot de atendimento do usuário (users.current_active_ticket_id
+  # no servidor, que `pause!` não limpa — só encerrar ou trocar de ticket o
+  # move). Entre vários tickets pausados, só o dono do slot parou por causa da
+  # indisponibilidade; um pausado por troca já entregou o slot e não pode
+  # ressuscitar.
   #
-  # Vem do servidor, então também sobrevive a recarregar a página no meio da
-  # pausa. `@autoPaused` fica de reserva para quando o campo não estiver
-  # disponível.
+  # A resposta vem do servidor a cada checkCurrentTracking, e não do usuário
+  # carregado no navegador: aquele objeto nem sempre chega atualizado em todas
+  # as abas, e com o dado velho as duas tentavam retomar ao mesmo tempo — a
+  # segunda levava 409.
   isAutoResumable: ->
-    activeTicketId = @currentUser?.current_active_ticket_id
-    return @autoPaused if !activeTicketId?
+    return @tracking.is_user_active_ticket if @tracking?.is_user_active_ticket?
 
-    activeTicketId is @ticket_id
+    # Sem a informação (resposta antiga em cache, versão anterior do backend),
+    # cai na marcação local.
+    @autoPaused
 
   onTicketUpdate: (data) =>
     return if data.ticket_id != @ticket_id

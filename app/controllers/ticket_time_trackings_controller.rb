@@ -153,9 +153,23 @@ class TicketTimeTrackingsController < ApplicationController
   # está em coluna nenhuma.
   def tracking_json(tracking)
     tracking.attributes_with_association_ids.merge(
-      'ticket_total_seconds' => tracking.ticket_total_seconds,
-      'total_time_seconds'   => tracking.total_time_seconds,
+      'ticket_total_seconds'  => tracking.ticket_total_seconds,
+      'total_time_seconds'    => tracking.total_time_seconds,
+      'is_user_active_ticket' => user_active_ticket?(tracking),
     )
+  end
+
+  # Customização ATS: diz se ESTE ticket é o que detém o slot de atendimento do
+  # usuário. É o que permite ao player decidir sozinho se pode retomar a
+  # contagem ao sair de uma pausa.
+  #
+  # Vai pelo servidor, e não pelo current_active_ticket_id do usuário carregado
+  # no navegador: aquele objeto nem sempre chega atualizado a todas as abas, e
+  # com o dado velho cada aba aberta tentava retomar ao mesmo tempo — a segunda
+  # levava 409 do próprio backend.
+  def user_active_ticket?(tracking)
+    current_user.current_active_ticket_id.present? &&
+      current_user.current_active_ticket_id == tracking.ticket_id
   end
 
   def format_seconds(seconds)
