@@ -366,8 +366,14 @@ class App.UserStatusBar extends App.Controller
     App.User.current().current_state = 'online'
     @scheduleRender(true)
     @skipNextCurrentCheck = true
-    App.Event.trigger('user_state:changed')
+
+    # `pause:ended` PRIMEIRO, de propósito. Quem escuta precisa saber que este
+    # 'online' veio de um fim de pausa — que o servidor ainda não confirmou —
+    # e não de alguém voltando de offline. Na ordem inversa, o player de tempo
+    # via só o `user_state:changed`, tentava retomar a contagem na hora e
+    # levava "User is in pause" do backend.
     App.Event.trigger('pause:ended')
+    App.Event.trigger('user_state:changed')
 
     payload = delay_reason: delayReason, ended_at: endedAt
     @persistPendingEndPauseIntent(payload)

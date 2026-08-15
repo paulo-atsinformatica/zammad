@@ -660,6 +660,16 @@ os botões.
 - **Não se moveu o `pause:ended` para dentro do `success`.** O otimismo existe
   para a barra de status responder sem esperar rede, e outras partes dependem
   disso; o evento novo resolve sem tirar essa propriedade.
+- **A ordem dos dois triggers otimistas em `endPause` foi invertida:
+  `pause:ended` agora vem ANTES de `user_state:changed`.** O stack trace do erro
+  que sobrou mostrava a cadeia
+  `endPause → user_state:changed → onUserStateChanged → maybeAutoResume`: como
+  o evento de estado saía primeiro, ele passava pela trava
+  (`awaitingPauseEndConfirmation`) antes de `onPauseEnded` ter chance de armá-la.
+  Quem escuta precisa saber que este 'online' veio de um fim de pausa ainda não
+  confirmado, e não de alguém voltando de offline.
+  Conferido que os outros ouvintes dos dois eventos (`pause_blocker`, a própria
+  barra) são idempotentes e decidem pelo estado atual, não pela ordem.
 
 ### Gatilho: e-mail para os endereços guardados num campo (15/08/2026)
 
