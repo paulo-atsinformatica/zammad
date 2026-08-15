@@ -2,6 +2,12 @@
 
 class Ticket::PerformChanges::Action::NotificationEmail < Ticket::PerformChanges::Action
 
+  # Customização ATS: prefixo dos destinatários vindos de um campo do
+  # ticket/organização. O que vem depois é o caminho do placeholder, resolvido
+  # em recipients_by_type_attribute. Precisa casar com o valor gerado pela tela
+  # (ver _application_action.coffee, @recpientVariables).
+  ATTRIBUTE_RECIPIENT_PREFIX = 'attribute::'.freeze
+
   def self.phase
     :after_save
   end
@@ -258,10 +264,50 @@ class Ticket::PerformChanges::Action::NotificationEmail < Ticket::PerformChanges
 
       Rails.logger.warn "Can't find configured #{origin} Email recipient User with ID '#{$1}'"
       nil
+    when %r{\A#{ATTRIBUTE_RECIPIENT_PREFIX}(.+)\z}o
+      recipients_by_type_attribute($1)
     else
       Rails.logger.error "Unknown email notification recipient '#{recipient_type}'"
       nil
     end
+  end
+
+  # Customização ATS: destinatários lidos de um campo do ticket ou da
+  # organização (ex.: um campo "E-mails para aviso" da organização).
+  #
+  # O upstream aceita só a lista fixa acima; o placeholder já sabe resolver
+  # qualquer caminho (NotificationFactory::Renderer), mas nunca era aplicado ao
+  # destinatário — só a assunto e corpo. Aqui o caminho salvo pela tela
+  # ("attribute::ticket.organization.campo") passa pelo mesmo renderizador.
+  #
+  # Devolve ARRAY: um campo desses costuma ter vários endereços, e
+  # valid_recipient_address só aproveita o primeiro de cada string. Quem chama
+  # (recipients_raw) já concatena arrays, então cada endereço é validado,
+  # deduplicado e checado individualmente.
+  def recipients_by_type_attribute(path)
+    rendered = NotificationFactory::Mailer.template(
+      templateInline: "\#{#{path}}",
+      objects:        notification_factory_template_objects,
+      quote:          false,
+      locale:         locale,
+      timezone:       timezone,
+    )
+
+    return [] if rendered.blank?
+
+    # Caminho que não resolve não levanta: o renderizador devolve o próprio
+    # placeholder de volta, anotado (ex.: "\#{ticket.organization.x / no such
+    # method}"). Sem descartar aqui, isso seguiria como se fosse endereço.
+    return [] if rendered.include?('#{')
+
+    # Aceita vírgula, ponto e vírgula ou quebra de linha: o campo é digitado por
+    # gente, e cada um separa de um jeito.
+    rendered.split(%r{[,;\n]}).map(&:strip).compact_blank
+  rescue => e
+    # Caminho inválido (campo renomeado, organização sem valor) não pode
+    # derrubar o disparo inteiro do gatilho.
+    Rails.logger.error "Could not resolve #{origin} Email recipient attribute '#{path}': #{e.message}"
+    []
   end
 
   def recipients_by_type_article_last_sender

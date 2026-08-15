@@ -516,6 +516,30 @@ class App.UiElement.ApplicationAction
       'ticket_agents': App.i18n.translatePlain('Agents with "%s" permission', App.i18n.translatePlain('Full'))
     }
 
+  # Customização ATS: campos de e-mail do ticket e da organização, para enviar
+  # a notificação aos endereços guardados neles.
+  #
+  # Só campos cujo tipo é E-mail (input + type email): oferecer todo campo de
+  # texto encheria a lista e convidaria a apontar para algo que não é endereço.
+  # O valor casa com ATTRIBUTE_RECIPIENT_PREFIX em
+  # Ticket::PerformChanges::Action::NotificationEmail.
+  @recipientAttributeVariables: ->
+    options = {}
+
+    collect = (model, pathPrefix, labelPrefix) ->
+      return if !model?.configure_attributes
+      for attribute in model.configure_attributes
+        continue if attribute.tag isnt 'input' or attribute.type isnt 'email'
+        # Os campos nativos já têm entrada própria acima; aqui só o que foi
+        # criado em Gerenciar > Objetos.
+        continue if attribute.name in ['email']
+        options["attribute::#{pathPrefix}.#{attribute.name}"] = "#{labelPrefix}: #{App.i18n.translatePlain(attribute.display or attribute.name)}"
+
+    collect(App.Ticket, 'ticket', App.i18n.translatePlain('Ticket'))
+    collect(App.Organization, 'ticket.organization', App.i18n.translatePlain('Organization'))
+
+    options
+
   @buildNotificationArea: (notificationType, elementFull, elementRow, groupAndAttribute, elements, meta, attribute) ->
 
     return if elementRow.find(".js-setNotification .js-body-#{notificationType}").get(0)
@@ -554,19 +578,41 @@ class App.UiElement.ApplicationAction
         selected: selected
     columnSelectRecipientUserOptions = _.sortBy(columnSelectRecipientUserOptions,(item) -> item.name?.toLowerCase())
 
+    # Customização ATS: grupo próprio para os campos de e-mail. Fica separado de
+    # "Variáveis" porque estes dependem do que existe em Gerenciar > Objetos e
+    # variam de instalação para instalação.
+    columnSelectAttributeOptions = []
+    for key, value of @recipientAttributeVariables()
+      selected = undefined
+      for recipient in meta.recipient
+        if key is recipient
+          selected = true
+      columnSelectAttributeOptions.push({ value: key, name: value, selected: selected })
+    columnSelectAttributeOptions = _.sortBy(columnSelectAttributeOptions, (item) -> item.name?.toLowerCase())
+
+    columnSelectRecipientGroups = [
+      {
+        label: __('Variables'),
+        group: columnSelectOptions
+      },
+      {
+        label: __('User'),
+        group: columnSelectRecipientUserOptions
+      },
+    ]
+
+    # Sem campo de e-mail cadastrado o grupo não aparece, em vez de mostrar uma
+    # seção vazia.
+    if columnSelectAttributeOptions.length
+      columnSelectRecipientGroups.push({
+        label: __('Email fields'),
+        group: columnSelectAttributeOptions
+      })
+
     columnSelectRecipient = new App.ColumnSelect
       attribute:
         name:    "#{name}::recipient"
-        options: [
-          {
-            label: __('Variables'),
-            group: columnSelectOptions
-          },
-          {
-            label: __('User'),
-            group: columnSelectRecipientUserOptions
-          },
-        ]
+        options: columnSelectRecipientGroups
 
     selectionRecipient = columnSelectRecipient.element()
 

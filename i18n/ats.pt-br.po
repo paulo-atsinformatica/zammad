@@ -585,3 +585,7 @@ msgstr "precisa ser menor que o tempo limite"
 
 msgid "cannot be set when the time limit is unlimited"
 msgstr "não pode ser usado quando o tempo limite é ilimitado"
+
+#. ------------------------------ Destinatário de gatilho vindo de um campo.
+msgid "Email fields"
+msgstr "Campos de e-mail"

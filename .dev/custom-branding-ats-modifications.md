@@ -567,6 +567,48 @@ por isso A não tenta mais retomar.
   já documentada para o spec de contagem por grupo). Verificado rastreando a
   lógica manualmente linha a linha contra o cenário relatado.
 
+### Gatilho: e-mail para os endereços guardados num campo (15/08/2026)
+
+Permite pôr endereços num campo (ex.: "E-mails de aviso" da organização) e, com
+a condição do gatilho satisfeita, notificar quem estiver lá.
+
+O destinatário de um gatilho aceitava só uma lista fechada — cliente,
+proprietário, agentes do grupo, usuário específico — e qualquer outro valor caía
+no `else` e era descartado com log de erro
+(`Ticket::PerformChanges::Action::NotificationEmail#recipients_by_type`). O
+sistema de placeholders já resolvia `ticket.organization.campo` desde sempre,
+mas nunca era aplicado ao destinatário, só a assunto e corpo — há inclusive um
+comentário no upstream admitindo o desvio ("Small workaround to avoid
+complicated code changes for placeholder support",
+`_ui_element/_application_action.coffee`).
+
+**Arquivos do upstream tocados — reaplicar se o upstream mexer neles:**
+
+| Arquivo | Mudança e motivo |
+|---|---|
+| `app/models/ticket/perform_changes/action/notification_email.rb` | Novo `when` para `attribute::<caminho>` em `recipients_by_type`, resolvendo pelo mesmo renderizador do corpo. |
+| `app/assets/javascripts/app/controllers/_ui_element/_application_action.coffee` | `recipientAttributeVariables` + grupo "Campos de e-mail" no seletor de destinatários. |
+
+**Decisões que não são óbvias pelo código:**
+
+- **Devolve ARRAY, não string.** `valid_recipient_address` só aproveita o
+  primeiro endereço de cada string — um campo com três e-mails perderia dois.
+  Como `recipients_raw` concatena arrays, devolvendo lista cada endereço é
+  validado, deduplicado e checado individualmente, sem tocar no upstream.
+- **Separadores aceitos: vírgula, ponto e vírgula e quebra de linha.** É campo
+  digitado por gente, e cada um separa de um jeito.
+- **Caminho que não resolve é descartado explicitamente.** O renderizador
+  **não** levanta exceção: devolve o placeholder de volta anotado
+  (`\#{ticket.organization.x / no such method}`). Sem o `include?('#{')` isso
+  seguiria adiante como se fosse endereço. O `rescue` sozinho não bastava —
+  descoberto testando com um campo inexistente.
+- **Só campos do tipo E-mail aparecem na lista** (`tag: 'input'` +
+  `type: 'email'`). Oferecer todo campo de texto encheria o seletor e convidaria
+  a apontar para algo que não é endereço. Sem nenhum campo assim, o grupo nem
+  aparece.
+- **Grupo separado de "Variáveis"** porque estes dependem do que existe em
+  Gerenciar > Objetos e variam de instalação para instalação.
+
 ### Acesso somente leitura para clientes
 
 Objetivo: cliente entra no perfil dele e **apenas visualiza** — não muda
