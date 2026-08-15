@@ -563,3 +563,25 @@ msgstr "%s (de)"
 
 msgid "%s (until)"
 msgstr "%s (até)"
+
+#. ------------------------------ Aviso de fim de pausa (controle de pausas).
+msgid "Sua pausa termina em %s min."
+msgstr "Sua pausa termina em %s min."
+
+msgid "Warn before the end (minutes)"
+msgstr "Avisar antes do fim (minutos)"
+
+msgid "Leave empty to disable the warning. Must be smaller than the time limit."
+msgstr "Deixe em branco para não avisar. Precisa ser menor que o tempo limite."
+
+msgid "Pause warning sound"
+msgstr "Som do aviso de pausa"
+
+msgid "Play a sound when a pause is about to reach its time limit."
+msgstr "Tocar um som quando a pausa estiver perto de atingir o tempo limite."
+
+msgid "must be smaller than the time limit"
+msgstr "precisa ser menor que o tempo limite"
+
+msgid "cannot be set when the time limit is unlimited"
+msgstr "não pode ser usado quando o tempo limite é ilimitado"

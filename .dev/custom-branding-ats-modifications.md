@@ -244,6 +244,50 @@ Este sistema foi implementado para controlar o tempo de atendimento por ticket e
 4. **Modal de Motivo de Atraso**: Modal obrigatório quando o tempo limite da pausa é excedido
 5. **Cadastro de Tipos de Pausa**: Tela de administração para gerenciar tipos de pausa
 6. **Relatórios**: Relatórios de pausas por usuário e por tipo de pausa
+7. **Aviso de fim de pausa**: alerta visual e sonoro antes do tempo limite (ver abaixo)
+
+#### Aviso antes do fim da pausa (15/08/2026)
+
+Alerta para o colaborador não perder a hora de voltar. Dispara quando faltam N
+minutos para o tempo limite: notificação no topo + cronômetro da barra piscando
+em âmbar + som.
+
+- **Antecedência é por tipo de pausa**: coluna nova `pause_types.warning_minutes`
+  (migration `20260815120000`). Em branco desliga o aviso para aquele tipo, que
+  é o comportamento de antes — nenhum tipo existente passa a avisar sozinho.
+- **Som liga/desliga** pelo setting `pause_control_warning_sound`
+  (`db/seeds/ats_settings.rb` + migration `20260815120100`), default ligado.
+  Usa `assets/sounds/Bell.mp3`, que já vem no Zammad.
+
+Arquivos: `app/models/pause_type.rb`, `app/controllers/pause_types_controller.rb`,
+`app/assets/javascripts/app/models/pause_type.coffee`,
+`app/assets/javascripts/app/controllers/user_status_bar.coffee`,
+`app/assets/stylesheets/zammad.scss`.
+
+**Decisões que não são óbvias pelo código:**
+
+- **O timer da barra deixou de PARAR com a aba em segundo plano; passou a rodar
+  a cada 5s.** Ele parava para poupar CPU, mas quem está em pausa quase sempre
+  deixou a aba escondida — com o timer parado o aviso nunca dispararia,
+  justamente no cenário em que ele mais serve. Ver `onVisibilityChange`.
+- **A "já avisei" é o id da pausa, não um booleano.** Duas pausas em sequência
+  reusam o mesmo controller; com booleano, a segunda herdaria o aviso da
+  primeira e ficaria muda.
+- **A janela do aviso fecha no tempo limite.** Passou do limite, o aviso perde a
+  função: aí já existe o fluxo de justificativa de atraso, que é mais forte.
+- **`warning_minutes` precisa ser menor que `time_limit`, e não pode existir com
+  limite ilimitado (`time_limit` 0).** Avisar "faltam 10" numa pausa de 5 nunca
+  dispararia, e sem fim definido não há o que antecipar — validado no model, com
+  mensagem em vez de silêncio.
+- **Som dentro de `try`.** Navegador bloqueia áudio sem interação prévia do
+  usuário; o aviso visual cobre o caso, e uma exceção aí não pode derrubar o
+  timer.
+- **`prefers-reduced-motion` desliga o piscar**, mantendo a cor: o destaque
+  continua, sem animação para quem pediu menos movimento no sistema.
+- **A migration da coluna NÃO tem o guard de `system_init_done`** usado nas
+  outras migrations ATS. Aquele guard existe para migrations que reaplicam dados
+  que o seed já cria; esta cria coluna, e pular numa instalação nova deixaria o
+  schema incompleto.
 
 ### Validações e Callbacks
 

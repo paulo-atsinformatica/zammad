@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2025 Zammad Foundation, https://zammad-foundation.org/
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
 
 class PauseTypesController < ApplicationController
   prepend_before_action :authenticate_and_authorize!
@@ -48,9 +48,6 @@ class PauseTypesController < ApplicationController
   private
 
   def pause_type_params
-    params.permit(:name, :time_limit, :color, :active)
+    params.permit(:name, :time_limit, :color, :active, :warning_minutes)
   end
 end
-
-
-

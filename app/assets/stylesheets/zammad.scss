@@ -16727,6 +16727,33 @@ div.accounted-time-value {
   font-variant-numeric: tabular-nums;
 }
 
+/* Customização ATS: pausa chegando ao fim (ver maybeWarnPauseEnding). A
+   notificação some sozinha em alguns segundos; este destaque fica até a pausa
+   encerrar, para quem voltou depois do balão sumir ainda perceber. */
+.status-bar-elapsed.is-ending {
+  background: hsl(38, 80%, 50%);
+  color: #fff;
+  animation: pause-ending-blink 1.4s ease-in-out infinite;
+}
+
+@keyframes pause-ending-blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.45;
+  }
+}
+
+/* Respeita quem pediu menos animação no sistema: a cor sozinha já destaca. */
+@media (prefers-reduced-motion: reduce) {
+  .status-bar-elapsed.is-ending {
+    animation: none;
+  }
+}
+
 .status-bar-arrow {
   width: 10px;
   height: 10px;

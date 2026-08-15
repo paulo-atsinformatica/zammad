@@ -546,6 +546,9 @@ class App.UserStatusBar extends App.Controller
     $target = @$('.js-pause-elapsed')
     if @currentState isnt 'pause' || !@currentPause?.active
       @exceededRendered = false
+      # Some com o destaque e libera o aviso para a próxima pausa.
+      @warnedPauseId = null
+      $target?.removeClass('is-ending')
       $target?.text('')
       return
 
@@ -557,6 +560,8 @@ class App.UserStatusBar extends App.Controller
     now = new Date()
     diffSeconds = (now.getTime() - startedAt.getTime()) / 1000
     $target?.text(@formatDuration(diffSeconds))
+
+    @maybeWarnPauseEnding()
 
     # Ao ultrapassar o tempo limite, re-renderiza para exibir o campo de justificativa (uma vez)
     if @isTimeExceeded() && !@exceededRendered
@@ -570,16 +575,26 @@ class App.UserStatusBar extends App.Controller
     @_visibilityHandler = => @onVisibilityChange()
     $(document).on('visibilitychange.statusbar', @_visibilityHandler)
 
+  # Customização ATS: em segundo plano o timer passa a rodar devagar em vez de
+  # parar. Ele parava para poupar CPU, mas quem está em pausa quase sempre
+  # deixou a aba escondida — e com o timer parado o aviso de fim de pausa nunca
+  # dispararia, que é justamente quando ele mais importa. A cada 5s o custo é
+  # desprezível (o próprio navegador ainda limita timers em aba oculta) e o
+  # aviso continua chegando com poucos segundos de atraso, no máximo.
+  BACKGROUND_TICK_MS = 5000
+
   onVisibilityChange: ->
-    if document.hidden
-      if @elapsedTimer
-        clearInterval(@elapsedTimer)
-        @elapsedTimer = null
-    else
-      return unless @currentState is 'pause' and @currentPause?.active
-      return if @elapsedTimer
-      @elapsedTimer = setInterval((=> @updateElapsed()), 1000)
-      @updateElapsed()
+    return if !@_visibilityHandler # já liberado
+
+    if @elapsedTimer
+      clearInterval(@elapsedTimer)
+      @elapsedTimer = null
+
+    return unless @currentState is 'pause' and @currentPause?.active
+
+    interval = if document.hidden then BACKGROUND_TICK_MS else 1000
+    @elapsedTimer = setInterval((=> @updateElapsed()), interval)
+    @updateElapsed()
 
   stopElapsedTimer: ->
     $(document).off('visibilitychange.statusbar', @_visibilityHandler) if @_visibilityHandler
@@ -608,6 +623,60 @@ class App.UserStatusBar extends App.Controller
     limit = @getPauseTypeLimit()
     return false if !limit? or limit <= 0
     @getElapsedSeconds() > (limit * 60)
+
+  # Customização ATS: aviso de "sua pausa está acabando". A antecedência é por
+  # tipo de pausa (pause_types.warning_minutes); em branco desliga o aviso.
+  getPauseTypeWarningMinutes: ->
+    return null if !@currentPause?.pause_type_id
+    pauseType = @pauseTypes.find((p) => p.id == @currentPause.pause_type_id)
+    warning = pauseType?.warning_minutes
+    return null if !warning? or warning <= 0
+    warning
+
+  # Só na janela entre "faltam N minutos" e o limite. Depois de estourar o aviso
+  # perde a função: aí já existe o fluxo de justificativa de atraso.
+  isInWarningWindow: ->
+    limit = @getPauseTypeLimit()
+    return false if !limit? or limit <= 0
+
+    warning = @getPauseTypeWarningMinutes()
+    return false if !warning?
+
+    elapsed = @getElapsedSeconds()
+    limitSeconds = limit * 60
+
+    elapsed >= (limitSeconds - (warning * 60)) and elapsed <= limitSeconds
+
+  # Dispara uma vez por pausa. A chave é o id da pausa, e não um booleano, para
+  # uma pausa nova logo depois de outra não herdar o aviso já dado.
+  maybeWarnPauseEnding: ->
+    if !@isInWarningWindow()
+      @$('.js-pause-elapsed').removeClass('is-ending')
+      return
+
+    return if @warnedPauseId is @currentPause?.id
+    @warnedPauseId = @currentPause?.id
+
+    @$('.js-pause-elapsed').addClass('is-ending')
+    @playPauseWarningSound()
+
+    remaining = Math.max(0, Math.ceil(((@getPauseTypeLimit() * 60) - @getElapsedSeconds()) / 60))
+    @notify(
+      type:    'error'
+      msg:     App.i18n.translateContent('Sua pausa termina em %s min.', remaining)
+      timeout: 8000
+    )
+
+  playPauseWarningSound: ->
+    return if App.Config.get('pause_control_warning_sound') is false
+
+    try
+      audio = new Audio('assets/sounds/Bell.mp3')
+      audio.play()
+    catch error
+      # Navegador pode bloquear áudio sem interação prévia do usuário; o aviso
+      # visual já cobre o caso.
+      return
 
   buildStatusDot: (type, label = null) ->
     cssClass = switch type

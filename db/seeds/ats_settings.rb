@@ -13,3 +13,33 @@
 # quase impossível de achar no admin: o título do setting é 'Open ticket
 # indicator', que não tem nada a ver com o que ele faz.
 Setting.set('ui_table_group_by_show_count', true)
+
+# Som do aviso de fim de pausa. A antecedência é por tipo de pausa
+# (pause_types.warning_minutes); este setting só liga/desliga o som, para quem
+# trabalha em sala compartilhada poder deixar só o aviso visual.
+Setting.create_if_not_exists(
+  title:       __('Pause warning sound'),
+  name:        'pause_control_warning_sound',
+  area:        'UI::Base',
+  description: __('Play a sound when a pause is about to reach its time limit.'),
+  options:     {
+    form: [
+      {
+        display:   '',
+        null:      true,
+        name:      'pause_control_warning_sound',
+        tag:       'boolean',
+        translate: true,
+        options:   {
+          true  => 'yes',
+          false => 'no',
+        },
+      },
+    ],
+  },
+  state:       true,
+  preferences: {
+    permission: ['admin.ui'],
+  },
+  frontend:    true
+)
