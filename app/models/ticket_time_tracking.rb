@@ -231,6 +231,25 @@ class TicketTimeTracking < ApplicationModel
     PushMessages.send_to(user_id, message)
 
     broadcast_to_ticket_watchers
+    broadcast_pause_indicators
+  end
+
+  # Customização ATS: o painel público de indicadores mostra o atendimento em
+  # curso (ticket, organização e tempo), então precisa saber quando uma contagem
+  # começa, pausa ou troca de ticket. Sem isto ele só se atualizaria quando algo
+  # de PAUSA mudasse, e as colunas de atendimento ficariam paradas até o cache
+  # expirar (PauseIndicatorsCache::TTL_SECONDS).
+  #
+  # Só invalida o cache e avisa os painéis — o payload em si não vai por aqui,
+  # cada painel recarrega pelo endpoint público (ver broadcast_to_ticket_watchers
+  # para o porquê de não sair nada sensível em broadcast aberto).
+  def broadcast_pause_indicators
+    return if !defined?(PauseIndicatorsBroadcast)
+
+    PauseIndicatorsBroadcast.broadcast_change
+  rescue => e
+    # Nunca derruba o salvamento da contagem por causa do painel.
+    Rails.logger.warn { "[TicketTimeTracking] pause indicators broadcast failed: #{e.message}" }
   end
 
   # Avisa quem mais está com o ticket aberto, para o estado do player ficar em

@@ -1,5 +1,8 @@
+# Copyright (C) 2012-2026 Zammad Foundation, https://zammad-foundation.org/
+
 class PublicPauseIndicatorsController < ApplicationController
   include ActionController::Live
+
   layout 'public_monitor', only: [:page]
 
   # Duração máxima de uma conexão SSE antes de encerrar graciosamente.
@@ -13,8 +16,7 @@ class PublicPauseIndicatorsController < ApplicationController
   SSE_POP_TIMEOUT = 30 # segundos
 
   # Página HTML pública
-  def page
-  end
+  def page; end
 
   # SSE: notifica o painel público quando o estado de pausa de qualquer usuário mudar (requer Redis).
   #
@@ -126,7 +128,7 @@ class PublicPauseIndicatorsController < ApplicationController
         .where(roles: { id: eligible_role_ids })
         .where(users: { active: true })
         .distinct
-        .order(:firstname, :lastname)
+        .reorder(:firstname, :lastname)
         .map { |u| { id: u.id, name: "#{u.firstname} #{u.lastname}".strip.presence || u.login } }
   end
 
@@ -151,7 +153,11 @@ class PublicPauseIndicatorsController < ApplicationController
   def redis_available?
     return @redis_available if defined?(@redis_available)
 
-    @redis_available = (Zammad::Service::Redis.new.ping == 'PONG' rescue false)
+    @redis_available = begin
+      Zammad::Service::Redis.new.ping == 'PONG'
+    rescue
+      false
+    end
   end
 
   def build_public_entries_full
@@ -168,6 +174,8 @@ class PublicPauseIndicatorsController < ApplicationController
     pauses_by_id     = UserPause.includes(:pause_type)
                                 .where(id: active_pause_ids, ended_at: nil)
                                 .index_by(&:id)
+
+    trackings_by_user_id = active_trackings_by_user_id(user_list)
 
     user_list.map do |user|
       logged_in    = logged_in_ids.include?(user.id)
@@ -186,8 +194,46 @@ class PublicPauseIndicatorsController < ApplicationController
         pause_started_at: active_pause&.started_at&.iso8601
       }
       entry[:equipe] = user.equipe.to_s if user_equipe_attribute?
+      entry.merge!(tracking_attributes(trackings_by_user_id[user.id]))
       entry
     end
+  end
+
+  # Contagem de tempo em curso, em lote. O ticket e a organização vêm no
+  # includes porque as colunas de atendimento mostram os dois — sem isso seriam
+  # duas queries por usuário.
+  def active_trackings_by_user_id(user_list)
+    TicketTimeTracking.active
+                      .where(user_id: user_list.map(&:id))
+                      .includes(ticket: :organization)
+                      .index_by(&:user_id)
+  end
+
+  # Colunas de atendimento em curso. O tempo vai em duas partes — acumulado
+  # persistido e início do trecho corrente — porque o painel soma o segundo a
+  # segundo no navegador, como já faz com o tempo de pausa. Mandar um total
+  # pronto congelaria o cronômetro entre um refresh e outro.
+  def tracking_attributes(tracking)
+    return empty_tracking_attributes if tracking.blank?
+
+    ticket = tracking.ticket
+    return empty_tracking_attributes if ticket.blank?
+
+    {
+      tracking_ticket_number: ticket.number,
+      tracking_organization:  ticket.organization&.name,
+      tracking_total_seconds: tracking.total_seconds.to_i,
+      tracking_started_at:    (tracking.resumed_at || tracking.started_at)&.iso8601
+    }
+  end
+
+  def empty_tracking_attributes
+    {
+      tracking_ticket_number: nil,
+      tracking_organization:  nil,
+      tracking_total_seconds: nil,
+      tracking_started_at:    nil
+    }
   end
 
   def filter_public_entries(entries, req_params)
@@ -209,4 +255,3 @@ class PublicPauseIndicatorsController < ApplicationController
     entries
   end
 end
-

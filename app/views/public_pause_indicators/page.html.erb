@@ -49,11 +49,16 @@
                 <th><%= __('Tempo em pausa') %></th>
                 <th><%= __('Logado') %></th>
                 <th><%= __('Pausa ativa') %></th>
+                <%# 'Número do ticket' e não 'Ticket': este último já existe no
+                    catálogo oficial e sairia como "Tíquete". %>
+                <th><%= __('Tempo de atendimento') %></th>
+                <th><%= __('Número do ticket') %></th>
+                <th><%= __('Organização') %></th>
               </tr>
             </thead>
             <tbody class="js-public-pause-body">
               <tr>
-                <td colspan="7"><%= __('Carregando...') %></td>
+                <td colspan="10"><%= __('Carregando...') %></td>
               </tr>
             </tbody>
           </table>
@@ -116,6 +121,46 @@
 
   .public-pause-indicators .pause-indicator {
     border-radius: 999px;
+  }
+
+  /* Destaque da linha inteira: o painel fica numa TV, e um ponto colorido de
+     10px na primeira coluna não se lê de longe. A borda lateral marca a linha
+     sem depender de cor de fundo, que muda entre tema claro e escuro. */
+  .public-pause-indicators .pause-indicators-row > td {
+    border-inline-start: 4px solid transparent;
+  }
+
+  .public-pause-indicators .pause-indicators-row > td:not(:first-child) {
+    border-inline-start-color: transparent;
+  }
+
+  .public-pause-indicators .pause-indicators-row--pause > td {
+    background-color: rgba(240, 173, 78, 0.16);
+    font-weight: 600;
+  }
+
+  .public-pause-indicators .pause-indicators-row--pause > td:first-child {
+    border-inline-start-color: #f0ad4e;
+  }
+
+  .public-pause-indicators .pause-indicators-row--offline > td {
+    background-color: rgba(217, 83, 79, 0.16);
+    font-weight: 600;
+  }
+
+  .public-pause-indicators .pause-indicators-row--offline > td:first-child {
+    border-inline-start-color: #d9534f;
+  }
+
+  /* Deslogado é o estado mais "apagado": marca a linha sem gritar, já que
+     quem não iniciou o expediente não é uma anomalia a corrigir agora. */
+  .public-pause-indicators .pause-indicators-row--logged-out > td {
+    background-color: rgba(108, 117, 125, 0.14);
+    color: #6c757d;
+  }
+
+  .public-pause-indicators .pause-indicators-row--logged-out > td:first-child {
+    border-inline-start-color: #adb5bd;
   }
 </style>
 

@@ -65,17 +65,25 @@ do ->
     loggedSelect.value = '' if loggedSelect?
     loadData()
 
-  formatDuration = (startedAt) ->
-    return '00:00' unless startedAt
-    started = new Date(startedAt)
-    return '00:00' if isNaN(started.getTime())
-    now = new Date()
-    sec = Math.max(0, Math.floor((now - started) / 1000))
+  formatSeconds = (sec) ->
+    sec = Math.max(0, Math.floor(sec))
     h   = Math.floor(sec / 3600)
     m   = Math.floor((sec % 3600) / 60)
     s   = sec % 60
     pad = (n) -> if n < 10 then "0#{n}" else String(n)
     if h > 0 then "#{pad(h)}:#{pad(m)}:#{pad(s)}" else "#{pad(m)}:#{pad(s)}"
+
+  # baseSeconds é o acumulado que já veio do servidor; startedAt marca o início
+  # do trecho que ainda está correndo. A contagem de tempo de atendimento passa
+  # por várias pausas, então sem o acumulado o cronômetro voltaria do zero a
+  # cada retomada.
+  formatDuration = (startedAt, baseSeconds = 0) ->
+    base = Number(baseSeconds) or 0
+    return formatSeconds(base) unless startedAt
+    started = new Date(startedAt)
+    return formatSeconds(base) if isNaN(started.getTime())
+    now = new Date()
+    formatSeconds(base + Math.floor((now - started) / 1000))
 
   buildIndicatorCell = (entry) ->
     span = document.createElement('span')
@@ -109,7 +117,7 @@ do ->
     unless data?.entries? and data.entries.length > 0
       trEmpty = document.createElement('tr')
       tdEmpty = document.createElement('td')
-      tdEmpty.colSpan = 7
+      tdEmpty.colSpan = 10
       tdEmpty.textContent = 'Nenhum registro encontrado'
       trEmpty.appendChild(tdEmpty)
       tbody.appendChild(trEmpty)
@@ -118,6 +126,16 @@ do ->
     data.entries.forEach (entry) ->
       tr = document.createElement('tr')
       tr.className = 'pause-indicators-row'
+
+      # Destaque da linha inteira. Em pausa vence offline: quem está em pausa
+      # também aparece com state 'pause', e é a informação mais específica.
+      if !entry.logged_in
+        tr.className += ' pause-indicators-row--logged-out'
+      else if entry.in_pause
+        tr.className += ' pause-indicators-row--pause'
+      else if entry.state isnt 'online'
+        tr.className += ' pause-indicators-row--offline'
+
       tr.setAttribute('data-state', entry.state or '')
       tr.setAttribute('data-in-pause', if entry.in_pause then 'true' else 'false')
       tr.setAttribute('data-pause-started-at', entry.pause_started_at or '')
@@ -153,6 +171,29 @@ do ->
       tdPauseName = document.createElement('td')
       tdPauseName.textContent = entry.pause_name or '-'
       tr.appendChild(tdPauseName)
+
+      # Atendimento em curso. O cronômetro é montado igual ao de pausa: o
+      # servidor manda acumulado + início do trecho corrente, e o timer local
+      # soma segundo a segundo.
+      tdTracking = document.createElement('td')
+      tdTracking.className = 'js-tracking-duration-cell'
+      if entry.tracking_started_at
+        tdTracking.setAttribute('data-started-at', entry.tracking_started_at)
+        tdTracking.setAttribute('data-base-seconds', String(entry.tracking_total_seconds or 0))
+        tdTracking.textContent = formatDuration(entry.tracking_started_at, entry.tracking_total_seconds)
+      else
+        tdTracking.setAttribute('data-started-at', '')
+        tdTracking.setAttribute('data-base-seconds', '0')
+        tdTracking.textContent = '-'
+      tr.appendChild(tdTracking)
+
+      tdTicket = document.createElement('td')
+      tdTicket.textContent = entry.tracking_ticket_number or '-'
+      tr.appendChild(tdTicket)
+
+      tdOrganization = document.createElement('td')
+      tdOrganization.textContent = entry.tracking_organization or '-'
+      tr.appendChild(tdOrganization)
 
       tbody.appendChild(tr)
 
@@ -217,15 +258,16 @@ do ->
         return
 
   updateAllDurations = ->
-    cells = document.querySelectorAll('.js-pause-duration-cell')
+    cells = document.querySelectorAll('.js-pause-duration-cell, .js-tracking-duration-cell')
     return unless cells.length
-    now = new Date()
     for cell in cells
       startedAt = cell.getAttribute('data-started-at')
       unless startedAt
         cell.textContent = '-'
         continue
-      cell.textContent = formatDuration(startedAt)
+      # Só a célula de atendimento traz acumulado; a de pausa conta do zero.
+      base = Number(cell.getAttribute('data-base-seconds')) or 0
+      cell.textContent = formatDuration(startedAt, base)
 
   startDurationTimer = ->
     return if durationTimer?

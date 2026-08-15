@@ -280,6 +280,57 @@ Os exemplos em `contrib/nginx/zammad.conf` e `contrib/nginx/zammad_ssl.conf` inc
 
 Se nos logs do nginx **não** aparecer nenhuma requisição a `/api/v1/public_pause_indicators/stream` e só aparecer `GET /api/v1/public_pause_indicators?...` a cada ~5s, o SSE não está em uso e o painel está em modo polling.
 
+#### Colunas de atendimento em curso e destaque de linha (15/08/2026)
+
+O painel ganhou três colunas — **Tempo de atendimento**, **Número do ticket** e
+**Organização** — preenchidas quando o colaborador tem uma contagem de tempo
+correndo (`TicketTimeTracking.active`). E as linhas de quem está em pausa,
+offline ou deslogado passaram a ter destaque na linha inteira.
+
+Arquivos: `app/controllers/public_pause_indicators_controller.rb`,
+`app/views/public_pause_indicators/page.html.erb`,
+`app/assets/javascripts/app/public_pause_indicators.coffee` (todos ATS puros) e
+`app/models/ticket_time_tracking.rb` (ver invalidação de cache abaixo).
+
+**Decisões que não são óbvias pelo código:**
+
+- **O tempo vai em duas partes: `tracking_total_seconds` (acumulado
+  persistido) + `tracking_started_at` (início do trecho corrente).** O navegador
+  soma os dois a cada segundo, como já fazia com o tempo de pausa. Mandar um
+  total pronto congelaria o cronômetro entre um refresh e outro; mandar só o
+  instante de início zeraria a contagem a cada retomada, já que um atendimento
+  costuma passar por várias pausas.
+- **`TicketTimeTracking#broadcast_state_change` passou a chamar
+  `PauseIndicatorsBroadcast.broadcast_change`.** Sem isso o painel só era
+  notificado (e o cache só invalidado) em eventos de PAUSA — iniciar ou trocar
+  de atendimento não avisava ninguém, e as colunas novas ficariam paradas até o
+  cache expirar (`PauseIndicatorsCache::TTL_SECONDS`, 60s). O broadcast está
+  dentro de `rescue` porque um painel indisponível não pode derrubar o
+  salvamento de uma contagem de tempo.
+- **Batch load das contagens, com `includes(ticket: :organization)`.** As
+  colunas mostram ticket e organização; sem o includes seriam duas queries por
+  usuário. Medido: `build_public_entries_full` faz **5 queries fixas**,
+  independente da quantidade de colaboradores.
+- **Rótulo "Número do ticket", não "Ticket".** `Ticket` já existe no catálogo
+  oficial pt-BR e sairia como "Tíquete".
+- **Destaque com borda lateral além de cor de fundo.** O painel roda em TV: o
+  ponto colorido de 10px da primeira coluna não se lê de longe. Em pausa vence
+  offline na precedência, por ser a informação mais específica (quem está em
+  pausa também tem `state` diferente de `online`).
+
+**Exposição de dados — decidido com o usuário (15/08/2026):** a rota
+`/monitor/pause_indicators` **não tem autenticação** (`PublicPauseIndicatorsController`
+não chama `authentication_check`), então número de ticket e nome de organização
+ficam visíveis para qualquer um com o link. Isso foi levantado antes de
+implementar e o usuário confirmou que o painel é de uso interno.
+
+Vale notar a tensão: `TicketTimeTracking#broadcast_to_ticket_watchers` tem um
+comentário explicando que ele evita `Sessions.broadcast` aberto justamente para
+um cliente não descobrir "qual atendente está em qual ticket e há quanto tempo".
+O painel agora publica exatamente isso, sem login. **Se um dia esse link sair da
+rede interna, reavaliar** — as opções levantadas na época foram: omitir a
+organização, mostrar só o tempo, ou exigir autenticação na página.
+
 ### Balanceamento de carga (Nginx) e Redis
 
 Para o **controle de pausas** funcionar corretamente com **vários nós** atrás de um balanceador (Nginx ou outro):
