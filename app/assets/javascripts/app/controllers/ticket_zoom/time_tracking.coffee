@@ -35,6 +35,11 @@ class App.TicketZoomTimeTracking extends App.Controller
     @totalSeconds = 0
     @isPaused = false
 
+    # Customização ATS: true entre o fim otimista da pausa na barra de status e
+    # a confirmação do servidor. Segura a retomada nesse intervalo, em que o
+    # backend ainda considera o usuário em pausa.
+    @awaitingPauseEndConfirmation = false
+
     # Customização ATS: fica true a partir de "deslogar" no controle de pausas
     # e só volta a false quando o usuário clica em Iniciar de novo - impede
     # que logar de volta retome a contagem sozinho (ver onPauseControlLogout).
@@ -54,6 +59,7 @@ class App.TicketZoomTimeTracking extends App.Controller
     @controllerBind('user_state:changed', @onUserStateChanged)
     @controllerBind('pause:started', @onPauseStarted)
     @controllerBind('pause:ended', @onPauseEnded)
+    @controllerBind('pause:ended:confirmed', @onPauseEndedConfirmed)
     @controllerBind('pause_control:logout', @onPauseControlLogout)
     @controllerBind('pause_control:login', @onPauseControlLogin)
 
@@ -307,6 +313,8 @@ class App.TicketZoomTimeTracking extends App.Controller
     # mesmo que o bloqueio tenha vindo de um "deslogar" anterior.
     @blockAutoResume = false
     @autoPaused = false
+    # Se o usuário clicou, não há mais o que esperar de confirmação.
+    @awaitingPauseEndConfirmation = false
 
     if @canResume()
       @resumeTracking()
@@ -476,14 +484,27 @@ class App.TicketZoomTimeTracking extends App.Controller
 
   onPauseStarted: =>
     @currentUser = App.User.current()
+    # Nova pausa: nada pendente da anterior.
+    @awaitingPauseEndConfirmation = false
 
     if @tracking?.is_active && !@isPaused
       @autoPauseTracking()
 
     @updateButtonStates()
 
+  # `pause:ended` é otimista: a barra de status dispara antes de avisar o
+  # servidor, para a UI responder na hora. Retomar aqui levava
+  # "User is in pause" do backend, que só sabe do fim da pausa depois do POST.
+  # A retomada mora em onPauseEndedConfirmed; aqui só o estado dos botões.
   onPauseEnded: =>
     @currentUser = App.User.current()
+    @awaitingPauseEndConfirmation = true
+    @updateButtonStates()
+
+  # Servidor confirmou o fim da pausa - agora `resume` passa.
+  onPauseEndedConfirmed: =>
+    @currentUser = App.User.current()
+    @awaitingPauseEndConfirmation = false
     @maybeAutoResume()
     @updateButtonStates()
 
@@ -623,6 +644,9 @@ class App.TicketZoomTimeTracking extends App.Controller
   # falta só o bloqueio específico de "deslogar" (blockAutoResume).
   maybeAutoResume: ->
     return if @blockAutoResume
+    # Fim de pausa ainda não confirmado pelo servidor: retomar agora levaria
+    # "User is in pause". Quem retoma nesse caso é onPauseEndedConfirmed.
+    return if @awaitingPauseEndConfirmation
     return if !@isAutoResumable()
     return if !@canResume()
 

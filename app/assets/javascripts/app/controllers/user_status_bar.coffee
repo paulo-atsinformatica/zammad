@@ -392,6 +392,14 @@ class App.UserStatusBar extends App.Controller
       success:     (data) =>
         @clearPendingEndPauseIntent()
         @hasShownEndPauseRetryNotice = false
+
+        # Customização ATS: só agora o servidor sabe que a pausa acabou.
+        # `pause:ended` é disparado lá em cima, de forma otimista, para a UI
+        # responder na hora — mas quem depende do SERVIDOR não pode usar
+        # aquele: o player de tempo tentava retomar a contagem antes e levava
+        # "User is in pause" (TicketTimeTrackingService#resume_tracking).
+        App.Event.trigger('pause:ended:confirmed')
+
         @notify(
           type:    'success'
           msg:     App.i18n.translateContent('Pausa finalizada.')
@@ -417,6 +425,11 @@ class App.UserStatusBar extends App.Controller
           App.User.current().in_pause = false
           App.User.current().current_state = 'online'
           @stopElapsedTimer()
+          # O POST falhou, mas a consulta mostra que a pausa terminou mesmo
+          # assim. Vale como confirmação do servidor - sem isto a contagem
+          # ficaria parada esperando um evento que não viria (ver
+          # attemptEndPauseRequest).
+          App.Event.trigger('pause:ended:confirmed')
           @scheduleRender(true)
           return
 

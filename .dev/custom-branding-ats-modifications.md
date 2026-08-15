@@ -626,6 +626,41 @@ Duas causas:
   outro ticket já ter assumido a contagem é resposta legítima — daí o silêncio,
   não um toast.
 
+#### A causa de verdade: fim de pausa é otimista (15/08/2026)
+
+Mesmo depois das correções acima o erro continuou —
+`POST .../time_tracking/resume 422`, com um ticket só aberto. As anteriores
+tratavam **qual** ticket retoma; esta é sobre **quando**.
+
+`TicketTimeTrackingService#resume_tracking` recusa com
+`User is in pause` enquanto o servidor considerar o usuário em pausa
+(`return error(__('User is in pause')) if current_user.in_pause?`).
+
+E `endPause` (`user_status_bar.coffee`) é **otimista**: marca `in_pause = false`
+localmente e dispara `pause:ended`/`user_state:changed` **antes** do
+`POST /user_pauses/end`, para a barra responder na hora. O player ouvia o evento
+otimista e tentava retomar enquanto o servidor ainda tinha a pausa aberta.
+
+Isso explica a assimetria que o usuário observou: `setState` (online/offline)
+dispara `user_state:changed` **dentro do `success`** do POST, ou seja, depois da
+confirmação — por isso aquele caminho sempre funcionou.
+
+Correção: novo evento `pause:ended:confirmed`, emitido só depois de o servidor
+confirmar. O player passou a retomar nele; `pause:ended` ficou só para atualizar
+os botões.
+
+**Decisões que não são óbvias pelo código:**
+
+- **`awaitingPauseEndConfirmation` segura também o `user_state:changed`**, que
+  é disparado no mesmo instante otimista e chamaria `maybeAutoResume` cedo do
+  mesmo jeito.
+- **`verifyPauseEndedOrRetry` também emite o evento.** É o caminho de quando o
+  POST falha mas a consulta mostra a pausa já encerrada no servidor; sem emitir
+  ali, a contagem ficaria parada esperando um evento que nunca viria.
+- **Não se moveu o `pause:ended` para dentro do `success`.** O otimismo existe
+  para a barra de status responder sem esperar rede, e outras partes dependem
+  disso; o evento novo resolve sem tirar essa propriedade.
+
 ### Gatilho: e-mail para os endereços guardados num campo (15/08/2026)
 
 Permite pôr endereços num campo (ex.: "E-mails de aviso" da organização) e, com
