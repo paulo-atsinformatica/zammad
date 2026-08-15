@@ -197,6 +197,11 @@ class App.TicketZoomTimeTracking extends App.Controller
             @autoPaused = false
             @startTimer(data.resumed_at || data.started_at)
           else
+            # Mesma regra de onTimeTrackingStateChange: pausado com o usuário
+            # indisponível quer dizer "volta sozinho". Vale principalmente para
+            # quem recarrega a página no meio da pausa - sem isto a marcação se
+            # perderia e a contagem não voltaria ao sair.
+            @autoPaused = true if @currentUser?.in_pause or @currentUser?.current_state is 'offline'
             @stopTimer()
 
           @updateButtonStates()
@@ -515,12 +520,16 @@ class App.TicketZoomTimeTracking extends App.Controller
         @isPaused = true
         @isDeactivated = !data.is_active
         @stopTimer()
-        # @autoPaused não é tocado aqui de propósito: autoPauseTracking já seta
-        # true no próprio success, e esse mesmo pause dispara este evento de
-        # volta via WebSocket - zerar aqui desfaria o que acabou de ser
-        # marcado. Uma pausa que não veio de autoPauseTracking (troca de
-        # ticket, por exemplo) nunca marca a flag, então o valor por padrão
-        # (false) já protege esse caso sem precisar zerar aqui.
+        # Quem pausou não importa; o que importa é POR QUE. Se o usuário está
+        # em pausa ou offline neste instante, a contagem parou por causa disso
+        # e deve voltar sozinha depois. Trocar de ticket, ao contrário,
+        # acontece com o usuário disponível.
+        #
+        # Marcar aqui (e não só no sucesso de autoPauseTracking) é o que faz
+        # sair da pausa retomar: UserPauseService#start_pause já pausa a
+        # contagem no servidor, então o frontend costuma nem chegar a chamar o
+        # próprio auto-pause — só recebe este evento pronto.
+        @autoPaused = true if @currentUser?.in_pause or @currentUser?.current_state is 'offline'
       when 'ended', 'inactive'
         @tracking = null
         @isPaused = false
@@ -599,10 +608,28 @@ class App.TicketZoomTimeTracking extends App.Controller
   # falta só o bloqueio específico de "deslogar" (blockAutoResume).
   maybeAutoResume: ->
     return if @blockAutoResume
-    return if !@autoPaused
+    return if !@isAutoResumable()
     return if !@canResume()
 
     @resumeTracking()
+
+  # Qual dos tickets abertos deve voltar sozinho.
+  #
+  # O servidor guarda em users.current_active_ticket_id qual ticket ocupa o
+  # slot de atendimento, e `pause!` (o que roda ao entrar em pausa ou ficar
+  # offline) NÃO limpa esse campo — só encerrar ou trocar de ticket o move.
+  # Ou seja: entre vários tickets pausados, o ativo é o que parou por causa da
+  # indisponibilidade; um pausado por troca já entregou o slot a outro e não
+  # pode ressuscitar.
+  #
+  # Vem do servidor, então também sobrevive a recarregar a página no meio da
+  # pausa. `@autoPaused` fica de reserva para quando o campo não estiver
+  # disponível.
+  isAutoResumable: ->
+    activeTicketId = @currentUser?.current_active_ticket_id
+    return @autoPaused if !activeTicketId?
+
+    activeTicketId is @ticket_id
 
   onTicketUpdate: (data) =>
     return if data.ticket_id != @ticket_id

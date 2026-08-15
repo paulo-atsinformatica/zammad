@@ -567,6 +567,36 @@ por isso A não tenta mais retomar.
   já documentada para o spec de contagem por grupo). Verificado rastreando a
   lógica manualmente linha a linha contra o cenário relatado.
 
+#### Bug: sair da pausa não retomava a contagem (15/08/2026)
+
+Relato: ficar offline e voltar online retomava a contagem, mas entrar em pausa e
+sair **não**.
+
+Causa da assimetria: `UserPauseService#start_pause` **já pausa** a contagem no
+servidor (`active_tracking&.pause!`). O frontend, então, nem chegava a executar o
+próprio `autoPauseTracking` — e era só ali que a marcação "pausei por
+indisponibilidade" acontecia. Sem a marca, `maybeAutoResume` desistia ao sair da
+pausa. Ficar offline não tem equivalente no backend: o frontend pausa sozinho,
+marca, e por isso aquele caminho funcionava.
+
+Correção: a decisão de retomar deixou de depender de **quem** pausou e passou a
+usar `users.current_active_ticket_id`, que o servidor mantém e que `pause!`
+**não** limpa — só encerrar ou trocar de ticket o move. Ver `isAutoResumable`.
+
+**Decisões que não são óbvias pelo código:**
+
+- **`current_active_ticket_id` resolve os dois bugs de uma vez.** É o mesmo
+  critério que impede o "retoma o ticket errado" documentado acima: entre vários
+  tickets pausados, só o que ainda detém o slot volta sozinho — um pausado por
+  troca já entregou o slot a outro. Confirmado que o campo chega ao frontend
+  pelos assets do usuário.
+- **Sobrevive a recarregar a página no meio da pausa**, porque vem do servidor.
+  A flag local `@autoPaused` sozinha se perderia no reload; ela ficou apenas
+  como reserva para quando o campo não estiver disponível.
+- **A marcação da flag passou a olhar o estado do usuário, não a origem do
+  pause** (`in_pause`/`offline` no instante em que a contagem para). Trocar de
+  ticket acontece com o usuário disponível, então não marca.
+
 ### Gatilho: e-mail para os endereços guardados num campo (15/08/2026)
 
 Permite pôr endereços num campo (ex.: "E-mails de aviso" da organização) e, com
