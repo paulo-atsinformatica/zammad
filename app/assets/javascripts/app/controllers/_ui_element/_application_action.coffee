@@ -519,8 +519,11 @@ class App.UiElement.ApplicationAction
   # Customização ATS: campos de e-mail do ticket e da organização, para enviar
   # a notificação aos endereços guardados neles.
   #
-  # Só campos cujo tipo é E-mail (input + type email): oferecer todo campo de
-  # texto encheria a lista e convidaria a apontar para algo que não é endereço.
+  # Campos de Texto e de E-mail (input) e de Área de texto (textarea). Só E-mail
+  # não bastava: o tipo E-mail valida um único endereço no formulário, então não
+  # havia como guardar uma lista. Um campo de Texto ou Área de texto aceita
+  # vários endereços separados por vírgula, ponto e vírgula ou quebra de linha,
+  # e o backend separa e valida cada um.
   # O valor casa com ATTRIBUTE_RECIPIENT_PREFIX em
   # Ticket::PerformChanges::Action::NotificationEmail.
   @recipientAttributeVariables: ->
@@ -529,10 +532,12 @@ class App.UiElement.ApplicationAction
     collect = (model, pathPrefix, labelPrefix) ->
       return if !model?.configure_attributes
       for attribute in model.configure_attributes
-        continue if attribute.tag isnt 'input' or attribute.type isnt 'email'
-        # Os campos nativos já têm entrada própria acima; aqui só o que foi
-        # criado em Gerenciar > Objetos.
-        continue if attribute.name in ['email']
+        isInput    = attribute.tag is 'input' and attribute.type in ['email', 'text']
+        isTextarea = attribute.tag is 'textarea'
+        continue if !isInput and !isTextarea
+        # Campos nativos que nunca guardam endereços (e o e-mail nativo, que já
+        # tem entrada própria acima); aqui só o que foi criado em Gerenciar > Objetos.
+        continue if attribute.name in ['email', 'title', 'number', 'name', 'domain', 'note']
         options["attribute::#{pathPrefix}.#{attribute.name}"] = "#{labelPrefix}: #{App.i18n.translatePlain(attribute.display or attribute.name)}"
 
     collect(App.Ticket, 'ticket', App.i18n.translatePlain('Ticket'))

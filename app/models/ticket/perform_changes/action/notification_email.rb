@@ -300,9 +300,14 @@ class Ticket::PerformChanges::Action::NotificationEmail < Ticket::PerformChanges
     # method}"). Sem descartar aqui, isso seguiria como se fosse endereço.
     return [] if rendered.include?('#{')
 
+    # Campo Área de texto volta do renderizador como HTML (quebras viram <br>).
+    # Só converte quando há essas tags: "Nome <a@b.com>" também tem '<' e o
+    # html2text engoliria o endereço como se fosse tag.
+    rendered = rendered.html2text if rendered.match?(%r{<(br|div|p)\b}i)
+
     # Aceita vírgula, ponto e vírgula ou quebra de linha: o campo é digitado por
     # gente, e cada um separa de um jeito.
-    rendered.split(%r{[,;\n]}).map(&:strip).compact_blank
+    rendered.split(%r{[,;\r\n]}).map(&:strip).compact_blank
   rescue => e
     # Caminho inválido (campo renomeado, organização sem valor) não pode
     # derrubar o disparo inteiro do gatilho.

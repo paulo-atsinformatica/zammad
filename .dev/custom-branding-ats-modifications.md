@@ -706,10 +706,21 @@ complicated code changes for placeholder support",
   (`\#{ticket.organization.x / no such method}`). Sem o `include?('#{')` isso
   seguiria adiante como se fosse endereço. O `rescue` sozinho não bastava —
   descoberto testando com um campo inexistente.
-- **Só campos do tipo E-mail aparecem na lista** (`tag: 'input'` +
-  `type: 'email'`). Oferecer todo campo de texto encheria o seletor e convidaria
-  a apontar para algo que não é endereço. Sem nenhum campo assim, o grupo nem
-  aparece.
+- **Campos de Texto, E-mail e Área de texto aparecem na lista** (16/09/2026).
+  A primeira versão listava só o tipo E-mail, mas esse tipo valida **um único
+  endereço** no formulário (`pattern` em `generic/input.jst.eco` e
+  `App.Model.validate`), então era impossível guardar uma lista — e um campo
+  criado como Texto nem aparecia no gatilho. Afrouxar a validação do tipo
+  E-mail afetaria também o e-mail de usuário, por isso a lista passou a aceitar
+  Texto e Área de texto. Nativos que nunca guardam endereço (`title`, `number`,
+  `name`, `domain`, `note`) ficam de fora. Sem nenhum campo elegível, o grupo
+  nem aparece.
+- **Área de texto chega como HTML.** O renderizador aplica `text2html` em
+  textarea, e as quebras de linha viram `<br>`. O backend converte com
+  `html2text` antes de separar — mas só se houver `<br>`/`<div>`/`<p>`, porque
+  `Nome <a@b.com>` também tem `<` e o endereço seria engolido como tag.
+- **Campo de Texto tem limite de 120 caracteres por padrão** (Max. length).
+  Para vários endereços, aumentar em Gerenciar > Objetos.
 - **Grupo separado de "Variáveis"** porque estes dependem do que existe em
   Gerenciar > Objetos e variam de instalação para instalação.
 
