@@ -122,7 +122,13 @@ class App.WidgetLinkKbAnswer extends App.WidgetLink
   releaseController: =>
     # Cancel a still-pending debounced fetch so it cannot run after teardown. Only our own timeout,
     # so a successor instance that already replaced it in the shared map keeps its pending request.
-    if App.WidgetLinkKbAnswer.suggestionsTimeouts?[@object.id] is @suggestionsTimeout
+    #
+    # Customização ATS: sem provedor de IA as sugestões nunca rodam, então o mapa
+    # suggestionsTimeouts não existe e @suggestionsTimeout é undefined. A comparação
+    # `undefined is undefined` dava true e o `delete` no mapa inexistente lançava
+    # TypeError, derrubando a barra lateral inteira ao trocar o cliente do ticket.
+    timeouts = App.WidgetLinkKbAnswer.suggestionsTimeouts
+    if timeouts && @suggestionsTimeout && timeouts[@object.id] is @suggestionsTimeout
       clearTimeout(@suggestionsTimeout)
       delete App.WidgetLinkKbAnswer.suggestionsTimeouts[@object.id]
 

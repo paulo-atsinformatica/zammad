@@ -1346,6 +1346,31 @@ de outro agente apagava o que o agente estivesse digitando.
 ligado, faz o `@reset()` antes de sair. Ao sincronizar com o upstream, conferir
 se o bloco `return if @renderDone && ticketIsNewest` mudou.
 
+### Barra lateral em branco ao trocar o cliente do ticket (16/09/2026)
+
+**Sintoma:** depois de "Mudar cliente", a barra lateral direita some inteira
+(abas e campos). Console: `TypeError: Cannot convert undefined or null to
+object at App.WidgetLinkKbAnswer.releaseController`.
+
+**Causa (código upstream, veio no sync 7.2 — commit `6e3d9c515f`):** trocar o
+cliente faz o `App.TicketZoomSidebar` remontar todos os painéis, e o painel
+Ticket libera o widget de "Conhecimento relacionado" antes de recriá-lo. Sem
+provedor de IA configurado, o widget nunca agenda sugestões:
+`App.WidgetLinkKbAnswer.suggestionsTimeouts` não existe e `@suggestionsTimeout`
+é `undefined`. A condição `undefined is undefined` dava verdadeiro e o `delete`
+no mapa inexistente lançava a exceção. Como `App.Sidebar` já tinha esvaziado o
+container, nada era desenhado de volta.
+
+**Correção:** `app/assets/javascripts/app/controllers/widget/link/kb_answer.coffee`
+(`releaseController`) — só mexe no mapa se ele existir e houver timeout
+próprio. O upstream (develop) ainda tem o bug; ao sincronizar, se o bloco mudar,
+conferir se a correção deles cobre o caso sem IA.
+
+**Junto:** `app/assets/javascripts/app/controllers/ticket_customer.coffee` —
+com organização preenchida, `App.User.full` e `App.Organization.full` chamavam
+o mesmo callback e o ticket era salvo duas vezes (`update_customer` duplicado).
+Agora `_.after` espera os dois carregamentos e salva uma vez.
+
 ## Referências
 
 - Repositório original: https://github.com/zammad/zammad

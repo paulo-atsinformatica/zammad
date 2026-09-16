@@ -42,7 +42,10 @@ class App.TicketCustomer extends App.ControllerModal
     @customer_id     = params['customer_id']
     @organization_id = params['organization_id']
 
-    callback = =>
+    # Customização ATS: com organização preenchida, User.full e Organization.full
+    # chamavam o callback cada um, salvando o ticket duas vezes. _.after só executa
+    # quando os dois carregamentos terminarem.
+    callback = _.after((if @organization_id then 2 else 1), =>
 
       # close modal
       @close()
@@ -50,6 +53,7 @@ class App.TicketCustomer extends App.ControllerModal
       ticket.save(
         url: ticket.generateURL('update_customer')
       )
+    )
 
     # load user if not already exists
     App.User.full(@customer_id, callback)
