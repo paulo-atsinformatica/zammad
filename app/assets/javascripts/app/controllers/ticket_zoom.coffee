@@ -159,7 +159,18 @@ class App.TicketZoom extends App.Controller
       @renderDone = false
 
     ticketIsNewest = @ticketUpdatedAtLastCall && new Date(@currentTicketRaw.updated_at).getTime() <= new Date(@ticketUpdatedAtLastCall).getTime()
-    return if @renderDone && ticketIsNewest
+
+    # Customização ATS: com o servidor lento, o evento Ticket:update do websocket
+    # dispara um GET que pode voltar ANTES da resposta do PUT de submitPost. Esse
+    # GET já carrega o updated_at novo, então o load do PUT caía no return abaixo
+    # e nunca chegava ao @reset(): o artigo era gravado, mas o texto continuava no
+    # campo e um segundo clique duplicava o artigo. O @recentlyUpdated ainda
+    # ficava preso em true e apagava o rascunho no próximo update de outro agente.
+    if @renderDone && ticketIsNewest
+      if @recentlyUpdated
+        @recentlyUpdated = false
+        @reset()
+      return
     @ticketUpdatedAtLastCall = @currentTicketRaw.updated_at
 
     attributes_to_ignore_for_notify = [

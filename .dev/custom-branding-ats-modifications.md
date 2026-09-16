@@ -1320,6 +1320,32 @@ Nenhum arquivo do upstream foi tocado.
   sem banco o `rails_helper` morre calado — nem stdout nem stderr. Subir os três
   containers resolve.
 
+### Anotação continua no campo após salvar (16/09/2026)
+
+**Sintoma:** às vezes, ao lançar uma anotação, o artigo aparece no ticket mas o
+texto continua no campo de resposta. Um novo clique em Atualizar grava o mesmo
+artigo de novo.
+
+**Causa (código upstream):** `App.TicketZoom#submitPost` marca
+`@recentlyUpdated = true` e chama `@load(data)`, que é quem faz o `@reset()` do
+formulário. Mas `load` retorna cedo quando o `updated_at` recebido não é mais
+novo que `@ticketUpdatedAtLastCall`. Com o servidor lento, a ordem vira:
+
+1. o PUT grava o artigo e o backend publica `Ticket:update` no websocket;
+2. `fetchMayBe` espera 1 s e faz o GET do ticket;
+3. o GET volta **antes** da resposta do PUT → renderiza o artigo e atualiza
+   `@ticketUpdatedAtLastCall`;
+4. a resposta do PUT chega com o mesmo `updated_at` → `load` retorna cedo →
+   `@reset()` nunca roda.
+
+Efeito colateral: `@recentlyUpdated` ficava em `true` e o próximo update vindo
+de outro agente apagava o que o agente estivesse digitando.
+
+**Correção:** `app/assets/javascripts/app/controllers/ticket_zoom.coffee`
+(`load`) — no caminho de retorno antecipado, se `@recentlyUpdated` estiver
+ligado, faz o `@reset()` antes de sair. Ao sincronizar com o upstream, conferir
+se o bloco `return if @renderDone && ticketIsNewest` mudou.
+
 ## Referências
 
 - Repositório original: https://github.com/zammad/zammad
